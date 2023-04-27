@@ -14,7 +14,7 @@ from gym.utils import seeding
 
 
 class Quadrotor:
-    def __init__(self, x=0, y=0, z=0, phi=0, theta=0, psi=0, dt=1 / 50, m=1.4, l=0.56):
+    def __init__(self, x=0, y=0, z=0, phi=0, theta=0, psi=0, dt=1 / 10, m=1.4, l=0.50):
 
         self.p1 = np.array([l / 2, 0, 0, 1]).T
         self.p2 = np.array([-l / 2, 0, 0, 1]).T
@@ -34,6 +34,9 @@ class Quadrotor:
         self.theta = theta
         # yaw
         self.psi = psi
+        self.phi_dot = 0
+        self.theta_dot = 0
+        self.psi_dot = 0
 
         # timestep
         self.dt = dt
@@ -69,18 +72,31 @@ class Quadrotor:
             ]
         )
 
-    # def rot_matrix(self, ):
-    #     ct = cos(theta)
-    #     st = sin(theta)
-    #     cf = cos(phi)
-    #     sf = sin(phi)
-    #     cp = cos(psi)
-    #     sp = sin(psi)
+    def rotation_matrix(
+        self,
+    ):
+        c_theta = cos(self.theta)
+        s_theta = sin(self.theta)
+        c_phi = cos(self.phi)
+        s_phi = sin(self.phi)
+        c_psi = cos(self.psi)
+        s_psi = sin(self.psi)
 
-    #     return np.array([
-    #         [cp * ct, sp * ct, -st],
-    #         []
-    #     ])
+        return np.array(
+            [
+                [
+                    c_psi * c_theta,
+                    c_psi * s_theta * s_phi - s_psi * c_phi,
+                    c_psi * s_theta * c_phi + s_psi * s_phi,
+                ],
+                [
+                    s_psi * c_theta,
+                    s_psi * s_theta * s_phi + c_psi + c_phi,
+                    s_psi * s_theta * c_phi - c_psi * s_phi,
+                ],
+                [-s_theta, c_theta * s_phi, c_theta * c_phi],
+            ]
+        )
 
     def step(self, action=np.zeros(4)):
         pass
@@ -175,13 +191,14 @@ class UavSim:
                 x_axis = np.arange(-2, 3)
                 y_axis = np.arange(-2, 3)
                 z_axis = np.arange(-2, 3)
-                (pointCM,) = self.ax.plot([0], [0], [0], "b.")
-                (pointBLDC1,) = self.ax.plot([0], [0], [0], "b.")
-                (pointBLDC2,) = self.ax.plot([0], [0], [0], "b.")
-                (pointBLDC3,) = self.ax.plot([0], [0], [0], "b.")
-                (pointBLDC4,) = self.ax.plot([0], [0], [0], "b.")
-                (line1,) = self.ax.plot([0, 0], [0, 0], [0, 0], "b.")
-                (line2,) = self.ax.plot([0, 0], [0, 0], [0, 0], "b.")
+
+                # (pointCM,) = self.ax.plot([0], [0], [0], "b.")
+                # (pointBLDC1,) = self.ax.plot([0], [0], [0], "b.")
+                # (pointBLDC2,) = self.ax.plot([0], [0], [0], "b.")
+                # (pointBLDC3,) = self.ax.plot([0], [0], [0], "b.")
+                # (pointBLDC4,) = self.ax.plot([0], [0], [0], "b.")
+                # (line1,) = self.ax.plot([0, 0], [0, 0], [0, 0], "b.")
+                # (line2,) = self.ax.plot([0, 0], [0, 0], [0, 0], "b.")
 
                 self.ax.plot([0, 0], [0, 0], [0, 0], "k+")
                 self.ax.plot(x_axis, np.zeros(5), np.zeros(5), "r--", linewidth=0.5)
@@ -190,7 +207,7 @@ class UavSim:
 
                 self.ax.set_xlim([-5, 5])
                 self.ax.set_ylim([-5, 5])
-                self.ax.set_zlim([-5, 5])
+                self.ax.set_zlim([0, 10])
 
                 self.ax.set_xlabel("X-axis (in meters)")
                 self.ax.set_ylabel("Y-axis (in meters)")
@@ -206,6 +223,9 @@ class UavSim:
                     0, 0.95, "green", color="green", transform=self.ax.transAxes
                 )
 
+                # self.ax.hold(True)
+
+                self.background = self.fig.canvas.copy_from_bbox(self.ax.bbox)
 
                 T = self.uav.transformation_matrix()
 
@@ -213,8 +233,6 @@ class UavSim:
                 p2_t = np.matmul(T, self.uav.p2)
                 p3_t = np.matmul(T, self.uav.p3)
                 p4_t = np.matmul(T, self.uav.p4)
-
-                plt.cla()
 
                 self.props = self.ax.plot(
                     [p1_t[0], p2_t[0], p3_t[0], p4_t[0]],
@@ -230,7 +248,8 @@ class UavSim:
                 self.line2 = self.ax.plot(
                     [p3_t[0], p4_t[0]], [p3_t[1], p4_t[1]], [p3_t[2], p4_t[2]], "r-"
                 )
-                
+
+            # https://stackoverflow.com/questions/11874767/how-do-i-plot-in-real-time-in-a-while-loop-using-matplotlib
             self.time_display.set_text(f"Simulation time = {self.time_elapsed:.2f} s")
 
             T = self.uav.transformation_matrix()
@@ -240,31 +259,42 @@ class UavSim:
             p3_t = np.matmul(T, self.uav.p3)
             p4_t = np.matmul(T, self.uav.p4)
 
+            # self.ax.remove(self.props)
             # self.props.remove()
+            # self.ax.lines.remove(self.line1)
             # self.line1.remove()
             # self.line2.remote()
             # plt.cla()
 
-            self.props = self.ax.plot(
-                [p1_t[0], p2_t[0], p3_t[0], p4_t[0]],
-                [p1_t[1], p2_t[1], p3_t[1], p4_t[1]],
-                [p1_t[2], p2_t[2], p3_t[2], p4_t[2]],
-                "k.",
+            self.props.append(
+                # self.props = self.ax.plot(
+                [
+                    [p1_t[0], p2_t[0], p3_t[0], p4_t[0]],
+                    [p1_t[1], p2_t[1], p3_t[1], p4_t[1]],
+                    [p1_t[2], p2_t[2], p3_t[2], p4_t[2]],
+                ]
+                # "k.",
             )
 
-            self.line1 = self.ax.plot(
-                [p1_t[0], p2_t[0]], [p1_t[1], p2_t[1]], [p1_t[2], p2_t[2]], "r-"
-            )
+            # self.line1 = self.ax.plot(
+            #     [p1_t[0], p2_t[0]], [p1_t[1], p2_t[1]], [p1_t[2], p2_t[2]], "r-"
+            # )
 
-            self.line2 = self.ax.plot(
-                [p3_t[0], p4_t[0]], [p3_t[1], p4_t[1]], [p3_t[2], p4_t[2]], "r-"
-            )
+            # self.line2 = self.ax.plot(
+            #     [p3_t[0], p4_t[0]], [p3_t[1], p4_t[1]], [p3_t[2], p4_t[2]], "r-"
+            # )
 
-            self.time_display.set_text(f"Simulation time = {self.time_elapsed:.2f} s")
+            # self.time_display.set_text(f"Simulation time = {self.time_elapsed:.2f} s")
 
-            self.ax.set_xlim([-5, 5])
-            self.ax.set_ylim([-5, 5])
-            self.ax.set_zlim([0, 10])
+            self.fig.canvas.restore_region(self.background)
+
+            # self.ax.draw_artist(self.props)
+
+            self.fig.canvas.blit(self.ax.bbox)
+
+            # self.ax.set_xlim([-5, 5])
+            # self.ax.set_ylim([-5, 5])
+            # self.ax.set_zlim([0, 10])
 
             # self.ax.plot(self.x_data, self.y_data, self.z_data, 'b:')
             plt.pause(0.0001)

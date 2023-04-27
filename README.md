@@ -25,7 +25,9 @@ https://github.com/abhijitmajumdar/Quadcopter_simulator
 
 https://scholarsarchive.byu.edu/cgi/viewcontent.cgi?article=2324&context=facpub
 
-
+https://andrew.gibiansky.com/blog/physics/quadcopter-dynamics/
+use this matlab code to simulate dynamics
+https://github.com/gibiansky/experiments/blob/master/quadcopter/matlab/simulate.m
 
 ## References: 
 https://github.com/NishanthARao/Python-Quadrotor-Simulation
