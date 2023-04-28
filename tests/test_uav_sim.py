@@ -1,8 +1,8 @@
 import numpy as np
 import unittest
 
-import context
-
+from tests import context
+import unittest
 from uav_sim.envs.uav_sim import UavSim
 
 
@@ -19,6 +19,7 @@ class TestUavSim(unittest.TestCase):
             self.env.step(actions)
             self.env.render()
             t += 1
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -5,6 +5,16 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Run All Unit Tests",
+            "type": "python",
+            "request": "launch",
+            "module": "unittest",
+            "justMyCode": true,
+            "env": {
+                "DISPLAY": "192.168.1.11:0.0"
+            }
+        },
+        {
             "name": "unittest_uav_sim",
             "type": "python",
             "request": "launch",
