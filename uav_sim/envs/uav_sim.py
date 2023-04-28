@@ -5,6 +5,7 @@ import matplotlib
 # matplotlib.use("Qt5Agg")
 matplotlib.use("TKAgg")
 import matplotlib.pyplot as plt
+
 R2D = 57.295779513
 D2R = 0.017453293
 
@@ -16,7 +17,7 @@ class Quadrotor:
         self, x=0, y=0, z=0, phi=0, theta=0, psi=0, dt=1 / 10, m=0.18, l=0.086
     ):
 
-        l = 1
+        # l = 1
         # timestep
         self.dt = dt  # s
 
@@ -27,11 +28,13 @@ class Quadrotor:
         self.m = m  # kg
 
         # lenght of arms
-        self.l = 0.086  # m
+        self.l = 1  # m
 
         self.inertia = np.array(
             [[0.00025, 0, 2.55e-6], [0, 0.000232, 0], [2.55e-6, 0, 0.0003738]]
         )
+
+        self.inertia = np.eye(3) * 0.000232
 
         self.inv_inertia = np.linalg.inv(self.inertia)
 
@@ -66,16 +69,16 @@ class Quadrotor:
         return np.array(
             [
                 [
-                    c_psi * c_theta,
-                    c_psi * s_theta * s_phi - s_psi * c_phi,
-                    c_psi * s_theta * c_phi + s_psi * s_phi,
+                    c_psi * c_theta - s_phi * s_psi * s_theta,
+                    -c_phi * s_psi,
+                    c_psi * s_theta + c_theta * s_phi * s_psi,
                 ],
                 [
-                    s_psi * c_theta,
-                    s_psi * s_theta * s_phi + c_psi + c_phi,
-                    s_psi * s_theta * c_phi - c_psi * s_phi,
+                    c_theta * s_psi + c_psi * s_phi * s_theta,
+                    c_phi * c_psi,
+                    s_psi * s_theta - c_psi * c_theta * s_phi,
                 ],
-                [-s_theta, c_theta * s_phi, c_theta * c_phi],
+                [-c_phi * s_theta, s_phi, c_phi * c_theta],
             ]
         )
 
@@ -109,7 +112,7 @@ class Quadrotor:
         # p, q, r
         omega = np.dot(
             phi_rot,
-            np.array([self._state[9], self._state[10], self._state[11]]),
+            self._state[9:12]
         )
         tau = np.dot(
             np.array(
@@ -127,13 +130,14 @@ class Quadrotor:
         )
 
         self._state[3:6] += x_ddot * self.dt
-        self._state[0:3] = self._state[3:6] * self.dt
+        self._state[0:3] += self._state[3:6] * self.dt
         if self._state[2] < 0:
             self._state[2] = 0
 
         omega += omega_dot * self.dt
         self._state[9:12] += np.dot(np.linalg.inv(phi_rot), omega)
         self._state[6:9] += self._state[9:12] * self.dt
+        self._state[6:9] = self.wrap_angle(self._state[6:9])
 
     def wrap_angle(self, val):
         return (val + np.pi) % (2 * np.pi) - np.pi
@@ -188,6 +192,7 @@ class UavSim:
 
     def step(self, actions):
         action = np.random.rand(4) * (self.uav.max_f - self.uav.min_f) + self.uav.min_f
+        action = np.ones(4) * self.uav.m * self.uav.g / 4 + 0.01
 
         self.uav.step(action)
 
@@ -251,13 +256,12 @@ class UavSim:
                 )
 
                 (self.l1,) = self.ax.plot(
-                    [], [], [], color="blue", linewidth=3, antialiased=False
+                    [], [], [], color="blue", linewidth=1, antialiased=False
                 )
                 (self.l2,) = self.ax.plot(
-                    [], [], [], color="red", linewidth=3, antialiased=False
+                    [], [], [], color="red", linewidth=1, antialiased=False
                 )
 
-                # self.background = self.fig.canvas.copy_from_bbox(self.ax.bbox)
                 R = self.uav.rotation_matrix()
                 l = self.uav.l
 
@@ -273,29 +277,10 @@ class UavSim:
                 self.l2.set_data(self.points[0, 2:4], self.points[1, 2:4])
                 self.l2.set_3d_properties(self.points[2, 2:4])
 
-                # T = self.uav.transformation_matrix()
+                # TODO: See if method below can improve plotting speed
+                # https://stackoverflow.com/questions/11874767/how-do-i-plot-in-real-time-in-a-while-loop-using-matplotlib
+                # self.background = self.fig.canvas.copy_from_bbox(self.ax.bbox)
 
-                # p1_t = np.matmul(T, self.uav.p1)
-                # p2_t = np.matmul(T, self.uav.p2)
-                # p3_t = np.matmul(T, self.uav.p3)
-                # p4_t = np.matmul(T, self.uav.p4)
-
-                # self.props = self.ax.plot(
-                #     [p1_t[0], p2_t[0], p3_t[0], p4_t[0]],
-                #     [p1_t[1], p2_t[1], p3_t[1], p4_t[1]],
-                #     [p1_t[2], p2_t[2], p3_t[2], p4_t[2]],
-                #     "k.",
-                # )
-
-                # self.line1 = self.ax.plot(
-                #     [p1_t[0], p2_t[0]], [p1_t[1], p2_t[1]], [p1_t[2], p2_t[2]], "r-"
-                # )
-
-                # self.line2 = self.ax.plot(
-                #     [p3_t[0], p4_t[0]], [p3_t[1], p4_t[1]], [p3_t[2], p4_t[2]], "r-"
-                # )
-
-            # https://stackoverflow.com/questions/11874767/how-do-i-plot-in-real-time-in-a-while-loop-using-matplotlib
             self.time_display.set_text(f"Simulation time = {self.time_elapsed:.2f} s")
             uav_state = self.uav.state
             self.state_display.set_text(
@@ -316,30 +301,4 @@ class UavSim:
             self.l1.set_3d_properties(points[2, 0:2])
             self.l2.set_data(points[0, 2:4], points[1, 2:4])
             self.l2.set_3d_properties(points[2, 2:4])
-            plt.pause(0.0000001)
-            # T = self.uav.transformation_matrix()
-
-            # p1_t = np.matmul(T, self.uav.p1)
-            # p2_t = np.matmul(T, self.uav.p2)
-            # p3_t = np.matmul(T, self.uav.p3)
-            # p4_t = np.matmul(T, self.uav.p4)
-
-            # self.props.append(
-            #     [
-            #         [p1_t[0], p2_t[0], p3_t[0], p4_t[0]],
-            #         [p1_t[1], p2_t[1], p3_t[1], p4_t[1]],
-            #         [p1_t[2], p2_t[2], p3_t[2], p4_t[2]],
-            #     ]
-            # )
-
-            # self.fig.canvas.restore_region(self.background)
-
-            # # self.ax.draw_artist(self.props)
-
-            # self.fig.canvas.blit(self.ax.bbox)
-
-            # # self.ax.set_xlim([-5, 5])
-            # # self.ax.set_ylim([-5, 5])
-            # # self.ax.set_zlim([0, 10])
-
-            # # self.ax.plot(self.x_data, self.y_data, self.z_data, 'b:')
+            plt.pause(0.0000000001)
