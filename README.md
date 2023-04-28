@@ -40,4 +40,7 @@ https://github.com/AtsushiSakai/PythonRobotics
 
 http://www.kostasalexis.com/simulations-with-simpy.html
 
+Another drone simulation using python gym:
+https://github.com/SuhrudhSarathy/drone_sim
+
 

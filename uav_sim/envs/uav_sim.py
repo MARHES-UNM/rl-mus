@@ -6,15 +6,15 @@ import matplotlib
 matplotlib.use("TKAgg")
 import matplotlib.pyplot as plt
 
-R2D = 57.295779513
-D2R = 0.017453293
+# R2D = 57.295779513
+# D2R = 0.017453293
 
 from gym.utils import seeding
 
 
 class Quadrotor:
     def __init__(
-        self, x=0, y=0, z=0, phi=0, theta=0, psi=0, dt=1 / 10, m=0.18, l=0.086
+        self, x=0, y=0, z=0, phi=0, theta=0, psi=0, dt=1 / 50, m=0.18, l=0.086
     ):
 
         # l = 1
@@ -34,7 +34,7 @@ class Quadrotor:
             [[0.00025, 0, 2.55e-6], [0, 0.000232, 0], [2.55e-6, 0, 0.0003738]]
         )
 
-        self.inertia = np.eye(3) * 0.000232
+        self.inertia = np.eye(3) * 1
 
         self.inv_inertia = np.linalg.inv(self.inertia)
 
@@ -59,6 +59,17 @@ class Quadrotor:
     def rotation_matrix(
         self,
     ):
+        ct = cos(self._state[7])
+        cp = cos(self._state[6])
+        cg = cos(self._state[8])
+        st = sin(self._state[7])
+        sp = sin(self._state[6])
+        sg = sin(self._state[8])
+        R_x = np.array([[1, 0, 0], [0, ct, -st], [0, st, ct]])
+        R_y = np.array([[cp, 0, sp], [0, 1, 0], [-sp, 0, cp]])
+        R_z = np.array([[cg, -sg, 0], [sg, cg, 0], [0, 0, 1]])
+        R = np.dot(R_z, np.dot(R_y, R_x))
+        return R
         c_phi = cos(self._state[6])
         s_phi = sin(self._state[6])
         c_theta = cos(self._state[7])
@@ -80,6 +91,49 @@ class Quadrotor:
                 ],
                 [-c_phi * s_theta, s_phi, c_phi * c_theta],
             ]
+        )
+
+    def state_dot(self, time, state, action=np.zeros(4)):
+        action = np.clip(action, self.min_f, self.max_f)
+        state_dot = np.zeros(12)
+
+        x_ddot = (
+            np.array([0, 0, -self.m * self.g])
+            + np.dot(self.rotation_matrix(), np.array([0, 0, action.sum()]))
+        ) / self.m
+
+        s_phi = sin(self._state[6])
+        c_phi = cos(self._state[6])
+        s_theta = sin(self._state[7])
+        c_theta = cos(self._state[7])
+
+        phi_rot = np.array(
+            [
+                [c_theta, 0, -c_phi * s_theta],
+                [0, 1, s_phi],
+                [s_theta, 0, c_phi * c_theta],
+            ]
+        )
+
+        # phi_rot = np.eye(3)
+        # p, q, r
+        omega = np.dot(phi_rot, self._state[9:12])
+
+        omega = self._state[9:12]
+
+        tau = np.dot(
+            np.array(
+                [
+                    [0, self.l, 0, -self.l],
+                    [-self.l, 0, self.l, 0],
+                    [self.gamma, self.gamma, self.gamma, self.gamma],
+                ]
+            ),
+            action,
+        )
+
+        omega_dot = np.dot(
+            self.inv_inertia, (tau - np.cross(omega, np.dot(self.inertia, omega)))
         )
 
     def step(self, action=np.zeros(4)):
@@ -109,11 +163,13 @@ class Quadrotor:
                 [s_theta, 0, c_phi * c_theta],
             ]
         )
+
+        phi_rot = np.eye(3)
         # p, q, r
-        omega = np.dot(
-            phi_rot,
-            self._state[9:12]
-        )
+        omega = np.dot(phi_rot, self._state[9:12])
+
+        omega = self._state[9:12]
+
         tau = np.dot(
             np.array(
                 [
@@ -135,7 +191,8 @@ class Quadrotor:
             self._state[2] = 0
 
         omega += omega_dot * self.dt
-        self._state[9:12] += np.dot(np.linalg.inv(phi_rot), omega)
+        # self._state[9:12] += np.dot(np.linalg.inv(phi_rot), omega)
+        self._state[9:12] += omega
         self._state[6:9] += self._state[9:12] * self.dt
         self._state[6:9] = self.wrap_angle(self._state[6:9])
 
@@ -192,7 +249,7 @@ class UavSim:
 
     def step(self, actions):
         action = np.random.rand(4) * (self.uav.max_f - self.uav.min_f) + self.uav.min_f
-        action = np.ones(4) * self.uav.m * self.uav.g / 4 + 0.01
+        action = np.ones(4) * self.uav.m * self.uav.g / 4
 
         self.uav.step(action)
 
@@ -284,7 +341,8 @@ class UavSim:
             self.time_display.set_text(f"Simulation time = {self.time_elapsed:.2f} s")
             uav_state = self.uav.state
             self.state_display.set_text(
-                f"x:{uav_state[0]:.2f}, y:{uav_state[1]:.2f}, z:{uav_state[2]:.2f}"
+                f"x:{uav_state[0]:.2f}, y:{uav_state[1]:.2f}, z:{uav_state[2]:.2f}\n"
+                f"phi: {uav_state[6]:.2f}, theta: {uav_state[7]:.2f}, psi: {uav_state[8]:.2f}"
             )
 
             R = self.uav.rotation_matrix()
