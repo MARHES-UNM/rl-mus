@@ -1,6 +1,8 @@
+import stat
 import numpy as np
 from math import cos, sin
 import matplotlib
+import scipy.integrate
 
 # matplotlib.use("Qt5Agg")
 matplotlib.use("TKAgg")
@@ -14,8 +16,12 @@ from gym.utils import seeding
 
 class Quadrotor:
     def __init__(
-        self, x=0, y=0, z=0, phi=0, theta=0, psi=0, dt=1 / 50, m=0.18, l=0.086
+        self, x=0, y=0, z=0, phi=0, theta=0, psi=0, dt=1 / 10, m=0.18, l=0.086
     ):
+
+        self.ode = scipy.integrate.ode(self.state_dot).set_integrator(
+            "vode", nsteps=500, method="bdf"
+        )
 
         # l = 1
         # timestep
@@ -34,7 +40,7 @@ class Quadrotor:
             [[0.00025, 0, 2.55e-6], [0, 0.000232, 0], [2.55e-6, 0, 0.0003738]]
         )
 
-        self.inertia = np.eye(3) * 1
+        self.inertia = np.eye(3) * 0.0003738
 
         self.inv_inertia = np.linalg.inv(self.inertia)
 
@@ -97,10 +103,25 @@ class Quadrotor:
         action = np.clip(action, self.min_f, self.max_f)
         state_dot = np.zeros(12)
 
+        # The velocities(t+1 x_dots equal the t x_dots)
+        state_dot[0] = self._state[3]
+        state_dot[1] = self._state[4]
+        state_dot[2] = self._state[5]
+
+        # The acceleration
+
         x_ddot = (
             np.array([0, 0, -self.m * self.g])
             + np.dot(self.rotation_matrix(), np.array([0, 0, action.sum()]))
         ) / self.m
+        state_dot[3] = x_ddot[0]
+        state_dot[4] = x_ddot[1]
+        state_dot[5] = x_ddot[2]
+
+        # the angular rates
+        state_dot[6] = self._state[9]
+        state_dot[7] = self._state[10]
+        state_dot[8] = self._state[11]
 
         s_phi = sin(self._state[6])
         c_phi = cos(self._state[6])
@@ -115,7 +136,6 @@ class Quadrotor:
             ]
         )
 
-        # phi_rot = np.eye(3)
         # p, q, r
         omega = np.dot(phi_rot, self._state[9:12])
 
@@ -135,6 +155,12 @@ class Quadrotor:
         omega_dot = np.dot(
             self.inv_inertia, (tau - np.cross(omega, np.dot(self.inertia, omega)))
         )
+
+        state_dot[9] = omega_dot[0]
+        state_dot[10] = omega_dot[1]
+        state_dot[11] = omega_dot[2]
+        
+        return state_dot
 
     def step(self, action=np.zeros(4)):
         """Action is propeller forces in body frame
@@ -145,86 +171,67 @@ class Quadrotor:
             x, y, z, x_dot, y_dot, z_dot, phi, theta, psi, phi_dot, theta_dot, psi_dot
         """
 
-        action = np.clip(action, self.min_f, self.max_f)
-        x_ddot = (
-            np.array([0, 0, -self.m * self.g])
-            + np.dot(self.rotation_matrix(), np.array([0, 0, action.sum()]))
-        ) / self.m
-
-        s_phi = sin(self._state[6])
-        c_phi = cos(self._state[6])
-        s_theta = sin(self._state[7])
-        c_theta = cos(self._state[7])
-
-        phi_rot = np.array(
-            [
-                [c_theta, 0, -c_phi * s_theta],
-                [0, 1, s_phi],
-                [s_theta, 0, c_phi * c_theta],
-            ]
-        )
-
-        phi_rot = np.eye(3)
-        # p, q, r
-        omega = np.dot(phi_rot, self._state[9:12])
-
-        omega = self._state[9:12]
-
-        tau = np.dot(
-            np.array(
-                [
-                    [0, self.l, 0, -self.l],
-                    [-self.l, 0, self.l, 0],
-                    [self.gamma, self.gamma, self.gamma, self.gamma],
-                ]
-            ),
-            action,
-        )
-
-        omega_dot = np.dot(
-            self.inv_inertia, (tau - np.cross(omega, np.dot(self.inertia, omega)))
-        )
-
-        self._state[3:6] += x_ddot * self.dt
-        self._state[0:3] += self._state[3:6] * self.dt
-        if self._state[2] < 0:
-            self._state[2] = 0
-
-        omega += omega_dot * self.dt
-        # self._state[9:12] += np.dot(np.linalg.inv(phi_rot), omega)
-        self._state[9:12] += omega
-        self._state[6:9] += self._state[9:12] * self.dt
+        self.ode.set_initial_value(self._state, 0).set_f_params(action)
+        self._state = self.ode.integrate(self.ode.t + self.dt)
+        assert self.ode.successful()
+        
         self._state[6:9] = self.wrap_angle(self._state[6:9])
+        self._state[2] = max(0, self._state[2])
+        
+        
+        # action = np.clip(action, self.min_f, self.max_f)
+        # x_ddot = (
+        #     np.array([0, 0, -self.m * self.g])
+        #     + np.dot(self.rotation_matrix(), np.array([0, 0, action.sum()]))
+        # ) / self.m
+
+        # s_phi = sin(self._state[6])
+        # c_phi = cos(self._state[6])
+        # s_theta = sin(self._state[7])
+        # c_theta = cos(self._state[7])
+
+        # phi_rot = np.array(
+        #     [
+        #         [c_theta, 0, -c_phi * s_theta],
+        #         [0, 1, s_phi],
+        #         [s_theta, 0, c_phi * c_theta],
+        #     ]
+        # )
+
+        # phi_rot = np.eye(3)
+        # # p, q, r
+        # omega = np.dot(phi_rot, self._state[9:12])
+
+        # omega = self._state[9:12]
+
+        # tau = np.dot(
+        #     np.array(
+        #         [
+        #             [0, self.l, 0, -self.l],
+        #             [-self.l, 0, self.l, 0],
+        #             [self.gamma, self.gamma, self.gamma, self.gamma],
+        #         ]
+        #     ),
+        #     action,
+        # )
+
+        # omega_dot = np.dot(
+        #     self.inv_inertia, (tau - np.cross(omega, np.dot(self.inertia, omega)))
+        # )
+
+        # self._state[3:6] += x_ddot * self.dt
+        # self._state[0:3] += self._state[3:6] * self.dt
+        # if self._state[2] < 0:
+        #     self._state[2] = 0
+
+        # omega += omega_dot * self.dt
+        # # self._state[9:12] += np.dot(np.linalg.inv(phi_rot), omega)
+        # self._state[9:12] += omega
+        # self._state[6:9] += self._state[9:12] * self.dt
+        # self._state[6:9] = self.wrap_angle(self._state[6:9])
 
     def wrap_angle(self, val):
         return (val + np.pi) % (2 * np.pi) - np.pi
-
-    def transformation_matrix(self):
-
-        x = self._state[0]
-        y = self._state[1]
-        z = self._state[2]
-        roll = self._state[6]
-        pitch = self._state[7]
-        yaw = self._state[8]
-        return np.array(
-            [
-                [
-                    cos(yaw) * cos(pitch),
-                    -sin(yaw) * cos(roll) + cos(yaw) * sin(pitch) * sin(roll),
-                    sin(yaw) * sin(roll) + cos(yaw) * sin(pitch) * cos(roll),
-                    x,
-                ],
-                [
-                    sin(yaw) * cos(pitch),
-                    cos(yaw) * cos(roll) + sin(yaw) * sin(pitch) * sin(roll),
-                    -cos(yaw) * sin(roll) + sin(yaw) * sin(pitch) * cos(roll),
-                    y,
-                ],
-                [-sin(pitch), cos(pitch) * sin(roll), cos(pitch) * cos(yaw), z],
-            ]
-        )
-
 
 class UavSim:
     metadata = {
@@ -285,12 +292,12 @@ class UavSim:
 
                 x_axis = np.arange(-2, 3)
                 y_axis = np.arange(-2, 3)
-                z_axis = np.arange(-2, 3)
+                z_axis = np.arange(0, 3)
 
                 self.ax.plot([0, 0], [0, 0], [0, 0], "k+")
                 self.ax.plot(x_axis, np.zeros(5), np.zeros(5), "r--", linewidth=0.5)
                 self.ax.plot(np.zeros(5), y_axis, np.zeros(5), "g--", linewidth=0.5)
-                self.ax.plot(np.zeros(5), np.zeros(5), z_axis, "b--", linewidth=0.5)
+                self.ax.plot(np.zeros(3), np.zeros(3), z_axis, "b--", linewidth=0.5)
 
                 self.ax.set_xlim([-5, 5])
                 self.ax.set_ylim([-5, 5])
@@ -359,4 +366,4 @@ class UavSim:
             self.l1.set_3d_properties(points[2, 0:2])
             self.l2.set_data(points[0, 2:4], points[1, 2:4])
             self.l2.set_3d_properties(points[2, 2:4])
-            plt.pause(0.0000000001)
+            plt.pause(0.0000000000001)

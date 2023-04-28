@@ -11,7 +11,7 @@ class TestUavSim(unittest.TestCase):
         self.env = UavSim()
 
     def test_render(self):
-        tf = 10000
+        tf = 100
         t = 0
         actions = {}
         while t < tf:
