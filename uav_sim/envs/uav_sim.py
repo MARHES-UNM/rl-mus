@@ -34,13 +34,13 @@ class Quadrotor:
         self.m = m  # kg
 
         # lenght of arms
-        self.l = 1  # m
+        self.l = l  # m
 
         self.inertia = np.array(
             [[0.00025, 0, 2.55e-6], [0, 0.000232, 0], [2.55e-6, 0, 0.0003738]]
         )
 
-        self.inertia = np.eye(3) * 0.0003738
+        # self.inertia = np.eye(3) * 0.0003738
 
         self.inv_inertia = np.linalg.inv(self.inertia)
 
@@ -76,6 +76,7 @@ class Quadrotor:
         R_z = np.array([[cg, -sg, 0], [sg, cg, 0], [0, 0, 1]])
         R = np.dot(R_z, np.dot(R_y, R_x))
         return R
+
         c_phi = cos(self._state[6])
         s_phi = sin(self._state[6])
         c_theta = cos(self._state[7])
@@ -159,7 +160,7 @@ class Quadrotor:
         state_dot[9] = omega_dot[0]
         state_dot[10] = omega_dot[1]
         state_dot[11] = omega_dot[2]
-        
+
         return state_dot
 
     def step(self, action=np.zeros(4)):
@@ -174,11 +175,10 @@ class Quadrotor:
         self.ode.set_initial_value(self._state, 0).set_f_params(action)
         self._state = self.ode.integrate(self.ode.t + self.dt)
         assert self.ode.successful()
-        
+
         self._state[6:9] = self.wrap_angle(self._state[6:9])
         self._state[2] = max(0, self._state[2])
-        
-        
+
         # action = np.clip(action, self.min_f, self.max_f)
         # x_ddot = (
         #     np.array([0, 0, -self.m * self.g])
@@ -232,6 +232,7 @@ class Quadrotor:
 
     def wrap_angle(self, val):
         return (val + np.pi) % (2 * np.pi) - np.pi
+
 
 class UavSim:
     metadata = {
@@ -299,9 +300,9 @@ class UavSim:
                 self.ax.plot(np.zeros(5), y_axis, np.zeros(5), "g--", linewidth=0.5)
                 self.ax.plot(np.zeros(3), np.zeros(3), z_axis, "b--", linewidth=0.5)
 
-                self.ax.set_xlim([-5, 5])
-                self.ax.set_ylim([-5, 5])
-                self.ax.set_zlim([0, 10])
+                self.ax.set_xlim([-3, 3])
+                self.ax.set_ylim([-3, 3])
+                self.ax.set_zlim([0, 6])
 
                 self.ax.set_xlabel("X-axis (in meters)")
                 self.ax.set_ylabel("Y-axis (in meters)")
