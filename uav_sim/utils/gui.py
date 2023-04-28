@@ -5,6 +5,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
+class TargetSprite:
+    def __init__(self, ax, num_targets=1):
+        self.ax = ax
+        self.targets = []
+        for i in range(num_targets):
+            (t_sprite,) = self.ax.plot([], [], [], "r.", markersize=4)
+
+            self.targets.append(t_sprite)
+
+
 class UavSprite:
     def __init__(self, ax):
         self.ax = ax
@@ -15,7 +25,7 @@ class UavSprite:
             [], [], [], color="blue", linewidth=1, antialiased=False
         )
 
-        (self.cm,) = self.ax.plot3D([], [], [], "k.")
+        (self.cm,) = self.ax.plot([], [], [], "k.")
         (self.rotor1,) = self.ax.plot([], [], [], "k.")
         (self.rotor2,) = self.ax.plot([], [], [], "k.")
         (self.rotor3,) = self.ax.plot([], [], [], "k.")
@@ -78,6 +88,8 @@ class Gui:
     def init_entities(self):
         self.sprites = []
 
+        self.target_sprites = TargetSprite(self.ax, len(self.uavs))
+
         for idx in range(len(self.uavs)):
             uav_sprite = UavSprite(self.ax)
             self.sprites.append(uav_sprite)
@@ -87,6 +99,15 @@ class Gui:
     # https://stackoverflow.com/questions/11874767/how-do-i-plot-in-real-time-in-a-while-loop-using-matplotlib
     def update(self, time_elapsed):
         self.time_display.set_text(f"Sim time = {time_elapsed:.2f} s")
+
+        target_points = np.array(
+            [[0.5, 0.5, 0], [0.5, 1.5, 0], [1.5, 0.5, 0], [1.5, 1.5, 0]]
+        ).T
+        for idx, target in enumerate(self.target_sprites.targets):
+            target.set_data(
+                target_points[0, idx : idx + 1], target_points[1, idx : idx + 1]
+            )
+            target.set_3d_properties(target_points[2, idx : idx + 1])
 
         for uav, uav_sprite in zip(self.uavs, self.sprites):
             uav_state = uav.state
@@ -136,6 +157,9 @@ class Gui:
             # uav_sprite.rotor2.set_data(points[0, 4:5], points[0, 4:5])
 
         plt.pause(0.0000000000001)
+
+    def __del__(self):
+        plt.close(self.fig)
 
     def close(self):
         plt.close(self.fig)
