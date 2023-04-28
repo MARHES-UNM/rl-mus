@@ -16,9 +16,12 @@ class UavSim:
         self._seed = env_config.get("seed", None)
         self.render_mode = env_config.get("render_mode", "human")
         self.num_uavs = env_config.get("num_uavs", 4)
-        # self.env_max_x = env_config.get("max_x", )
-        self.fig = None
-        self.clock = None
+        self._agent_ids = set(range(self.num_uavs))
+
+        self.env_max_w = env_config.get("env_max_w", 2.5)
+        self.env_max_l = env_config.get("env_max_l", 2.5)
+        self.env_max_h = env_config.get("env_max_h", 2.5)
+
         self.gui = None
         self._time_elapsed = 0
 
@@ -29,13 +32,14 @@ class UavSim:
         return self._time_elapsed
 
     def step(self, actions):
-        for uav in self.uavs:
-            action = np.random.rand(4) * (uav.max_f - uav.min_f) + uav.min_f
-            action = np.ones(4) * uav.m * uav.g / 4
+        obs, rew, terminated, truncated, info = {}, {}, {}, {}, {}
 
-            uav.step(action)
+        for i, action in actions.items():
+            self.uavs[i].step(action)
 
         self._time_elapsed += self.dt
+
+        return obs, rew, terminated, truncated, info
 
     def seed(self, seed=None):
         """Random value to seed"""
@@ -57,22 +61,23 @@ class UavSim:
         self.seed(seed)
         self.uavs = []
 
-        uav_pos = [[2, 4, 5], [1, 1, 1], [1, 1, 2], [2, 1, 3]]
-        for pos in uav_pos:
-            uav = Quadrotor(*pos)
-            self.uavs.append(uav)
-        # for idx in range(self.num_uavs):
-        #     # x = np.random.rand()
-        #     # y =
-        #     # z =
-        #     self.uavs.append(uav)]
+        for idx in range(self.num_uavs):
+            x = np.random.rand() * self.env_max_w
+            y = np.random.rand() * self.env_max_l
+            z = np.random.rand() * self.env_max_h
 
-        # self.uav = Quadrotor(2, 4, 5)
+            uav = Quadrotor(_id=idx, x=x, y=y, z=z)
+            self.uavs.append(uav)
 
     def render(self, mode="human"):
         if self.render_mode == "human":
             if self.gui is None:
-                self.gui = Gui(self.uavs)
+                self.gui = Gui(
+                    self.uavs,
+                    max_x=self.env_max_w,
+                    max_y=self.env_max_l,
+                    max_z=self.env_max_h,
+                )
             else:
                 self.gui.update(self.time_elapsed)
 

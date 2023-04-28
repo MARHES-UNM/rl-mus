@@ -12,12 +12,18 @@ class UavSprite:
             [], [], [], color="blue", linewidth=1, antialiased=False
         )
         (self.l2,) = self.ax.plot(
-            [], [], [], color="red", linewidth=1, antialiased=False
+            [], [], [], color="blue", linewidth=1, antialiased=False
         )
+
+        (self.cm,) = self.ax.plot3D([], [], [], "k.")
+        (self.rotor1,) = self.ax.plot([], [], [], "k.")
+        (self.rotor2,) = self.ax.plot([], [], [], "k.")
+        (self.rotor3,) = self.ax.plot([], [], [], "k.")
+        (self.rotor4,) = self.ax.plot([], [], [], "k.")
 
 
 class Gui:
-    def __init__(self, uavs, fig=None):
+    def __init__(self, uavs, max_x, max_y, max_z, fig=None):
         self.uavs = uavs
         self.fig = fig
 
@@ -25,9 +31,9 @@ class Gui:
             self.fig = plt.figure()
             self.ax = self.fig.add_subplot(111, projection="3d")
 
-        self.ax.set_xlim3d([-3, 3])
-        self.ax.set_ylim3d([-3, 3])
-        self.ax.set_zlim3d([0, 6])
+        self.ax.set_xlim3d([0, max_x])
+        self.ax.set_ylim3d([0, max_y])
+        self.ax.set_zlim3d([0, max_z])
 
         self.ax.set_xlabel("X (m)")
         self.ax.set_ylabel("Y (m)")
@@ -36,14 +42,10 @@ class Gui:
         self.ax.set_title("Multi-UAV Simulation")
 
         # add axis
-        x_axis = np.arange(-2, 3)
-        y_axis = np.arange(-2, 3)
-        z_axis = np.arange(0, 3)
-
         n_points = 5
-        x_axis = np.linspace(-3, 3, n_points)
-        y_axis = np.linspace(-3, 3, n_points)
-        z_axis = np.linspace(0, 3, n_points)
+        x_axis = np.linspace(0, max_x, n_points)
+        y_axis = np.linspace(0, max_y, n_points)
+        z_axis = np.linspace(0, max_z, n_points)
 
         self.ax.plot([0, 0], [0, 0], [0, 0], "k+")
         self.ax.plot(
@@ -89,16 +91,30 @@ class Gui:
         for uav, uav_sprite in zip(self.uavs, self.sprites):
             uav_state = uav.state
             self.state_display.set_text(
-                    f"x:{uav_state[0]:.2f}, y:{uav_state[1]:.2f}, z:{uav_state[2]:.2f}\n"
-                    f"phi: {uav_state[6]:.2f}, theta: {uav_state[7]:.2f}, psi: {uav_state[8]:.2f}"
-                )
+                f"x:{uav_state[0]:.2f}, y:{uav_state[1]:.2f}, z:{uav_state[2]:.2f}\n"
+                f"phi: {uav_state[6]:.2f}, theta: {uav_state[7]:.2f}, psi: {uav_state[8]:.2f}"
+            )
 
             R = uav.rotation_matrix()
             l = uav.l
 
-            points = np.array([[-l, 0, 0], [l, 0, 0], [0, -l, 0], [0, l, 0]]).T
+            points = np.array(
+                [
+                    [-l, 0, 0],
+                    [l, 0, 0],
+                    [0, -l, 0],
+                    [0, l, 0],
+                    [0, 0, 0],  # cm
+                    [-l, 0, 0],
+                    [l, 0, 0],
+                    [0, -l, 0],
+                    [0, l, 0],
+                ]
+            ).T
             points = np.dot(R, points)
 
+            # for idx in range(len(points)):
+            #     points[idx, :] += uav._state[idx]
             points[0, :] += uav._state[0]
             points[1, :] += uav._state[1]
             points[2, :] += uav._state[2]
@@ -107,6 +123,18 @@ class Gui:
             uav_sprite.l1.set_3d_properties(points[2, 0:2])
             uav_sprite.l2.set_data(points[0, 2:4], points[1, 2:4])
             uav_sprite.l2.set_3d_properties(points[2, 2:4])
+            uav_sprite.cm.set_data(points[0, 4:5], points[1, 4:5])
+            uav_sprite.cm.set_3d_properties(points[2, 4:5])
+            # uav_sprite.rotor1.set_data(points[0, 5:6], points[1, 5:6])
+            # uav_sprite.rotor1.set_3d_properties(points[2, 5:6])
+            # uav_sprite.rotor2.set_data(points[0, 6:7], points[1, 6:7])
+            # uav_sprite.rotor2.set_3d_properties(points[2, 6:7])
+            # uav_sprite.rotor3.set_data(points[0, 5:6], points[0, 5:6])
+            # uav_sprite.rotor3.set_3d_properties(points[2, 5:6])
+            # uav_sprite.rotor1.set_data(points[0, 5:6], points[0, 5:6])
+            # uav_sprite.rotor1.set_3d_properties(points[2, 5:6])
+            # uav_sprite.rotor2.set_data(points[0, 4:5], points[0, 4:5])
+
         plt.pause(0.0000000000001)
 
     def close(self):

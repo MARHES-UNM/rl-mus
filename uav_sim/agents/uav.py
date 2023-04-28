@@ -1,10 +1,30 @@
 from math import cos, sin
 import numpy as np
 import scipy.integrate
+from zmq import IntEnum
 
-class Quadrotor:
+
+class AgentType(IntEnum):
+    U = 0  # uav
+    O = 1  # obstacle
+    C = 2  # moving car as target
+
+
+class ObsType(IntEnum):
+    S = 0  # Static
+    M = 1  # Moving
+
+
+class Entity:
+    def __init__(self, _id, _type=AgentType.O):
+        self.id = _id
+        self.type = _type
+
+
+class Quadrotor(Entity):
     def __init__(
         self,
+        _id,
         x=0,
         y=0,
         z=0,
@@ -16,6 +36,8 @@ class Quadrotor:
         l=0.086,
         use_ode=False,
     ):
+
+        super().__init__(_id=_id, _type=AgentType.U)
 
         self.use_ode = use_ode
 
