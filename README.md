@@ -13,13 +13,17 @@ they also added Aerodynamical effects to the equation.
 
 A simulation use RL to flip Quadcopters https://github.com/nikhilkalige/quadrotor
 
-References this paper]https://arxiv.org/pdf/2111.03915.pdf)
+References this [paper](https://arxiv.org/pdf/2111.03915.pdf)
 
 they trained a quadrotor with RL to hover. 
 https://github.com/adipandas/gym_multirotor
 
 Use this model for quadrotor simulation: 
 https://andrew.gibiansky.com/downloads/pdf/Quadcopter%20Dynamics,%20Simulation,%20and%20Control.pdf  
+
+https://andrew.gibiansky.com/blog/physics/quadcopter-dynamics/
+
+
 https://github.com/gibiansky/experiments/blob/master/quadcopter/matlab/simulate.m. 
 b = drag coefficient
 https://github.com/abhijitmajumdar/Quadcopter_simulator
