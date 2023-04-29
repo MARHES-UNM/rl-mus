@@ -82,13 +82,13 @@ class Quadrotor(Entity):
             [[0.00025, 0, 2.55e-6], [0, 0.000232, 0], [2.55e-6, 0, 0.0003738]]
         )
 
-        self.inertia = np.eye(3) * 0.00025
+        # self.inertia = np.eye(3) * 0.00025
 
-        self.m = 1.
-        self.inertia = np.eye(3)
-        self.inertia[0,0] = 8.1 * 1e-3
-        self.inertia[1,1] = 8.1 * 1e-3
-        self.inertia[2,2] = 14.2 * 1e-3
+        # self.m = 1.0
+        # self.inertia = np.eye(3)
+        # self.inertia[0, 0] = 8.1 * 1e-3
+        # self.inertia[1, 1] = 8.1 * 1e-3
+        # self.inertia[2, 2] = 14.2 * 1e-3
 
         self.inv_inertia = np.linalg.inv(self.inertia)
 
@@ -325,8 +325,6 @@ class Quadrotor(Entity):
                 ),
                 action,
             )
-            
-            # tau = action[1:]
 
             omega_dot = np.dot(
                 self.inv_inertia, (tau - np.cross(omega, np.dot(self.inertia, omega)))

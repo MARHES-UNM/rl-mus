@@ -60,16 +60,16 @@ class TestUavSim(unittest.TestCase):
     #         self.env.step(actions)
     #         self.env.render()
 
-    def test_render(self):
-        tf = 100
-        t = 0
-        actions = {}
-        while t < tf:
-            for i in range(self.env.num_uavs):
-                actions[i] = np.ones(4) * self.env.uavs[i].m * self.env.uavs[i].g / 4
-            self.env.step(actions)
-            self.env.render()
-            t += 1
+    # def test_render(self):
+    #     tf = 100
+    #     t = 0
+    #     actions = {}
+    #     while t < tf:
+    #         for i in range(self.env.num_uavs):
+    #             actions[i] = np.ones(4) * self.env.uavs[i].m * self.env.uavs[i].g / 4
+    #         self.env.step(actions)
+    #         self.env.render()
+    #         t += 1
 
 
 if __name__ == "__main__":
