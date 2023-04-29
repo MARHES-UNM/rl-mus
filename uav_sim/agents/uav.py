@@ -145,65 +145,67 @@ class Quadrotor(Entity):
         return self._state
 
     def calc_k(self):
-        # Ix = self.inertia[0, 0]
-        # Iy = self.inertia[1, 1]
-        # Iz = self.inertia[2, 2]
-        # # The control can be done in a decentralized style
-        # # The linearized system is divided into four decoupled subsystems
+        Ix = self.inertia[0, 0]
+        Iy = self.inertia[1, 1]
+        Iz = self.inertia[2, 2]
+        # The control can be done in a decentralized style
+        # The linearized system is divided into four decoupled subsystems
 
-        # # X-subsystem
-        # # The state variables are x, dot_x, pitch, dot_pitch
-        # Ax = np.array(
-        #     [
-        #         [0.0, 1.0, 0.0, 0.0],
-        #         [0.0, 0.0, self.g, 0.0],
-        #         [0.0, 0.0, 0.0, 1.0],
-        #         [0.0, 0.0, 0.0, 0.0],
-        #     ]
-        # )
-        # Bx = np.array([[0.0], [0.0], [0.0], [1 / Ix]])
+        # X-subsystem
+        # The state variables are x, dot_x, pitch, dot_pitch
+        Ax = np.array(
+            [
+                [0.0, 1.0, 0.0, 0.0],
+                [0.0, 0.0, self.g, 0.0],
+                [0.0, 0.0, 0.0, 1.0],
+                [0.0, 0.0, 0.0, 0.0],
+            ]
+        )
+        Bx = np.array([[0.0], [0.0], [0.0], [1 / Ix]])
 
-        # # Y-subsystem
-        # # The state variables are y, dot_y, roll, dot_roll
-        # Ay = np.array(
-        #     [
-        #         [0.0, 1.0, 0.0, 0.0],
-        #         [0.0, 0.0, -self.g, 0.0],
-        #         [0.0, 0.0, 0.0, 1.0],
-        #         [0.0, 0.0, 0.0, 0.0],
-        #     ]
-        # )
-        # By = np.array([[0.0], [0.0], [0.0], [1 / Iy]])
+        # Y-subsystem
+        # The state variables are y, dot_y, roll, dot_roll
+        Ay = np.array(
+            [
+                [0.0, 1.0, 0.0, 0.0],
+                [0.0, 0.0, -self.g, 0.0],
+                [0.0, 0.0, 0.0, 1.0],
+                [0.0, 0.0, 0.0, 0.0],
+            ]
+        )
+        By = np.array([[0.0], [0.0], [0.0], [1 / Iy]])
 
-        # # Z-subsystem
-        # # The state variables are z, dot_z
-        # Az = np.array([[0.0, 1.0], [0.0, 0.0]])
-        # Bz = np.array([[0.0], [1 / self.m]])
+        # Z-subsystem
+        # The state variables are z, dot_z
+        Az = np.array([[0.0, 1.0], [0.0, 0.0]])
+        Bz = np.array([[0.0], [1 / self.m]])
 
-        # # Yaw-subsystem
-        # # The state variables are yaw, dot_yaw
-        # Ayaw = np.array([[0.0, 1.0], [0.0, 0.0]])
-        # Byaw = np.array([[0.0], [1 / Iz]])
+        # Yaw-subsystem
+        # The state variables are yaw, dot_yaw
+        Ayaw = np.array([[0.0, 1.0], [0.0, 0.0]])
+        Byaw = np.array([[0.0], [1 / Iz]])
 
-        # ####################### solve LQR #######################
-        # Ks = []  # feedback gain matrices K for each subsystem
-        # for A, B in ((Ax, Bx), (Ay, By), (Az, Bz), (Ayaw, Byaw)):
-        #     n = A.shape[0]
-        #     m = B.shape[1]
-        #     Q = np.eye(n)
-        #     Q[0, 0] = 1  # The first state variable is the one we care about.
-        #     R = np.diag(
-        #         [
-        #             1.0,
-        #         ]
-        #     )
-        #     K, _, _ = lqr(A, B, Q, R)
-        #     Ks.append(K)
+        ####################### solve LQR #######################
+        Ks = []  # feedback gain matrices K for each subsystem
+        for A, B in ((Ax, Bx), (Ay, By), (Az, Bz), (Ayaw, Byaw)):
+            n = A.shape[0]
+            m = B.shape[1]
+            Q = np.eye(n)
+            Q[0, 0] = 1  # The first state variable is the one we care about.
+            R = np.diag(
+                [
+                    1.0,
+                ]
+            )
+            K, _, _ = lqr(A, B, Q, R)
+            Ks.append(K)
+
+        return Ks
 
         # return Ks
         A = np.zeros((12, 12), dtype=np.float64)
         A[0:3, 3:6] = np.eye(3)
-        # A[5, 5] = -1
+        # A[5, 5] = -self.g
         A[3, 7] = self.g
         A[4, 6] = -self.g
         A[6:9, 9:12] = np.eye(3)
@@ -248,11 +250,11 @@ class Quadrotor(Entity):
         # B[9, 2] = 1 / iy
         # B[11, 3] = 1 / iz
 
-        Q = np.eye(12) * 10000
-        # Q[3, 3] = 1000
+        Q = np.eye(12) * 1000000
+        Q[3, 3] = 1000000000
 
         # Q[:3,:3] = np.eye(3) * 110
-        R = np.eye(4) * 0.1
+        R = np.eye(4) * 0.001
         # R = np.diag(
         #     [
         #         1.0,
