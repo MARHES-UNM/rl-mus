@@ -39,6 +39,7 @@ class Gui:
 
         if self.fig is None:
             self.fig = plt.figure()
+            # self.fig = plt.figure(figsize=(8, 6))
             self.ax = self.fig.add_subplot(111, projection="3d")
 
         self.ax.set_xlim3d([0, max_x])

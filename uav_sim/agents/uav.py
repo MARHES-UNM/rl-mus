@@ -1,6 +1,7 @@
 from math import cos, sin
 import numpy as np
 import scipy.integrate
+import scipy
 from zmq import IntEnum
 
 
@@ -19,6 +20,25 @@ class Entity:
     def __init__(self, _id, _type=AgentType.O):
         self.id = _id
         self.type = _type
+
+
+def lqr(A, B, Q, R):
+    """Solve the continuous time lqr controller.
+    dx/dt = A x + B u
+    cost = integral x.T*Q*x + u.T*R*u
+    """
+    # http://www.mwm.im/lqr-controllers-with-python/
+    # ref Bertsekas, p.151
+
+    # first, try to solve the ricatti equation
+    X = np.matrix(scipy.linalg.solve_continuous_are(A, B, Q, R))
+
+    # compute the LQR gain
+    K = np.matrix(scipy.linalg.inv(R) * (B.T * X))
+
+    eigVals, eigVecs = scipy.linalg.eig(A - B * K)
+
+    return np.asarray(K), np.asarray(X), np.asarray(eigVals)
 
 
 class Quadrotor(Entity):
@@ -62,7 +82,7 @@ class Quadrotor(Entity):
             [[0.00025, 0, 2.55e-6], [0, 0.000232, 0], [2.55e-6, 0, 0.0003738]]
         )
 
-        self.inertia = np.eye(3) * 0.0003738
+        # self.inertia = np.eye(3) * 0.00025
 
         self.inv_inertia = np.linalg.inv(self.inertia)
 
@@ -83,6 +103,94 @@ class Quadrotor(Entity):
     @property
     def state(self):
         return self._state
+
+    def calc_k(self):
+        Ix = self.inertia[0, 0]
+        Iy = self.inertia[1, 1]
+        Iz = self.inertia[2, 2]
+        # The control can be done in a decentralized style
+        # The linearized system is divided into four decoupled subsystems
+
+        # X-subsystem
+        # The state variables are x, dot_x, pitch, dot_pitch
+        Ax = np.array(
+            [
+                [0.0, 1.0, 0.0, 0.0],
+                [0.0, 0.0, self.g, 0.0],
+                [0.0, 0.0, 0.0, 1.0],
+                [0.0, 0.0, 0.0, 0.0],
+            ]
+        )
+        Bx = np.array([[0.0], [0.0], [0.0], [1 / Ix]])
+
+        # Y-subsystem
+        # The state variables are y, dot_y, roll, dot_roll
+        Ay = np.array(
+            [
+                [0.0, 1.0, 0.0, 0.0],
+                [0.0, 0.0, -self.g, 0.0],
+                [0.0, 0.0, 0.0, 1.0],
+                [0.0, 0.0, 0.0, 0.0],
+            ]
+        )
+        By = np.array([[0.0], [0.0], [0.0], [1 / Iy]])
+
+        # Z-subsystem
+        # The state variables are z, dot_z
+        Az = np.array([[0.0, 1.0], [0.0, 0.0]])
+        Bz = np.array([[0.0], [1 / self.m]])
+
+        # Yaw-subsystem
+        # The state variables are yaw, dot_yaw
+        Ayaw = np.array([[0.0, 1.0], [0.0, 0.0]])
+        Byaw = np.array([[0.0], [1 / Iz]])
+
+        ####################### solve LQR #######################
+        Ks = []  # feedback gain matrices K for each subsystem
+        for A, B in ((Ax, Bx), (Ay, By), (Az, Bz), (Ayaw, Byaw)):
+            n = A.shape[0]
+            m = B.shape[1]
+            Q = np.eye(n)
+            Q[0, 0] = 10.0  # The first state variable is the one we care about.
+            R = np.diag(
+                [
+                    1.0,
+                ]
+            )
+            K, _, _ = lqr(A, B, Q, R)
+            Ks.append(K)
+
+        return Ks
+
+        # A = np.zeros((12, 12), dtype=np.float64)
+        # A[0, 1] = 1.0
+        # A[1, 8] = self.g
+        # A[2, 3] = 1.0
+        # A[3, 6] = -self.g
+        # A[4, 5] = 1.0
+        # A[6, 7] = 1.0
+        # A[8, 9] = 1.0
+        # A[10, 11] = 1.0
+
+        # B = np.zeros((12, 4))
+        # ix = self.inertia[0, 0]
+        # iy = self.inertia[1, 1]
+        # iz = self.inertia[2, 2]
+        # B[5, 0] = 1 / self.m
+        # B[7, 1] = 1 / ix
+        # B[9, 2] = 1 / iy
+        # B[11, 3] = 1 / iz
+
+        # Q = np.ones((12, 12)) * 0.25
+        # R = np.ones((4, 4))
+        # R[0, 0] = 1.0
+        # R[1, 1] = 10
+        # R[2, 2] = 100
+        # R[3, 3] = 10
+
+        # K, _, _ = lqr(A, B, Q, R)
+
+        # return K
 
     def rotation_matrix(
         self,

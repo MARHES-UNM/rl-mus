@@ -21,6 +21,9 @@ class UavSim:
         self.env_max_w = env_config.get("env_max_w", 2.5)
         self.env_max_l = env_config.get("env_max_l", 2.5)
         self.env_max_h = env_config.get("env_max_h", 2.5)
+        # self.env_max_w = env_config.get("env_max_w", 10)
+        # self.env_max_l = env_config.get("env_max_l", 10)
+        # self.env_max_h = env_config.get("env_max_h", 10)
 
         self.gui = None
         self._time_elapsed = 0

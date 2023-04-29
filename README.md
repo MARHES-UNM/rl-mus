@@ -34,6 +34,10 @@ https://andrew.gibiansky.com/blog/physics/quadcopter-dynamics/
 use this matlab code to simulate dynamics
 https://github.com/gibiansky/experiments/blob/master/quadcopter/matlab/simulate.m
 
+
+Low level LQR controller
+https://github.com/sundw2014/Quadrotor_LQR
+
 ## References: 
 https://github.com/NishanthARao/Python-Quadrotor-Simulation
 https://github.com/AtsushiSakai/PythonRobotics
