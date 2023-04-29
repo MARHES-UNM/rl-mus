@@ -82,7 +82,13 @@ class Quadrotor(Entity):
             [[0.00025, 0, 2.55e-6], [0, 0.000232, 0], [2.55e-6, 0, 0.0003738]]
         )
 
-        # self.inertia = np.eye(3) * 0.00025
+        self.inertia = np.eye(3) * 0.00025
+
+        self.m = 1.
+        self.inertia = np.eye(3)
+        self.inertia[0,0] = 8.1 * 1e-3
+        self.inertia[1,1] = 8.1 * 1e-3
+        self.inertia[2,2] = 14.2 * 1e-3
 
         self.inv_inertia = np.linalg.inv(self.inertia)
 
@@ -151,7 +157,7 @@ class Quadrotor(Entity):
             n = A.shape[0]
             m = B.shape[1]
             Q = np.eye(n)
-            Q[0, 0] = 10.0  # The first state variable is the one we care about.
+            Q[0, 0] = 1  # The first state variable is the one we care about.
             R = np.diag(
                 [
                     1.0,
@@ -314,11 +320,13 @@ class Quadrotor(Entity):
                     [
                         [0, self.l, 0, -self.l],
                         [-self.l, 0, self.l, 0],
-                        [self.gamma, self.gamma, self.gamma, self.gamma],
+                        [self.gamma, -self.gamma, self.gamma, -self.gamma],
                     ]
                 ),
                 action,
             )
+            
+            # tau = action[1:]
 
             omega_dot = np.dot(
                 self.inv_inertia, (tau - np.cross(omega, np.dot(self.inertia, omega)))
