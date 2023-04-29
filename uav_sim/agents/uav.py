@@ -168,35 +168,35 @@ class Quadrotor(Entity):
 
         return Ks
 
-        # A = np.zeros((12, 12), dtype=np.float64)
-        # A[0, 1] = 1.0
-        # A[1, 8] = self.g
-        # A[2, 3] = 1.0
-        # A[3, 6] = -self.g
-        # A[4, 5] = 1.0
-        # A[6, 7] = 1.0
-        # A[8, 9] = 1.0
-        # A[10, 11] = 1.0
+        A = np.zeros((12, 12), dtype=np.float64)
+        A[0, 1] = 1.0
+        A[1, 8] = self.g
+        A[2, 3] = 1.0
+        A[3, 6] = -self.g
+        A[4, 5] = 1.0
+        A[6, 7] = 1.0
+        A[8, 9] = 1.0
+        A[10, 11] = 1.0
 
-        # B = np.zeros((12, 4))
-        # ix = self.inertia[0, 0]
-        # iy = self.inertia[1, 1]
-        # iz = self.inertia[2, 2]
-        # B[5, 0] = 1 / self.m
-        # B[7, 1] = 1 / ix
-        # B[9, 2] = 1 / iy
-        # B[11, 3] = 1 / iz
+        B = np.zeros((12, 4))
+        ix = self.inertia[0, 0]
+        iy = self.inertia[1, 1]
+        iz = self.inertia[2, 2]
+        B[5, 0] = 1 / self.m
+        B[7, 1] = 1 / ix
+        B[9, 2] = 1 / iy
+        B[11, 3] = 1 / iz
 
-        # Q = np.ones((12, 12)) * 0.25
-        # R = np.ones((4, 4))
-        # R[0, 0] = 1.0
-        # R[1, 1] = 10
-        # R[2, 2] = 100
-        # R[3, 3] = 10
+        Q = np.ones((12, 12)) * 100
+        R = np.ones((4, 4))
+        R[0, 0] = 1.0
+        R[1, 1] = 10
+        R[2, 2] = 100
+        R[3, 3] = 10
 
-        # K, _, _ = lqr(A, B, Q, R)
+        K, _, _ = lqr(A, B, Q, R)
 
-        # return K
+        return K
 
     def rotation_matrix(
         self,

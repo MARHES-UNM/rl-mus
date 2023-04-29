@@ -47,4 +47,7 @@ http://www.kostasalexis.com/simulations-with-simpy.html
 Another drone simulation using python gym:
 https://github.com/SuhrudhSarathy/drone_sim
 
+# TODO: implement PID controller from UPenn class
+* take a look at page 13 of paper: https://upcommons.upc.edu/bitstream/handle/2117/112404/Thesis-Jesus_Valle.pdf?sequence=1&isAllowed=y
+
 
