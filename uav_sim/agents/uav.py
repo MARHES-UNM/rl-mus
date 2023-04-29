@@ -41,6 +41,40 @@ def lqr(A, B, Q, R):
     return np.asarray(K), np.asarray(X), np.asarray(eigVals)
 
 
+def dlqr_dyn(x_error, Q, R, A, B, dt):
+    N = 50
+    P = [None] * (N + 1)
+    Qf = Q
+    P[N] = Qf
+
+    for i in range(N, 0, -1):
+
+        # Discrete-time Algebraic Riccati equation to calculate the optimal
+        # state cost matrix
+        P[i - 1] = (
+            Q
+            + A.T @ P[i] @ A
+            - (A.T @ P[i] @ B) @ np.linalg.pinv(R + B.T @ P[i] @ B) @ (B.T @ P[i] @ A)
+        )
+
+    # Create a list of N elements
+    K = [None] * N
+    u = [None] * N
+
+    # For i = 0, ..., N - 1
+    for i in range(N):
+
+        # Calculate the optimal feedback gain K
+        K[i] = -np.linalg.pinv(R + B.T @ P[i + 1] @ B) @ B.T @ P[i + 1] @ A
+
+        u[i] = K[i] @ x_error
+
+    # Optimal control input is u_star
+    u_star = u[N - 1]
+
+    return u_star
+
+
 class Quadrotor(Entity):
     def __init__(
         self,
@@ -111,92 +145,150 @@ class Quadrotor(Entity):
         return self._state
 
     def calc_k(self):
-        Ix = self.inertia[0, 0]
-        Iy = self.inertia[1, 1]
-        Iz = self.inertia[2, 2]
-        # The control can be done in a decentralized style
-        # The linearized system is divided into four decoupled subsystems
+        # Ix = self.inertia[0, 0]
+        # Iy = self.inertia[1, 1]
+        # Iz = self.inertia[2, 2]
+        # # The control can be done in a decentralized style
+        # # The linearized system is divided into four decoupled subsystems
 
-        # X-subsystem
-        # The state variables are x, dot_x, pitch, dot_pitch
-        Ax = np.array(
-            [
-                [0.0, 1.0, 0.0, 0.0],
-                [0.0, 0.0, self.g, 0.0],
-                [0.0, 0.0, 0.0, 1.0],
-                [0.0, 0.0, 0.0, 0.0],
-            ]
-        )
-        Bx = np.array([[0.0], [0.0], [0.0], [1 / Ix]])
+        # # X-subsystem
+        # # The state variables are x, dot_x, pitch, dot_pitch
+        # Ax = np.array(
+        #     [
+        #         [0.0, 1.0, 0.0, 0.0],
+        #         [0.0, 0.0, self.g, 0.0],
+        #         [0.0, 0.0, 0.0, 1.0],
+        #         [0.0, 0.0, 0.0, 0.0],
+        #     ]
+        # )
+        # Bx = np.array([[0.0], [0.0], [0.0], [1 / Ix]])
 
-        # Y-subsystem
-        # The state variables are y, dot_y, roll, dot_roll
-        Ay = np.array(
-            [
-                [0.0, 1.0, 0.0, 0.0],
-                [0.0, 0.0, -self.g, 0.0],
-                [0.0, 0.0, 0.0, 1.0],
-                [0.0, 0.0, 0.0, 0.0],
-            ]
-        )
-        By = np.array([[0.0], [0.0], [0.0], [1 / Iy]])
+        # # Y-subsystem
+        # # The state variables are y, dot_y, roll, dot_roll
+        # Ay = np.array(
+        #     [
+        #         [0.0, 1.0, 0.0, 0.0],
+        #         [0.0, 0.0, -self.g, 0.0],
+        #         [0.0, 0.0, 0.0, 1.0],
+        #         [0.0, 0.0, 0.0, 0.0],
+        #     ]
+        # )
+        # By = np.array([[0.0], [0.0], [0.0], [1 / Iy]])
 
-        # Z-subsystem
-        # The state variables are z, dot_z
-        Az = np.array([[0.0, 1.0], [0.0, 0.0]])
-        Bz = np.array([[0.0], [1 / self.m]])
+        # # Z-subsystem
+        # # The state variables are z, dot_z
+        # Az = np.array([[0.0, 1.0], [0.0, 0.0]])
+        # Bz = np.array([[0.0], [1 / self.m]])
 
-        # Yaw-subsystem
-        # The state variables are yaw, dot_yaw
-        Ayaw = np.array([[0.0, 1.0], [0.0, 0.0]])
-        Byaw = np.array([[0.0], [1 / Iz]])
+        # # Yaw-subsystem
+        # # The state variables are yaw, dot_yaw
+        # Ayaw = np.array([[0.0, 1.0], [0.0, 0.0]])
+        # Byaw = np.array([[0.0], [1 / Iz]])
 
-        ####################### solve LQR #######################
-        Ks = []  # feedback gain matrices K for each subsystem
-        for A, B in ((Ax, Bx), (Ay, By), (Az, Bz), (Ayaw, Byaw)):
-            n = A.shape[0]
-            m = B.shape[1]
-            Q = np.eye(n)
-            Q[0, 0] = 1  # The first state variable is the one we care about.
-            R = np.diag(
-                [
-                    1.0,
-                ]
-            )
-            K, _, _ = lqr(A, B, Q, R)
-            Ks.append(K)
+        # ####################### solve LQR #######################
+        # Ks = []  # feedback gain matrices K for each subsystem
+        # for A, B in ((Ax, Bx), (Ay, By), (Az, Bz), (Ayaw, Byaw)):
+        #     n = A.shape[0]
+        #     m = B.shape[1]
+        #     Q = np.eye(n)
+        #     Q[0, 0] = 1  # The first state variable is the one we care about.
+        #     R = np.diag(
+        #         [
+        #             1.0,
+        #         ]
+        #     )
+        #     K, _, _ = lqr(A, B, Q, R)
+        #     Ks.append(K)
 
-        return Ks
-
+        # return Ks
         A = np.zeros((12, 12), dtype=np.float64)
-        A[0, 1] = 1.0
-        A[1, 8] = self.g
-        A[2, 3] = 1.0
-        A[3, 6] = -self.g
-        A[4, 5] = 1.0
-        A[6, 7] = 1.0
-        A[8, 9] = 1.0
-        A[10, 11] = 1.0
+        A[0:3, 3:6] = np.eye(3)
+        # A[5, 5] = -1
+        A[3, 7] = self.g
+        A[4, 6] = -self.g
+        A[6:9, 9:12] = np.eye(3)
 
-        B = np.zeros((12, 4))
         ix = self.inertia[0, 0]
         iy = self.inertia[1, 1]
         iz = self.inertia[2, 2]
-        B[5, 0] = 1 / self.m
-        B[7, 1] = 1 / ix
-        B[9, 2] = 1 / iy
-        B[11, 3] = 1 / iz
+        B = np.zeros((12, 4))
+        B[5, :] = 1 / self.m
+        # B[5, 0] = 1 / self.m
+        # B[9, 1] = 1 / ix
+        # B[10, 2] = 1 / iy
+        # B[11, 3] = 1 / iz
+        # # B[9:12, 1:] = np.eye(3)
+        B[9:12, :] = np.dot(
+            self.inv_inertia,
+            np.array(
+                [
+                    [0, self.l, 0, -self.l],
+                    [-self.l, 0, self.l, 0],
+                    [self.gamma, -self.gamma, self.gamma, -self.gamma],
+                ]
+            ),
+        )
 
-        Q = np.ones((12, 12)) * 100
-        R = np.ones((4, 4))
-        R[0, 0] = 1.0
-        R[1, 1] = 10
-        R[2, 2] = 100
-        R[3, 3] = 10
+        # A = np.zeros((12, 12), dtype=np.float64)
+        # A[0, 1] = 1.0
+        # A[1, 8] = self.g
+        # A[2, 3] = 1.0
+        # A[3, 6] = -self.g
+        # A[4, 5] = 1.0
+        # A[6, 7] = 1.0
+        # A[8, 9] = 1.0
+        # A[10, 11] = 1.0
+
+        # B = np.zeros((12, 4))
+        # ix = self.inertia[0, 0]
+        # iy = self.inertia[1, 1]
+        # iz = self.inertia[2, 2]
+        # B[5, 0] = 1 / self.m
+        # B[7, 1] = 1 / ix
+        # B[9, 2] = 1 / iy
+        # B[11, 3] = 1 / iz
+
+        Q = np.eye(12) * 10000
+        # Q[3, 3] = 1000
+
+        # Q[:3,:3] = np.eye(3) * 110
+        R = np.eye(4) * 0.1
+        # R = np.diag(
+        #     [
+        #         1.0,
+        #     ]
+        # )
+        # R[0, 0] = 1.0
+        # R[1, 1] = 10
+        # R[2, 2] = 100
+        # R[3, 3] = 10
 
         K, _, _ = lqr(A, B, Q, R)
+        # positions = np.array([[0.5, 0.5, 1], [0.5, 2, 2], [2, 0.5, 2], [2, 2, 1]])
+        # # positions = np.array([[4, 4, 1], [4, 2, 2], [4, 4, 2], [4, 4, 1]])
+        # des_pos = np.zeros((4, 12), dtype=np.float64)
+        # for idx in range(4):
+        #     des_pos[idx, 0:3] = positions[idx, :]
 
+        #     # self._state[0:3] = positions[idx, :]
+
+        # error = des_pos[0, :] - self.state
+
+        # u = dlqr_dyn(error, Q, R, A, B, dt=0.01)
+
+        # return u
         return K
+
+    def torque_to_inputs(self):
+        l = np.array(
+            [
+                [1, 1, 1, 1],
+                [0, self.l, 0, -self.l],
+                [-self.l, 0, self.l, 0],
+                [self.gamma, -self.gamma, self.gamma, -self.gamma],
+            ]
+        )
+        return l
 
     def rotation_matrix(
         self,
