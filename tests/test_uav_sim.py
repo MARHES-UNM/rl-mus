@@ -18,7 +18,7 @@ class TestUavSim(unittest.TestCase):
     def setUp(self):
         self.env = UavSim()
 
-    @unittest.skip
+    # @unittest.skip
     def test_trajectory_generator(self):
         x_coeffs = [[], [], [], []]
         y_coeffs = [[], [], [], []]
@@ -28,24 +28,22 @@ class TestUavSim(unittest.TestCase):
         T = 5
 
         start_pos = np.zeros((4, 3))
-        des_pos = np.zeros((4, 3))
+        des_pos = np.zeros((self.env.num_uavs, 3))
         for i in range(4):
             start_pos[i, :] = self.env.uavs[i].state[0:3]
-            des_pos[i, 2] = 0
-            des_pos[i, 0] = 3
+            des_pos[i, 0] = 1
+            des_pos[i, 1] = 1
+            des_pos[i, 2] = 1
 
-        uav_coeffs = np.zeros((4, 3, 6, 1))
+        uav_coeffs = np.zeros((self.env.num_uavs, 3, 6, 1))
 
-        for i in range(4):
-            traj = TrajectoryGenerator(start_pos[i], des_pos[i], 2)
+        for i in range(self.env.num_uavs):
+            traj = TrajectoryGenerator(start_pos[i], des_pos[i], T)
             # traj = TrajectoryGenerator(waypoints[i], waypoints[(i + 1) % 4], T)
             traj.solve()
             uav_coeffs[i, 0] = traj.x_c
             uav_coeffs[i, 1] = traj.y_c
             uav_coeffs[i, 2] = traj.z_c
-            # x_coeffs[i] = traj.x_c
-            # y_coeffs[i] = traj.y_c
-            # z_coeffs[i] = traj.z_c
 
         actions = {}
         for i in range(500):
@@ -56,7 +54,7 @@ class TestUavSim(unittest.TestCase):
             self.env.step(actions)
             self.env.render()
 
-    # @unittest.skip
+    @unittest.skip
     def test_controller(self):
         des_pos = np.zeros((4, 12), dtype=np.float64)
         des_pos[:, 2] = 3

@@ -125,6 +125,10 @@ class Quadrotor(Entity):
 
         self.m = 0.2
         self.inertia = np.eye(3)
+        self.ixx = self.inertia[0, 0]
+        self.iyy = self.inertia[1, 1]
+        self.iyy = self.inertia[2, 2]
+        self.dt = 0.1
 
         # self.m = 1.0
         # self.inertia = np.eye(3)
@@ -302,61 +306,41 @@ class Quadrotor(Entity):
 
         state_error = des_pos_w - self.state
 
-        kx = k_x_dot = 1
-        ky = k_y_dot = 1
-        kz = k_z_dot = 1
-        k_phi = k_phi_dot = 25
-        k_theta = k_theta_dot = 25
-        k_psi = k_psi_dot = 25
-        # # TODO: don't calculate every time
-        # K = self.calc_k()
-        # Kx = K[0].squeeze()
-        # Ky = K[1].squeeze()
-        # Kz = K[2].squeeze()
-        # K_psi = K[3].squeeze()
-
-        # kx = Kx[0]
-        # k_x_dot = Kx[1]
-        # k_theta = Kx[2]
-        # k_theta_dot = Kx[3]
-
-        # ky = Ky[0]
-        # k_y_dot = Ky[1]
-        # k_phi = Ky[2]
-        # k_phi_dot = Ky[3]
-
-        # kz = Kz[0]
-        # k_z_dot = Kz[1]
-
-        # k_psi = K_psi[0]
-        # k_psi_dot = K_psi[1]
+        kx = 1
+        ky = 1
+        kz = 1
+        k_x_dot = 10
+        k_y_dot = 10
+        k_z_dot = 1
+        k_phi = 25
+        k_theta = 25
+        k_psi = 25
+        k_phi_dot = 25
+        k_theta_dot = 25
+        k_phi_dot = 25
 
         # https://upcommons.upc.edu/bitstream/handle/2117/112404/Thesis-Jesus_Valle.pdf?sequence=1&isAllowed=y
-        r_ddot_des_x = des_x_acc + kx * state_error[0] + k_x_dot * state_error[3]
-        r_ddot_des_y = des_y_acc + ky * state_error[1] + k_y_dot * state_error[4]
+        # r_ddot_des_x = des_x_acc + kx * state_error[0] + k_x_dot * state_error[3]
+        # r_ddot_des_y = des_y_acc + ky * state_error[1] + k_y_dot * state_error[4]
+        r_ddot_des_x = des_x_acc
+        r_ddot_des_y = des_y_acc
         r_ddot_des_z = des_z_acc + kz * state_error[2] + k_z_dot * state_error[5]
 
-        cur_psi = self.state[8]
-        cur_psi = des_pos_w[8]
+        # des_psi = self.state[8]
+        des_psi = des_pos_w[8]
 
         u1 = self.m * self.g + self.m * (r_ddot_des_z)
-        # u1 = u1.squeeze()
-
         # roll
-        u2_phi = (
-            k_phi
-            * (
-                ((r_ddot_des_x * sin(cur_psi) - r_ddot_des_y * cos(cur_psi)) / self.g)
-                - self.state[6]
-            )
-            # - k_phi_dot * self.state[9]
+        u2_phi = k_phi * (
+            ((r_ddot_des_x * sin(des_psi) - r_ddot_des_y * cos(des_psi)) / self.g)
+            - self.state[6]
         )
 
         # pitch
         u2_theta = (
             k_theta
             * (
-                ((r_ddot_des_x * cos(cur_psi) - r_ddot_des_y * sin(cur_psi)) / self.g)
+                ((r_ddot_des_x * cos(des_psi) - r_ddot_des_y * sin(des_psi)) / self.g)
                 - self.state[7]
             )
             # + k_theta_dot * self.state[10]
@@ -368,7 +352,6 @@ class Quadrotor(Entity):
         # u2_phi = 0
         # u2_theta = 0
         action = np.array([u1, u2_phi, u2_theta, u2_psi])
-        # return np.array([u1, u2_phi, u2_theta, u2_psi])
         return action
 
     def get_controller(self, des_pos_w):
@@ -409,16 +392,16 @@ class Quadrotor(Entity):
         r_ddot_des_y = ky * state_error[1] + k_y_dot * state_error[4]
         r_ddot_des_z = kz * state_error[2] + k_z_dot * state_error[5]
 
-        cur_psi = self.state[8]
-        cur_psi = des_pos_w[8]
+        # des_psi = self.state[8]
+        des_psi = des_pos_w[8]
 
         u1 = self.m * self.g + self.m * (r_ddot_des_z)
         phi_des = (
-            1 / self.g * (r_ddot_des_x * sin(cur_psi) - r_ddot_des_y * cos(cur_psi))
+            1 / self.g * (r_ddot_des_x * sin(des_psi) - r_ddot_des_y * cos(des_psi))
         )
         # phi_des = ky * state_error[1] + k_y_dot * state_error[4]
         theta_des = (
-            1 / self.g * (r_ddot_des_x * cos(cur_psi) - r_ddot_des_y * sin(cur_psi))
+            1 / self.g * (r_ddot_des_x * cos(des_psi) - r_ddot_des_y * sin(des_psi))
         )
         # theta_des = kx * state_error[0] + k_x_dot * state_error[3]
         # theta_des = np.clip(theta_des, -0.17, 0.17)
@@ -433,7 +416,7 @@ class Quadrotor(Entity):
         u2_phi = (
             k_phi
             * (
-                ((r_ddot_des_x * sin(cur_psi) - r_ddot_des_y * cos(cur_psi)) / self.g)
+                ((r_ddot_des_x * sin(des_psi) - r_ddot_des_y * cos(des_psi)) / self.g)
                 - self.state[6]
             )
             # + k_phi_dot * state_error[9]
@@ -444,7 +427,7 @@ class Quadrotor(Entity):
         u2_theta = (
             k_theta
             * (
-                ((r_ddot_des_x * cos(cur_psi) - r_ddot_des_y * sin(cur_psi)) / self.g)
+                ((r_ddot_des_x * cos(des_psi) - r_ddot_des_y * sin(des_psi)) / self.g)
                 - self.state[7]
             )
             # + k_theta_dot * state_error[10]q
@@ -590,8 +573,6 @@ class Quadrotor(Entity):
         return state_dot
 
     def f(self, time, state, action):
-        m = self.m
-        g = self.g
         Ix = self.inertia[0, 0]
         Iy = self.inertia[1, 1]
         Iz = self.inertia[2, 2]
@@ -602,11 +583,27 @@ class Quadrotor(Entity):
         ).tolist()
         ft, tau_x, tau_y, tau_z = action.reshape(-1).tolist()
 
-        R = rotation_matrix(phi1, theta1, psi1)
+        self._state[9] += tau_x * self.dt / Ix
+        self._state[10] += tau_y * self.dt / Iy
+        self._state[11] += tau_z * self.dt / Iz
+
+        self._state[6] += self._state[9] * self.dt
+        self._state[7] += self._state[10] * self.dt
+        self._state[8] += self._state[11] * self.dt
+
+        R = rotation_matrix(self._state[6], self._state[7], self._state[8])
         acc = (
-            np.dot(R, np.array([0, 0, ft], dtype=np.float64).T)
-            - np.array([0, 0, m * g], dtype=np.float64).T
-        ) / m
+            np.dot(R, np.array([0, 0, ft.item()], dtype=np.float64).T)
+            - np.array([0, 0, self.m * self.g], dtype=np.float64).T
+        ) / self.m
+
+        self._state[3] += acc[0] * self.dt
+        self._state[4] += acc[1] * self.dt
+        self._state[5] += acc[2] * self.dt
+
+        self._state[0] += self._state[3] * self.dt
+        self._state[1] += self._state[4] * self.dt
+        self._state[2] += self._state[5] * self.dt
 
         dot_x = np.array(
             [
@@ -657,15 +654,16 @@ class Quadrotor(Entity):
             # self._state = self.ode.integrate(self.ode.t + self.dt)
             # assert self.ode.successful()
             ddot = self.f(0, self.state, action)
-            self._state[3:6] += ddot[3:6] * self.dt
-            self._state[0:3] += self._state[3:6] * self.dt
+            # ddot = self.f(0, self.state, action)
+            # self._state[3:6] += ddot[3:6] * self.dt
+            # self._state[0:3] += self._state[3:6] * self.dt
 
-            self._state[9:12] += ddot[9:12] * self.dt
-            self._state[9:12] = self.wrap_angle(self._state[9:12])
-            self._state[6:9] += self._state[9:12] * self.dt
+            # self._state[9:12] += ddot[9:12] * self.dt
+            # self._state[9:12] = self.wrap_angle(self._state[9:12])
+            # self._state[6:9] += self._state[9:12] * self.dt
 
-            self._state[6:9] = self.wrap_angle(self._state[6:9])
             # self._state[6:9] = self.wrap_angle(self._state[6:9])
+            # # self._state[6:9] = self.wrap_angle(self._state[6:9])
             self._state[2] = max(0, self._state[2])
 
         else:
