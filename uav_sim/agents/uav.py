@@ -65,7 +65,7 @@ class Quadrotor(Entity):
         self.use_ode = use_ode
 
         if self.use_ode:
-            self.ode = scipy.integrate.ode(self.state_dot).set_integrator(
+            self.ode = scipy.integrate.ode(self.f).set_integrator(
                 "vode", nsteps=500, method="bdf"
             )
 
@@ -252,6 +252,8 @@ class Quadrotor(Entity):
 
     def get_controller(self, des_pos_w):
         state_error = self.state - des_pos_w
+
+        # TODO: don't calculate every time
         K = self.calc_k()
         Kx = K[0].squeeze()
         Ky = K[1].squeeze()
@@ -275,26 +277,77 @@ class Quadrotor(Entity):
         k_psi_dot = K_psi[1]
 
         # https://upcommons.upc.edu/bitstream/handle/2117/112404/Thesis-Jesus_Valle.pdf?sequence=1&isAllowed=y
-        u1 = self.m * self.g - self.m * (kz * state_error[2] + k_z_dot * state_error[5])
-        theta_r = kx * state_error[0] + k_x_dot * state_error[3]
-        tau_x = k_theta * (theta_r - self.state[7]) - k_theta_dot * self.state[10]
-        tau_x = k_theta * (state_error[7]) - k_theta_dot * self.state[10]
+        r_ddot_des_x = kx * state_error[0] + k_x_dot * state_error[3]
+        r_ddot_des_y = ky * state_error[1] + k_y_dot * state_error[4]
+        r_ddot_des_z = kz * state_error[2] + k_z_dot * state_error[5]
 
-        phi_r = ky * state_error[1] + k_y_dot * state_error[4]
-        tau_y = k_phi * (phi_r - self.state[6]) - k_phi_dot * self.state[9]
-        tau_y = k_phi * (state_error[6]) - k_phi_dot * self.state[9]
+        cur_psi = self.state[8]
+        u1 = self.m * self.g - self.m * (r_ddot_des_z)
+        phi_des = (
+            1 / self.g * (r_ddot_des_x * sin(cur_psi) - r_ddot_des_y * cos(cur_psi))
+        )
+        # phi_des = ky * state_error[1] + k_y_dot * state_error[4]
+        theta_des = (
+            1 / self.g * (r_ddot_des_x * cos(cur_psi) + r_ddot_des_y * sin(cur_psi))
+        )
+        # theta_des = kx * state_error[0] + k_x_dot * state_error[3]
+        # theta_des = np.clip(theta_des, -0.17, 0.17)
+        # phi_des = np.clip(phi_des, -0.17, 0.17)
 
-        tau_z = k_psi * state_error[8] + k_psi_dot * state_error[11]
+        u2_theta = k_theta * (theta_des - self.state[7]) - k_theta_dot * self.state[10]
+        # u2_x = k_theta * (state_error[7]) - k_theta_dot * self.state[10]
+        u2_phi = k_phi * (phi_des - self.state[6]) - k_phi_dot * self.state[9]
+        # u2_y = k_phi * (state_error[6]) - k_phi_dot * self.state[10]
+        u2_psi = k_psi * state_error[8] + k_psi_dot * state_error[11]
 
-        des_actions = np.array([u1, tau_x, tau_y, tau_z])
+        # u2_psi = 0
+        u2_theta = 0
+        u2_phi = 0
+        action = np.dot(
+            np.linalg.inv(self.torque_to_inputs()),
+            np.array([u1, u2_phi, u2_theta, u2_psi]),
+        )
+        return np.array([u1, u2_phi, u2_theta, u2_psi])
+        # action = np.dot(
+        #     np.linalg.pinv(
+        #         np.array(
+        #             [
+        #                 [0, self.l, 0, -self.l],
+        #                 [-self.l, 0, self.l, 0],
+        #                 [self.gamma, -self.gamma, self.gamma, -self.gamma],
+        #             ]
+        #         )
+        #     ),
+        #     np.array([u2_phi, u2_theta, u2_psi]),
+        # )
+        # theta_r = kx * state_error[0] + k_x_dot * state_error[3]
+        # tau_x = k_theta * (theta_r - self.state[7]) - k_theta_dot * self.state[10]
+        # tau_x = k_theta * (state_error[7]) - k_theta_dot * self.state[10]
 
-        action = np.dot(np.linalg.inv(self.torque_to_inputs()), des_actions)
+        # phi_r = ky * state_error[1] + k_y_dot * state_error[4]
+        # tau_y = k_phi * (phi_r - self.state[6]) - k_phi_dot * self.state[9]
+        # tau_y = k_phi * (state_error[6]) - k_phi_dot * self.state[9]
+
+        # tau_z = k_psi * state_error[8] + k_psi_dot * state_error[11]
+
+        # des_actions = np.array([u1, tau_x, tau_y, tau_z])
+
+        # action = np.dot(np.linalg.inv(self.torque_to_inputs()), des_actions)
 
         return action
 
-        ev = des_pos_w
-
     def torque_to_inputs(self):
+        # t_array = np.ones((1,4))
+        # l = np.array(
+        #     [
+        #         [0, self.l, 0, -self.l],
+        #         [-self.l, 0, self.l, 0],
+        #         [self.gamma, -self.gamma, self.gamma, -self.gamma],
+        #     ]
+        # )
+        # l = np.dot(self.inv_inertia, l)
+
+        # l = np.concatenate([t_array, l])
         l = np.array(
             [
                 [1, 1, 1, 1],
@@ -366,7 +419,7 @@ class Quadrotor(Entity):
                 [
                     [0, self.l, 0, -self.l],
                     [-self.l, 0, self.l, 0],
-                    [self.gamma, self.gamma, self.gamma, self.gamma],
+                    [self.gamma, -self.gamma, self.gamma, -self.gamma],
                 ]
             ),
             action,
@@ -382,6 +435,57 @@ class Quadrotor(Entity):
 
         return state_dot
 
+    def f(self, time, state, action):
+        m = self.m
+        g = self.g
+        Ix = self.inertia[0, 0]
+        Iy = self.inertia[1, 1]
+        Iz = self.inertia[2, 2]
+        action = np.clip(action, self.min_f, self.max_f)
+        x1 = self._state[0]
+        y1 = self._state[1]
+        z1 = self._state[2]
+        x2 = self._state[3]
+        y2 = self._state[4]
+        z2 = self._state[5]
+        phi1 = self._state[6]
+        theta1 = self._state[7]
+        psi1 = self._state[8]
+        phi2 = self._state[9]
+        theta2 = self._state[10]
+        psi2 = self._state[11]
+
+        # x1, x2, y1, y2, z1, z2, phi1, phi2, theta1, theta2, psi1, psi2 = x.reshape(-1).tolist()
+        # ft, tau_x, tau_y, tau_z = u.reshape(-1).tolist()
+        ft, tau_x, tau_y, tau_z = action.reshape(-1).tolist()
+        dot_x = np.array(
+            [
+                x2,
+                y2,
+                z2,
+                ft
+                / m
+                * (
+                    np.sin(phi1) * np.sin(psi1)
+                    + np.cos(phi1) * np.cos(psi1) * np.sin(theta1)
+                ),
+                ft
+                / m
+                * (
+                    np.cos(phi1) * np.sin(psi1) * np.sin(theta1)
+                    - np.cos(psi1) * np.sin(phi1)
+                ),
+                -g + ft / m * np.cos(phi1) * np.cos(theta1),
+                phi2,
+                theta2,
+                psi2,
+                (Iy - Iz) / Ix * theta2 * psi2 + tau_x / Ix,
+                (Iz - Ix) / Iy * phi2 * psi2 + tau_y / Iy,
+                (Ix - Iy) / Iz * phi2 * theta2 + tau_z / Iz,
+            ]
+        )
+        return dot_x
+
     def step(self, action=np.zeros(4)):
         """Action is propeller forces in body frame
 
@@ -396,7 +500,7 @@ class Quadrotor(Entity):
             self._state = self.ode.integrate(self.ode.t + self.dt)
             assert self.ode.successful()
 
-            self._state[6:9] = self.wrap_angle(self._state[6:9])
+            # self._state[6:12] = self.wrap_angle(self._state[6:12])
             self._state[2] = max(0, self._state[2])
 
         else:
@@ -445,11 +549,10 @@ class Quadrotor(Entity):
 
             omega += omega_dot * self.dt
             self._state[9:12] += np.dot(np.linalg.inv(phi_rot), omega)
-            # self._state[9:12] += omega
             self._state[6:9] += self._state[9:12] * self.dt
 
             # wrap angles
-            self._state[6:9] = self.wrap_angle(self._state[6:9])
+            self._state[6:12] = self.wrap_angle(self._state[6:12])
 
     def wrap_angle(self, val):
         return (val + np.pi) % (2 * np.pi) - np.pi

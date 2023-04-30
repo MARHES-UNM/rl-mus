@@ -14,6 +14,9 @@ class TestUavSim(unittest.TestCase):
     def test_controller(self):
         des_pos = np.zeros((4, 12), dtype=np.float64)
         des_pos[:, 2] = 3
+        des_pos[:, 0] = 1
+        # des_pos[:, 1] = 2
+        des_pos[:, 8] = np.pi
         # des_pos[:, 1] = 1
         # des_pos[:, 0:3] = np.array([[0.5, 0.5, 1], [0.5, 2, 2], [2, 0.5, 2], [2, 2, 1]])
 
@@ -29,6 +32,8 @@ class TestUavSim(unittest.TestCase):
     #     des_pos = np.zeros((4, 12), dtype=np.float64)
     #     for idx in range(4):
     #         des_pos[idx, 0:3] = positions[idx, :]
+    #         # des_pos[idx, 0:3] = 3
+    #         # des_pos[idx, 8] = np.pi
 
     #         self.env.uavs[idx]._state[0:2] = positions[idx, 0:2]
 
@@ -38,9 +43,10 @@ class TestUavSim(unittest.TestCase):
     #     Ks = self.env.uavs[0].calc_k()
     #     m = self.env.uavs[0].m
     #     g = self.env.uavs[0].g
+    #     inv_inertia = self.env.uavs[0].inv_inertia
 
     #     actions = {}
-    #     for i in range(25):
+    #     for i in range(250):
     #         for idx, pos in enumerate(des_pos):
     #             # pos_er = -(self.env.uavs[idx].state - pos)
     #             pos_er = pos - self.env.uavs[idx].state
@@ -49,14 +55,12 @@ class TestUavSim(unittest.TestCase):
     #             Uy = np.dot(Ks[1], pos_er[[1, 4, 6, 9]])[0]
     #             Uz = np.dot(Ks[2], pos_er[[2, 5]])[0]
     #             Uyaw = np.dot(Ks[3], pos_er[[8, 11]])[0]
-    #             inputs = np.array([Uz, Ux, Uy, Uyaw])
+    #             inputs = np.array([Uz+m*g, Uy, Ux, Uyaw])
 
-    #             # u_1 = m * g - m * (Ks[2][]
     #             l = self.env.uavs[idx].torque_to_inputs()
 
     #             actions[idx] = np.dot(np.linalg.inv(l), inputs)
     #             # actions[idx] = inputs
-    #             # actions[idx] = np.array([Uz, Ux, Uy, Uyaw])
     #         self.env.step(actions)
     #         self.env.render()
 
