@@ -11,59 +11,54 @@ class TestUavSim(unittest.TestCase):
     def setUp(self):
         self.env = UavSim()
 
-    def test_lqr_controller(self):
-        positions = np.array([[0.5, 0.5, 1], [0.5, 2, 2], [2, 0.5, 2], [2, 2, 1]])
+    def test_controller(self):
         des_pos = np.zeros((4, 12), dtype=np.float64)
-        for idx in range(4):
-            des_pos[idx, 0:3] = positions[idx, :]
-
-            self.env.uavs[idx]._state[0:3] = positions[idx, :]
-
-        # des_pos = np.zeros((4, 12), dtype=np.float64)
-        # for idx in range(4):
-        #     des_pos[idx] = self.env.uavs[idx].state
-        Ks = self.env.uavs[0].calc_k()
-        m = self.env.uavs[0].m
-        g = self.env.uavs[0].g
+        des_pos[:, 2] = 3
+        # des_pos[:, 1] = 1
+        # des_pos[:, 0:3] = np.array([[0.5, 0.5, 1], [0.5, 2, 2], [2, 0.5, 2], [2, 2, 1]])
 
         actions = {}
         for i in range(100):
-            for idx, pos in enumerate(des_pos):
-                # pos_er = -(self.env.uavs[idx].state - pos)
-                pos_er = pos - self.env.uavs[idx].state
-
-                Ux = np.dot(Ks[0], pos_er[[0, 3, 6, 9]])[0]
-                Uy = np.dot(Ks[1], pos_er[[1, 4, 7, 10]])[0]
-                Uz = np.dot(Ks[2], pos_er[[2, 5]])[0]
-                Uyaw = np.dot(Ks[3], pos_er[[8, 11]])[0]
-                inputs = np.array([Uz, Ux, Uy, Uyaw])
-                
-                # u_1 = m * g - m * (Ks[2][]
-                l = self.env.uavs[idx].torque_to_inputs()
-
-                actions[idx] = np.dot(np.linalg.inv(l), inputs)
-                # actions[idx] = inputs
-                # actions[idx] = np.array([Uz, Ux, Uy, Uyaw])
+            for idx in range(4):
+                actions[idx] = self.env.uavs[idx].get_controller(des_pos[idx])
             self.env.step(actions)
             self.env.render()
 
-        # K = self.env.uavs[0].calc_k()
-        # actions = {i: self.env.uavs[i].calc_k() for i in range(4)}
+    # def test_lqr_controller(self):
+    #     positions = np.array([[0.5, 0.5, 1], [0.5, 2, 2], [2, 0.5, 2], [2, 2, 1]])
+    #     des_pos = np.zeros((4, 12), dtype=np.float64)
+    #     for idx in range(4):
+    #         des_pos[idx, 0:3] = positions[idx, :]
 
-        # actions = {}
-        # for i in range(10000):
-        #     for idx, pos in enumerate(des_pos):
-        #         # l = self.env.uavs[idx].torque_to_inputs()
-        #         # # actions[idx] = np.dot(K, self.env.uavs[idx].state - pos)
-        #         # actions[idx] = np.dot(K, (pos - self.env.uavs[idx].state))
-        #         # # actions[idx][0] -= self.env.uavs[idx].g
-        #         # actions[idx] = np.dot(np.linalg.inv(l), actions[idx])
-        #         # # actions[idx] = np.dot(np.linalg.pinv(l), np.dot(K, pos - self.env.uavs[idx].state)[1:])
-        #         actions[idx] = (
-        #             np.dot(K, pos - self.env.uavs[idx].state)  + self.env.uavs[idx].g / 4
-        #         )
-        #     self.env.step(actions)
-        #     self.env.render()
+    #         self.env.uavs[idx]._state[0:2] = positions[idx, 0:2]
+
+    #     # des_pos = np.zeros((4, 12), dtype=np.float64)
+    #     # for idx in range(4):
+    #     #     des_pos[idx] = self.env.uavs[idx].state
+    #     Ks = self.env.uavs[0].calc_k()
+    #     m = self.env.uavs[0].m
+    #     g = self.env.uavs[0].g
+
+    #     actions = {}
+    #     for i in range(25):
+    #         for idx, pos in enumerate(des_pos):
+    #             # pos_er = -(self.env.uavs[idx].state - pos)
+    #             pos_er = pos - self.env.uavs[idx].state
+
+    #             Ux = np.dot(Ks[0], pos_er[[0, 3, 7, 10]])[0]
+    #             Uy = np.dot(Ks[1], pos_er[[1, 4, 6, 9]])[0]
+    #             Uz = np.dot(Ks[2], pos_er[[2, 5]])[0]
+    #             Uyaw = np.dot(Ks[3], pos_er[[8, 11]])[0]
+    #             inputs = np.array([Uz, Ux, Uy, Uyaw])
+
+    #             # u_1 = m * g - m * (Ks[2][]
+    #             l = self.env.uavs[idx].torque_to_inputs()
+
+    #             actions[idx] = np.dot(np.linalg.inv(l), inputs)
+    #             # actions[idx] = inputs
+    #             # actions[idx] = np.array([Uz, Ux, Uy, Uyaw])
+    #         self.env.step(actions)
+    #         self.env.render()
 
     def test_setting_uav_pos(self):
         self.env = UavSim(env_config={"dt": 0.1})

@@ -1,4 +1,5 @@
 from math import cos, sin
+import stat
 import numpy as np
 import scipy.integrate
 import scipy
@@ -29,6 +30,7 @@ def lqr(A, B, Q, R):
 
     """
     # http://www.mwm.im/lqr-controllers-with-python/
+    # https://github.com/ssloy/tutorials/blob/master/tutorials/pendulum/lqr.py
     # ref Bertsekas, p.151
 
     # first, try to solve the ricatti equation
@@ -40,6 +42,7 @@ def lqr(A, B, Q, R):
     eig_vals, eig_vecs = np.linalg.eig(A - np.dot(B, K))
 
     return K, X, eig_vals
+
 
 class Quadrotor(Entity):
     def __init__(
@@ -246,6 +249,50 @@ class Quadrotor(Entity):
 
         # return u
         return K
+
+    def get_controller(self, des_pos_w):
+        state_error = self.state - des_pos_w
+        K = self.calc_k()
+        Kx = K[0].squeeze()
+        Ky = K[1].squeeze()
+        Kz = K[2].squeeze()
+        K_psi = K[3].squeeze()
+
+        kx = Kx[0]
+        k_x_dot = Kx[1]
+        k_theta = Kx[2]
+        k_theta_dot = Kx[3]
+
+        ky = Ky[0]
+        k_y_dot = Ky[1]
+        k_phi = Ky[2]
+        k_phi_dot = Ky[3]
+
+        kz = Kz[0]
+        k_z_dot = Kz[1]
+
+        k_psi = K_psi[0]
+        k_psi_dot = K_psi[1]
+
+        # https://upcommons.upc.edu/bitstream/handle/2117/112404/Thesis-Jesus_Valle.pdf?sequence=1&isAllowed=y
+        u1 = self.m * self.g - self.m * (kz * state_error[2] + k_z_dot * state_error[5])
+        theta_r = kx * state_error[0] + k_x_dot * state_error[3]
+        tau_x = k_theta * (theta_r - self.state[7]) - k_theta_dot * self.state[10]
+        tau_x = k_theta * (state_error[7]) - k_theta_dot * self.state[10]
+
+        phi_r = ky * state_error[1] + k_y_dot * state_error[4]
+        tau_y = k_phi * (phi_r - self.state[6]) - k_phi_dot * self.state[9]
+        tau_y = k_phi * (state_error[6]) - k_phi_dot * self.state[9]
+
+        tau_z = k_psi * state_error[8] + k_psi_dot * state_error[11]
+
+        des_actions = np.array([u1, tau_x, tau_y, tau_z])
+
+        action = np.dot(np.linalg.inv(self.torque_to_inputs()), des_actions)
+
+        return action
+
+        ev = des_pos_w
 
     def torque_to_inputs(self):
         l = np.array(
