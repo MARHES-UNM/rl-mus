@@ -26,54 +26,20 @@ def lqr(A, B, Q, R):
     """Solve the continuous time lqr controller.
     dx/dt = A x + B u
     cost = integral x.T*Q*x + u.T*R*u
+
     """
     # http://www.mwm.im/lqr-controllers-with-python/
     # ref Bertsekas, p.151
 
     # first, try to solve the ricatti equation
-    X = np.matrix(scipy.linalg.solve_continuous_are(A, B, Q, R))
+    X = scipy.linalg.solve_continuous_are(A, B, Q, R)
 
     # compute the LQR gain
-    K = np.matrix(scipy.linalg.inv(R) * (B.T * X))
+    K = np.dot(np.linalg.inv(R), np.dot(B.T, X))
 
-    eigVals, eigVecs = scipy.linalg.eig(A - B * K)
+    eig_vals, eig_vecs = np.linalg.eig(A - np.dot(B, K))
 
-    return np.asarray(K), np.asarray(X), np.asarray(eigVals)
-
-
-def dlqr_dyn(x_error, Q, R, A, B, dt):
-    N = 50
-    P = [None] * (N + 1)
-    Qf = Q
-    P[N] = Qf
-
-    for i in range(N, 0, -1):
-
-        # Discrete-time Algebraic Riccati equation to calculate the optimal
-        # state cost matrix
-        P[i - 1] = (
-            Q
-            + A.T @ P[i] @ A
-            - (A.T @ P[i] @ B) @ np.linalg.pinv(R + B.T @ P[i] @ B) @ (B.T @ P[i] @ A)
-        )
-
-    # Create a list of N elements
-    K = [None] * N
-    u = [None] * N
-
-    # For i = 0, ..., N - 1
-    for i in range(N):
-
-        # Calculate the optimal feedback gain K
-        K[i] = -np.linalg.pinv(R + B.T @ P[i + 1] @ B) @ B.T @ P[i + 1] @ A
-
-        u[i] = K[i] @ x_error
-
-    # Optimal control input is u_star
-    u_star = u[N - 1]
-
-    return u_star
-
+    return K, X, eig_vals
 
 class Quadrotor(Entity):
     def __init__(
@@ -190,8 +156,8 @@ class Quadrotor(Entity):
         for A, B in ((Ax, Bx), (Ay, By), (Az, Bz), (Ayaw, Byaw)):
             n = A.shape[0]
             m = B.shape[1]
-            Q = np.eye(n) * 10000
-            Q[0, 0] = 100  # The first state variable is the one we care about.
+            Q = np.eye(n)
+            Q[0, 0] = 25  # The first state variable is the one we care about.
             R = np.diag(
                 [
                     1.0,
@@ -254,7 +220,7 @@ class Quadrotor(Entity):
         # Q[3, 3] = 1000000000
 
         # Q[:3,:3] = np.eye(3) * 110
-        R = np.eye(4) 
+        R = np.eye(4)
         # R = np.diag(
         #     [
         #         1.0,

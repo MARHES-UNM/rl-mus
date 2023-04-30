@@ -17,7 +17,7 @@ class TestUavSim(unittest.TestCase):
         for idx in range(4):
             des_pos[idx, 0:3] = positions[idx, :]
 
-        #     self.env.uavs[idx]._state[0:3] = positions[idx, :]
+            self.env.uavs[idx]._state[0:3] = positions[idx, :]
 
         # des_pos = np.zeros((4, 12), dtype=np.float64)
         # for idx in range(4):
