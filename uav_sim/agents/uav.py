@@ -87,6 +87,9 @@ class Quadrotor(Entity):
 
         # self.inertia = np.eye(3) * 0.00025
 
+        self.m = 0.2
+        self.inertia = np.eye(3)
+        
         # self.m = 1.0
         # self.inertia = np.eye(3)
         # self.inertia[0, 0] = 8.1 * 1e-3
@@ -160,7 +163,7 @@ class Quadrotor(Entity):
             n = A.shape[0]
             m = B.shape[1]
             Q = np.eye(n)
-            Q[0, 0] = 25  # The first state variable is the one we care about.
+            Q[0, 0] = 10  # The first state variable is the one we care about.
             R = np.diag(
                 [
                     1.0,
@@ -441,22 +444,25 @@ class Quadrotor(Entity):
         Ix = self.inertia[0, 0]
         Iy = self.inertia[1, 1]
         Iz = self.inertia[2, 2]
-        action = np.clip(action, self.min_f, self.max_f)
-        x1 = self._state[0]
-        y1 = self._state[1]
-        z1 = self._state[2]
-        x2 = self._state[3]
-        y2 = self._state[4]
-        z2 = self._state[5]
-        phi1 = self._state[6]
-        theta1 = self._state[7]
-        psi1 = self._state[8]
-        phi2 = self._state[9]
-        theta2 = self._state[10]
-        psi2 = self._state[11]
+        # action = np.clip(action, self.min_f, self.max_f)
+        x1 = state[0]
+        y1 = state[1]
+        z1 = state[2]
+        x2 = state[3]
+        y2 = state[4]
+        z2 = state[5]
+        phi1 = state[6]
+        theta1 = state[7]
+        psi1 = state[8]
+        phi2 = state[9]
+        theta2 = state[10]
+        psi2 = state[11]
 
         # x1, x2, y1, y2, z1, z2, phi1, phi2, theta1, theta2, psi1, psi2 = x.reshape(-1).tolist()
         # ft, tau_x, tau_y, tau_z = u.reshape(-1).tolist()
+        x1, y1, z1, x2, y2, z2, phi1, theta1, psi1, phi2, theta2, psi2 = state.reshape(
+            -1
+        ).tolist()
         ft, tau_x, tau_y, tau_z = action.reshape(-1).tolist()
         dot_x = np.array(
             [
@@ -500,7 +506,7 @@ class Quadrotor(Entity):
             self._state = self.ode.integrate(self.ode.t + self.dt)
             assert self.ode.successful()
 
-            # self._state[6:12] = self.wrap_angle(self._state[6:12])
+            self._state[6:12] = self.wrap_angle(self._state[6:12])
             self._state[2] = max(0, self._state[2])
 
         else:
