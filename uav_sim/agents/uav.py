@@ -89,7 +89,7 @@ class Quadrotor(Entity):
 
         self.m = 0.2
         self.inertia = np.eye(3)
-        
+
         # self.m = 1.0
         # self.inertia = np.eye(3)
         # self.inertia[0, 0] = 8.1 * 1e-3
@@ -255,6 +255,7 @@ class Quadrotor(Entity):
 
     def get_controller(self, des_pos_w):
         state_error = self.state - des_pos_w
+        state_error = des_pos_w - self.state
 
         # TODO: don't calculate every time
         K = self.calc_k()
@@ -279,13 +280,22 @@ class Quadrotor(Entity):
         k_psi = K_psi[0]
         k_psi_dot = K_psi[1]
 
+        kx = k_x_dot = 1
+        ky = k_y_dot = 1
+        kz = k_z_dot = 1
+        k_phi = k_phi_dot = 25
+        k_theta = k_theta_dot = 25
+        k_psi = k_psi_dot = 25
+
         # https://upcommons.upc.edu/bitstream/handle/2117/112404/Thesis-Jesus_Valle.pdf?sequence=1&isAllowed=y
         r_ddot_des_x = kx * state_error[0] + k_x_dot * state_error[3]
         r_ddot_des_y = ky * state_error[1] + k_y_dot * state_error[4]
         r_ddot_des_z = kz * state_error[2] + k_z_dot * state_error[5]
 
         cur_psi = self.state[8]
-        u1 = self.m * self.g - self.m * (r_ddot_des_z)
+        cur_psi = des_pos_w[8]
+
+        u1 = self.m * self.g + self.m * (r_ddot_des_z)
         phi_des = (
             1 / self.g * (r_ddot_des_x * sin(cur_psi) - r_ddot_des_y * cos(cur_psi))
         )
@@ -301,15 +311,26 @@ class Quadrotor(Entity):
         # u2_x = k_theta * (state_error[7]) - k_theta_dot * self.state[10]
         u2_phi = k_phi * (phi_des - self.state[6]) - k_phi_dot * self.state[9]
         # u2_y = k_phi * (state_error[6]) - k_phi_dot * self.state[10]
+
+        u2_phi = k_phi * (
+            ((r_ddot_des_x * sin(cur_psi) - r_ddot_des_y * cos(cur_psi)) / self.g)
+            - self.state[6]
+        )
+
+        u2_theta = k_theta * (
+            ((r_ddot_des_x * cos(cur_psi) - r_ddot_des_y * sin(cur_psi)) / self.g)
+            - self.state[7]
+        )
+
         u2_psi = k_psi * state_error[8] + k_psi_dot * state_error[11]
 
         # u2_psi = 0
         u2_theta = 0
         u2_phi = 0
-        action = np.dot(
-            np.linalg.inv(self.torque_to_inputs()),
-            np.array([u1, u2_phi, u2_theta, u2_psi]),
-        )
+        # action = np.dot(
+        #     np.linalg.inv(self.torque_to_inputs()),
+        #     np.array([u1, u2_phi, u2_theta, u2_psi]),
+        # )
         return np.array([u1, u2_phi, u2_theta, u2_psi])
         # action = np.dot(
         #     np.linalg.pinv(
@@ -506,7 +527,7 @@ class Quadrotor(Entity):
             self._state = self.ode.integrate(self.ode.t + self.dt)
             assert self.ode.successful()
 
-            self._state[6:12] = self.wrap_angle(self._state[6:12])
+            # self._state[6:12] = self.wrap_angle(self._state[6:12])
             self._state[2] = max(0, self._state[2])
 
         else:
