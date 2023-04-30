@@ -13,14 +13,18 @@ class TestUavSim(unittest.TestCase):
 
     def test_lqr_controller(self):
         positions = np.array([[0.5, 0.5, 1], [0.5, 2, 2], [2, 0.5, 2], [2, 2, 1]])
-        # positions = np.array([[4, 4, 1], [4, 2, 2], [4, 4, 2], [4, 4, 1]])
         des_pos = np.zeros((4, 12), dtype=np.float64)
         for idx in range(4):
             des_pos[idx, 0:3] = positions[idx, :]
 
-            self.env.uavs[idx]._state[0:3] = positions[idx, :]
+        #     self.env.uavs[idx]._state[0:3] = positions[idx, :]
 
+        # des_pos = np.zeros((4, 12), dtype=np.float64)
+        # for idx in range(4):
+        #     des_pos[idx] = self.env.uavs[idx].state
         Ks = self.env.uavs[0].calc_k()
+        m = self.env.uavs[0].m
+        g = self.env.uavs[0].g
 
         actions = {}
         for i in range(100):
@@ -33,6 +37,8 @@ class TestUavSim(unittest.TestCase):
                 Uz = np.dot(Ks[2], pos_er[[2, 5]])[0]
                 Uyaw = np.dot(Ks[3], pos_er[[8, 11]])[0]
                 inputs = np.array([Uz, Ux, Uy, Uyaw])
+                
+                # u_1 = m * g - m * (Ks[2][]
                 l = self.env.uavs[idx].torque_to_inputs()
 
                 actions[idx] = np.dot(np.linalg.inv(l), inputs)
@@ -41,9 +47,8 @@ class TestUavSim(unittest.TestCase):
             self.env.step(actions)
             self.env.render()
 
-        # # u = self.env.uavs
         # K = self.env.uavs[0].calc_k()
-        # # actions = {i: self.env.uavs[i].calc_k() for i in range(4)}
+        # actions = {i: self.env.uavs[i].calc_k() for i in range(4)}
 
         # actions = {}
         # for i in range(10000):

@@ -190,8 +190,8 @@ class Quadrotor(Entity):
         for A, B in ((Ax, Bx), (Ay, By), (Az, Bz), (Ayaw, Byaw)):
             n = A.shape[0]
             m = B.shape[1]
-            Q = np.eye(n)
-            Q[0, 0] = 1  # The first state variable is the one we care about.
+            Q = np.eye(n) * 10000
+            Q[0, 0] = 100  # The first state variable is the one we care about.
             R = np.diag(
                 [
                     1.0,
@@ -206,8 +206,8 @@ class Quadrotor(Entity):
         A = np.zeros((12, 12), dtype=np.float64)
         A[0:3, 3:6] = np.eye(3)
         # A[5, 5] = -self.g
-        A[3, 7] = self.g
-        A[4, 6] = -self.g
+        A[3, 6] = self.g
+        A[4, 7] = -self.g
         A[6:9, 9:12] = np.eye(3)
 
         ix = self.inertia[0, 0]
@@ -250,11 +250,11 @@ class Quadrotor(Entity):
         # B[9, 2] = 1 / iy
         # B[11, 3] = 1 / iz
 
-        Q = np.eye(12) * 1000000
-        Q[3, 3] = 1000000000
+        Q = np.eye(12) * 1000
+        # Q[3, 3] = 1000000000
 
         # Q[:3,:3] = np.eye(3) * 110
-        R = np.eye(4) * 0.001
+        R = np.eye(4) 
         # R = np.diag(
         #     [
         #         1.0,
