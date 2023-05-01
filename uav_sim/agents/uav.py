@@ -203,7 +203,7 @@ class Quadrotor(Entity):
             n = A.shape[0]
             m = B.shape[1]
             Q = np.eye(n)
-            Q[0, 0] = 10  # The first state variable is the one we care about.
+            Q[0, 0] = 100  # The first state variable is the one we care about.
             R = np.diag(
                 [
                     1.0,
