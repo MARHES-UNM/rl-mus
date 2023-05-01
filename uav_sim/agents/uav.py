@@ -557,14 +557,14 @@ class Quadrotor(Entity):
     def rotation_matrix(
         self,
     ):
-        ct = cos(self._state[7])
         cp = cos(self._state[6])
+        ct = cos(self._state[7])
         cg = cos(self._state[8])
-        st = sin(self._state[7])
         sp = sin(self._state[6])
+        st = sin(self._state[7])
         sg = sin(self._state[8])
-        R_x = np.array([[1, 0, 0], [0, ct, -st], [0, st, ct]])
-        R_y = np.array([[cp, 0, sp], [0, 1, 0], [-sp, 0, cp]])
+        R_x = np.array([[1, 0, 0], [0, cp, -sp], [0, sp, cp]])
+        R_y = np.array([[ct, 0, st], [0, 1, 0], [-st, 0, ct]])
         R_z = np.array([[cg, -sg, 0], [sg, cg, 0], [0, 0, 1]])
         R = np.dot(R_z, np.dot(R_y, R_x))
         return R
@@ -581,7 +581,8 @@ class Quadrotor(Entity):
         self._state[7] += self._state[10] * self.dt
         self._state[8] += self._state[11] * self.dt
 
-        R = rotation_matrix(self._state[6], self._state[7], self._state[8])
+        # R = rotation_matrix(self._state[6], self._state[7], self._state[8])
+        R = self.rotation_matrix()
         acc = (
             np.dot(R, np.array([0, 0, ft], dtype=np.float64).T)
             - np.array([0, 0, self.m * self.g], dtype=np.float64).T
