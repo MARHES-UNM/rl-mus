@@ -33,7 +33,9 @@ class TestUavSim(unittest.TestCase):
         for i in range(self.env.num_uavs):
             for way_point_num in range(num_waypoints):
                 traj = TrajectoryGenerator(
-                    waypoints[way_point_num], waypoints[(way_point_num + 1) % num_waypoints], T
+                    waypoints[way_point_num],
+                    waypoints[(way_point_num + 1) % num_waypoints],
+                    T,
                 )
                 traj.solve()
                 uav_coeffs[i, way_point_num, 0] = traj.x_c
@@ -59,6 +61,30 @@ class TestUavSim(unittest.TestCase):
                         uav_coeffs[idx, way_point_num, 2], t
                     )
 
+                    # # Velocity
+                    # des_pos[idx, 3] = calculate_velocity(
+                    #     uav_coeffs[idx, way_point_num, 0], t
+                    # )
+                    # des_pos[idx, 4] = calculate_velocity(
+                    #     uav_coeffs[idx, way_point_num, 1], t
+                    # )
+                    # des_pos[idx, 5] = calculate_velocity(
+                    #     uav_coeffs[idx, way_point_num, 2], t
+                    # )
+
+                    # # Acceleration
+                    # acc = np.zeros(3)
+                    # acc[0] = calculate_acceleration(
+                    #     uav_coeffs[idx, way_point_num, 0], t
+                    # )
+                    # acc[1] = calculate_acceleration(
+                    #     uav_coeffs[idx, way_point_num, 1], t
+                    # )
+                    # acc[2] = calculate_acceleration(
+                    #     uav_coeffs[idx, way_point_num, 2], t
+                    # )
+
+                    # Acceleration
                     pos_er = des_pos[idx] - self.env.uavs[idx].state
                     Ux = np.dot(Ks[0], pos_er[[0, 3, 7, 10]])[0]
                     Uy = np.dot(Ks[1], pos_er[[1, 4, 6, 9]])[0]
