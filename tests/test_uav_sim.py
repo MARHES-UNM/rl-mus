@@ -18,14 +18,14 @@ class TestUavSim(unittest.TestCase):
     def setUp(self):
         self.env = UavSim()
 
-    # @unittest.skip
+    @unittest.skip
     def test_trajectory_generator(self):
         x_coeffs = [[], [], [], []]
         y_coeffs = [[], [], [], []]
         z_coeffs = [[], [], [], []]
         waypoints = [[-5, -5, 5], [5, -5, 5], [5, 5, 5], [-5, 5, 5]]
 
-        T = 5
+        T = 3
 
         start_pos = np.zeros((4, 3))
         des_pos = np.zeros((self.env.num_uavs, 3))
@@ -60,9 +60,9 @@ class TestUavSim(unittest.TestCase):
         des_pos[:, 2] = 3
         # des_pos[:, 1] = 0
         # des_pos[:, 1] = 2
-        des_pos[:, 8] = np.pi
+        # des_pos[:, 8] = np.pi
         # des_pos[:, 1] = 1
-        des_pos[:, 0:3] = np.array([[0.5, 0.5, 1], [0.5, 2, 1], [2, 0.5, 1], [2, 2, 1]])
+        # des_pos[:, 0:3] = np.array([[0.5, 0.5, 1], [0.5, 2, 1], [2, 0.5, 1], [2, 2, 1]])
 
         actions = {}
         for i in range(100):
@@ -71,7 +71,7 @@ class TestUavSim(unittest.TestCase):
             self.env.step(actions)
             self.env.render()
 
-    @unittest.skip
+    # @unittest.skip
     def test_lqr_controller(self):
         positions = np.array([[0.5, 0.5, 1], [0.5, 2, 2], [2, 0.5, 2], [2, 2, 1]])
         des_pos = np.zeros((4, 12), dtype=np.float64)
