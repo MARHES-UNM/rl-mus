@@ -1,3 +1,4 @@
+import sys
 import matplotlib
 
 matplotlib.use("TKAgg")
@@ -81,10 +82,7 @@ class Gui:
 
         self.init_entities()
         # for stopping simulation with the esc key
-        self.fig.canvas.mpl_connect(
-            "key_release_event",
-            lambda event: [exit(0) if event.key == "escape" else None],
-        )
+        self.fig.canvas.mpl_connect("key_press_event", self.keypress_routine)
 
     def init_entities(self):
         self.sprites = []
@@ -158,6 +156,32 @@ class Gui:
             # uav_sprite.rotor2.set_data(points[0, 4:5], points[0, 4:5])
 
         plt.pause(0.0000000000001)
+
+    def keypress_routine(self, event):
+        sys.stdout.flush()
+        if event.key == "x":
+            y = list(self.ax.get_ylim3d())
+            y[0] += 0.2
+            y[1] += 0.2
+            self.ax.set_ylim3d(y)
+        elif event.key == "w":
+            y = list(self.ax.get_ylim3d())
+            y[0] -= 0.2
+            y[1] -= 0.2
+            self.ax.set_ylim3d(y)
+        elif event.key == "d":
+            x = list(self.ax.get_xlim3d())
+            x[0] += 0.2
+            x[1] += 0.2
+            self.ax.set_xlim3d(x)
+        elif event.key == "a":
+            x = list(self.ax.get_xlim3d())
+            x[0] -= 0.2
+            x[1] -= 0.2
+            self.ax.set_xlim3d(x)
+
+        elif event.key == "escape":
+            exit(0)
 
     def __del__(self):
         plt.close(self.fig)

@@ -46,8 +46,16 @@ http://www.kostasalexis.com/simulations-with-simpy.html
 
 Another drone simulation using python gym:
 https://github.com/SuhrudhSarathy/drone_sim
+git@github.com:NishanthARao/Python-Quadrotor-Simulation.git
 
 # TODO: implement PID controller from UPenn class
 * take a look at page 13 of paper: https://upcommons.upc.edu/bitstream/handle/2117/112404/Thesis-Jesus_Valle.pdf?sequence=1&isAllowed=y
 
+# use the dynamics in this repo for the drones. Follow the rotation matrix
+git@github.com:AtsushiSakai/PythonRobotics.git
 
+# use the gui class in this repo
+git@github.com:abhijitmajumdar/Quadcopter_simulator.git
+
+# derive the lqr k matrix from this repo
+git@github.com:sundw2014/Quadrotor_LQR.git
