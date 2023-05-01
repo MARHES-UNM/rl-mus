@@ -31,6 +31,7 @@ https://github.com/abhijitmajumdar/Quadcopter_simulator
 https://scholarsarchive.byu.edu/cgi/viewcontent.cgi?article=2324&context=facpub
 
 https://andrew.gibiansky.com/blog/physics/quadcopter-dynamics/
+
 use this matlab code to simulate dynamics
 https://github.com/gibiansky/experiments/blob/master/quadcopter/matlab/simulate.m
 
@@ -55,7 +56,35 @@ git@github.com:NishanthARao/Python-Quadrotor-Simulation.git
 git@github.com:AtsushiSakai/PythonRobotics.git
 
 # use the gui class in this repo
-git@github.com:abhijitmajumdar/Quadcopter_simulator.git
+https://github.com/abhijitmajumdar/Quadcopter_simulator
 
 # derive the lqr k matrix from this repo
-git@github.com:sundw2014/Quadrotor_LQR.git
+https://github.com/sundw2014/Quadrotor_LQR
+
+
+## MOdeling the UAV
+https://andrew.gibiansky.com/blog/physics/quadcopter-dynamics/
+
+the thesis below has different methods for linearization of of the UAV dynamic.
+[Implementation and comparison of linearization-based and backstepping controllers for quadcopters](https://upcommons.upc.edu/bitstream/handle/2117/112404/Thesis-Jesus_Valle.pdf?sequence=1&isAllowed=y)
+
+[Autonomous Navigation and Tracking of Dynamic Surface Targets On-board a Computationally Impoverished Aerial Vehicle ](https://s3-us-west-2.amazonaws.com/selbystorage/wp-content/uploads/2016/05/WCSelbyMSThesisFinal.pdf)
+
+Use the paper from the Upen Vijay Kumar class
+https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=5569026&casa_token=Ld80GMUrC8cAAAAA:k2y_jt-vTcrl2pOba5m7_29nsADbio0zTnsMUQTGs7aSwVVenSw-xVq1_-7cH-P_TcNPkyHXqNqAvQ&tag=1
+
+## Linearization Techniques for UAVs:
+[LQR controller design for quad-rotor helicopters](https://ietresearch.onlinelibrary.wiley.com/doi/10.1049/joe.2018.8126)
+
+use linearization from this paper:Different Linearization Control Techniques for a Quadrotor System
+https://ieeexplore-ieee-org.libproxy.unm.edu/stamp/stamp.jsp?tp=&arnumber=6417914
+
+Look to using runge-kutta 4 method to simulate step
+https://www.geeksforgeeks.org/runge-kutta-4th-order-method-solve-differential-equation/
+
+Look at this dissertation for the control and trajectory tracking: 
+https://repository.upenn.edu/cgi/viewcontent.cgi?article=1705&context=edissertations
+
+
+## Trajectory Generation
+https://repository.upenn.edu/cgi/viewcontent.cgi?article=1705&context=edissertations
