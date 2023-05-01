@@ -123,12 +123,12 @@ class Quadrotor(Entity):
 
         # self.inertia = np.eye(3) * 0.00025
 
-        self.m = 0.2
+        # self.m = 0.2
         self.inertia = np.eye(3)
         self.ixx = self.inertia[0, 0]
         self.iyy = self.inertia[1, 1]
         self.izz = self.inertia[2, 2]
-        self.dt = 0.1
+        # self.dt = 0.1
 
         # self.m = 1.0
         # self.inertia = np.eye(3)
@@ -576,10 +576,12 @@ class Quadrotor(Entity):
         self._state[9] += tau_x * self.dt / self.ixx
         self._state[10] += tau_y * self.dt / self.iyy
         self._state[11] += tau_z * self.dt / self.izz
+        self._state[9:12] = self.wrap_angle(self._state[9:12])
 
         self._state[6] += self._state[9] * self.dt
         self._state[7] += self._state[10] * self.dt
         self._state[8] += self._state[11] * self.dt
+        self._state[6:9] = self.wrap_angle(self._state[6:9])
 
         # R = rotation_matrix(self._state[6], self._state[7], self._state[8])
         R = self.rotation_matrix()
