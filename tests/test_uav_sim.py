@@ -18,13 +18,63 @@ class TestUavSim(unittest.TestCase):
     def setUp(self):
         self.env = UavSim()
 
+    def test_lqr_waypoints(self):
+        T = 1
+        t = 0
+        start_pos = np.zeros((4, 3))
+        for i in range(4):
+            start_pos[i, :] = self.env.uavs[i].state[0:3]
+
+        waypoints = [[0.5, 0.5, 2], [0.5, 2, 1.5], [2, 0.5, 2.5], [2, 2, 1]]
+        num_waypoints = len(waypoints)
+
+        uav_coeffs = np.zeros((self.env.num_uavs, num_waypoints, 3, 6, 1))
+
+        for i in range(self.env.num_uavs):
+            for way_point_num in range(num_waypoints):
+                traj = TrajectoryGenerator(
+                    waypoints[way_point_num], waypoints[(way_point_num + 1) % num_waypoints], T
+                )
+                traj.solve()
+                uav_coeffs[i, way_point_num, 0] = traj.x_c
+                uav_coeffs[i, way_point_num, 1] = traj.y_c
+                uav_coeffs[i, way_point_num, 2] = traj.z_c
+
+        Ks = self.env.uavs[0].calc_k()
+        way_point_num = 0
+        m = self.env.uavs[0].m
+        g = self.env.uavs[0].g
+        while True:
+            while t <= T:
+                des_pos = np.zeros((4, 12), dtype=np.float64)
+                actions = {}
+                for idx in range(self.env.num_uavs):
+                    des_pos[idx, 0] = calculate_position(
+                        uav_coeffs[idx, way_point_num, 0], t
+                    )
+                    des_pos[idx, 1] = calculate_position(
+                        uav_coeffs[idx, way_point_num, 1], t
+                    )
+                    des_pos[idx, 2] = calculate_position(
+                        uav_coeffs[idx, way_point_num, 2], t
+                    )
+
+                    pos_er = des_pos[idx] - self.env.uavs[idx].state
+                    Ux = np.dot(Ks[0], pos_er[[0, 3, 7, 10]])[0]
+                    Uy = np.dot(Ks[1], pos_er[[1, 4, 6, 9]])[0]
+                    Uz = np.dot(Ks[2], pos_er[[2, 5]])[0]
+                    Uyaw = np.dot(Ks[3], pos_er[[8, 11]])[0]
+                    actions[idx] = np.array([Uz + m * g, Uy, Ux, Uyaw])
+
+                self.env.step(actions)
+                self.env.render()
+
+                t += self.env.dt
+            t = 0
+            way_point_num = (way_point_num + 1) % num_waypoints
+
     @unittest.skip
     def test_trajectory_generator(self):
-        x_coeffs = [[], [], [], []]
-        y_coeffs = [[], [], [], []]
-        z_coeffs = [[], [], [], []]
-        waypoints = [[-5, -5, 5], [5, -5, 5], [5, 5, 5], [-5, 5, 5]]
-
         T = 3
 
         start_pos = np.zeros((4, 3))
@@ -54,7 +104,7 @@ class TestUavSim(unittest.TestCase):
             self.env.step(actions)
             self.env.render()
 
-    # @unittest.skip
+    @unittest.skip
     def test_controller(self):
         des_pos = np.zeros((4, 12), dtype=np.float64)
         des_pos[:, 2] = 1
