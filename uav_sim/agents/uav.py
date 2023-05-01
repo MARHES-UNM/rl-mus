@@ -302,13 +302,13 @@ class Quadrotor(Entity):
         kz = 1
         k_x_dot = 0.01
         k_y_dot = 0.01
-        k_z_dot = .01
+        k_z_dot = 0.01
         k_phi = 25
         k_theta = 25
         k_psi = 25
         k_phi_dot = 25
         k_theta_dot = 25
-        k_phi_dot = 25
+        k_psi_dot = 25
 
         des_x_acc = 0
         des_y_acc = 0
@@ -325,9 +325,13 @@ class Quadrotor(Entity):
 
         u1 = self.m * self.g + self.m * (r_ddot_des_z)
         # roll
-        u2_phi = k_phi * (
-            ((r_ddot_des_x * sin(des_psi) - r_ddot_des_y * cos(des_psi)) / self.g)
-            - self.state[6]
+        u2_phi = (
+            k_phi
+            * (
+                ((r_ddot_des_x * sin(des_psi) - r_ddot_des_y * cos(des_psi)) / self.g)
+                - self.state[6]
+            )
+            # + k_phi_dot * state_error[9]
         )
 
         # pitch
@@ -341,11 +345,11 @@ class Quadrotor(Entity):
         )
 
         # yaw
-        u2_psi = k_psi * state_error[8]  # + k_psi_dot * state_error[11]
+        u2_psi = k_psi * state_error[8] + k_psi_dot * state_error[11]
 
         action = np.array([u1, u2_phi, u2_theta, u2_psi])
         return action
-    
+
     def get_controller_with_coeffs(self, coeffs, t):
 
         des_pos_w = np.zeros(12)
