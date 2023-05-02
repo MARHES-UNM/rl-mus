@@ -124,7 +124,7 @@ class Quadrotor(Entity):
         # self.inertia = np.eye(3) * 0.00025
 
         # self.m = 0.2
-        self.inertia = np.eye(3)
+        # self.inertia = np.eye(3)
         self.ixx = self.inertia[0, 0]
         self.iyy = self.inertia[1, 1]
         self.izz = self.inertia[2, 2]
@@ -573,9 +573,20 @@ class Quadrotor(Entity):
 
         ft, tau_x, tau_y, tau_z = action.reshape(-1).tolist()
 
-        self._state[9] += tau_x * self.dt / self.ixx
-        self._state[10] += tau_y * self.dt / self.iyy
-        self._state[11] += tau_z * self.dt / self.izz
+        omega = self._state[9:12]
+        tau = np.array([tau_x, tau_y, tau_z])
+        # tau = np.zeros(3)
+
+        omega_dot = np.dot(
+            self.inv_inertia, (tau - np.cross(omega, np.dot(self.inertia, omega)))
+        )
+        
+        # omega_dot = self.wrap_angle(omega_dot)
+
+        self._state[9:12] += omega_dot * self.dt
+        # self._state[9] += tau_x * self.dt / self.ixx
+        # self._state[10] += tau_y * self.dt / self.iyy
+        # self._state[11] += tau_z * self.dt / self.izz
         self._state[9:12] = self.wrap_angle(self._state[9:12])
 
         self._state[6] += self._state[9] * self.dt
@@ -590,6 +601,29 @@ class Quadrotor(Entity):
             - np.array([0, 0, self.m * self.g], dtype=np.float64).T
         ) / self.m
 
+        # acc = np.zeros(3)
+        m = self.m
+        g = self.g
+        phi1 = self._state[6]
+        theta1 = self._state[7]
+        psi1 = self._state[8]
+        # acc[0] = (
+        #     ft
+        #     / m
+        #     * (
+        #         np.sin(phi1) * np.sin(psi1)
+        #         + np.cos(phi1) * np.cos(psi1) * np.sin(theta1)
+        #     )
+        # )
+        # acc[1] = (
+        #     ft
+        #     / m
+        #     * (
+        #         np.cos(phi1) * np.sin(psi1) * np.sin(theta1)
+        #         - np.cos(psi1) * np.sin(phi1)
+        #     )
+        # )
+        # acc[2] = (-g + ft / m * np.cos(phi1) * np.cos(theta1))
         self._state[3] += acc[0] * self.dt
         self._state[4] += acc[1] * self.dt
         self._state[5] += acc[2] * self.dt
@@ -599,6 +633,25 @@ class Quadrotor(Entity):
         self._state[2] += self._state[5] * self.dt
 
         self._state[2] = max(0, self._state[2])
+
+        s_phi = sin(self._state[6])
+        c_phi = cos(self._state[6])
+        s_theta = sin(self._state[7])
+        c_theta = cos(self._state[7])
+
+        # phi_rot = np.array(
+        #     [
+        #         [c_theta, 0, -c_phi * s_theta],
+        #         [0, 1, s_phi],
+        #         [s_theta, 0, c_phi * c_theta],
+        #     ]
+        # )
+
+        # # p, q, r
+        # omega = np.dot(phi_rot, self._state[9:12])
+
+        # self._state[9:12] += omega_dot * self.dt
+        # self._state[9:12] = np.dot(np.linalg.inv(phi_rot), omega)
 
     def step(self, action=np.zeros(4)):
         """Action is propeller forces in body frame
