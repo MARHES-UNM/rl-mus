@@ -100,13 +100,14 @@ class Quadrotor(Entity):
 
         self.use_ode = use_ode
 
-        # if self.use_ode:
-        # self.ode = scipy.integrate.ode(self.f).set_integrator(
-        #     "vode", nsteps=500, method="bdf"
-        # )
+        if self.use_ode:
+            self.ode = scipy.integrate.ode(self.f_dot).set_integrator(
+                "vode", nsteps=500, method="bdf"
+            )
 
         # timestep
         self.dt = dt  # s
+        self.dt = 0.1  # s
 
         # gravity constant
         self.g = 9.81  # m/s^2
@@ -121,7 +122,8 @@ class Quadrotor(Entity):
             [[0.00025, 0, 2.55e-6], [0, 0.000232, 0], [2.55e-6, 0, 0.0003738]]
         )
 
-        # self.inertia = np.eye(3) * 0.00025
+        self.inertia = np.eye(3) * 0.00025
+        self.inertia = np.diag([8.1e-3, 8.1e-3, 14.2e-3])
 
         # self.m = 0.2
         # self.inertia = np.eye(3)
@@ -580,7 +582,7 @@ class Quadrotor(Entity):
         omega_dot = np.dot(
             self.inv_inertia, (tau - np.cross(omega, np.dot(self.inertia, omega)))
         )
-        
+
         # omega_dot = self.wrap_angle(omega_dot)
 
         self._state[9:12] += omega_dot * self.dt
@@ -653,6 +655,41 @@ class Quadrotor(Entity):
         # self._state[9:12] += omega_dot * self.dt
         # self._state[9:12] = np.dot(np.linalg.inv(phi_rot), omega)
 
+    def f_dot(self, time, state, action):
+        ft, tau_x, tau_y, tau_z = action.reshape(-1).tolist()
+
+        omega = state[9:12]
+        tau = np.array([tau_x, tau_y, tau_z])
+
+        omega_dot = np.dot(
+            self.inv_inertia, (tau - np.cross(omega, np.dot(self.inertia, omega)))
+        )
+
+        R = self.rotation_matrix()
+        acc = (
+            np.dot(R, np.array([0, 0, ft], dtype=np.float64).T)
+            - np.array([0, 0, self.m * self.g], dtype=np.float64).T
+        ) / self.m
+
+        dot_x = np.array(
+            [
+                state[3],
+                state[4],
+                state[5],
+                acc[0],
+                acc[1],
+                acc[2],
+                state[9],
+                state[10],
+                state[11],
+                omega_dot[0],
+                omega_dot[1],
+                omega_dot[2],
+            ]
+        )
+
+        return dot_x
+
     def step(self, action=np.zeros(4)):
         """Action is propeller forces in body frame
 
@@ -663,7 +700,15 @@ class Quadrotor(Entity):
         """
 
         if self.use_ode:
-            self.f(action)
+            self.ode.set_initial_value(self._state, 0).set_f_params(action)
+            self._state = self.ode.integrate(self.ode.t + self.dt)
+            assert self.ode.successful()
+
+            self._state[9:12] = self.wrap_angle(self._state[9:12])
+
+            self._state[6:9] = self.wrap_angle(self._state[6:9])
+            self._state[2] = max(0, self._state[2])
+            # self.f(action)
 
         else:
             action = np.clip(action, self.min_f, self.max_f)
