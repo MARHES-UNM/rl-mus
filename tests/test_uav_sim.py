@@ -160,7 +160,7 @@ class TestUavSim(unittest.TestCase):
             self.env.step(actions)
             self.env.render()
 
-    @unittest.skip
+    # @unittest.skip
     def test_lqr_controller(self):
         positions = np.array([[0.5, 0.5, 1], [0.5, 2, 2], [2, 0.5, 2], [2, 2, 1]])
         des_pos = np.zeros((4, 12), dtype=np.float64)

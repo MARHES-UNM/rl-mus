@@ -122,11 +122,11 @@ class Quadrotor(Entity):
             [[0.00025, 0, 2.55e-6], [0, 0.000232, 0], [2.55e-6, 0, 0.0003738]]
         )
 
-        self.inertia = np.eye(3) * 0.00025
+        # self.inertia = np.eye(3) * 0.00025
         # self.inertia = np.diag([8.1e-3, 8.1e-3, 14.2e-3])
 
         # # self.m = 0.2
-        self.inertia = np.eye(3)
+        # self.inertia = np.eye(3)
         self.ixx = self.inertia[0, 0]
         self.iyy = self.inertia[1, 1]
         self.izz = self.inertia[2, 2]
@@ -177,7 +177,7 @@ class Quadrotor(Entity):
         )
         Bx = np.array([[0.0], [0.0], [0.0], [1 / Ix]])
 
-        Qx = np.diag([100000, 1, 10, 1])
+        Qx = np.diag([.5, 100, 1, 100])
 
         # Y-subsystem
         # The state variables are y, dot_y, roll, dot_roll
@@ -191,7 +191,7 @@ class Quadrotor(Entity):
         )
         By = np.array([[0.0], [0.0], [0.0], [1 / Iy]])
 
-        Qy = np.diag([100000, 1, 100000, 1])
+        Qy = np.diag([.5, 100, 1, 100])
         # Z-subsystem
         # The state variables are z, dot_z
         Az = np.array([[0.0, 1.0], [0.0, 0.0]])
@@ -207,7 +207,7 @@ class Quadrotor(Entity):
         # The state variables are yaw, dot_yaw
         Ayaw = np.array([[0.0, 1.0], [0.0, 0.0]])
         Byaw = np.array([[0.0], [1 / Iz]])
-        Qyaw = np.diag([10, 1])
+        Qyaw = np.diag([1, 1])
 
         ####################### solve LQR #######################
         Ks = []  # feedback gain matrices K for each subsystem
@@ -220,7 +220,7 @@ class Quadrotor(Entity):
             #     Q[1, 1] = 1
             R = np.diag(
                 [
-                    1000,
+                    10000000,
                 ]
             )
             K, _, _ = lqr(A, B, Q, R)
