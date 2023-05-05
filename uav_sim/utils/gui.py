@@ -39,7 +39,6 @@ class Gui:
         self.fig = fig
 
         if self.fig is None:
-            # self.fig = plt.figure()
             self.fig = plt.figure(figsize=(12, 6))
             gs0 = self.fig.add_gridspec(1,2)
             gs00 = gs0[0].subgridspec(1,1)
@@ -48,14 +47,6 @@ class Gui:
             self.ax_errors = []
             for i in range(3):
                 self.ax_errors.append(self.fig.add_subplot(gs01[i]))
-                
-            # self.ax = self.fig.add_subplot(121, projection="3d")
-            # self.ax
-            # ax1 = self.fig.add_subplot(411)
-            # ax2 = self.fig.add_subplot(412)
-            # ax3 = self.fig.add_subplot(143)
-            # ax4 = self.fig.add_subplot(144)
-            # self.ax_errs = [ax1, ax2, ax3, ax4]
 
         self.ax.set_xlim3d([0, max_x])
         self.ax.set_ylim3d([0, max_y])

@@ -39,6 +39,7 @@ class TestUav(unittest.TestCase):
         np.testing.assert_almost_equal(0.0, uav.state[2])
 
     def test_calc_gain(self):
+         K = self.uav.calc_gain()
         
 
 

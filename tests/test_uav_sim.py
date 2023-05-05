@@ -43,7 +43,7 @@ class TestUavSim(unittest.TestCase):
                 uav_coeffs[i, way_point_num, 1] = traj.y_c
                 uav_coeffs[i, way_point_num, 2] = traj.z_c
 
-        Ks = self.env.uavs[0].calc_k()
+        Ks = self.env.uavs[0].calc_gain()
         way_point_num = 0
         m = self.env.uavs[0].m
         g = self.env.uavs[0].g
