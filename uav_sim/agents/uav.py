@@ -30,55 +30,6 @@ class Entity:
         self.type = _type
 
 
-def lqr(A, B, Q, R):
-    """Solve the continuous time lqr controller.
-    dx/dt = A x + B u
-    cost = integral x.T*Q*x + u.T*R*u
-
-    """
-    # http://www.mwm.im/lqr-controllers-with-python/
-    # https://github.com/ssloy/tutorials/blob/master/tutorials/pendulum/lqr.py
-    # ref Bertsekas, p.151
-
-    # first, try to solve the ricatti equation
-    X = scipy.linalg.solve_continuous_are(A, B, Q, R)
-
-    # compute the LQR gain
-    K = np.dot(np.linalg.inv(R), np.dot(B.T, X))
-
-    eig_vals, eig_vecs = np.linalg.eig(A - np.dot(B, K))
-
-    return K, X, eig_vals
-
-
-def rotation_matrix(roll, pitch, yaw):
-    """
-    Calculates the ZYX rotation matrix.
-
-    Args
-        Roll: Angular position about the x-axis in radians.
-        Pitch: Angular position about the y-axis in radians.
-        Yaw: Angular position about the z-axis in radians.
-
-    Returns
-        3x3 rotation matrix as NumPy array
-    """
-    return np.array(
-        [
-            [
-                cos(yaw) * cos(pitch),
-                -sin(yaw) * cos(roll) + cos(yaw) * sin(pitch) * sin(roll),
-                sin(yaw) * sin(roll) + cos(yaw) * sin(pitch) * cos(roll),
-            ],
-            [
-                sin(yaw) * cos(pitch),
-                cos(yaw) * cos(roll) + sin(yaw) * sin(pitch) * sin(roll),
-                -cos(yaw) * sin(roll) + sin(yaw) * sin(pitch) * cos(roll),
-            ],
-            [-sin(pitch), cos(pitch) * sin(roll), cos(pitch) * cos(yaw)],
-        ]
-    )
-
 
 class Quadrotor(Entity):
     def __init__(
@@ -107,14 +58,12 @@ class Quadrotor(Entity):
 
         # timestep
         self.dt = dt  # s
-        self.dt = 0.1  # s
 
         # gravity constant
         self.g = 9.81  # m/s^2
 
         # mass
         self.m = m  # kg
-        # self.m = 1
 
         # lenght of arms
         self.l = l  # m
@@ -123,21 +72,10 @@ class Quadrotor(Entity):
             [[0.00025, 0, 2.55e-6], [0, 0.000232, 0], [2.55e-6, 0, 0.0003738]]
         )
 
-        # self.inertia = np.eye(3) * 0.00025
-        # self.inertia = np.diag([8.1e-3, 8.1e-3, 14.2e-3])
-
-        # # self.m = 0.2
-        # self.inertia = np.eye(3)
         self.ixx = self.inertia[0, 0]
         self.iyy = self.inertia[1, 1]
         self.izz = self.inertia[2, 2]
-        # self.dt = 0.1
-
-        # self.m = 1.0
-        # self.inertia = np.eye(3)
-        # self.inertia[0, 0] = 8.1 * 1e-3
-        # self.inertia[1, 1] = 8.1 * 1e-3
-        # self.inertia[2, 2] = 14.2 * 1e-3
+  
 
         self.inv_inertia = np.linalg.pinv(self.inertia)
 
@@ -159,7 +97,9 @@ class Quadrotor(Entity):
     def state(self):
         return self._state
 
-    def calc_k(self):
+    def calc_gain(self):
+        
+        
         Ix = self.inertia[0, 0]
         Iy = self.inertia[1, 1]
         Iz = self.inertia[2, 2]

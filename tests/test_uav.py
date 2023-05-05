@@ -1,6 +1,6 @@
 # from tests import context
 
-# import context
+import context
 
 from uav_sim.agents.uav import Quadrotor
 import unittest
@@ -37,6 +37,9 @@ class TestUav(unittest.TestCase):
             action = np.zeros(4)
             uav.step(action)
         np.testing.assert_almost_equal(0.0, uav.state[2])
+
+    def test_calc_gain(self):
+        
 
 
 if __name__ == "__main__":
