@@ -85,6 +85,8 @@ https://www.geeksforgeeks.org/runge-kutta-4th-order-method-solve-differential-eq
 Look at this dissertation for the control and trajectory tracking: 
 https://repository.upenn.edu/cgi/viewcontent.cgi?article=1705&context=edissertations
 
+Linear Quadratic Regulator for Trajectory Tracking of a Quadrotor
+https://reader.elsevier.com/reader/sd/pii/S2405896319311450?token=A623301C4D79726D5E878D5ED45FDEB9B09B01E091E8D096636924105BB74069114A9518838AF42A95C14A4BC20156C7&originRegion=us-east-1&originCreation=20230505012459
 
 ## Trajectory Generation
 https://repository.upenn.edu/cgi/viewcontent.cgi?article=1705&context=edissertations

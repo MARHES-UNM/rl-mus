@@ -107,6 +107,7 @@ class Quadrotor(Entity):
 
         # timestep
         self.dt = dt  # s
+        self.dt = 0.1  # s
 
         # gravity constant
         self.g = 9.81  # m/s^2
@@ -704,101 +705,36 @@ class Quadrotor(Entity):
 
     def f_dot(self, time, state, action):
         ft, tau_x, tau_y, tau_z = action.reshape(-1).tolist()
-        (
-            x,
-            y,
-            z,
-            x_dot,
-            y_dot,
-            z_dot,
-            phi,
-            theta,
-            psi,
-            phi_dot,
-            theta_dot,
-            psi_dot,
-        ) = state.reshape(-1).tolist()
 
-        # s_phi = sin(self._state[6])
-        # c_phi = cos(self._state[6])
-        # s_theta = sin(self._state[7])
-        # c_theta = cos(self._state[7])
-        # psi = self._state[8]
+        omega = state[9:12]
+        tau = np.array([tau_x, tau_y, tau_z])
 
-        # phi_rot = np.array(
-        #     [
-        #         [c_theta, 0, -c_phi * s_theta],
-        #         [0, 1, s_phi],
-        #         [s_theta, 0, c_phi * c_theta],
-        #     ]
-        # )
+        omega_dot = np.dot(
+            self.inv_inertia, (tau - np.cross(omega, np.dot(self.inertia, omega)))
+        )
 
-        # # p, q, r
-        # omega = np.dot(phi_rot, self._state[9:12])
-        # # omega = state[9:12]
-        # tau = np.array([tau_x, tau_y, tau_z])
-
-        # omega_dot = np.dot(
-        #     self.inv_inertia, (tau - np.cross(omega, np.dot(self.inertia, omega)))
-        # )
-        # p = self._state[9]
-        # q = self._state[10]
-        # r = self._state[11]
-
-        # # omega_dot[0] = (self.iyy - self.izz) / self.ixx * q * r + tau[0] / self.ixx
-        # # omega_dot[1] = (self.izz - self.ixx) / self.iyy * p * r + tau[1] / self.iyy
-        # # omega_dot[2] = (self.ixx - self.iyy) / self.izz * p * q + tau[2] / self.izz
-
-        # # angle_dot = np.dot(np.linalg.inv(phi_rot), omega.T)
-
-        # # omega_dot = np.dot(self.inv_inertia, tau)
-
-        # R = self.rotation_matrix()
-        # acc = (
-        #     np.dot(R, np.array([0.0, 0.0, ft], dtype=np.float64).T)
-        #     - np.array([0.0, 0.0, self.m * self.g], dtype=np.float64).T
-        # ) / self.m
+        R = self.rotation_matrix()
+        acc = (
+            np.dot(R, np.array([0, 0, ft], dtype=np.float64).T)
+            - np.array([0, 0, self.m * self.g], dtype=np.float64).T
+        ) / self.m
 
         dot_x = np.array(
             [
-                x_dot,
-                y_dot,
-                z_dot,
-                # state[3],
-                # state[4],
-                # state[5],
-                self.g * (state[7] * cos(state[8]) + state[6] * sin(state[8])),
-                self.g * (state[7] * sin(state[8]) - state[6] * cos(state[8])),
-                # self.g * state[7],
-                # -self.g * state[6],
-                1 / self.m * ft - self.g,
-                phi_dot,
-                theta_dot,
-                psi_dot,
-                # state[9],
-                # state[10],
-                # state[11],
-                1 / self.ixx * tau_x,
-                1 / self.iyy * tau_y,
-                1 / self.izz * tau_z,
+                state[3],
+                state[4],
+                state[5],
+                acc[0],
+                acc[1],
+                acc[2],
+                state[9],
+                state[10],
+                state[11],
+                omega_dot[0],
+                omega_dot[1],
+                omega_dot[2],
             ]
         )
-        # dot_x = np.array(
-        #     [
-        #         state[3],
-        #         state[4],
-        #         state[5],
-        #         acc[0],
-        #         acc[1],
-        #         acc[2],
-        #         state[9],
-        #         state[10],
-        #         state[11],
-        #         omega_dot[0],
-        #         omega_dot[1],
-        #         omega_dot[2],
-        #     ]
-        # )
 
         return dot_x
 
@@ -816,31 +752,37 @@ class Quadrotor(Entity):
             self._state = self.ode.integrate(self.ode.t + self.dt)
             assert self.ode.successful()
 
-            s_phi = sin(self._state[6])
-            c_phi = cos(self._state[6])
-            s_theta = sin(self._state[7])
-            c_theta = cos(self._state[7])
-            psi = self._state[8]
-
-            phi_rot = np.array(
-                [
-                    [c_theta, 0, -c_phi * s_theta],
-                    [0, 1, s_phi],
-                    [s_theta, 0, c_phi * c_theta],
-                ]
-            )
-
-            # p, q, r
-            # omega = np.dot(np.linalg.inv(phi_rot), self._state[9:12])
             self._state[9:12] = self.wrap_angle(self._state[9:12])
 
             self._state[6:9] = self.wrap_angle(self._state[6:9])
-
-            # self.f(action)
-            # for i in range(6, 8):
-            # self._state[i] = max(90 * np.pi / 180, self._state[i])
-            # self._state[i] = min(-np.pi * 90 / 180, self._state[i])
             self._state[2] = max(0, self._state[2])
+            # self.f(action)
+
+            # s_phi = sin(self._state[6])
+            # c_phi = cos(self._state[6])
+            # s_theta = sin(self._state[7])
+            # c_theta = cos(self._state[7])
+            # psi = self._state[8]
+
+            # phi_rot = np.array(
+            #     [
+            #         [c_theta, 0, -c_phi * s_theta],
+            #         [0, 1, s_phi],
+            #         [s_theta, 0, c_phi * c_theta],
+            #     ]
+            # )
+
+            # # p, q, r
+            # # omega = np.dot(np.linalg.inv(phi_rot), self._state[9:12])
+            # self._state[9:12] = self.wrap_angle(self._state[9:12])
+
+            # self._state[6:9] = self.wrap_angle(self._state[6:9])
+
+            # # self.f(action)
+            # # for i in range(6, 8):
+            # # self._state[i] = max(90 * np.pi / 180, self._state[i])
+            # # self._state[i] = min(-np.pi * 90 / 180, self._state[i])
+            # self._state[2] = max(0, self._state[2])
         else:
             action = np.clip(action, self.min_f, self.max_f)
             x_ddot = (
