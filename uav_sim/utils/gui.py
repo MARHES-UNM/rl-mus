@@ -67,7 +67,7 @@ class UavSprite:
             ]
         ).T
 
-        self.t_lim = 3
+        self.t_lim = 30
 
     def update(self, t):
         R = self.uav.rotation_matrix()
@@ -120,7 +120,6 @@ class Gui:
             gs01 = gs0[1].subgridspec(4, 1)
             self.ax = {}
             self.ax["ax_3d"] = self.fig.add_subplot(gs00[0], projection="3d")
-            # self.ax = self.fig.add_subplot(gs00[0], projection="3d")
             self.ax["ax_error_x"] = self.fig.add_subplot(gs01[0])
             self.ax["ax_error_x"].set_ylim([0, max_x])
             self.ax["ax_error_y"] = self.fig.add_subplot(gs01[1])
@@ -160,13 +159,8 @@ class Gui:
         # (0, 0) is bottom left, (1, 1) is top right
         # Placement 0, 0 would be the bottom left, 1, 1 would be the top right.
         self.time_display = self.ax["ax_3d"].text2D(
-            0.75, 0.95, "", color="red", transform=self.ax["ax_3d"].transAxes
+            0.0, 0.95, "", color="red", transform=self.ax["ax_3d"].transAxes
         )
-
-        self.state_display = self.ax["ax_3d"].text2D(
-            0, 0.95, "", color="green", transform=self.ax["ax_3d"].transAxes
-        )
-
         self.init_entities()
         # for stopping simulation with the esc key
         self.fig.canvas.mpl_connect("key_press_event", self.keypress_routine)
@@ -184,16 +178,12 @@ class Gui:
         for uav in self.uavs:
             uav_sprite = UavSprite(self.ax, uav)
             self.sprites.append(uav_sprite)
-        # for idx in range(len(self.uavs)):
-        #     uav_sprite = UavSprite(self.ax)
-        #     self.sprites.append(uav_sprite)
 
     # TODO: update this to use blit
     # https://matplotlib.org/stable/api/animation_api.html
     # https://stackoverflow.com/questions/11874767/how-do-i-plot-in-real-time-in-a-while-loop-using-matplotlib
     def update(self, time_elapsed):
         # self.fig.canvas.restore_region(self.background)
-
         self.time_display.set_text(f"Sim time = {time_elapsed:.2f} s")
 
         target_points = np.array(
@@ -205,13 +195,7 @@ class Gui:
             )
             target.set_3d_properties(target_points[2, idx : idx + 1])
 
-        for uav, uav_sprite in zip(self.uavs, self.sprites):
-            uav_state = uav.state
-            self.state_display.set_text(
-                f"x:{uav_state[0]:.2f}, y:{uav_state[1]:.2f}, z:{uav_state[2]:.2f}\n"
-                f"phi: {uav_state[6]:.2f}, theta: {uav_state[7]:.2f}, psi: {uav_state[8]:.2f}"
-            )
-
+        for uav_sprite in self.sprites:
             uav_sprite.update(time_elapsed)
 
         #     self.ax.draw_artist(uav_sprite.cm)

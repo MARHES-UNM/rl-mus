@@ -69,7 +69,7 @@ class UavSim:
             y = np.random.rand() * self.env_max_l
             z = np.random.rand() * self.env_max_h
 
-            uav = Quadrotor(_id=idx, x=x, y=y, z=z)
+            uav = Quadrotor(_id=idx, x=x, y=y, z=z, dt=self.dt)
             self.uavs.append(uav)
 
     def render(self, mode="human"):
