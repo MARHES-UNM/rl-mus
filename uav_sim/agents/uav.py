@@ -31,6 +31,11 @@ class Pad(Entity):
         self.x = x
         self.y = y
         super().__init__(_id, _type)
+        self._state = np.array([self.x, self.y])
+
+    @property
+    def state(self):
+        return self._state
 
 
 class Target(Entity):
@@ -44,7 +49,7 @@ class Target(Entity):
         w=0,
         dt=0.1,
         num_landing_pads=1,
-        pad_offset=0.,
+        pad_offset=0.5,
         r=1,
     ):
         super().__init__(_id=_id, _type=AgentType.C)
@@ -57,20 +62,29 @@ class Target(Entity):
         self.r = r  # radius, m
         self.pad_offset = pad_offset  # m
 
-        pad_position = [
-            (x - pad_offset, y),
-            (x + pad_offset, y),
-            (x, y - pad_offset),
-            (x, y + pad_offset),
-        ]
-
         self.pads = [
-            Pad(_id, pad_loc[0], pad_loc[1]) for _id, pad_loc in enumerate(pad_position)
+            Pad(_id, pad_loc[0], pad_loc[1])
+            for _id, pad_loc in enumerate(self.get_pad_offsets())
         ]
 
     @property
     def state(self):
         return self._state
+
+    def get_pad_offsets(self):
+        x = self._state[0]
+        y = self._state[1]
+        return [
+            (x - self.pad_offset, y),
+            (x + self.pad_offset, y),
+            (x, y - self.pad_offset),
+            (x, y + self.pad_offset),
+        ]
+
+    def update_pad_loc(self):
+        pad_offsets = self.get_pad_offsets()
+        for pad, offset in zip(self.pads, pad_offsets):
+            pad.x, pad.y = offset
 
     def step(self, action):
         self.v = action[0]
@@ -82,6 +96,7 @@ class Target(Entity):
         psi += self.w * self.dt
 
         self._state[2] = self.wrap_angle(psi)
+        self.update_pad_loc()
 
 
 class Quadrotor(Entity):

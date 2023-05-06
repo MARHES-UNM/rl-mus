@@ -32,7 +32,7 @@ class TargetSprite:
         self.target = target
         self.t_lim = t_lim
         self.body = None
-        self.pads = [None] * 4
+        self.pad_sprites = [None] * 4
         # self.body = Circle((0, 0), self.target.r)
         # self.body.center = (0, 0)
         # self.ax["ax_3d"].add_patch(self.body)
@@ -72,34 +72,18 @@ class TargetSprite:
         self.ax["ax_3d"].add_patch(self.body)
         art3d.pathpatch_2d_to_3d(self.body, z=0, zdir="z")
 
-        for idx, pad in enumerate(self.pads):
-            if pad is not None:
-                pad.remove()
+        for pad, pad_sprite in zip(self.target.pads, self.pad_sprites):
+            if pad_sprite:
+                pad_sprite.remove()
 
             pad = Circle(
-                (self.target.pads[idx].x, self.target.pads[idx].y),
+                (pad.x, pad.y),
                 0.25,
                 fill=False,
                 color="red",
             )
             self.ax["ax_3d"].add_patch(pad)
             art3d.pathpatch_2d_to_3d(pad, z=0, zdir="z")
-
-        # self.body.set_3d_properties(
-        #     (self.target.state[0], self.target.state[1]), zs=0, zdir="z"
-        # )
-        # self.body.verts = (self.target.state[0], self.target.state[1])
-
-        # self.cm.set_offsets(se)
-        # self.cm.set_3d_properties([0])
-        #         target_points = np.array(
-        #     [[0.5, 0.5, 0], [0.5, 1.5, 0], [1.5, 0.5, 0], [1.5, 1.5, 0]]
-        # ).T
-        # for idx, target in enumerate(self.target_sprites.targets):
-        #     target.set_data(
-        #         target_points[0, idx : idx + 1], target_points[1, idx : idx + 1]
-        #     )
-        #     target.set_3d_properties(target_points[2, idx : idx + 1])
 
         self.trajectory["t"].append(t)
         self.trajectory["x"].append(self.target._state[0])
