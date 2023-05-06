@@ -1,20 +1,113 @@
-from cProfile import label
 import sys
+from turtle import color
 import matplotlib
 
 matplotlib.use("TKAgg")
 import matplotlib.pyplot as plt
+from matplotlib.patches import Circle
 import numpy as np
+import mpl_toolkits.mplot3d.art3d as art3d
+
+
+class Sprite:
+    def __init__(self, ax, t_lim=30):
+        self.t_lim = t_lim
+        self.ax = ax
+
+    def update(self, t):
+        raise NotImplemented
 
 
 class TargetSprite:
-    def __init__(self, ax, num_targets=1):
-        self.ax = ax
-        self.targets = []
-        for i in range(num_targets):
-            (t_sprite,) = self.ax.plot([], [], [], "r.", markersize=4)
+    """
+    Creates circular patch on 3d surface
+    https://matplotlib.org/stable/gallery/mplot3d/pathpatch3d.html
 
-            self.targets.append(t_sprite)
+    https://nickcharlton.net/posts/drawing-animating-shapes-matplotlib
+    https://stackoverflow.com/questions/73892040/moving-circle-animation-3d-plot
+    """
+
+    def __init__(self, ax, target=None, num_targets=1, t_lim=30):
+        self.ax = ax
+        self.target = target
+        self.t_lim = t_lim
+        self.body = None
+        # self.body = Circle((0, 0), self.target.r)
+        # self.body.center = (0, 0)
+        # self.ax["ax_3d"].add_patch(self.body)
+        # art3d.pathpatch_2d_to_3d(self.body, z=0, zdir="z")
+
+        self.trajectory = {
+            "t": [],
+            "x": [],
+            "y": [],
+            "psi": [],
+        }
+
+        (self.x_bar,) = self.ax["ax_error_x"].plot(
+            [], [], label=f"id: {self.target.id}"
+        )
+        (self.y_bar,) = self.ax["ax_error_y"].plot(
+            [], [], label=f"id: {self.target.id}"
+        )
+        (self.psi_bar,) = self.ax["ax_error_psi"].plot(
+            [], [], label=f"id: {self.target.id}"
+        )
+
+    def update(self, t):
+        # self.cm.set_data(self.target.state[0], self.target.state[1])
+        # self.body.verts = ()
+        # self.ax["ax_3d"].patches.pop()
+        if self.body:
+            self.body.remove()
+
+        self.body = Circle(
+            (self.target.state[0], self.target.state[1]),
+            self.target.r,
+            fill=False,
+            color="green",
+        )
+        self.ax["ax_3d"].add_patch(self.body)
+        art3d.pathpatch_2d_to_3d(self.body, z=0, zdir="z")
+
+        for pad in self.target.pads:
+            temp_pad = Circle((pad.x, pad.y), 0.25, fill=False, color="red")
+            self.ax["ax_3d"].add_patch(temp_pad)
+            art3d.pathpatch_2d_to_3d(temp_pad, z=0, zdir="z")
+
+        # self.body.set_3d_properties(
+        #     (self.target.state[0], self.target.state[1]), zs=0, zdir="z"
+        # )
+        # self.body.verts = (self.target.state[0], self.target.state[1])
+
+        # self.cm.set_offsets(se)
+        # self.cm.set_3d_properties([0])
+        #         target_points = np.array(
+        #     [[0.5, 0.5, 0], [0.5, 1.5, 0], [1.5, 0.5, 0], [1.5, 1.5, 0]]
+        # ).T
+        # for idx, target in enumerate(self.target_sprites.targets):
+        #     target.set_data(
+        #         target_points[0, idx : idx + 1], target_points[1, idx : idx + 1]
+        #     )
+        #     target.set_3d_properties(target_points[2, idx : idx + 1])
+
+        self.trajectory["t"].append(t)
+        self.trajectory["x"].append(self.target._state[0])
+        self.trajectory["y"].append(self.target._state[1])
+        self.trajectory["psi"].append(self.target._state[2])
+
+        self.ax["ax_error_x"].set_xlim(
+            left=max(0, t - self.t_lim), right=t + self.t_lim
+        )
+        self.x_bar.set_data(self.trajectory["t"], self.trajectory["x"])
+        self.ax["ax_error_y"].set_xlim(
+            left=max(0, t - self.t_lim), right=t + self.t_lim
+        )
+        self.y_bar.set_data(self.trajectory["t"], self.trajectory["y"])
+        self.ax["ax_error_psi"].set_xlim(
+            left=max(0, t - self.t_lim), right=t + self.t_lim
+        )
+        self.psi_bar.set_data(self.trajectory["t"], self.trajectory["psi"])
 
 
 class UavSprite:
@@ -109,7 +202,7 @@ class UavSprite:
 
 
 class Gui:
-    def __init__(self, uavs, target, max_x=3, max_y=3, max_z=3, fig=None):
+    def __init__(self, uavs=[], target=None, max_x=3, max_y=3, max_z=3, fig=None):
         self.uavs = uavs
         self.fig = fig
         self.target = target
@@ -173,8 +266,8 @@ class Gui:
 
     def init_entities(self):
         self.sprites = []
-
-        self.target_sprites = TargetSprite(self.ax["ax_3d"], len(self.uavs))
+        target_sprite = TargetSprite(self.ax, self.target)
+        self.sprites.append(target_sprite)
 
         for uav in self.uavs:
             uav_sprite = UavSprite(self.ax, uav)
@@ -187,24 +280,17 @@ class Gui:
         # self.fig.canvas.restore_region(self.background)
         self.time_display.set_text(f"Sim time = {time_elapsed:.2f} s")
 
-        target_points = np.array(
-            [[0.5, 0.5, 0], [0.5, 1.5, 0], [1.5, 0.5, 0], [1.5, 1.5, 0]]
-        ).T
-        for idx, target in enumerate(self.target_sprites.targets):
-            target.set_data(
-                target_points[0, idx : idx + 1], target_points[1, idx : idx + 1]
-            )
-            target.set_3d_properties(target_points[2, idx : idx + 1])
+        for sprite in self.sprites:
+            sprite.update(time_elapsed)
 
-        for uav_sprite in self.sprites:
-            uav_sprite.update(time_elapsed)
+        # self.ax["ax_3d"].plot(1, 1, "r+")
 
         #     self.ax.draw_artist(uav_sprite.cm)
         # self.fig.canvas.blit(self.ax.bbox)
-        for key, ax in self.ax.items():
-            if key == "ax_3d":
-                continue
-            ax.legend()
+        # for key, ax in self.ax.items():
+        #     if key == "ax_3d":
+        #         continue
+        #     ax.legend()
 
         plt.pause(0.0000000000001)
 

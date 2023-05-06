@@ -90,3 +90,6 @@ https://reader.elsevier.com/reader/sd/pii/S2405896319311450?token=A623301C4D7972
 
 ## Trajectory Generation
 https://repository.upenn.edu/cgi/viewcontent.cgi?article=1705&context=edissertations
+
+Prediction-Based Leader-Follower Rendezvous Model Predictive Control with Robustness to Communication Losses
+https://arxiv.org/pdf/2304.01045.pdf

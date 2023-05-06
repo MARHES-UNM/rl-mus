@@ -1,16 +1,9 @@
 from math import cos, sin
 import numpy as np
-from uav_sim.agents.uav import AgentType
 from uav_sim.utils.utils import lqr
 import scipy.integrate
 import scipy
 from enum import IntEnum
-
-from uav_sim.utils.trajectory_generator import (
-    calculate_acceleration,
-    calculate_position,
-    calculate_velocity,
-)
 
 
 class AgentType(IntEnum):
@@ -32,14 +25,27 @@ class Entity:
     def wrap_angle(self, val):
         return (val + np.pi) % (2 * np.pi) - np.pi
 
+
 class Pad(Entity):
-    def __init__(self, _id, _type=AgentType.O):
+    def __init__(self, _id, x, y, _type=AgentType.O):
+        self.x = x
+        self.y = y
         super().__init__(_id, _type)
 
 
 class Target(Entity):
     def __init__(
-        self, _id, x=0, y=0, psi=0, v=0, w=0, dt=0.1, num_landing_pads=1, pad_offset=1
+        self,
+        _id,
+        x=0,
+        y=0,
+        psi=0,
+        v=0,
+        w=0,
+        dt=0.1,
+        num_landing_pads=1,
+        pad_offset=0.,
+        r=1,
     ):
         super().__init__(_id=_id, _type=AgentType.C)
         self.x = x
@@ -48,7 +54,19 @@ class Target(Entity):
         self.dt = dt
         self.num_landing_pads = num_landing_pads
         self._state = np.array([x, y, psi, v, w])
-        self.pad_offset = pad_offset
+        self.r = r  # radius, m
+        self.pad_offset = pad_offset  # m
+
+        pad_position = [
+            (x - pad_offset, y),
+            (x + pad_offset, y),
+            (x, y - pad_offset),
+            (x, y + pad_offset),
+        ]
+
+        self.pads = [
+            Pad(_id, pad_loc[0], pad_loc[1]) for _id, pad_loc in enumerate(pad_position)
+        ]
 
     @property
     def state(self):

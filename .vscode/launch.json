@@ -13,7 +13,24 @@
             "env": {
                 "DISPLAY": "192.168.1.11:0.0"
                 // "DISPLAY": "192.168.243.10:0.0"
-            }
+            },
+            "args": ["-v"]
+        },
+        {
+            "name": "unittest_target",
+            "type": "python",
+            "request": "launch",
+            "module": "unittest",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "DISPLAY": "192.168.1.11:0.0"
+            },
+            "args": [
+                "-v", 
+                "${cwd}/tests/test_target.py"
+            ]
         },
         {
             "name": "unittest_uav",
@@ -29,6 +46,7 @@
                 // "DISPLAY": "192.168.243.10:0.0"
             },
             "args": [
+                "-v", 
                 "${cwd}/tests/test_uav.py"
             ]
         },
