@@ -32,6 +32,7 @@ class TargetSprite:
         self.target = target
         self.t_lim = t_lim
         self.body = None
+        self.pads = [None] * 4
         # self.body = Circle((0, 0), self.target.r)
         # self.body.center = (0, 0)
         # self.ax["ax_3d"].add_patch(self.body)
@@ -58,6 +59,7 @@ class TargetSprite:
         # self.cm.set_data(self.target.state[0], self.target.state[1])
         # self.body.verts = ()
         # self.ax["ax_3d"].patches.pop()
+
         if self.body:
             self.body.remove()
 
@@ -70,10 +72,18 @@ class TargetSprite:
         self.ax["ax_3d"].add_patch(self.body)
         art3d.pathpatch_2d_to_3d(self.body, z=0, zdir="z")
 
-        for pad in self.target.pads:
-            temp_pad = Circle((pad.x, pad.y), 0.25, fill=False, color="red")
-            self.ax["ax_3d"].add_patch(temp_pad)
-            art3d.pathpatch_2d_to_3d(temp_pad, z=0, zdir="z")
+        for idx, pad in enumerate(self.pads):
+            if pad is not None:
+                pad.remove()
+
+            pad = Circle(
+                (self.target.pads[idx].x, self.target.pads[idx].y),
+                0.25,
+                fill=False,
+                color="red",
+            )
+            self.ax["ax_3d"].add_patch(pad)
+            art3d.pathpatch_2d_to_3d(pad, z=0, zdir="z")
 
         # self.body.set_3d_properties(
         #     (self.target.state[0], self.target.state[1]), zs=0, zdir="z"
