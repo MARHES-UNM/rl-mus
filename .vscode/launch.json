@@ -20,7 +20,7 @@
             "type": "python",
             "request": "launch",
             "module": "unittest",
-            "program": "${cwd}/tests/test_uav.py",
+            // "program": "${cwd}/tests/test_uav.py",
             "console": "integratedTerminal",
             "justMyCode": true,
             "cwd": "${workspaceFolder}",
@@ -45,7 +45,7 @@
                 "DISPLAY": "192.168.1.11:0.0"
             },
             "args": [
-                "${cwd}/uav_sim/tests/test_uav_sim.py"
+                "${cwd}/tests/test_uav_sim.py"
             ]
         }
     ]
