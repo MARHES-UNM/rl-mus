@@ -1,5 +1,6 @@
 from math import cos, sin
 import numpy as np
+from uav_sim.agents.uav import AgentType
 from uav_sim.utils.utils import lqr
 import scipy.integrate
 import scipy
@@ -27,6 +28,42 @@ class Entity:
     def __init__(self, _id, _type=AgentType.O):
         self.id = _id
         self.type = _type
+
+    def wrap_angle(self, val):
+        return (val + np.pi) % (2 * np.pi) - np.pi
+
+class Pad(Entity):
+    def __init__(self, _id, _type=AgentType.O):
+        super().__init__(_id, _type)
+
+
+class Target(Entity):
+    def __init__(
+        self, _id, x=0, y=0, psi=0, v=0, w=0, dt=0.1, num_landing_pads=1, pad_offset=1
+    ):
+        super().__init__(_id=_id, _type=AgentType.C)
+        self.x = x
+        self.y = y
+        self.psi = psi
+        self.dt = dt
+        self.num_landing_pads = num_landing_pads
+        self._state = np.array([x, y, psi, v, w])
+        self.pad_offset = pad_offset
+
+    @property
+    def state(self):
+        return self._state
+
+    def step(self, action):
+        self.v = action[0]
+        self.w = action[1]
+
+        psi = self._state[2]
+        self._state[0] += self.v * self.dt * cos(psi)
+        self._state[1] += self.v * self.dt * sin(psi)
+        psi += self.w * self.dt
+
+        self._state[2] = self.wrap_angle(psi)
 
 
 class Quadrotor(Entity):
@@ -252,6 +289,3 @@ class Quadrotor(Entity):
 
         self._state[6:9] = self.wrap_angle(self._state[6:9])
         self._state[2] = max(0, self._state[2])
-
-    def wrap_angle(self, val):
-        return (val + np.pi) % (2 * np.pi) - np.pi

@@ -2,6 +2,7 @@ import numpy as np
 
 from gym.utils import seeding
 from uav_sim.agents.uav import Quadrotor
+from uav_sim.agents.uav import Target
 from uav_sim.utils.gui import Gui
 
 
@@ -63,6 +64,11 @@ class UavSim:
 
         self.seed(seed)
         self.uavs = []
+        x = np.random.rand() * self.env_max_w
+        y = np.random.rand() * self.env_max_l
+        self.target = Target(
+            _id=0, x=x, y=y, dt=self.dt, num_landing_pads=self.num_uavs
+        )
 
         for idx in range(self.num_uavs):
             x = np.random.rand() * self.env_max_w

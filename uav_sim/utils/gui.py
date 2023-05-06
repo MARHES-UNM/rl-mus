@@ -109,9 +109,10 @@ class UavSprite:
 
 
 class Gui:
-    def __init__(self, uavs, max_x, max_y, max_z, fig=None):
+    def __init__(self, uavs, target, max_x=3, max_y=3, max_z=3, fig=None):
         self.uavs = uavs
         self.fig = fig
+        self.target = target
 
         if self.fig is None:
             self.fig = plt.figure(figsize=(12, 6))
