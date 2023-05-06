@@ -22,7 +22,6 @@ class TestUavSim(unittest.TestCase):
             start_pos[i, :] = self.env.uavs[i].state[0:3]
 
         waypoints = [[0.5, 0.5, 2], [0.5, 2, 1.5], [2, 0.5, 2.5], [2, 2, 1], [0, 0, 0]]
-        waypoints = [[0, 0, 0], [2, 2, 2]]
         num_waypoints = len(waypoints)
 
         uav_coeffs = np.zeros((self.env.num_uavs, num_waypoints, 3, 6, 1))
@@ -45,14 +44,15 @@ class TestUavSim(unittest.TestCase):
                 des_pos = np.zeros((4, 12), dtype=np.float64)
                 actions = {}
                 for idx in range(self.env.num_uavs):
+                    uav_waypoint_num = (way_point_num + idx) % num_waypoints
                     des_pos[idx, 0] = calculate_position(
-                        uav_coeffs[idx, way_point_num, 0], t
+                        uav_coeffs[idx, uav_waypoint_num, 0], t
                     )
                     des_pos[idx, 1] = calculate_position(
-                        uav_coeffs[idx, way_point_num, 1], t
+                        uav_coeffs[idx, uav_waypoint_num, 1], t
                     )
                     des_pos[idx, 2] = calculate_position(
-                        uav_coeffs[idx, way_point_num, 2], t
+                        uav_coeffs[idx, uav_waypoint_num, 2], t
                     )
                     # des_pos[idx, 0:3] = 0.0
                     des_pos[idx, 3] = 1.0
