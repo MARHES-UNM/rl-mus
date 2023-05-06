@@ -62,6 +62,7 @@ class Quadrotor(Entity):
 
         # mass
         self.m = m  # kg
+        self.m = 1
 
         # lenght of arms
         self.l = l  # m
@@ -70,7 +71,7 @@ class Quadrotor(Entity):
             [[0.00025, 0, 2.55e-6], [0, 0.000232, 0], [2.55e-6, 0, 0.0003738]]
         )
 
-        # self.inertia = np.eye(3)
+        self.inertia = np.eye(3)
         self.ixx = self.inertia[0, 0]
         self.iyy = self.inertia[1, 1]
         self.izz = self.inertia[2, 2]
@@ -116,8 +117,8 @@ class Quadrotor(Entity):
         )
         Bx = np.array([[0.0], [0.0], [0.0], [1 / self.ixx]])
 
-        Qx = np.diag([0.5, 100, 1, 100])
-        Rx = np.diag([10000000])
+        Qx = np.diag([1, 1, 1, 1])
+        Rx = np.diag([10])
 
         # Y-subsystem
         # The state variables are y, dot_y, roll, dot_roll
@@ -131,23 +132,23 @@ class Quadrotor(Entity):
         )
         By = np.array([[0.0], [0.0], [0.0], [1 / self.iyy]])
 
-        Qy = np.diag([0.5, 100, 1, 100])
-        Ry = np.diag([10000000])
+        Qy = np.diag([1, 1, 1, 1])
+        Ry = np.diag([10])
 
         # Z-subsystem
         # The state variables are z, dot_z
         Az = np.array([[0.0, 1.0], [0.0, 0.0]])
         Bz = np.array([[0.0], [1 / self.m]])
 
-        Qz = np.diag([100, 10])
-        Rz = np.diag([10000000])
+        Qz = np.diag([1, 1])
+        Rz = np.diag([10])
 
         # Yaw-subsystem
         # The state variables are yaw, dot_yaw
         Ayaw = np.array([[0.0, 1.0], [0.0, 0.0]])
         Byaw = np.array([[0.0], [1 / self.izz]])
         Qyaw = np.diag([1, 1])
-        Ryaw = np.diag([10000000])
+        Ryaw = np.diag([1])
 
         ####################### solve LQR #######################
         Ks = []  # feedback gain matrices K for each subsystem

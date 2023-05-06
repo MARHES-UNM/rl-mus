@@ -71,7 +71,7 @@ class TestUav(unittest.TestCase):
                 des_pos[0:3] = uav.state[0:3].copy()
                 des_pos[3] = uav.state[8].copy()
             else:
-                des_pos = np.array([2, 1, 2, 0])
+                des_pos = np.array([2, 1, 2, np.pi])
 
             action = uav.calc_torque(des_pos)
 
