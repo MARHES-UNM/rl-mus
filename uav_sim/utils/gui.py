@@ -40,9 +40,9 @@ class Gui:
 
         if self.fig is None:
             self.fig = plt.figure(figsize=(12, 6))
-            gs0 = self.fig.add_gridspec(1,2)
-            gs00 = gs0[0].subgridspec(1,1)
-            gs01 = gs0[1].subgridspec(3,1)
+            gs0 = self.fig.add_gridspec(1, 2)
+            gs00 = gs0[0].subgridspec(1, 1)
+            gs01 = gs0[1].subgridspec(3, 1)
             self.ax = self.fig.add_subplot(gs00[0], projection="3d")
             self.ax_errors = []
             for i in range(3):
@@ -89,6 +89,11 @@ class Gui:
         # for stopping simulation with the esc key
         self.fig.canvas.mpl_connect("key_press_event", self.keypress_routine)
 
+        # # plt.show(False)
+        # plt.draw()
+        
+        # self.background = self.fig.canvas.copy_from_bbox(self.ax.bbox)
+
     def init_entities(self):
         self.sprites = []
 
@@ -102,6 +107,9 @@ class Gui:
     # https://matplotlib.org/stable/api/animation_api.html
     # https://stackoverflow.com/questions/11874767/how-do-i-plot-in-real-time-in-a-while-loop-using-matplotlib
     def update(self, time_elapsed):
+
+        # self.fig.canvas.restore_region(self.background)
+        
         self.time_display.set_text(f"Sim time = {time_elapsed:.2f} s")
 
         target_points = np.array(
@@ -138,8 +146,6 @@ class Gui:
             ).T
             points = np.dot(R, points)
 
-            # for idx in range(len(points)):
-            #     points[idx, :] += uav._state[idx]
             points[0, :] += uav._state[0]
             points[1, :] += uav._state[1]
             points[2, :] += uav._state[2]
@@ -159,7 +165,9 @@ class Gui:
             # uav_sprite.rotor1.set_data(points[0, 5:6], points[0, 5:6])
             # uav_sprite.rotor1.set_3d_properties(points[2, 5:6])
             # uav_sprite.rotor2.set_data(points[0, 4:5], points[0, 4:5])
-
+        
+        #     self.ax.draw_artist(uav_sprite.cm)
+        # self.fig.canvas.blit(self.ax.bbox)
         plt.pause(0.0000000000001)
 
     def keypress_routine(self, event):

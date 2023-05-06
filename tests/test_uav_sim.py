@@ -1,9 +1,8 @@
-import imp
 import numpy as np
 import unittest
 
 # from tests import context
-# import context
+import context
 import unittest
 from uav_sim.envs.uav_sim import UavSim
 from uav_sim.utils.trajectory_generator import TrajectoryGenerator
@@ -18,7 +17,7 @@ class TestUavSim(unittest.TestCase):
     def setUp(self):
         self.env = UavSim()
 
-    # @unittest.skip
+    @unittest.skip
     def test_lqr_waypoints(self):
         T = 1
         t = 0
@@ -171,7 +170,8 @@ class TestUavSim(unittest.TestCase):
 
             # self.env.uavs[idx]._state[0:2] = positions[idx, 0:2]
 
-        Ks = self.env.uavs[0].calc_k()
+        # Ks = self.env.uavs[0].calc_gain()
+        Ks = self.env.uavs[0].k
         m = self.env.uavs[0].m
         g = self.env.uavs[0].g
         inv_inertia = self.env.uavs[0].inv_inertia
