@@ -12,7 +12,7 @@ class UavSim:
     }
 
     def __init__(self, env_config={}):
-        self.dt = env_config.get("dt", 0.01)
+        self.dt = env_config.get("dt", 0.1)
         self._seed = env_config.get("seed", None)
         self.render_mode = env_config.get("render_mode", "human")
         self.num_uavs = env_config.get("num_uavs", 4)
@@ -69,7 +69,7 @@ class UavSim:
             y = np.random.rand() * self.env_max_l
             z = np.random.rand() * self.env_max_h
 
-            uav = Quadrotor(_id=idx, x=x, y=y, z=z, use_ode=True)
+            uav = Quadrotor(_id=idx, x=x, y=y, z=z)
             self.uavs.append(uav)
 
     def render(self, mode="human"):

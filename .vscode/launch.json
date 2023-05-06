@@ -19,6 +19,7 @@
             "name": "unittest_uav",
             "type": "python",
             "request": "launch",
+            "module": "unittest",
             "program": "${cwd}/tests/test_uav.py",
             "console": "integratedTerminal",
             "justMyCode": true,
@@ -26,19 +27,26 @@
             "env": {
                 "DISPLAY": "192.168.1.11:0.0"
                 // "DISPLAY": "192.168.243.10:0.0"
-            }
+            },
+            "args": [
+                "${cwd}/tests/test_uav.py"
+            ]
         },
         {
             "name": "unittest_uav_sim",
             "type": "python",
             "request": "launch",
-            "program": "${cwd}/tests/test_uav_sim.py",
+            "module": "unittest",
+            // "program": "${cwd}/uav_sim/tests/test_uav_sim.py",
             "console": "integratedTerminal",
             "justMyCode": true,
             "cwd": "${workspaceFolder}",
             "env": {
                 "DISPLAY": "192.168.1.11:0.0"
-            }
+            },
+            "args": [
+                "${cwd}/uav_sim/tests/test_uav_sim.py"
+            ]
         }
     ]
 }
