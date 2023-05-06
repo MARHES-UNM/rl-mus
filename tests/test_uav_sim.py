@@ -13,15 +13,16 @@ class TestUavSim(unittest.TestCase):
     def setUp(self):
         self.env = UavSim()
 
-    @unittest.skip
+    # @unittest.skip
     def test_lqr_waypoints(self):
-        T = 1
+        T = 20
         t = 0
         start_pos = np.zeros((4, 3))
         for i in range(4):
             start_pos[i, :] = self.env.uavs[i].state[0:3]
 
-        waypoints = [[0.5, 0.5, 2], [0.5, 2, 1.5], [2, 0.5, 2.5], [2, 2, 1]]
+        waypoints = [[0.5, 0.5, 2], [0.5, 2, 1.5], [2, 0.5, 2.5], [2, 2, 1], [0, 0, 0]]
+        waypoints = [[0, 0, 0], [2, 2, 2]]
         num_waypoints = len(waypoints)
 
         uav_coeffs = np.zeros((self.env.num_uavs, num_waypoints, 3, 6, 1))
@@ -38,10 +39,7 @@ class TestUavSim(unittest.TestCase):
                 uav_coeffs[i, way_point_num, 1] = traj.y_c
                 uav_coeffs[i, way_point_num, 2] = traj.z_c
 
-        Ks = self.env.uavs[0].calc_gain()
         way_point_num = 0
-        m = self.env.uavs[0].m
-        g = self.env.uavs[0].g
         while True:
             while t <= T:
                 des_pos = np.zeros((4, 12), dtype=np.float64)
@@ -56,7 +54,8 @@ class TestUavSim(unittest.TestCase):
                     des_pos[idx, 2] = calculate_position(
                         uav_coeffs[idx, way_point_num, 2], t
                     )
-                    des_pos[idx, 8] = 0
+                    # des_pos[idx, 0:3] = 0.0
+                    des_pos[idx, 3] = 1.0
 
                     # # Velocity
                     # des_pos[idx, 3] = calculate_velocity(
@@ -81,24 +80,7 @@ class TestUavSim(unittest.TestCase):
                     #     uav_coeffs[idx, way_point_num, 2], t
                     # )
 
-                    # Acceleration
-                    # Ks[1][0:2] *= -1
-                    pos_er = des_pos[idx] - self.env.uavs[idx].state
-                    # pos_er = - des_pos[idx] + self.env.uavs[idx].state
-                    # pos_er[8] = self.env.uavs[idx].state[8]
-                    # pos_er[11] = self.env.uavs[idx].state[11]
-                    Ux = np.dot(Ks[0], pos_er[[0, 3, 7, 10]])[0]
-                    Uy = np.dot(Ks[1], pos_er[[1, 4, 6, 9]])[0]
-                    Uz = np.dot(Ks[2], pos_er[[2, 5]])[0]
-                    Uyaw = np.dot(Ks[3], pos_er[[8, 11]])[0]
-                    # Uy = 1
-                    # Ux = 0
-                    # Ux = 1
-                    Uy = max(min(.0005, Uy), -.0005)
-                    Ux = max(min(.0005, Ux), -.0005)
-                    # Uy = self.env.uavs[0].ixx * Uy * .0001
-                    # Ux = self.env.uavs[0].iyy * Ux * .0001
-                    actions[idx] = np.array([Uz + m * g, Uy, Ux, Uyaw])
+                    actions[idx] = self.env.uavs[idx].calc_torque(des_pos[idx])
 
                 self.env.step(actions)
                 self.env.render()
@@ -107,41 +89,16 @@ class TestUavSim(unittest.TestCase):
             t = 0
             way_point_num = (way_point_num + 1) % num_waypoints
 
-
-    # @unittest.skip
+    @unittest.skip
     def test_lqr_controller(self):
-        positions = np.array([[0.5, 0.5, 1], [0.5, 2, 2], [2, 0.5, 2], [2, 2, 1]])
-        des_pos = np.zeros((4, 12), dtype=np.float64)
-        for idx in range(4):
-            # des_pos[idx, 0:3] = positions[idx, :]
-            des_pos[idx, 2] = 1
-            # des_pos[idx, 8] = np.pi
-
-            # self.env.uavs[idx]._state[0:2] = positions[idx, 0:2]
-
-        # Ks = self.env.uavs[0].calc_gain()
-        Ks = self.env.uavs[0].k
-        m = self.env.uavs[0].m
-        g = self.env.uavs[0].g
-        inv_inertia = self.env.uavs[0].inv_inertia
+        positions = np.array(
+            [[0.5, 0.5, 1, np.pi], [0.5, 2, 2, 0], [2, 0.5, 2, 1.2], [2, 2, 1, -1.2]]
+        )
 
         actions = {}
-        for i in range(300):
-            for idx, pos in enumerate(des_pos):
-                # pos_er = self.env.uavs[idx].state - self.env.uavs[idx].state
-                pos_er = np.zeros(12)
-                pos_er = pos_er - self.env.uavs[idx].state
-                pos_er[2] = 2 - self.env.uavs[idx].state[2]
-                pos_er[5] = 0 - self.env.uavs[idx].state[5]
-                # pos_er[8] = np.pi/2 - self.env.uavs[idx].state[8]
-
-                Ux = np.dot(Ks[0], pos_er[[0, 3, 7, 10]])[0]
-                Uy = np.dot(Ks[1], pos_er[[1, 4, 6, 9]])[0]
-                Uz = np.dot(Ks[2], pos_er[[2, 5]])[0]
-                Uyaw = np.dot(Ks[3], pos_er[[8, 11]])[0]
-                inputs = np.array([Uz + m * g, Uy, Ux, Uyaw])
-
-                actions[idx] = inputs
+        for i in range(100):
+            for idx, pos in enumerate(positions):
+                actions[idx] = self.env.uavs[idx].calc_torque(pos)
             self.env.step(actions)
             self.env.render()
 
@@ -162,6 +119,7 @@ class TestUavSim(unittest.TestCase):
                 uav_pos[idx, 0:2], self.env.uavs[idx].state[0:2]
             )
             np.testing.assert_almost_equal(0.0, self.env.uavs[idx].state[2])
+
 
 if __name__ == "__main__":
     unittest.main()
