@@ -109,11 +109,15 @@ class TargetSprite:
         self.psi_bar.set_data(self.trajectory["t"], self.trajectory["psi"])
 
     def update_axis(self):
-        target_x = self.target.state[0] / 2
-        target_y = self.target.state[1] / 2
+        target_x = self.target.state[0]
+        target_y = self.target.state[1]
 
-        self.ax["ax_3d"].set_xlim3d([target_x - self.x_lim[0], target_x + self.x_lim[1]])
-        self.ax["ax_3d"].set_ylim3d([target_y - self.y_lim[0], target_y + self.y_lim[1]])
+        self.ax["ax_3d"].set_xlim3d(
+            [target_x - self.x_lim[1] / 2, target_x + self.x_lim[1] / 2]
+        )
+        self.ax["ax_3d"].set_ylim3d(
+            [target_y - self.y_lim[1] / 2, target_y + self.y_lim[1] / 2]
+        )
 
 
 class UavSprite:
