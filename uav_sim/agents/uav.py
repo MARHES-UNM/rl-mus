@@ -30,6 +30,7 @@ class Pad(Entity):
     def __init__(self, _id, x, y, _type=AgentType.O):
         self.x = x
         self.y = y
+        self.id = _id
         super().__init__(_id, _type)
         self._state = np.array([self.x, self.y])
 
@@ -57,6 +58,7 @@ class Target(Entity):
         self.y = y
         self.psi = psi
         self.dt = dt
+        self.id = _id
         self.num_landing_pads = num_landing_pads
         self._state = np.array([x, y, psi, v, w])
         self.r = r  # radius, m

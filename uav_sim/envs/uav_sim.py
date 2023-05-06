@@ -41,6 +41,8 @@ class UavSim:
         for i, action in actions.items():
             self.uavs[i].step(action)
 
+        # self.target.step(np.array([.5, 0]))
+
         self._time_elapsed += self.dt
 
         return obs, rew, terminated, truncated, info
@@ -83,6 +85,7 @@ class UavSim:
             if self.gui is None:
                 self.gui = Gui(
                     self.uavs,
+                    target=self.target,
                     max_x=self.env_max_w,
                     max_y=self.env_max_l,
                     max_z=self.env_max_h,
