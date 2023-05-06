@@ -55,6 +55,9 @@ class TargetSprite:
             [], [], label=f"id: {self.target.id}"
         )
 
+        self.x_lim = list(self.ax["ax_3d"].get_xlim3d())
+        self.y_lim = list(self.ax["ax_3d"].get_ylim3d())
+
     def update(self, t):
         # self.cm.set_data(self.target.state[0], self.target.state[1])
         # self.body.verts = ()
@@ -72,23 +75,25 @@ class TargetSprite:
         self.ax["ax_3d"].add_patch(self.body)
         art3d.pathpatch_2d_to_3d(self.body, z=0, zdir="z")
 
-        for pad, pad_sprite in zip(self.target.pads, self.pad_sprites):
-            if pad_sprite:
-                pad_sprite.remove()
+        for idx, pad in enumerate(self.target.pads):
+            if self.pad_sprites[idx]:
+                self.pad_sprites[idx].remove()
 
-            pad = Circle(
+            self.pad_sprites[idx] = Circle(
                 (pad.x, pad.y),
                 0.25,
                 fill=False,
                 color="red",
             )
-            self.ax["ax_3d"].add_patch(pad)
-            art3d.pathpatch_2d_to_3d(pad, z=0, zdir="z")
+            self.ax["ax_3d"].add_patch(self.pad_sprites[idx])
+            art3d.pathpatch_2d_to_3d(self.pad_sprites[idx], z=0, zdir="z")
 
         self.trajectory["t"].append(t)
         self.trajectory["x"].append(self.target._state[0])
         self.trajectory["y"].append(self.target._state[1])
         self.trajectory["psi"].append(self.target._state[2])
+
+        self.update_axis()
 
         self.ax["ax_error_x"].set_xlim(
             left=max(0, t - self.t_lim), right=t + self.t_lim
@@ -102,6 +107,13 @@ class TargetSprite:
             left=max(0, t - self.t_lim), right=t + self.t_lim
         )
         self.psi_bar.set_data(self.trajectory["t"], self.trajectory["psi"])
+
+    def update_axis(self):
+        target_x = self.target.state[0] / 2
+        target_y = self.target.state[1] / 2
+
+        self.ax["ax_3d"].set_xlim3d([target_x - self.x_lim[0], target_x + self.x_lim[1]])
+        self.ax["ax_3d"].set_ylim3d([target_y - self.y_lim[0], target_y + self.y_lim[1]])
 
 
 class UavSprite:
@@ -200,6 +212,9 @@ class Gui:
         self.uavs = uavs
         self.fig = fig
         self.target = target
+        self.max_x = max_x
+        self.max_y = max_y
+        self.max_z = max_z
 
         if self.fig is None:
             self.fig = plt.figure(figsize=(12, 6))
@@ -217,9 +232,9 @@ class Gui:
             self.ax["ax_error_psi"] = self.fig.add_subplot(gs01[3])
             self.ax["ax_error_psi"].set_ylim([-np.pi, np.pi])
 
-        self.ax["ax_3d"].set_xlim3d([0, max_x])
-        self.ax["ax_3d"].set_ylim3d([0, max_y])
-        self.ax["ax_3d"].set_zlim3d([0, max_z])
+        self.ax["ax_3d"].set_xlim3d([0, self.max_x])
+        self.ax["ax_3d"].set_ylim3d([0, self.max_y])
+        self.ax["ax_3d"].set_zlim3d([0, self.max_z])
 
         self.ax["ax_3d"].set_xlabel("X (m)")
         self.ax["ax_3d"].set_ylabel("Y (m)")
@@ -227,22 +242,22 @@ class Gui:
 
         self.ax["ax_3d"].set_title("Multi-UAV Simulation")
 
-        # add axis
-        n_points = 5
-        x_axis = np.linspace(0, max_x, n_points)
-        y_axis = np.linspace(0, max_y, n_points)
-        z_axis = np.linspace(0, max_z, n_points)
+        # # add axis
+        # n_points = 5
+        # x_axis = np.linspace(0, self.max_x, n_points)
+        # y_axis = np.linspace(0, self.max_y, n_points)
+        # z_axis = np.linspace(0, self.max_z, n_points)
 
-        self.ax["ax_3d"].plot([0, 0], [0, 0], [0, 0], "k+")
-        self.ax["ax_3d"].plot(
-            x_axis, np.zeros(n_points), np.zeros(n_points), "r--", linewidth=0.5
-        )
-        self.ax["ax_3d"].plot(
-            np.zeros(n_points), y_axis, np.zeros(n_points), "g--", linewidth=0.5
-        )
-        self.ax["ax_3d"].plot(
-            np.zeros(n_points), np.zeros(n_points), z_axis, "b--", linewidth=0.5
-        )
+        # self.ax["ax_3d"].plot([0, 0], [0, 0], [0, 0], "k+")
+        # self.ax["ax_3d"].plot(
+        #     x_axis, np.zeros(n_points), np.zeros(n_points), "r--", linewidth=0.5
+        # )
+        # self.ax["ax_3d"].plot(
+        #     np.zeros(n_points), y_axis, np.zeros(n_points), "g--", linewidth=0.5
+        # )
+        # self.ax["ax_3d"].plot(
+        #     np.zeros(n_points), np.zeros(n_points), z_axis, "b--", linewidth=0.5
+        # )
 
         # (0, 0) is bottom left, (1, 1) is top right
         # Placement 0, 0 would be the bottom left, 1, 1 would be the top right.
