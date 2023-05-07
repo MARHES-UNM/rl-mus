@@ -1,7 +1,7 @@
 import numpy as np
 
 from gym.utils import seeding
-from uav_sim.agents.uav import Quadrotor
+from uav_sim.agents.uav import Obstacle, Quadrotor
 from uav_sim.agents.uav import Target
 from uav_sim.utils.gui import Gui
 import logging
@@ -20,8 +20,8 @@ class UavSim:
         self._seed = env_config.get("seed", None)
         self.render_mode = env_config.get("render_mode", "human")
         self.num_uavs = env_config.get("num_uavs", 4)
-        self.num_uavs = env_config.get("num_obs", 4)
-        
+        self.num_obstacles = env_config.get("num_obstacles", 4)
+
         self._agent_ids = set(range(self.num_uavs))
 
         self.env_max_w = env_config.get("env_max_w", 4)
@@ -160,6 +160,16 @@ class UavSim:
             uav = Quadrotor(_id=idx, x=x, y=y, z=z, dt=self.dt)
             self.uavs.append(uav)
 
+        # Reset obstacles
+        self.obstacles = []
+        for idx in range(self.num_obstacles):
+            x = np.random.rand() * self.env_max_l
+            y = np.random.rand() * self.env_max_l
+            z = np.random.rand() * self.env_max_h
+
+            obstacle = Obstacle(_id=idx, x=x, y=y, z=z)
+            self.obstacles.append(obstacle)
+
         obs = {uav.id: self._get_obs(uav) for uav in self.uavs}
 
         return obs
@@ -170,6 +180,7 @@ class UavSim:
                 self.gui = Gui(
                     self.uavs,
                     target=self.target,
+                    obstacles=self.obstacles,
                     max_x=self.env_max_w,
                     max_y=self.env_max_l,
                     max_z=self.env_max_h,

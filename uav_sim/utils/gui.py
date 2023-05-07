@@ -22,14 +22,15 @@ class Sprite:
 class ObstacleSprite(Sprite):
     def __init__(self, ax, obstacle, t_lim=30):
         super().__init__(ax, t_lim)
+        self.obstacle = obstacle
         self.body = self.ax["ax_3d"].scatter(
             [], [], [], marker="o", color="r", s=5**2
         )
 
     def update(self, t):
-        xa = [1]
-        ya = [1]
-        z = [1]
+        xa = [self.obstacle._state[0]]
+        ya = [self.obstacle._state[1]]
+        z = [self.obstacle._state[2]]
         self.body._offsets3d = (xa, ya, z)
 
 
@@ -213,10 +214,13 @@ class UavSprite:
 
 
 class Gui:
-    def __init__(self, uavs=[], target=None, max_x=3, max_y=3, max_z=3, fig=None):
+    def __init__(
+        self, uavs=[], target=None, obstacles=None, max_x=3, max_y=3, max_z=3, fig=None
+    ):
         self.uavs = uavs
         self.fig = fig
         self.target = target
+        self.obstacles = obstacles
         self.max_x = max_x
         self.max_y = max_y
         self.max_z = max_z
@@ -289,8 +293,9 @@ class Gui:
             uav_sprite = UavSprite(self.ax, uav)
             self.sprites.append(uav_sprite)
 
-        obs_sprite = ObstacleSprite(self.ax, None)
-        self.sprites.append(obs_sprite)
+        for obstacle in self.obstacles:
+            obs_sprite = ObstacleSprite(self.ax, obstacle)
+            self.sprites.append(obs_sprite)
 
     # TODO: update this to use blit
     # https://matplotlib.org/stable/api/animation_api.html
