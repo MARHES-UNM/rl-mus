@@ -1,6 +1,7 @@
 from math import cos, sin
 import numpy as np
 from uav_sim.utils.utils import lqr
+from uav_sim.utils.utils import distance, angle
 import scipy.integrate
 import scipy
 from enum import IntEnum
@@ -9,7 +10,8 @@ from enum import IntEnum
 class AgentType(IntEnum):
     U = 0  # uav
     O = 1  # obstacle
-    C = 2  # moving car as target
+    T = 2  # moving car as target
+    P = 3  # landing pad
 
 
 class ObsType(IntEnum):
@@ -18,21 +20,50 @@ class ObsType(IntEnum):
 
 
 class Entity:
-    def __init__(self, _id, _type=AgentType.O):
+    def __init__(self, _id, x=0, y=0, z=0, _type=AgentType.O):
         self.id = _id
         self.type = _type
+        self.x = x
+        self.y = y
+        self.z = z
+
+        # x, y, z, x_dot, y_dot, z_dot
+        self._state = np.array([self.x, self.y, self.z, 0, 0, 0])
+
+    @property
+    def state(self):
+        self._state = np.array([self.x, self.y, self.z, 0, 0, 0])
+        return self._state
 
     def wrap_angle(self, val):
         return (val + np.pi) % (2 * np.pi) - np.pi
 
+    def rel_distance(self, entity):
+        dist = distance((self.x, self.y), (entity.x, entity.y))
+
+        return dist
+
+    def rel_bearing_error(self, entity):
+        """[summary]
+
+        Args:
+            entity ([type]): [description]
+
+        Returns:
+            [type]: [description]
+        """
+        bearing = angle((self.x, self.y), (entity.x, entity.y)) - self.theta
+        # TODO: verify this from Deep RL for Swarms
+        bearing = (bearing + np.pi) % (2 * np.pi) - np.pi
+        return bearing
+
 
 class Pad(Entity):
-    def __init__(self, _id, x, y, _type=AgentType.O):
+    def __init__(self, _id, x, y, _type=AgentType.P):
         self.x = x
         self.y = y
         self.id = _id
-        super().__init__(_id, _type)
-        self._state = np.array([self.x, self.y])
+        super().__init__(_id=_id, x=x, y=y, z=0, _type=_type)
 
     @property
     def state(self):
@@ -53,12 +84,10 @@ class Target(Entity):
         pad_offset=0.5,
         r=1,
     ):
-        super().__init__(_id=_id, _type=AgentType.C)
-        self.x = x
-        self.y = y
-        self.psi = psi
-        self.dt = dt
+        super().__init__(_id=_id, x=x, y=y, z=0, _type=AgentType.T)
         self.id = _id
+        self.dt = dt
+        self.psi = psi
         self.num_landing_pads = num_landing_pads
         self._state = np.array([x, y, psi, v, w])
         self.r = r  # radius, m
@@ -83,22 +112,38 @@ class Target(Entity):
             (x, y + self.pad_offset),
         ]
 
-    def update_pad_loc(self):
+    def update_pads_state(self):
         pad_offsets = self.get_pad_offsets()
         for pad, offset in zip(self.pads, pad_offsets):
             pad.x, pad.y = offset
+
+            pad._state = np.array(
+                [
+                    pad.x,
+                    pad.y,
+                    0,
+                    self.vx,
+                    self.vy,
+                    0,
+                ]
+            )
 
     def step(self, action):
         self.v = action[0]
         self.w = action[1]
 
-        psi = self._state[2]
-        self._state[0] += self.v * self.dt * cos(psi)
-        self._state[1] += self.v * self.dt * sin(psi)
-        psi += self.w * self.dt
+        self.psi = self._state[2]
+        self.vx = self.v * cos(self.psi)
+        self.vy = self.v * sin(self.psi)
+        self.x += self.vx * self.dt
+        self.y += self.vy * self.dt
+        self.psi += self.w * self.dt
 
-        self._state[2] = self.wrap_angle(psi)
-        self.update_pad_loc()
+        self.psi = self.wrap_angle(self.psi)
+
+        self._state = np.array([self.x, self.y, 0, self.vx, self.vy, 0, self.psi])
+
+        self.update_pads_state()
 
 
 class Quadrotor(Entity):
@@ -117,7 +162,7 @@ class Quadrotor(Entity):
         use_ode=True,
         k=None,
     ):
-        super().__init__(_id=_id, _type=AgentType.U)
+        super().__init__(_id=_id, x=x, y=y, z=z, _type=AgentType.U)
 
         self.use_ode = use_ode
 
@@ -168,6 +213,7 @@ class Quadrotor(Entity):
         self._state[6] = phi
         self._state[7] = theta
         self._state[8] = psi
+        self.done = False
 
     @property
     def state(self):
@@ -324,3 +370,8 @@ class Quadrotor(Entity):
 
         self._state[6:9] = self.wrap_angle(self._state[6:9])
         self._state[2] = max(0, self._state[2])
+
+    def get_landed(self, pad):
+        dist = np.linalg.norm(self._state[0:3] - pad._state[0:3])
+
+        return dist <= 0.01

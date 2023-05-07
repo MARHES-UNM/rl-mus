@@ -1,6 +1,6 @@
 from matplotlib import pyplot as plt
 
-from uav_sim.agents.uav import Quadrotor
+from uav_sim.agents.uav import Pad, Quadrotor
 import unittest
 import numpy as np
 from uav_sim.utils.gui import Gui
@@ -11,6 +11,7 @@ class TestUav(unittest.TestCase):
         self.uav = Quadrotor(0, 2, 2, 2)
 
     def test_rotation_matrix(self):
+        """Asserts that rotation matrix is orthogonal."""
         for i in range(10):
             self.uav._state[6:9] = np.random.rand(3) * (np.pi + np.pi) - np.pi
             rot_mat = self.uav.rotation_matrix()
@@ -42,6 +43,7 @@ class TestUav(unittest.TestCase):
 
     # @unittest.skip
     def test_controller_hover(self):
+        """Test that UAV can hover when reached destination."""
         uav = Quadrotor(0, 0, 0, 2)
 
         des_pos = np.array([0, 0, 1, 0])
@@ -58,7 +60,8 @@ class TestUav(unittest.TestCase):
 
         self.plot_traj(uav_des_traj, uav_trajectory)
 
-    def test_controller_x(self):
+    def test_controller_des_pos(self):
+        """Test uav can reach a desired position."""
         uav = Quadrotor(0, 1, 0, 1)
         des_pos = np.zeros(4)
         uav_des_traj = []
@@ -107,6 +110,20 @@ class TestUav(unittest.TestCase):
 
         plt.show()
         print()
+
+    def test_get_landed(self):
+        pad = Pad(0, 1, 1)
+
+        self.assertFalse(self.uav.get_landed(pad))
+
+        des_pos = np.zeros(4)
+        for i in range(100):
+            des_pos[0:3] = pad.state[0:3]
+            action = self.uav.calc_torque(des_pos)
+
+            self.uav.step(action)
+
+        self.assertTrue(self.uav.get_landed(pad))
 
 
 if __name__ == "__main__":

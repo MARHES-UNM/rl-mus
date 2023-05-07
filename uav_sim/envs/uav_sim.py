@@ -34,8 +34,16 @@ class UavSim:
 
         self.gui = None
         self._time_elapsed = 0
+        self.action_space = self._get_action_space()
+        self.observation_space = self._get_observation_space()
 
         self.reset()
+
+    def _get_action_space(self):
+        pass
+
+    def _get_observation_space(self):
+        pass
 
     @property
     def time_elapsed(self):
@@ -60,17 +68,57 @@ class UavSim:
     def _get_info(self):
         pass
 
-    def _get_obs(self):
-        pass
+    def _get_obs(self, uav):
+        other_uav_states = []
 
-    def _get_reward(self):
-        pass
+        for other_uav in self.uavs:
+            if uav.id != other_uav.id:
+                other_uav_states.append(other_uav.state)
+
+        other_uav_states = np.array(other_uav_states)
+
+        landing_pads = []
+        for pad in self.target.pads:
+            landing_pads.append(pad.state)
+
+        landing_pads = np.array(landing_pads)
+
+        obstacles = np.array([])
+
+        obs_dict = {
+            "state": uav.state.astype(np.float32),
+            "other_uav_obs": other_uav_states.astype(np.float32),
+            "landing_pads": landing_pads.astype(np.float32),
+            "obstacles": obstacles.astype(np.float32),
+        }
+
+        return obs_dict
+
+    def _get_reward(self, uav):
+        if uav.done:
+            return 0
+
+        reward = 0
+        # pos reward if uav lands on any landing pad
+        for pad in self.target.pads:
+            if uav.get_landed(pad):
+                uav.done = True
+                reward += 1
+                break
+
+        # neg reward if uav collides with other uavs
+        # neg reward if uav collides with obstacles
+        return reward
 
     def _get_done(self):
+        """Outputs if sim is done based on entity's states.
+        Must calculate _get_reward first.
+        """
         done = {uav.id: uav.done for uav in self.uavs}
 
         # Done when Target is reached for all uavs
-        done["__all__"] = all(done) or self.time_elapsed >= self.max_time
+        done["__all__"] = all(val for val in done.values()) or self.time_elapsed >= self.max_time
+        return done
 
     def seed(self, seed=None):
         """Random value to seed"""

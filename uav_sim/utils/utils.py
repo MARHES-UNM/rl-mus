@@ -1,6 +1,26 @@
 import scipy.integrate
 import scipy
 import numpy as np
+from math import sqrt, atan2
+
+
+def cartesian2polar(point1=(0, 0), point2=(0, 0)):
+    """Retuns conversion of cartesian to polar coordinates"""
+    r = distance(point1, point2)
+    alpha = angle(point1, point2)
+
+    return r, alpha
+
+
+def distance(point_1=(0, 0), point_2=(0, 0)):
+    """Returns the distance between two points"""
+    return sqrt((point_1[0] - point_2[0]) ** 2 + (point_1[1] - point_2[1]) ** 2)
+
+
+def angle(point_1=(0, 0), point_2=(0, 0)):
+    """Returns the angle between two points"""
+    return atan2(point_2[1] - point_1[1], point_2[0] - point_1[0])
+
 
 def lqr(A, B, Q, R):
     """Solve the continuous time lqr controller.

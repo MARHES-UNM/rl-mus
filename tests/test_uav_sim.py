@@ -13,6 +13,24 @@ class TestUavSim(unittest.TestCase):
     def setUp(self):
         self.env = UavSim()
 
+    def test_lqr_landing(self):
+        self.env = UavSim({"target_v": 0})
+        obs, done = self.env.reset(), False
+
+        actions = {}
+
+        for _step in range(100):
+            pads = self.env.target.pads
+            positions = [[pad.x, pad.y, 0, 0] for pad in pads]
+
+            for idx, pos in enumerate(positions):
+                actions[idx] = self.env.uavs[idx].calc_torque(pos)
+            obs, rew, done, info = self.env.step(actions)
+            self.env.render()
+
+            if done["__all__"]:
+                break
+
     @unittest.skip
     def test_lqr_waypoints(self):
         T = 20
@@ -89,7 +107,7 @@ class TestUavSim(unittest.TestCase):
             t = 0
             way_point_num = (way_point_num + 1) % num_waypoints
 
-    # @unittest.skip
+    @unittest.skip
     def test_lqr_controller(self):
         positions = np.array(
             [[0.5, 0.5, 1, np.pi], [0.5, 2, 2, 0], [2, 0.5, 2, 1.2], [2, 2, 1, -1.2]]
