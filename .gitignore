@@ -131,4 +131,5 @@ dmypy.json
 # personal ones
 results
 plots
-# 
+_archives
+#
