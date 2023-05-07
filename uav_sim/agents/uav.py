@@ -1,7 +1,6 @@
 from math import cos, sin
 import numpy as np
-from uav_sim.utils.utils import lqr
-from uav_sim.utils.utils import distance, angle
+from uav_sim.utils.utils import distance, angle, lqr
 import scipy.integrate
 import scipy
 from enum import IntEnum
@@ -20,12 +19,13 @@ class ObsType(IntEnum):
 
 
 class Entity:
-    def __init__(self, _id, x=0, y=0, z=0, _type=AgentType.O):
+    def __init__(self, _id, x=0, y=0, z=0, r=0.1, _type=AgentType.O):
         self.id = _id
         self.type = _type
         self.x = x
         self.y = y
         self.z = z
+        self.r = r
 
         # x, y, z, x_dot, y_dot, z_dot
         self._state = np.array([self.x, self.y, self.z, 0, 0, 0])
@@ -58,12 +58,17 @@ class Entity:
         return bearing
 
 
+class Obstacle(Entity):
+    def __init__(self, _id, x=0, y=0, z=0, r=0.1):
+        super().__init__(_id, x, y, z, r, _type=AgentType.O)
+
+
 class Pad(Entity):
-    def __init__(self, _id, x, y, _type=AgentType.P):
+    def __init__(self, _id, x, y):
         self.x = x
         self.y = y
         self.id = _id
-        super().__init__(_id=_id, x=x, y=y, z=0, _type=_type)
+        super().__init__(_id=_id, x=x, y=y, z=0, _type=AgentType.P)
 
     @property
     def state(self):
@@ -80,19 +85,27 @@ class Target(Entity):
         v=0,
         w=0,
         dt=0.1,
+        r=1,
         num_landing_pads=1,
         pad_offset=0.5,
-        r=1,
     ):
-        super().__init__(_id=_id, x=x, y=y, z=0, _type=AgentType.T)
+        super().__init__(_id=_id, x=x, y=y, z=0, r=r, _type=AgentType.T)
         self.id = _id
         self.dt = dt
         self.psi = psi
         self.num_landing_pads = num_landing_pads
-        self._state = np.array([x, y, psi, v, w])
         self.r = r  # radius, m
         self.pad_offset = pad_offset  # m
 
+        # x, y, z, x_dot, y_dot, z_dot, psi, psi_dot
+        self.v = v
+        self.w = w
+        self.vx = self.v * cos(self.psi)
+        self.vy = self.v * sin(self.psi)
+
+        # verifies psi
+        np.testing.assert_almost_equal(self.psi, np.arctan2(self.vy, self.vx))
+        self._state = np.array([x, y, 0, 0, 0, 0, psi, self.w])
         self.pads = [
             Pad(_id, pad_loc[0], pad_loc[1])
             for _id, pad_loc in enumerate(self.get_pad_offsets())
@@ -141,7 +154,9 @@ class Target(Entity):
 
         self.psi = self.wrap_angle(self.psi)
 
-        self._state = np.array([self.x, self.y, 0, self.vx, self.vy, 0, self.psi])
+        self._state = np.array(
+            [self.x, self.y, 0, self.vx, self.vy, 0, self.psi, self.w]
+        )
 
         self.update_pads_state()
 

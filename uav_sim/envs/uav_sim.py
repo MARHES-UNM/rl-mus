@@ -20,6 +20,8 @@ class UavSim:
         self._seed = env_config.get("seed", None)
         self.render_mode = env_config.get("render_mode", "human")
         self.num_uavs = env_config.get("num_uavs", 4)
+        self.num_uavs = env_config.get("num_obs", 4)
+        
         self._agent_ids = set(range(self.num_uavs))
 
         self.env_max_w = env_config.get("env_max_w", 4)
@@ -117,7 +119,9 @@ class UavSim:
         done = {uav.id: uav.done for uav in self.uavs}
 
         # Done when Target is reached for all uavs
-        done["__all__"] = all(val for val in done.values()) or self.time_elapsed >= self.max_time
+        done["__all__"] = (
+            all(val for val in done.values()) or self.time_elapsed >= self.max_time
+        )
         return done
 
     def seed(self, seed=None):
@@ -138,6 +142,8 @@ class UavSim:
             self.close_gui()
 
         self.seed(seed)
+
+        # Reset Target
         x = np.random.rand() * self.env_max_w
         y = np.random.rand() * self.env_max_l
         self.target = Target(
