@@ -24,7 +24,7 @@ class ObstacleSprite(Sprite):
         super().__init__(ax, t_lim)
         self.obstacle = obstacle
         self.body = self.ax["ax_3d"].scatter(
-            [], [], [], marker="o", color="r", s=5**2
+            [], [], [], marker="o", color="r", s=100 * 4 * 0.5**2
         )
 
     def update(self, t):
