@@ -299,6 +299,11 @@ class Quadrotor(Entity):
     def rotation_matrix(
         self,
     ):
+        """Calculates the Z-Y-X rotation matrix.
+           Based on Different Linearization Control Techniques for a Quadrotor System
+
+        Returns: R - 3 x 3 rotation matrix
+        """
         cp = cos(self._state[6])
         ct = cos(self._state[7])
         cg = cos(self._state[8])
@@ -308,8 +313,9 @@ class Quadrotor(Entity):
         R_x = np.array([[1, 0, 0], [0, cp, -sp], [0, sp, cp]])
         R_y = np.array([[ct, 0, st], [0, 1, 0], [-st, 0, ct]])
         R_z = np.array([[cg, -sg, 0], [sg, cg, 0], [0, 0, 1]])
-        # R = np.dot(R_z, np.dot(R_y, R_x))
-        R = np.dot(R_y, np.dot(R_x, R_z))
+
+        # Z Y X
+        R = np.dot(R_x, np.dot(R_y, R_z))
         return R
 
     def f_dot(self, time, state, action):
@@ -385,6 +391,11 @@ class Quadrotor(Entity):
 
         self._state[6:9] = self.wrap_angle(self._state[6:9])
         self._state[2] = max(0, self._state[2])
+
+    def in_collision(self, entity):
+        dist = np.linalg.norm(self._state[0:3] - entity._state[0:3])
+
+        return dist <= (self.r + entity.r)
 
     def get_landed(self, pad):
         dist = np.linalg.norm(self._state[0:3] - pad._state[0:3])

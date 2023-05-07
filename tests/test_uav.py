@@ -1,6 +1,6 @@
 from matplotlib import pyplot as plt
 
-from uav_sim.agents.uav import Pad, Quadrotor
+from uav_sim.agents.uav import Obstacle, Pad, Quadrotor
 import unittest
 import numpy as np
 from uav_sim.utils.gui import Gui
@@ -124,6 +124,15 @@ class TestUav(unittest.TestCase):
             self.uav.step(action)
 
         self.assertTrue(self.uav.get_landed(pad))
+
+    def test_uav_collision(self):
+        obs = Obstacle(0, 1, 1, 1)
+        uav = Quadrotor(0, 1, 0, 0.9)
+
+        self.assertFalse(uav.in_collision(obs))
+
+        uav.state[0:3] = np.array([1, 1, 0.9])
+        self.assertTrue(uav.in_collision(obs))
 
 
 if __name__ == "__main__":
