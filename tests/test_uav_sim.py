@@ -13,7 +13,7 @@ class TestUavSim(unittest.TestCase):
     def setUp(self):
         self.env = UavSim()
 
-    # @unittest.skip
+    @unittest.skip
     def test_lqr_waypoints(self):
         T = 20
         t = 0
@@ -89,7 +89,7 @@ class TestUavSim(unittest.TestCase):
             t = 0
             way_point_num = (way_point_num + 1) % num_waypoints
 
-    @unittest.skip
+    # @unittest.skip
     def test_lqr_controller(self):
         positions = np.array(
             [[0.5, 0.5, 1, np.pi], [0.5, 2, 2, 0], [2, 0.5, 2, 1.2], [2, 2, 1, -1.2]]

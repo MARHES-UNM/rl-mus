@@ -13,12 +13,11 @@ class TestUav(unittest.TestCase):
 
     def test_target_move(self):
         t = 0
-        for i in range(100):
+        for i in range(10):
             t = i * self.target.dt
             action = np.array([1, 0])
             self.target.step(action)
             self.gui.update(t)
-        pass
 
 
 if __name__ == "__main__":

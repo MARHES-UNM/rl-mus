@@ -33,10 +33,6 @@ class TargetSprite:
         self.t_lim = t_lim
         self.body = None
         self.pad_sprites = [None] * 4
-        # self.body = Circle((0, 0), self.target.r)
-        # self.body.center = (0, 0)
-        # self.ax["ax_3d"].add_patch(self.body)
-        # art3d.pathpatch_2d_to_3d(self.body, z=0, zdir="z")
 
         self.trajectory = {
             "t": [],
@@ -59,9 +55,6 @@ class TargetSprite:
         self.y_lim = list(self.ax["ax_3d"].get_ylim3d())
 
     def update(self, t):
-        # self.cm.set_data(self.target.state[0], self.target.state[1])
-        # self.body.verts = ()
-        # self.ax["ax_3d"].patches.pop()
 
         if self.body:
             self.body.remove()
@@ -133,12 +126,6 @@ class UavSprite:
         )
 
         (self.cm,) = self.ax["ax_3d"].plot([], [], [], "k.")
-
-        # TODO: plot rotors
-        # (self.rotor1,) = self.ax["ax_3d"].plot([], [], [], "k.")
-        # (self.rotor2,) = self.ax["ax_3d"].plot([], [], [], "k.")
-        # (self.rotor3,) = self.ax["ax_3d"].plot([], [], [], "k.")
-        # (self.rotor4,) = self.ax["ax_3d"].plot([], [], [], "k.")
 
         self.trajectory = {
             "t": [],
@@ -295,8 +282,6 @@ class Gui:
 
         for sprite in self.sprites:
             sprite.update(time_elapsed)
-
-        # self.ax["ax_3d"].plot(1, 1, "r+")
 
         #     self.ax.draw_artist(uav_sprite.cm)
         # self.fig.canvas.blit(self.ax.bbox)
