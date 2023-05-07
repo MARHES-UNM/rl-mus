@@ -1,6 +1,7 @@
 import sys
 from turtle import color
 import matplotlib
+from matplotlib import cm
 
 matplotlib.use("TKAgg")
 import matplotlib.pyplot as plt
@@ -16,6 +17,28 @@ class Sprite:
 
     def update(self, t):
         raise NotImplemented
+
+
+class ObstacleSprite(Sprite):
+    def __init__(self, ax, obstacle, t_lim=30):
+        super().__init__(ax, t_lim)
+        self.body = self.ax["ax_3d"].scatter([], [], [], marker="o", color="r")
+
+    def update(self, t):
+        
+        if self.body:
+            self.body.remove
+
+        r = 0.05
+        u, v = np.mgrid[3 : 3 + 2 * np.pi : 30j, 3 : 3 + np.pi : 20j]
+        x = np.cos(u) * np.sin(v)
+        y = np.sin(u) * np.sin(v)
+        z = np.cos(v)
+
+        # Plot the surface.
+        surf = self.ax["ax_3d"].plot_surface(
+            x, y, z, cmap=cm.coolwarm, linewidth=0, antialiased=False
+        )
 
 
 class TargetSprite:
@@ -55,7 +78,6 @@ class TargetSprite:
         self.y_lim = list(self.ax["ax_3d"].get_ylim3d())
 
     def update(self, t):
-
         if self.body:
             self.body.remove()
 
@@ -258,6 +280,8 @@ class Gui:
         self.init_entities()
         # for stopping simulation with the esc key
         self.fig.canvas.mpl_connect("key_press_event", self.keypress_routine)
+        
+        self.ax['ax_3d'].view_init(25, 10)
 
         # # plt.show(False)
         # plt.draw()
@@ -272,6 +296,9 @@ class Gui:
         for uav in self.uavs:
             uav_sprite = UavSprite(self.ax, uav)
             self.sprites.append(uav_sprite)
+
+        obs_sprite = ObstacleSprite(self.ax, None)
+        self.sprites.append(obs_sprite)
 
     # TODO: update this to use blit
     # https://matplotlib.org/stable/api/animation_api.html
