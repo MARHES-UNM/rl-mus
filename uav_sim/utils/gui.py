@@ -285,10 +285,10 @@ class Gui:
 
         #     self.ax.draw_artist(uav_sprite.cm)
         # self.fig.canvas.blit(self.ax.bbox)
-        # for key, ax in self.ax.items():
-        #     if key == "ax_3d":
-        #         continue
-        #     ax.legend()
+        for key, ax in self.ax.items():
+            if key == "ax_3d":
+                continue
+            ax.legend()
 
         plt.pause(0.0000000000001)
 
