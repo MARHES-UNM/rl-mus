@@ -215,7 +215,7 @@ class UavSprite:
 
 class Gui:
     def __init__(
-        self, uavs=[], target=None, obstacles=None, max_x=3, max_y=3, max_z=3, fig=None
+        self, uavs=[], target=None, obstacles=[], max_x=3, max_y=3, max_z=3, fig=None
     ):
         self.uavs = uavs
         self.fig = fig
@@ -315,10 +315,14 @@ class Gui:
 
         #     self.ax.draw_artist(uav_sprite.cm)
         # self.fig.canvas.blit(self.ax.bbox)
+        # only plot legends if uav or target
         for key, ax in self.ax.items():
             if key == "ax_3d":
                 continue
-            ax.legend()
+
+            handles, labels = ax.get_legend_handles_labels()
+            if labels:
+                ax.legend()
 
         plt.pause(0.0000000000001)
 

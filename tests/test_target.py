@@ -8,7 +8,7 @@ from uav_sim.utils.gui import Gui
 
 class TestUav(unittest.TestCase):
     def setUp(self):
-        self.target = Target(_id=0, x=1.5, y=1.5, psi=np.pi / 2)
+        self.target = Target(_id=0, x=1.5, y=1.5, v=0, psi=np.pi / 2)
         self.gui = Gui(target=self.target)
 
     def test_target_move(self):

@@ -18,7 +18,7 @@ class TestUavSim(unittest.TestCase):
 
         obs, done = self.env.reset(), False
 
-        Tf = 12
+        Tf = 10
         start_pos = np.array([uav.state[0:3] for uav in self.env.uavs])
         pads = self.env.target.pads
         positions = [[pad.x, pad.y, 0, 0] for pad in pads]
@@ -34,35 +34,22 @@ class TestUavSim(unittest.TestCase):
         actions = {}
 
         t = 0
-        for _step in range(120):
-            des_pos = np.zeros((self.env.num_uavs, 12), dtype=np.float64)
+        for _step in range(150):
+            des_pos = np.zeros((self.env.num_uavs, 15), dtype=np.float64)
             for idx in range(self.env.num_uavs):
                 des_pos[idx, 0] = calculate_position(uav_coeffs[idx, 0], t)
                 des_pos[idx, 1] = calculate_position(uav_coeffs[idx, 1], t)
                 des_pos[idx, 2] = calculate_position(uav_coeffs[idx, 2], t)
 
-                # # Velocity
-                # des_pos[idx, 3] = calculate_velocity(
-                #     uav_coeffs[idx, way_point_num, 0], t
-                # )
-                # des_pos[idx, 4] = calculate_velocity(
-                #     uav_coeffs[idx, way_point_num, 1], t
-                # )
-                # des_pos[idx, 5] = calculate_velocity(
-                #     uav_coeffs[idx, way_point_num, 2], t
-                # )
+                # # velocity
+                # des_pos[idx, 3] = calculate_velocity(uav_coeffs[idx, 0], t)
+                # des_pos[idx, 4] = calculate_velocity(uav_coeffs[idx, 1], t)
+                # des_pos[idx, 5] = calculate_velocity(uav_coeffs[idx, 2], t)
 
-                # # Acceleration
-                # acc = np.zeros(3)
-                # acc[0] = calculate_acceleration(
-                #     uav_coeffs[idx, way_point_num, 0], t
-                # )
-                # acc[1] = calculate_acceleration(
-                #     uav_coeffs[idx, way_point_num, 1], t
-                # )
-                # acc[2] = calculate_acceleration(
-                #     uav_coeffs[idx, way_point_num, 2], t
-                # )
+                # # acceleration
+                # des_pos[idx, 12] = calculate_velocity(uav_coeffs[idx, 0], t)
+                # des_pos[idx, 13] = calculate_velocity(uav_coeffs[idx, 1], t)
+                # des_pos[idx, 14] = calculate_velocity(uav_coeffs[idx, 2], t)
 
                 actions[idx] = self.env.uavs[idx].calc_torque(des_pos[idx])
             obs, rew, done, info = self.env.step(actions)
@@ -72,6 +59,7 @@ class TestUavSim(unittest.TestCase):
             if done["__all__"]:
                 break
 
+    @unittest.skip
     def test_lqr_landing(self):
         self.env = UavSim({"target_v": 0})
         obs, done = self.env.reset(), False

@@ -104,7 +104,8 @@ class Target(Entity):
         self.vy = self.v * sin(self.psi)
 
         # verifies psi
-        np.testing.assert_almost_equal(self.psi, np.arctan2(self.vy, self.vx))
+        if not v == 0:
+            np.testing.assert_almost_equal(self.psi, np.arctan2(self.vy, self.vx))
         self._state = np.array([x, y, 0, 0, 0, 0, psi, self.w])
         self.pads = [
             Pad(_id, pad_loc[0], pad_loc[1])
@@ -353,26 +354,31 @@ class Quadrotor(Entity):
 
         return dot_x
 
-    def calc_torque(self, des_pos=np.array([0, 0, 0, 0])):
+    def calc_torque(self, des_pos=np.zeros(15)):
         """
+        Inputs are the desired states: x, y, z, x_dot, y_dot,
         Inputs are the desired position x, y, z, psi
         Outputs are T, tau_x, tau_y, tau_z
 
         Args:
             des_pos (_type_, optional): _description_. Defaults to np.arary([0, 0, 0, 0]).
         """
-        pos_er = np.zeros(12) - self._state
-        pos_er[0:3] = des_pos[0:3] - self._state[0:3]
-        pos_er[8] = des_pos[3] - self._state[8]
+        pos_er = des_pos[0:12] - self._state
+        # pos_er = np.zeros(12) - self._state
+        # pos_er[0:3] = des_pos[0:3] - self._state[0:3]
+        # pos_er[8] = des_pos[3] - self._state[8]
+        r_ddot_1 = des_pos[12]
+        r_ddot_2 = des_pos[13]
+        r_ddot_3 = des_pos[14]
 
-        T = np.dot(self.k[2], pos_er[[2, 5]]).squeeze()
-        u_x = np.dot(self.k[0], pos_er[[0, 3, 7, 10]]).squeeze()
+        T = np.dot(self.k[2], pos_er[[2, 5]]).squeeze()  # + r_ddot_3
+        u_theta = np.dot(self.k[0], pos_er[[0, 3, 7, 10]]).squeeze()  # + r_ddot_2
 
-        u_y = np.dot(self.k[1], pos_er[[1, 4, 6, 9]]).squeeze()
+        u_phi = np.dot(self.k[1], pos_er[[1, 4, 6, 9]]).squeeze()  # + r_ddot_1
 
-        u_z = np.dot(self.k[3], pos_er[[8, 11]]).squeeze()
+        u_psi = np.dot(self.k[3], pos_er[[8, 11]]).squeeze()
 
-        return np.array([T + self.m * self.g, u_y, u_x, u_z])
+        return np.array([T + self.m * self.g, u_phi, u_theta, u_psi])
 
     def step(self, action=np.zeros(4)):
         """Action is propeller forces in body frame

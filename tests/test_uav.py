@@ -46,13 +46,17 @@ class TestUav(unittest.TestCase):
         """Test that UAV can hover when reached destination."""
         uav = Quadrotor(0, 0, 0, 2)
 
-        des_pos = np.array([0, 0, 1, 0])
+        des_pos = np.zeros(15)
         uav_des_traj = []
         uav_trajectory = []
         for i in range(100):
+            if i < 20:
+                des_pos[2] = 1
+            elif i > 40:
+                des_pos[2] = 3
             action = uav.calc_torque(des_pos)
             uav.step(action)
-            uav_des_traj.append(des_pos)
+            uav_des_traj.append(des_pos.copy())
             uav_trajectory.append(uav.state)
 
         uav_des_traj = np.array(uav_des_traj)
@@ -63,20 +67,21 @@ class TestUav(unittest.TestCase):
     def test_controller_des_pos(self):
         """Test uav can reach a desired position."""
         uav = Quadrotor(0, 1, 0, 1)
-        des_pos = np.zeros(4)
+        des_pos = np.zeros(15)
         uav_des_traj = []
         uav_trajectory = []
         for i in range(100):
             if i < 20:
                 des_pos[0:3] = uav.state[0:3].copy()
-                des_pos[3] = uav.state[8].copy()
+                des_pos[8] = uav.state[8].copy()
             else:
-                des_pos = np.array([2, 1, 2, np.pi])
+                des_pos[0:3] = np.array([2, 1, 2])
+                des_pos[8] = np.pi
 
             action = uav.calc_torque(des_pos)
 
             uav.step(action)
-            uav_des_traj.append(des_pos)
+            uav_des_traj.append(des_pos.copy())
             uav_trajectory.append(uav.state)
 
         uav_des_traj = np.array(uav_des_traj)
@@ -104,7 +109,7 @@ class TestUav(unittest.TestCase):
         ax2.set_ylabel("z (m)")
 
         ax3 = fig.add_subplot(414)
-        ax3.plot(uav_des_traj[:, 3])
+        ax3.plot(uav_des_traj[:, 8])
         ax3.plot(uav_trajectory[:, 8])
         ax3.set_ylabel("psi (rad)")
 
@@ -116,7 +121,7 @@ class TestUav(unittest.TestCase):
 
         self.assertFalse(self.uav.get_landed(pad))
 
-        des_pos = np.zeros(4)
+        des_pos = np.zeros(15)
         for i in range(100):
             des_pos[0:3] = pad.state[0:3]
             action = self.uav.calc_torque(des_pos)
