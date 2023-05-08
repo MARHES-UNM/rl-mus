@@ -93,3 +93,10 @@ https://repository.upenn.edu/cgi/viewcontent.cgi?article=1705&context=edissertat
 
 Prediction-Based Leader-Follower Rendezvous Model Predictive Control with Robustness to Communication Losses
 https://arxiv.org/pdf/2304.01045.pdf
+
+
+## another repo
+This repo is good for cbf for quadrotor
+https://github.com/hocherie/cbf_quadrotor
+accompanying pdf
+https://github.com/hocherie/cbf_quadrotor/blob/master/docs/ensuring-safety-pdf.pdf

@@ -13,6 +13,65 @@ class TestUavSim(unittest.TestCase):
     def setUp(self):
         self.env = UavSim()
 
+    def test_landing_minimum_traj(self):
+        self.env = UavSim({"target_v": 0})
+
+        obs, done = self.env.reset(), False
+
+        Tf = 12
+        start_pos = np.array([uav.state[0:3] for uav in self.env.uavs])
+        pads = self.env.target.pads
+        positions = [[pad.x, pad.y, 0, 0] for pad in pads]
+
+        uav_coeffs = np.zeros((self.env.num_uavs, 3, 6, 1), dtype=np.float64)
+        for idx in range(self.env.num_uavs):
+            traj = TrajectoryGenerator(start_pos[idx], positions[idx], Tf)
+            traj.solve()
+            uav_coeffs[idx, 0] = traj.x_c
+            uav_coeffs[idx, 1] = traj.y_c
+            uav_coeffs[idx, 2] = traj.z_c
+
+        actions = {}
+
+        t = 0
+        for _step in range(120):
+            des_pos = np.zeros((self.env.num_uavs, 12), dtype=np.float64)
+            for idx in range(self.env.num_uavs):
+                des_pos[idx, 0] = calculate_position(uav_coeffs[idx, 0], t)
+                des_pos[idx, 1] = calculate_position(uav_coeffs[idx, 1], t)
+                des_pos[idx, 2] = calculate_position(uav_coeffs[idx, 2], t)
+
+                # # Velocity
+                # des_pos[idx, 3] = calculate_velocity(
+                #     uav_coeffs[idx, way_point_num, 0], t
+                # )
+                # des_pos[idx, 4] = calculate_velocity(
+                #     uav_coeffs[idx, way_point_num, 1], t
+                # )
+                # des_pos[idx, 5] = calculate_velocity(
+                #     uav_coeffs[idx, way_point_num, 2], t
+                # )
+
+                # # Acceleration
+                # acc = np.zeros(3)
+                # acc[0] = calculate_acceleration(
+                #     uav_coeffs[idx, way_point_num, 0], t
+                # )
+                # acc[1] = calculate_acceleration(
+                #     uav_coeffs[idx, way_point_num, 1], t
+                # )
+                # acc[2] = calculate_acceleration(
+                #     uav_coeffs[idx, way_point_num, 2], t
+                # )
+
+                actions[idx] = self.env.uavs[idx].calc_torque(des_pos[idx])
+            obs, rew, done, info = self.env.step(actions)
+            self.env.render()
+            t += self.env.dt
+
+            if done["__all__"]:
+                break
+
     def test_lqr_landing(self):
         self.env = UavSim({"target_v": 0})
         obs, done = self.env.reset(), False
