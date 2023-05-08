@@ -275,7 +275,7 @@ class Quadrotor(Entity):
         Bz = np.array([[0.0], [1 / self.m]])
 
         Qz = np.diag([1, 1])
-        Rz = np.diag([10])
+        Rz = np.diag([1])
 
         # Yaw-subsystem
         # The state variables are yaw, dot_yaw

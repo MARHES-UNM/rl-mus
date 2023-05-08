@@ -59,7 +59,7 @@ class TestUavSim(unittest.TestCase):
             if done["__all__"]:
                 break
 
-    @unittest.skip
+    # @unittest.skip
     def test_lqr_landing(self):
         self.env = UavSim({"target_v": 0})
         obs, done = self.env.reset(), False
@@ -68,9 +68,10 @@ class TestUavSim(unittest.TestCase):
 
         for _step in range(100):
             pads = self.env.target.pads
-            positions = [[pad.x, pad.y, 0, 0] for pad in pads]
+            positions = np.zeros((self.env.num_uavs, 15))
 
             for idx, pos in enumerate(positions):
+                positions[idx][0:2] = np.array([pads[idx].x, pads[idx].y])
                 actions[idx] = self.env.uavs[idx].calc_torque(pos)
             obs, rew, done, info = self.env.step(actions)
             self.env.render()

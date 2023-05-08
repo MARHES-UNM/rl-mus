@@ -70,11 +70,21 @@ class TestUav(unittest.TestCase):
         des_pos = np.zeros(15)
         uav_des_traj = []
         uav_trajectory = []
-        for i in range(100):
+        for i in range(220):
             if i < 20:
                 des_pos[0:3] = uav.state[0:3].copy()
                 des_pos[8] = uav.state[8].copy()
-            else:
+            elif i > 30 and i < 60:
+                des_pos[0:3] = np.array([1, 0, 1])
+                des_pos[8] = np.pi / 2
+            elif i > 90 and i < 140:
+                des_pos[0:3] = np.array([0, 3, 0])
+                des_pos[8] = 0.2
+            elif i > 150 and i < 180:
+                des_pos[0:3] = np.array([2, 1, 0.5])
+                des_pos[8] = 0.2
+
+            elif i > 190:
                 des_pos[0:3] = np.array([2, 1, 2])
                 des_pos[8] = np.pi
 
