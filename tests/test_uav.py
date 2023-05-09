@@ -42,18 +42,27 @@ class TestUav(unittest.TestCase):
         np.testing.assert_almost_equal(0.0, uav.state[2])
 
     # @unittest.skip
-    def test_controller_hover(self):
-        """Test that UAV can hover when reached destination."""
+    def test_controller_independent_control(self):
+        """Test that we can independently control UAV x, y, z and psi"""
         uav = Quadrotor(0, 0, 0, 2)
 
         des_pos = np.zeros(15)
         uav_des_traj = []
         uav_trajectory = []
-        for i in range(100):
+        for i in range(200):
+            # hover
             if i < 20:
-                des_pos[2] = 1
-            elif i > 40:
-                des_pos[2] = 3
+                des_pos[0:4] = np.array([0, 0, 1, 0])
+            # x direction
+            elif i > 30 and i < 50:
+                des_pos[0:4] = np.array([1, 0, 1, 0])
+            # y direction
+            elif i > 60 and i < 80:
+                des_pos[0:4] = np.array([1, 1, 1, 0])
+            elif i > 90:
+                des_pos[0:4] = np.array([1, 1, 1, 0])
+                des_pos[8] = 0.3
+
             action = uav.calc_torque(des_pos)
             uav.step(action)
             uav_des_traj.append(des_pos.copy())
