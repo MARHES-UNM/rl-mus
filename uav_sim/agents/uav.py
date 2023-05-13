@@ -162,6 +162,90 @@ class Target(Entity):
         self.update_pads_state()
 
 
+class Quad2DInt(Entity):
+    def __init__(self, _id, x=0, y=0, z=0, r=0.1, dt=1 / 10):
+        super().__init__(_id, x, y, z, r, _type=AgentType.U)
+
+        self.ode = scipy.integrate.ode(self.f_dot).set_integrator(
+            "vode", nsteps=500, method="bdf"
+        )
+
+        # timestep
+        self.dt = dt  # s
+
+        # gravity constant
+        self.g = 9.81  # m/s^2
+
+        self.m = 1
+
+        # lenght of arms
+        self.l = 1  # m
+
+        self.inertia = np.eye(3)
+        self.ixx = self.inertia[0, 0]
+        self.iyy = self.inertia[1, 1]
+        self.izz = self.inertia[2, 2]
+
+        self.inv_inertia = np.linalg.pinv(self.inertia)
+
+        self._state = np.zeros(6)
+        self._state[0] = x
+        self._state[1] = y
+        self._state[2] = z
+        self.done = False
+
+    @property
+    def state(self):
+        return self._state
+
+    def f_dot(self, time, state, action):
+        action_z = 1 / self.m * action[2] - self.g
+        return np.array([state[3], state[4], state[5], action[0], action[1], action_z])
+
+    def calc_des_action(self, des_pos):
+        kx = ky = kz = 2
+        k_x_dot = k_y_dot = k_z_dot = 3
+
+        pos_er = des_pos[0:6] - self._state
+        r_ddot_1 = des_pos[12]
+        r_ddot_2 = des_pos[13]
+        r_ddot_3 = des_pos[14]
+
+        # https://upcommons.upc.edu/bitstream/handle/2117/112404/Thesis-Jesus_Valle.pdf?sequence=1&isAllowed=y
+        r_ddot_des_x = kx * pos_er[0] + k_x_dot * pos_er[3] + r_ddot_1
+        r_ddot_des_y = ky * pos_er[1] + k_y_dot * pos_er[4] + r_ddot_2
+        r_ddot_des_z = kz * pos_er[2] + k_z_dot * pos_er[5] + r_ddot_3
+        r_ddot_des_z = self.m * (self.g + r_ddot_des_z)
+
+        action = np.array([r_ddot_des_x, r_ddot_des_y, r_ddot_des_z])
+        return action
+
+    def step(self, action=np.zeros(3)):
+        """Action is propeller forces in body frame
+
+        Args:
+            action (_type_, optional): _description_. Defaults to np.zeros(4).
+            state:
+            x, y, z, x_dot, y_dot, z_dot, phi, theta, psi, phi_dot, theta_dot, psi_dot
+        """
+
+        self.ode.set_initial_value(self._state, 0).set_f_params(action)
+        self._state = self.ode.integrate(self.ode.t + self.dt)
+        assert self.ode.successful()
+
+        self._state[2] = max(0, self._state[2])
+
+    def in_collision(self, entity):
+        dist = np.linalg.norm(self._state[0:3] - entity._state[0:3])
+
+        return dist <= (self.r + entity.r)
+
+    def get_landed(self, pad):
+        dist = np.linalg.norm(self._state[0:3] - pad._state[0:3])
+
+        return dist <= 0.01
+
+
 class Quadrotor(Entity):
     def __init__(
         self,
@@ -405,8 +489,7 @@ class Quadrotor(Entity):
         r_ddot_des_y = ky * pos_er[1] + k_y_dot * pos_er[4] + r_ddot_2
         r_ddot_des_z = kz * pos_er[2] + k_z_dot * pos_er[5] + r_ddot_3
 
-        # des_psi = self.state[8]
-        des_psi = pos_er[8]
+        des_psi = des_pos[8]
 
         u1 = self.m * self.g + self.m * (r_ddot_des_z)
 

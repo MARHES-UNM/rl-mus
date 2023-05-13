@@ -35,6 +35,22 @@
             ]
         },
         {
+            "name": "unittest_quad_2d",
+            "type": "python",
+            "request": "launch",
+            "module": "unittest",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "DISPLAY": "192.168.1.11:0.0"
+            },
+            "args": [
+                "-v",
+                "${cwd}/tests/test_quad_2d.py"
+            ]
+        },
+        {
             "name": "unittest_uav",
             "type": "python",
             "request": "launch",

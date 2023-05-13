@@ -3,7 +3,6 @@ from matplotlib import pyplot as plt
 from uav_sim.agents.uav import Obstacle, Pad, Quadrotor
 import unittest
 import numpy as np
-from uav_sim.utils.gui import Gui
 
 
 class TestUav(unittest.TestCase):
