@@ -1,7 +1,7 @@
 import numpy as np
 
 from gym.utils import seeding
-from uav_sim.agents.uav import Obstacle, Quadrotor
+from uav_sim.agents.uav import Obstacle, Quad2DInt, Quadrotor
 from uav_sim.agents.uav import Target
 from uav_sim.utils.gui import Gui
 import logging
@@ -157,7 +157,7 @@ class UavSim:
             y = np.random.rand() * self.env_max_l
             z = np.random.rand() * self.env_max_h
 
-            uav = Quadrotor(_id=idx, x=x, y=y, z=z, dt=self.dt)
+            uav = Quad2DInt(_id=idx, x=x, y=y, z=z, dt=self.dt)
             self.uavs.append(uav)
 
         # Reset obstacles

@@ -163,7 +163,17 @@ class Target(Entity):
 
 
 class Quad2DInt(Entity):
-    def __init__(self, _id, x=0, y=0, z=0, r=0.1, dt=1 / 10):
+    def __init__(
+        self,
+        _id,
+        x=0,
+        y=0,
+        z=0,
+        r=0.1,
+        dt=1 / 10,
+        m=0.18,
+        l=0.086,
+    ):
         super().__init__(_id, x, y, z, r, _type=AgentType.U)
 
         self.ode = scipy.integrate.ode(self.f_dot).set_integrator(
@@ -179,7 +189,7 @@ class Quad2DInt(Entity):
         self.m = 1
 
         # lenght of arms
-        self.l = 1  # m
+        self.l = l  # m
 
         self.inertia = np.eye(3)
         self.ixx = self.inertia[0, 0]
@@ -216,6 +226,12 @@ class Quad2DInt(Entity):
                 0,
             ]
         )
+
+    def rotation_matrix(self):
+        return np.eye(3)
+
+    def calc_torque(self, des_pos):
+        return self.calc_des_action(des_pos)
 
     def calc_des_action(self, des_pos):
         kx = ky = kz = 2

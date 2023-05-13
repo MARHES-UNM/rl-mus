@@ -46,20 +46,14 @@ class TestUavSim(unittest.TestCase):
                 # des_pos[idx, 4] = calculate_velocity(uav_coeffs[idx, 1], t)
                 # des_pos[idx, 5] = calculate_velocity(uav_coeffs[idx, 2], t)
 
-                # # acceleration
-                # des_pos[idx, 12] = calculate_acceleration(uav_coeffs[idx, 0], t)
-                # des_pos[idx, 13] = calculate_acceleration(uav_coeffs[idx, 1], t)
-                # des_pos[idx, 14] = calculate_acceleration(uav_coeffs[idx, 2], t)
+                # acceleration
+                des_pos[idx, 12] = calculate_acceleration(uav_coeffs[idx, 0], t)
+                des_pos[idx, 13] = calculate_acceleration(uav_coeffs[idx, 1], t)
+                des_pos[idx, 14] = calculate_acceleration(uav_coeffs[idx, 2], t)
+                des_pos[idx, 14] = self.env.uavs[idx].m * (self.env.uavs[idx].g + des_pos[idx, 14])
 
-                # des_pos[idx, 3] = self.env.uavs[idx].state[3] + des_pos[idx, 12] * self.env.dt
-                # des_pos[idx, 4] = self.env.uavs[idx].state[4] + des_pos[idx, 13] * self.env.dt
-                # des_pos[idx, 5] = self.env.uavs[idx].state[5] + des_pos[idx, 14] * self.env.dt
-
-                # des_pos[idx, 1] = self.env.uavs[idx].state[1] + des_pos[idx, 3] * self.env.dt
-                # des_pos[idx, 2] = self.env.uavs[idx].state[2] + des_pos[idx, 4] * self.env.dt
-                # des_pos[idx, 3] = self.env.uavs[idx].state[3] + des_pos[idx, 5] * self.env.dt
-
-                actions[idx] = self.env.uavs[idx].calc_torque(des_pos[idx])
+                actions[idx] = des_pos[idx, 12:15]
+                # actions[idx] = self.env.uavs[idx].calc_torque(des_pos[idx])
                 # actions[idx] = self.env.uavs[idx].calc_des_action(des_pos[idx])
             obs, rew, done, info = self.env.step(actions)
             self.env.render()
