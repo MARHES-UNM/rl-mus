@@ -505,8 +505,6 @@ class Quadrotor(Entity):
 
         k_psi = K_psi[0]
         k_psi_dot = K_psi[1]
-        # k_psi = self.k[3][0,0]
-        # k_psi_dot = self.k[3][0,1]
 
         pos_er = des_pos[0:12] - self._state
         r_ddot_1 = des_pos[12]

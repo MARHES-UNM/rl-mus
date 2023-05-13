@@ -66,6 +66,7 @@ class TestQuad2D(unittest.TestCase):
             des_pos[12] = calculate_acceleration(uav_coeff[0], t)
             des_pos[13] = calculate_acceleration(uav_coeff[1], t)
             des_pos[14] = calculate_acceleration(uav_coeff[2], t)
+            des_pos[14] = uav.m * (uav.g + des_pos[14])
 
             uav.step(des_pos[12:])
 
