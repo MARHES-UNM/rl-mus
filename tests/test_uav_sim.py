@@ -18,7 +18,6 @@ class TestUavSim(unittest.TestCase):
         """Test that uav can avoid obstacles"""
         obs, done = self.env.reset(), False
 
-
     def test_landing_minimum_traj(self):
         self.env = UavSim({"target_v": 0})
 
@@ -71,6 +70,28 @@ class TestUavSim(unittest.TestCase):
             if done["__all__"]:
                 break
 
+    def test_barrier_function(self):
+        obs, done = self.env.reset(), False
+
+        actions = {}
+
+        for _step in range(100):
+            pads = self.env.target.pads
+            positions = np.zeros((self.env.num_uavs, 15))
+
+            for idx, pos in enumerate(positions):
+                positions[idx][0:2] = np.array([pads[idx].x, pads[idx].y])
+                actions[idx] = self.env.uavs[idx].calc_torque(pos)
+
+                actions[idx] = self.env.proj_safe_action(
+                    self.env.uavs[idx], actions[idx]
+                )
+            obs, rew, done, info = self.env.step(actions)
+            self.env.render()
+
+            if done["__all__"]:
+                break
+
     # @unittest.skip
     def test_lqr_landing(self):
         self.env = UavSim({"target_v": 0})
@@ -86,7 +107,6 @@ class TestUavSim(unittest.TestCase):
                 positions[idx][0:2] = np.array([pads[idx].x, pads[idx].y])
                 actions[idx] = self.env.uavs[idx].calc_torque(pos)
 
-                actions[idx] = self.env.proj_safe_action(self.env.uavs[idx], actions[idx])
             obs, rew, done, info = self.env.step(actions)
             self.env.render()
 
