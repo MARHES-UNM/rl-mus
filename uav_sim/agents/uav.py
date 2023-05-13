@@ -316,7 +316,8 @@ class Quadrotor(Entity):
         R_z = np.array([[cg, -sg, 0], [sg, cg, 0], [0, 0, 1]])
 
         # Z Y X
-        R = np.dot(R_x, np.dot(R_y, R_z))
+        # R = np.dot(R_x, np.dot(R_y, R_z))
+        R = np.dot(R_y, np.dot(R_x, R_z))
         return R
 
     def f_dot(self, time, state, action):
@@ -354,6 +355,82 @@ class Quadrotor(Entity):
 
         return dot_x
 
+    def calc_des_action(self, des_pos):
+        kx = 0.07
+        ky = 0.07
+        kz = 1
+        k_x_dot = 0.6
+        k_y_dot = 0.6
+        k_z_dot = 2
+        k_phi = 0.1
+        k_theta = 0.1
+        k_psi = 1
+        k_phi_dot = 5
+        k_theta_dot = 5
+        k_psi_dot = 2
+
+        K = self.k
+        Kx = K[0].squeeze()
+        Ky = K[1].squeeze()
+        Kz = K[2].squeeze()
+        K_psi = K[3].squeeze()
+
+        kx = Kx[0]
+        k_x_dot = Kx[1]
+        k_theta = Kx[2]
+        k_theta_dot = Kx[3]
+
+        ky = Ky[0]
+        k_y_dot = Ky[1]
+        k_phi = Ky[2]
+        k_phi_dot = Ky[3]
+
+        kz = Kz[0]
+        k_z_dot = Kz[1]
+
+        k_psi = K_psi[0]
+        k_psi_dot = K_psi[1]
+        # k_psi = self.k[3][0,0]
+        # k_psi_dot = self.k[3][0,1]
+
+        pos_er = des_pos[0:12] - self._state
+        r_ddot_1 = des_pos[12]
+        r_ddot_2 = des_pos[13]
+        r_ddot_3 = des_pos[14]
+
+        # https://upcommons.upc.edu/bitstream/handle/2117/112404/Thesis-Jesus_Valle.pdf?sequence=1&isAllowed=y
+        # r_ddot_des_x = des_x_acc + kx * state_error[0] + k_x_dot * state_error[3]
+        # r_ddot_des_y = des_y_acc + ky * state_error[1] + k_y_dot * state_error[4]
+        r_ddot_des_x = kx * pos_er[0] + k_x_dot * pos_er[3] + r_ddot_1
+        r_ddot_des_y = ky * pos_er[1] + k_y_dot * pos_er[4] + r_ddot_2
+        r_ddot_des_z = kz * pos_er[2] + k_z_dot * pos_er[5] + r_ddot_3
+
+        # des_psi = self.state[8]
+        des_psi = pos_er[8]
+
+        u1 = self.m * self.g + self.m * (r_ddot_des_z)
+
+        # roll
+        u2_phi = k_phi * (
+            ((r_ddot_des_x * sin(des_psi) - r_ddot_des_y * cos(des_psi)) / self.g)
+            + k_phi_dot * (pos_er[6])
+        )
+
+        # pitch
+        u2_theta = k_theta * (
+            ((r_ddot_des_x * cos(des_psi) + r_ddot_des_y * sin(des_psi)) / self.g)
+            + k_theta_dot * (pos_er[7])
+        )
+
+        # yaw
+        u2_psi = k_psi * pos_er[8] + k_psi_dot * pos_er[11]
+        # u2_psi = self.k[3][0, 0] * pos_er[8] + self.k[3][0,1] * pos_er[11]
+
+        # u2_phi = 0
+        # u2_theta = 0
+        action = np.array([u1, u2_phi, u2_theta, u2_psi])
+        return action
+
     def calc_torque(self, des_pos=np.zeros(15)):
         """
         Inputs are the desired states: x, y, z, x_dot, y_dot,
@@ -364,19 +441,18 @@ class Quadrotor(Entity):
             des_pos (_type_, optional): _description_. Defaults to np.arary([0, 0, 0, 0]).
         """
         pos_er = des_pos[0:12] - self._state
-        # pos_er = np.zeros(12) - self._state
-        # pos_er[0:3] = des_pos[0:3] - self._state[0:3]
-        # pos_er[8] = des_pos[3] - self._state[8]
         r_ddot_1 = des_pos[12]
         r_ddot_2 = des_pos[13]
         r_ddot_3 = des_pos[14]
 
-        T = np.dot(self.k[2], pos_er[[2, 5]]).squeeze()  # + r_ddot_3
-        u_theta = np.dot(self.k[0], pos_er[[0, 3, 7, 10]]).squeeze()  # + r_ddot_2
+        T = np.dot(self.k[2], pos_er[[2, 5]]).squeeze() + r_ddot_3
+        u_theta = np.dot(self.k[0], pos_er[[0, 3, 7, 10]]).squeeze() + r_ddot_2
 
-        u_phi = np.dot(self.k[1], pos_er[[1, 4, 6, 9]]).squeeze()  # + r_ddot_1
+        u_phi = np.dot(self.k[1], pos_er[[1, 4, 6, 9]]).squeeze() + r_ddot_1
 
-        u_psi = np.dot(self.k[3], pos_er[[8, 11]]).squeeze()
+        # u_psi = np.dot(self.k[3], pos_er[[8, 11]]).squeeze()
+
+        u_psi = self.k[3][0, 0] * pos_er[8] + self.k[3][0, 1] * pos_er[11]
 
         return np.array([T + self.m * self.g, u_phi, u_theta, u_psi])
 

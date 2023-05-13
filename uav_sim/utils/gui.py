@@ -281,9 +281,9 @@ class Gui:
         # for stopping simulation with the esc key
         self.fig.canvas.mpl_connect("key_press_event", self.keypress_routine)
 
-        # self.ax["ax_3d"].view_init(25, 10)
+        self.ax["ax_3d"].view_init(25, 10)
         # Overhead Z
-        self.ax["ax_3d"].view_init(90, 270)
+        # self.ax["ax_3d"].view_init(90, 270)
 
         # # plt.show(False)
         # plt.draw()

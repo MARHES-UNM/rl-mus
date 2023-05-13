@@ -73,6 +73,50 @@ class TestUav(unittest.TestCase):
 
         self.plot_traj(uav_des_traj, uav_trajectory)
 
+    def test_controller_des_controller(self):
+        """Test uav can reach a desired position."""
+        uav = Quadrotor(0, 1, 0, 1)
+        des_pos = np.zeros(15)
+        uav_des_traj = []
+        uav_trajectory = []
+        for i in range(220):
+            if i < 20:
+                des_pos[0:3] = np.array([1, 0, 3])
+                # des_pos[8] = np.pi / 2
+            elif i > 30 and i < 60:
+                des_pos[0:3] = np.array([3, 0, 3])
+                # des_pos[8] = 0.3
+            elif i > 90 and i < 140:
+                des_pos[0:3] = np.array([3, 2, 3])
+                des_pos[8] = 0.3
+            # if i < 20:
+            #     des_pos[0:3] = uav.state[0:3].copy()
+            #     des_pos[8] = uav.state[8].copy()
+            # elif i > 30 and i < 60:
+            #     des_pos[0:3] = np.array([1, 0, 1])
+            #     des_pos[8] = np.pi / 2
+            # elif i > 90 and i < 140:
+            #     des_pos[0:3] = np.array([0, 3, 0])
+            #     des_pos[8] = 0.2
+            # elif i > 150 and i < 180:
+            #     des_pos[0:3] = np.array([2, 1, 0.5])
+            #     des_pos[8] = 0.2
+
+            # elif i > 190:
+            #     des_pos[0:3] = np.array([2, 1, 2])
+            #     des_pos[8] = np.pi
+
+            action = uav.calc_des_action(des_pos)
+
+            uav.step(action)
+            uav_des_traj.append(des_pos.copy())
+            uav_trajectory.append(uav.state)
+
+        uav_des_traj = np.array(uav_des_traj)
+        uav_trajectory = np.array(uav_trajectory)
+
+        self.plot_traj(uav_des_traj, uav_trajectory)
+
     def test_controller_des_pos(self):
         """Test uav can reach a desired position."""
         uav = Quadrotor(0, 1, 0, 1)

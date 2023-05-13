@@ -14,7 +14,9 @@
                 // "DISPLAY": "192.168.1.11:0.0"
                 // "DISPLAY": "192.168.243.10:0.0"
             },
-            "args": ["-v"]
+            "args": [
+                "-v"
+            ]
         },
         {
             "name": "unittest_target",
@@ -28,7 +30,7 @@
                 "DISPLAY": "192.168.1.11:0.0"
             },
             "args": [
-                "-v", 
+                "-v",
                 "${cwd}/tests/test_target.py"
             ]
         },
@@ -46,7 +48,7 @@
                 // "DISPLAY": "192.168.243.10:0.0"
             },
             "args": [
-                "-v", 
+                "-v",
                 "${cwd}/tests/test_uav.py"
             ]
         },
