@@ -81,12 +81,12 @@ class UavSim:
         P = np.eye(3)
         q = -np.dot(P.T, des_action)
 
-        # other agents
-        for other_uav in self.uavs:
-            if other_uav.id != uav.id:
-                G.append(uav.pos - other_uav.pos)
-                b = self.calc_b(uav, other_uav)
-                h.append(b)
+        # # other agents
+        # for other_uav in self.uavs:
+        #     if other_uav.id != uav.id:
+        #         G.append(uav.pos - other_uav.pos)
+        #         b = self.calc_b(uav, other_uav)
+        #         h.append(b)
 
         for obstacle in self.obstacles:
             G.append(uav.pos - obstacle.pos)

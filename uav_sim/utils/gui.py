@@ -54,17 +54,21 @@ class TargetSprite:
             "t": [],
             "x": [],
             "y": [],
+            "z": [],
             "psi": [],
         }
 
         (self.x_bar,) = self.ax["ax_error_x"].plot(
-            [], [], label=f"id: {self.target.id}"
+            [], [], label=f"{self.target.type}: {self.target.id}"
         )
         (self.y_bar,) = self.ax["ax_error_y"].plot(
-            [], [], label=f"id: {self.target.id}"
+            [], [], label=f"{self.target.type}: {self.target.id}"
+        )
+        (self.z_bar,) = self.ax["ax_error_z"].plot(
+            [], [], label=f"{self.target.type}: {self.target.id}"
         )
         (self.psi_bar,) = self.ax["ax_error_psi"].plot(
-            [], [], label=f"id: {self.target.id}"
+            [], [], label=f"{self.target.type}: {self.target.id}"
         )
 
         self.x_lim = list(self.ax["ax_3d"].get_xlim3d())
@@ -99,7 +103,8 @@ class TargetSprite:
         self.trajectory["t"].append(t)
         self.trajectory["x"].append(self.target._state[0])
         self.trajectory["y"].append(self.target._state[1])
-        self.trajectory["psi"].append(self.target._state[2])
+        self.trajectory["z"].append(self.target._state[2])
+        self.trajectory["psi"].append(self.target._state[6])
 
         self.update_axis()
 
@@ -111,6 +116,10 @@ class TargetSprite:
             left=max(0, t - self.t_lim), right=t + self.t_lim
         )
         self.y_bar.set_data(self.trajectory["t"], self.trajectory["y"])
+        self.ax["ax_error_z"].set_xlim(
+            left=max(0, t - self.t_lim), right=t + self.t_lim
+        )
+        self.z_bar.set_data(self.trajectory["t"], self.trajectory["z"])
         self.ax["ax_error_psi"].set_xlim(
             left=max(0, t - self.t_lim), right=t + self.t_lim
         )
