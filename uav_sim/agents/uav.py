@@ -188,7 +188,7 @@ class Quad2DInt(Entity):
 
         self.inv_inertia = np.linalg.pinv(self.inertia)
 
-        self._state = np.zeros(6)
+        self._state = np.zeros(12)
         self._state[0] = x
         self._state[1] = y
         self._state[2] = z
@@ -200,13 +200,28 @@ class Quad2DInt(Entity):
 
     def f_dot(self, time, state, action):
         action_z = 1 / self.m * action[2] - self.g
-        return np.array([state[3], state[4], state[5], action[0], action[1], action_z])
+        return np.array(
+            [
+                state[3],
+                state[4],
+                state[5],
+                action[0],
+                action[1],
+                action_z,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+            ]
+        )
 
     def calc_des_action(self, des_pos):
         kx = ky = kz = 2
         k_x_dot = k_y_dot = k_z_dot = 3
 
-        pos_er = des_pos[0:6] - self._state
+        pos_er = des_pos[0:12] - self._state
         r_ddot_1 = des_pos[12]
         r_ddot_2 = des_pos[13]
         r_ddot_3 = des_pos[14]

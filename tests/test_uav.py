@@ -40,7 +40,6 @@ class TestUav(unittest.TestCase):
             uav.step(action)
         np.testing.assert_almost_equal(0.0, uav.state[2])
 
-    # @unittest.skip
     def test_controller_independent_control(self):
         """Test that we can independently control UAV x, y, z and psi"""
         uav = Quadrotor(0, 0, 0, 2)
@@ -88,23 +87,6 @@ class TestUav(unittest.TestCase):
             elif i > 90 and i < 140:
                 des_pos[0:3] = np.array([3, 2, 3])
                 des_pos[8] = 0.3
-            # if i < 20:
-            #     des_pos[0:3] = uav.state[0:3].copy()
-            #     des_pos[8] = uav.state[8].copy()
-            # elif i > 30 and i < 60:
-            #     des_pos[0:3] = np.array([1, 0, 1])
-            #     des_pos[8] = np.pi / 2
-            # elif i > 90 and i < 140:
-            #     des_pos[0:3] = np.array([0, 3, 0])
-            #     des_pos[8] = 0.2
-            # elif i > 150 and i < 180:
-            #     des_pos[0:3] = np.array([2, 1, 0.5])
-            #     des_pos[8] = 0.2
-
-            # elif i > 190:
-            #     des_pos[0:3] = np.array([2, 1, 2])
-            #     des_pos[8] = np.pi
-
             action = uav.calc_des_action(des_pos)
 
             uav.step(action)

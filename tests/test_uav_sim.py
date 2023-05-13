@@ -193,7 +193,7 @@ class TestUavSim(unittest.TestCase):
             np.testing.assert_array_almost_equal(
                 uav_pos[idx, 0:2], self.env.uavs[idx].state[0:2]
             )
-            np.testing.assert_almost_equal(0.0, self.env.uavs[idx].state[2])
+            np.testing.assert_almost_equal(self.env.uavs[idx].state[2], 0.0)
 
 
 if __name__ == "__main__":
