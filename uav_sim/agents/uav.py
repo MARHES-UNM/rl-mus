@@ -35,6 +35,14 @@ class Entity:
         self._state = np.array([self.x, self.y, self.z, 0, 0, 0])
         return self._state
 
+    @property
+    def pos(self):
+        return self._state[0:3]
+
+    @property
+    def vel(self):
+        return self._state[3:6]
+
     def wrap_angle(self, val):
         return (val + np.pi) % (2 * np.pi) - np.pi
 

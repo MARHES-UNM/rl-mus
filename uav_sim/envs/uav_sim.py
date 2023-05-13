@@ -4,6 +4,7 @@ from gym.utils import seeding
 from uav_sim.agents.uav import Obstacle, Quad2DInt, Quadrotor
 from uav_sim.agents.uav import Target
 from uav_sim.utils.gui import Gui
+from qpsolvers import solve_qp
 import logging
 
 logger = logging.getLogger(__name__)
@@ -20,6 +21,7 @@ class UavSim:
         self._seed = env_config.get("seed", None)
         self.render_mode = env_config.get("render_mode", "human")
         self.num_uavs = env_config.get("num_uavs", 4)
+        self.gamma = env_config.get("gamma", 1)
         self.num_obstacles = env_config.get("num_obstacles", 4)
 
         self._agent_ids = set(range(self.num_uavs))
@@ -50,6 +52,75 @@ class UavSim:
     @property
     def time_elapsed(self):
         return self._time_elapsed
+
+    def get_h(self, uav, entity):
+        del_p = uav.pos - entity.pos
+        del_v = uav.vel - entity.vel
+
+        h = np.linalg.norm(del_p) - (uav.r + entity.r)
+        h = np.sqrt(h)
+        h += (del_p.T @ del_v) / np.linalg.norm(del_p)
+
+        return h
+
+    def calc_b(self, uav, entity):
+        del_p = uav.pos - entity.pos
+        del_v = uav.vel - entity.vel
+
+        h = self.get_h(uav, entity)
+
+        b = self.gamma * h**3 * np.linalg.norm(del_p)
+        b -= ((del_v.T @ del_p) ** 2) / ((np.linalg.norm(del_p)) ** 2)
+        b += (del_v.T @ del_p) / (np.sqrt(np.linalg.norm(del_p) - (uav.r + entity.r)))
+        b += np.linalg.norm(del_v) ** 2
+        return b
+
+    def proj_safe_action(self, uav, des_action):
+        G = []
+        h = []
+        P = np.eye(3)
+        q = -np.dot(P.T, des_action)
+
+        # other agents
+        for other_uav in self.uavs:
+            if other_uav.id != uav.id:
+                G.append(uav.pos - other_uav.pos)
+                b = self.calc_b(uav, other_uav)
+                h.append(b)
+
+        for obstacle in self.obstacles:
+            G.append(uav.pos - obstacle.pos)
+            b = self.calc_b(uav, obstacle)
+            h.append(b)
+
+        G = np.array(G)
+        h = np.array(h)
+
+        if G.any() and h.any():
+            try:
+                u_out = solve_qp(
+                    P.astype(np.float64),
+                    q.astype(np.float64),
+                    G.astype(np.float64),
+                    h.astype(np.float64),
+                    None,
+                    None,
+                    None,
+                    None,
+                    solver="quadprog",
+                )
+            except Exception as e:
+                print(f"error running solver: {e}")
+                u_out = des_action
+        else:
+            print("not running qpsolver")
+            return des_action
+
+        if u_out is None:
+            print("infeasible sovler")
+            return des_action
+
+        return u_out
 
     def step(self, actions):
         for i, action in actions.items():

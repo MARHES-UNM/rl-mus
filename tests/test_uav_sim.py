@@ -13,6 +13,12 @@ class TestUavSim(unittest.TestCase):
     def setUp(self):
         self.env = UavSim()
 
+    # TODO: finish setting up test
+    def test_obstacle_avoidance(self):
+        """Test that uav can avoid obstacles"""
+        obs, done = self.env.reset(), False
+
+
     def test_landing_minimum_traj(self):
         self.env = UavSim({"target_v": 0})
 
@@ -50,11 +56,14 @@ class TestUavSim(unittest.TestCase):
                 des_pos[idx, 12] = calculate_acceleration(uav_coeffs[idx, 0], t)
                 des_pos[idx, 13] = calculate_acceleration(uav_coeffs[idx, 1], t)
                 des_pos[idx, 14] = calculate_acceleration(uav_coeffs[idx, 2], t)
-                des_pos[idx, 14] = self.env.uavs[idx].m * (self.env.uavs[idx].g + des_pos[idx, 14])
+                des_pos[idx, 14] = self.env.uavs[idx].m * (
+                    self.env.uavs[idx].g + des_pos[idx, 14]
+                )
 
                 actions[idx] = des_pos[idx, 12:15]
                 # actions[idx] = self.env.uavs[idx].calc_torque(des_pos[idx])
                 # actions[idx] = self.env.uavs[idx].calc_des_action(des_pos[idx])
+                # actions[idx] = self.env.proj_safe_action(self.env.uavs[idx], actions[idx])
             obs, rew, done, info = self.env.step(actions)
             self.env.render()
             t += self.env.dt
@@ -76,6 +85,8 @@ class TestUavSim(unittest.TestCase):
             for idx, pos in enumerate(positions):
                 positions[idx][0:2] = np.array([pads[idx].x, pads[idx].y])
                 actions[idx] = self.env.uavs[idx].calc_torque(pos)
+
+                actions[idx] = self.env.proj_safe_action(self.env.uavs[idx], actions[idx])
             obs, rew, done, info = self.env.step(actions)
             self.env.render()
 
