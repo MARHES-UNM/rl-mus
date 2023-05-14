@@ -74,21 +74,22 @@ class TestUavSim(unittest.TestCase):
         env = UavSim({"num_uavs": 1, "num_obstacles": 1})
 
         obs, done = env.reset(), False
+        env.uavs[0].r = 0.2
+        env.obstacles[0].r = 0.2
 
         # uav position
-        env.uavs[0].state[0:3] = np.array([5, 2, 1])
+        env.uavs[0]._state[0:3] = np.array([3, 3, 1])
 
         # target
-        # env.target.state[0:3] = np.array([4, 2, 0])
-        env.target.x = 4
+        env.target.x = 3
         env.target.y = 2
         env.target.step([0, 0])
 
         # obstacle position
-        env.obstacles[0].state[0:3] = np.array([5, 1, 1])
+        env.obstacles[0]._state[0:3] = np.array([3.5, 1.5, 1])
 
         des_pos = np.zeros(15)
-        des_pos[0:3] = np.array([5, 0, 1])
+        des_pos[0:3] = np.array([3, 0, 1])
 
         actions = {}
 
@@ -96,7 +97,7 @@ class TestUavSim(unittest.TestCase):
             for idx in range(env.num_uavs):
                 actions[idx] = env.uavs[idx].calc_torque(des_pos)
 
-                actions[idx] = env.proj_safe_action(self.env.uavs[idx], actions[idx])
+                actions[idx] = env.proj_safe_action(env.uavs[idx], actions[idx])
             obs, rew, done, info = env.step(actions)
             env.render()
 

@@ -63,7 +63,7 @@ class UavSim:
 
         return h
 
-    def calc_b(self, uav, entity):
+    def get_b(self, uav, entity):
         del_p = uav.pos - entity.pos
         del_v = uav.vel - entity.vel
 
@@ -81,16 +81,16 @@ class UavSim:
         P = np.eye(3)
         q = -np.dot(P.T, des_action)
 
-        # # other agents
-        # for other_uav in self.uavs:
-        #     if other_uav.id != uav.id:
-        #         G.append(uav.pos - other_uav.pos)
-        #         b = self.calc_b(uav, other_uav)
-        #         h.append(b)
+        # other agents
+        for other_uav in self.uavs:
+            if other_uav.id != uav.id:
+                G.append(uav.pos - other_uav.pos)
+                b = self.get_b(uav, other_uav)
+                h.append(b)
 
         for obstacle in self.obstacles:
             G.append(uav.pos - obstacle.pos)
-            b = self.calc_b(uav, obstacle)
+            b = self.get_b(uav, obstacle)
             h.append(b)
 
         G = np.array(G)
@@ -119,6 +119,10 @@ class UavSim:
         if u_out is None:
             print("infeasible sovler")
             return des_action
+
+        # if np.linalg.norm(des_action - u_out) > 1e-3:
+        if np.linalg.norm(des_action - u_out) > .0001:
+            print("safety layer in effect")
 
         return u_out
 

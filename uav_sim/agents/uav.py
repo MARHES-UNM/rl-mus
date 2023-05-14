@@ -177,7 +177,7 @@ class Quad2DInt(Entity):
         x=0,
         y=0,
         z=0,
-        r=0.1,
+        r=.1,
         dt=1 / 10,
         m=0.18,
         l=0.086,
