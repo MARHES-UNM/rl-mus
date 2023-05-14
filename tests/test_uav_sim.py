@@ -17,7 +17,7 @@ class TestUavSim(unittest.TestCase):
 
     def test_lqr_landing_cbf(self):
         self.env = UavSim({"target_v": 0, "use_safe_action": True, "num_obstacles": 4})
-        self.env.gamma = 4
+        self.env.gamma = 2
         obs, done = self.env.reset(), False
 
         des_pos = np.zeros((self.env.num_uavs, 15))

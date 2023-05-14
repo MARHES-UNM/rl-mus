@@ -8,6 +8,7 @@ from uav_sim.agents.uav import Target
 from uav_sim.utils.gui import Gui
 from qpsolvers import solve_qp
 import logging
+import random
 
 logger = logging.getLogger(__name__)
 
@@ -242,6 +243,7 @@ class UavSim:
 
     def seed(self, seed=None):
         """Random value to seed"""
+        random.seed(seed)
         np.random.seed(seed)
 
         seed = seeding.np_random(seed)
@@ -282,8 +284,9 @@ class UavSim:
             x = np.random.rand() * self.env_max_l
             y = np.random.rand() * self.env_max_l
             z = np.random.rand() * self.env_max_h
+            _type = random.choice(list(ObsType))
 
-            obstacle = Obstacle(_id=idx, x=x, y=y, z=z, _type=ObsType.M)
+            obstacle = Obstacle(_id=idx, x=x, y=y, z=z, _type=_type)
             self.obstacles.append(obstacle)
 
         obs = {uav.id: self._get_obs(uav) for uav in self.uavs}
