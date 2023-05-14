@@ -292,7 +292,7 @@ class Gui:
 
         self.ax["ax_3d"].view_init(25, 10)
         # Overhead Z
-        self.ax["ax_3d"].view_init(90, 270)
+        # self.ax["ax_3d"].view_init(90, 270)
 
         # # plt.show(False)
         # plt.draw()

@@ -171,6 +171,8 @@ class UavSim:
                 "uav_landed": 1.0 if uav.landed else 0.0,
             }
 
+        return info
+
     def _get_obs(self, uav):
         other_uav_states = []
 

@@ -82,7 +82,7 @@
             },
             "args": [
                 "-v", 
-                "tests.test_uav_sim.TestUavSim",
+                "tests.test_uav_sim.TestUavSim.test_lqr_landing_cbf",
                 "--failfast"
             ]
         }

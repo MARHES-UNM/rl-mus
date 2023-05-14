@@ -1,3 +1,5 @@
+from tkinter import W
+from matplotlib import pyplot as plt
 import numpy as np
 import unittest
 from uav_sim.envs.uav_sim import UavSim
@@ -12,6 +14,56 @@ from uav_sim.utils.trajectory_generator import (
 class TestUavSim(unittest.TestCase):
     def setUp(self):
         self.env = UavSim()
+
+    def test_lqr_landing_cbf(self):
+        self.env = UavSim({"target_v": 0, "use_safe_action": True, "num_obstacles": 4})
+        self.env.gamma = 4
+        obs, done = self.env.reset(), False
+
+        des_pos = np.zeros((self.env.num_uavs, 15))
+        pads = self.env.target.pads
+        # get pad positions
+        for idx in range(self.env.num_uavs):
+            des_pos[idx, 0:2] = np.array([pads[idx].x, pads[idx].y])
+            # set uav starting positions
+            self.env.uavs[idx].state[0:3] = np.array([pads[idx].x, pads[idx].y, 3])
+            # set obstacle positions
+            self.env.obstacles[idx].state[0:3] = np.array([pads[idx].x, pads[idx].y, 2])
+
+        actions = {}
+
+        uav_collision_list = [[] for idx in range(self.env.num_uavs)]
+        obstacle_collision_list = [[] for idx in range(self.env.num_uavs)]
+        uav_done_list = [[] for idx in range(self.env.num_uavs)]
+        for _step in range(100):
+            for idx in range(self.env.num_uavs):
+                actions[idx] = self.env.uavs[idx].calc_torque(des_pos[idx])
+
+            obs, rew, done, info = self.env.step(actions)
+            for k, v in info.items():
+                uav_collision_list[k].append(v["uav_collision"])
+                obstacle_collision_list[k].append(v["obstacle_collision"])
+                uav_done_list[k].append(v["uav_landed"])
+            self.env.render()
+
+            if done["__all__"]:
+                break
+        uav_collision_list = np.array(uav_collision_list)
+        obstacle_collision_list = np.array(obstacle_collision_list)
+        uav_done_list = np.array(uav_done_list)
+
+        fig = plt.figure(figsize=(10, 6))
+        ax = fig.add_subplot(311)
+        ax1 = fig.add_subplot(312)
+        ax2 = fig.add_subplot(313)
+        for idx in range(self.env.num_uavs):
+            ax.plot(uav_collision_list[idx], label=f"id:{self.env.uavs[idx].id}")
+            ax1.plot(obstacle_collision_list[idx], label=f"id:{self.env.uavs[idx].id}")
+            ax2.plot(uav_done_list[idx], label=f"id:{self.env.uavs[idx].id}")
+
+        plt.legend()
+        plt.show()
+        print()
 
     def test_cbf_multi(self):
         self.env = UavSim({"target_v": 0, "num_obstacles": 4, "use_safe_action": True})
@@ -39,14 +91,14 @@ class TestUavSim(unittest.TestCase):
 
         obs, done = self.env.reset(), False
 
-        Tf = 10
+        t_final = 9
         start_pos = np.array([uav.state[0:3] for uav in self.env.uavs])
         pads = self.env.target.pads
         positions = [[pad.x, pad.y, 0, 0] for pad in pads]
 
         uav_coeffs = np.zeros((self.env.num_uavs, 3, 6, 1), dtype=np.float64)
         for idx in range(self.env.num_uavs):
-            traj = TrajectoryGenerator(start_pos[idx], positions[idx], Tf)
+            traj = TrajectoryGenerator(start_pos[idx], positions[idx], t_final)
             traj.solve()
             uav_coeffs[idx, 0] = traj.x_c
             uav_coeffs[idx, 1] = traj.y_c
@@ -55,6 +107,11 @@ class TestUavSim(unittest.TestCase):
         actions = {}
 
         t = 0
+
+        uav_collision_list = [[] for idx in range(self.env.num_uavs)]
+        obstacle_collision_list = [[] for idx in range(self.env.num_uavs)]
+        uav_done_list = [[] for idx in range(self.env.num_uavs)]
+
         for _step in range(150):
             des_pos = np.zeros((self.env.num_uavs, 15), dtype=np.float64)
             for idx in range(self.env.num_uavs):
@@ -68,14 +125,37 @@ class TestUavSim(unittest.TestCase):
 
                 actions[idx] = des_pos[idx, 12:15]
             obs, rew, done, info = self.env.step(actions)
+            for k, v in info.items():
+                uav_collision_list[k].append(v["uav_collision"])
+                obstacle_collision_list[k].append(v["obstacle_collision"])
+                uav_done_list[k].append(v["uav_landed"])
             self.env.render()
             t += self.env.dt
 
             if done["__all__"]:
                 break
 
+        uav_collision_list = np.array(uav_collision_list)
+        obstacle_collision_list = np.array(obstacle_collision_list)
+        uav_done_list = np.array(uav_done_list)
+
+        fig = plt.figure(figsize=(10, 6))
+
+        ax = fig.add_subplot(311)
+        for idx in range(self.env.num_uavs):
+            ax.plot(uav_done_list[idx], label=f"id:{self.env.uavs[idx].id}")
+
+        ax = fig.add_subplot(311)
+        for idx in range(self.env.num_uavs):
+            ax.plot(uav_done_list[idx], label=f"id:{self.env.uavs[idx].id}")
+
+        # ax.plot(t_final / self.env.dt, 1, label="finale time")
+        plt.legend()
+        plt.show()
+        print()
+
     def test_barrier_function_single(self):
-        env = UavSim({"num_uavs": 1, "num_obstacles": 1, "use_safe_action": True})
+        env = UavSim({"num_uavs": 1, "num_obstacles": 1, "use_safe_action": False})
         env.gamma = 6
 
         obs, done = env.reset(), False
@@ -96,22 +176,34 @@ class TestUavSim(unittest.TestCase):
 
         actions = {}
 
+        uav_collisions = 0
+        obstacle_collision = 0
         for _step in range(100):
             for idx in range(env.num_uavs):
                 actions[idx] = env.uavs[idx].calc_torque(des_pos)
             obs, rew, done, info = env.step(actions)
+            uav_collisions += sum([v["uav_collision"] for v in info.values()])
+            obstacle_collision += sum(
+                [v["obstacle_collision"] for k, v in info.items()]
+            )
             env.render()
 
             if done["__all__"]:
                 break
 
+        print(f"uav_collision: {uav_collisions}")
+        print(f"obstacle_collision: {obstacle_collision}")
+
     # @unittest.skip
     def test_lqr_landing(self):
-        self.env = UavSim({"target_v": 0})
+        self.env = UavSim({"target_v": 0, "use_safe_action": False})
         obs, done = self.env.reset(), False
 
         actions = {}
 
+        uav_collision_list = [[] for idx in range(self.env.num_uavs)]
+        obstacle_collision_list = [[] for idx in range(self.env.num_uavs)]
+        uav_done_list = [[] for idx in range(self.env.num_uavs)]
         for _step in range(100):
             pads = self.env.target.pads
             positions = np.zeros((self.env.num_uavs, 15))
@@ -119,15 +211,32 @@ class TestUavSim(unittest.TestCase):
             for idx, pos in enumerate(positions):
                 positions[idx][0:2] = np.array([pads[idx].x, pads[idx].y])
                 actions[idx] = self.env.uavs[idx].calc_torque(pos)
-                actions[idx] = self.env.get_safe_action(
-                    self.env.uavs[idx], actions[idx]
-                )
 
             obs, rew, done, info = self.env.step(actions)
+            for k, v in info.items():
+                uav_collision_list[k].append(v["uav_collision"])
+                obstacle_collision_list[k].append(v["obstacle_collision"])
+                uav_done_list[k].append(v["uav_landed"])
             self.env.render()
 
             if done["__all__"]:
                 break
+        uav_collision_list = np.array(uav_collision_list)
+        obstacle_collision_list = np.array(obstacle_collision_list)
+        uav_done_list = np.array(uav_done_list)
+
+        fig = plt.figure(figsize=(10, 6))
+        ax = fig.add_subplot(311)
+        ax1 = fig.add_subplot(312)
+        ax2 = fig.add_subplot(313)
+        for idx in range(self.env.num_uavs):
+            ax.plot(uav_collision_list[idx], label=f"id:{self.env.uavs[idx].id}")
+            ax1.plot(obstacle_collision_list[idx], label=f"id:{self.env.uavs[idx].id}")
+            ax2.plot(uav_done_list[idx], label=f"id:{self.env.uavs[idx].id}")
+
+        plt.legend()
+        plt.show()
+        print()
 
     @unittest.skip
     def test_lqr_waypoints(self):
