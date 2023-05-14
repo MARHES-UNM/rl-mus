@@ -1,3 +1,4 @@
+from math import isclose
 import numpy as np
 
 from gym.utils import seeding
@@ -120,8 +121,11 @@ class UavSim:
             print("infeasible sovler")
             return des_action
 
+        # if np.isclose(np.linalg.norm(u_out), 0.0) and not np.isclose(np.linalg.norm(des_action), 0):
+            # print(f"uav_id: {uav.id} in deadlock")
         # if np.linalg.norm(des_action - u_out) > 1e-3:
         if np.linalg.norm(des_action - u_out) > 0.0001:
+            # u_out += np.random.random(3)*.00001
             pass
             # print("safety layer in effect")
 
@@ -186,6 +190,9 @@ class UavSim:
 
         # neg reward if uav collides with other uavs
         # neg reward if uav collides with obstacles
+        for obstacle in self.obstacles:
+            if uav.in_collision(obstacle):
+                print("collision")
         return reward
 
     def _get_done(self):
