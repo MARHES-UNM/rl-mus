@@ -32,7 +32,6 @@ class Entity:
 
     @property
     def state(self):
-        self._state = np.array([self.x, self.y, self.z, 0, 0, 0])
         return self._state
 
     @property
@@ -78,10 +77,6 @@ class Pad(Entity):
         self.id = _id
         super().__init__(_id=_id, x=x, y=y, z=0, _type=AgentType.P)
 
-    @property
-    def state(self):
-        return self._state
-
 
 class Target(Entity):
     def __init__(
@@ -120,9 +115,6 @@ class Target(Entity):
             for _id, pad_loc in enumerate(self.get_pad_offsets())
         ]
 
-    @property
-    def state(self):
-        return self._state
 
     def get_pad_offsets(self):
         x = self._state[0]
@@ -213,9 +205,6 @@ class Quad2DInt(Entity):
         self.done = False
         self.landed = False
 
-    @property
-    def state(self):
-        return self._state
 
     def f_dot(self, time, state, action):
         action_z = 1 / self.m * action[2] - self.g
@@ -353,9 +342,6 @@ class Quadrotor(Entity):
         self._state[8] = psi
         self.done = False
 
-    @property
-    def state(self):
-        return self._state
 
     def calc_gain(self):
         # The control can be done in a decentralized style
