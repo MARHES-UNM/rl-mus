@@ -81,7 +81,8 @@
                 // "DISPLAY": "192.168.1.11:0.0"
             },
             "args": [
-                "tests.test_uav_sim.TestUavSim.test_cbf_multi",
+                "-v", 
+                "tests.test_uav_sim.TestUavSim",
                 "--failfast"
             ]
         }

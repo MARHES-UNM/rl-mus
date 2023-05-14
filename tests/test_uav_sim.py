@@ -14,7 +14,7 @@ class TestUavSim(unittest.TestCase):
         self.env = UavSim()
 
     def test_cbf_multi(self):
-        self.env = UavSim({"target_v": 0, "num_obstacles": 4})
+        self.env = UavSim({"target_v": 0, "num_obstacles": 4, "use_safe_action": True})
         # self.env.gamma = 4
         obs, done = self.env.reset(), False
 
@@ -27,9 +27,6 @@ class TestUavSim(unittest.TestCase):
             for idx, pos in enumerate(positions):
                 positions[idx][0:2] = np.array([pads[idx].x, pads[idx].y])
                 actions[idx] = self.env.uavs[idx].calc_torque(pos)
-                actions[idx] = self.env.proj_safe_action(
-                    self.env.uavs[idx], actions[idx]
-                )
 
             obs, rew, done, info = self.env.step(actions)
             self.env.render()
@@ -78,7 +75,7 @@ class TestUavSim(unittest.TestCase):
                 break
 
     def test_barrier_function_single(self):
-        env = UavSim({"num_uavs": 1, "num_obstacles": 1})
+        env = UavSim({"num_uavs": 1, "num_obstacles": 1, "use_safe_action": True})
         env.gamma = 6
 
         obs, done = env.reset(), False
@@ -102,8 +99,6 @@ class TestUavSim(unittest.TestCase):
         for _step in range(100):
             for idx in range(env.num_uavs):
                 actions[idx] = env.uavs[idx].calc_torque(des_pos)
-
-                actions[idx] = env.proj_safe_action(env.uavs[idx], actions[idx])
             obs, rew, done, info = env.step(actions)
             env.render()
 
@@ -124,7 +119,7 @@ class TestUavSim(unittest.TestCase):
             for idx, pos in enumerate(positions):
                 positions[idx][0:2] = np.array([pads[idx].x, pads[idx].y])
                 actions[idx] = self.env.uavs[idx].calc_torque(pos)
-                actions[idx] = self.env.proj_safe_action(
+                actions[idx] = self.env.get_safe_action(
                     self.env.uavs[idx], actions[idx]
                 )
 

@@ -24,6 +24,9 @@ class UavSim:
         self.num_uavs = env_config.get("num_uavs", 4)
         self.gamma = env_config.get("gamma", 1)
         self.num_obstacles = env_config.get("num_obstacles", 4)
+        self.obstacle_collision_weight = env_config.get("obstacle_collision_weight", 1)
+        self.uav_collision_weight = env_config.get("uav_collision_weight", 1)
+        self._use_safe_action = env_config.get("use_safe_action", False)
 
         self._agent_ids = set(range(self.num_uavs))
 
@@ -33,9 +36,6 @@ class UavSim:
         self.target_v = env_config.get("target_v", 0)
         self.target_w = env_config.get("target_w", 0)
         self.max_time = env_config.get("max_time", 40)
-        # self.env_max_w = env_config.get("env_max_w", 10)
-        # self.env_max_l = env_config.get("env_max_l", 10)
-        # self.env_max_h = env_config.get("env_max_h", 10)
 
         self.gui = None
         self._time_elapsed = 0
@@ -76,7 +76,7 @@ class UavSim:
         b += np.linalg.norm(del_v) ** 2
         return b
 
-    def proj_safe_action(self, uav, des_action):
+    def get_safe_action(self, uav, des_action):
         G = []
         h = []
         P = np.eye(3)
@@ -122,7 +122,7 @@ class UavSim:
             return des_action
 
         # if np.isclose(np.linalg.norm(u_out), 0.0) and not np.isclose(np.linalg.norm(des_action), 0):
-            # print(f"uav_id: {uav.id} in deadlock")
+        # print(f"uav_id: {uav.id} in deadlock")
         # if np.linalg.norm(des_action - u_out) > 1e-3:
         if np.linalg.norm(des_action - u_out) > 0.0001:
             # u_out += np.random.random(3)*.00001
@@ -133,6 +133,8 @@ class UavSim:
 
     def step(self, actions):
         for i, action in actions.items():
+            if self._use_safe_action:
+                action = self.get_safe_action(self.uavs[i], action)
             self.uavs[i].step(action)
 
         self.target.step(np.array([self.target_v, self.target_w]))
@@ -148,7 +150,26 @@ class UavSim:
         return obs, reward, done, info
 
     def _get_info(self):
-        pass
+        info = {}
+
+        for uav in self.uavs:
+            uav_collision = 0
+            obstacle_collision = 0
+
+            for other_uav in self.uavs:
+                if other_uav.id == uav.id:
+                    continue
+                uav_collision += 1 if uav.in_collision(other_uav) else 0
+
+            for obstacle in self.obstacles:
+                obstacle_collision += 1 if uav.in_collision(obstacle) else 0
+
+            info[uav.id] = {
+                "time_step": self.time_elapsed,
+                "obstacle_collision": obstacle_collision,
+                "uav_collision": uav_collision,
+                "uav_landed": 1.0 if uav.landed else 0.0,
+            }
 
     def _get_obs(self, uav):
         other_uav_states = []
@@ -185,14 +206,20 @@ class UavSim:
         for pad in self.target.pads:
             if uav.get_landed(pad):
                 uav.done = True
+                uav.landed = True
                 reward += 1
                 break
 
         # neg reward if uav collides with other uavs
+        for other_uav in self.uavs:
+            if uav.id == other_uav.id:
+                continue
+            reward -= (
+                self.obstacle_collision_weight if uav.in_collision(other_uav) else 0
+            )
         # neg reward if uav collides with obstacles
         for obstacle in self.obstacles:
-            if uav.in_collision(obstacle):
-                print("collision")
+            reward -= self.uav_collision_weight if uav.in_collision(obstacle) else 0
         return reward
 
     def _get_done(self):
