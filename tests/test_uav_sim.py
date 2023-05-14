@@ -16,8 +16,10 @@ class TestUavSim(unittest.TestCase):
         self.env = UavSim()
 
     def test_lqr_landing_cbf(self):
-        self.env = UavSim({"target_v": 0, "use_safe_action": True, "num_obstacles": 4})
-        self.env.gamma = 2
+        self.env = UavSim(
+            {"target_v": 0, "use_safe_action": True, "num_obstacles": 4, "seed": 0}
+        )
+        # self.env.gamma = 2
         obs, done = self.env.reset(), False
 
         des_pos = np.zeros((self.env.num_uavs, 15))
@@ -26,9 +28,11 @@ class TestUavSim(unittest.TestCase):
         for idx in range(self.env.num_uavs):
             des_pos[idx, 0:2] = np.array([pads[idx].x, pads[idx].y])
             # set uav starting positions
-            # self.env.uavs[idx].state[0:3] = np.array([pads[idx].x, pads[idx].y, 3])
+            self.env.uavs[idx].state[0:3] = np.array([pads[idx].x, pads[idx].y, 3])
             # set obstacle positions
-            # self.env.obstacles[idx].state[0:3] = np.array([pads[idx].x, pads[idx].y, 2])
+            self.env.obstacles[idx].state[0:3] = np.array(
+                [pads[idx].x, pads[idx].y + 0.1, 2]
+            )
 
         actions = {}
 
@@ -119,9 +123,6 @@ class TestUavSim(unittest.TestCase):
                 des_pos[idx, 12] = calculate_acceleration(uav_coeffs[idx, 0], t)
                 des_pos[idx, 13] = calculate_acceleration(uav_coeffs[idx, 1], t)
                 des_pos[idx, 14] = calculate_acceleration(uav_coeffs[idx, 2], t)
-                des_pos[idx, 14] = self.env.uavs[idx].m * (
-                    self.env.uavs[idx].g + des_pos[idx, 14]
-                )
 
                 actions[idx] = des_pos[idx, 12:15]
             obs, rew, done, info = self.env.step(actions)

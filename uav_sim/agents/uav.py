@@ -254,7 +254,6 @@ class Quad2DInt(Entity):
         r_ddot_des_x = kx * pos_er[0] + k_x_dot * pos_er[3] + r_ddot_1
         r_ddot_des_y = ky * pos_er[1] + k_y_dot * pos_er[4] + r_ddot_2
         r_ddot_des_z = kz * pos_er[2] + k_z_dot * pos_er[5] + r_ddot_3
-        r_ddot_des_z = self.m * (self.g + r_ddot_des_z)
 
         action = np.array([r_ddot_des_x, r_ddot_des_y, r_ddot_des_z])
         return action
@@ -267,6 +266,8 @@ class Quad2DInt(Entity):
             state:
             x, y, z, x_dot, y_dot, z_dot, phi, theta, psi, phi_dot, theta_dot, psi_dot
         """
+        # keeps uav hovering
+        action[2] = self.m * (self.g + action[2])
 
         self.ode.set_initial_value(self._state, 0).set_f_params(action)
         self._state = self.ode.integrate(self.ode.t + self.dt)
