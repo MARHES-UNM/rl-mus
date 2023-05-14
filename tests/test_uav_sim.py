@@ -26,9 +26,9 @@ class TestUavSim(unittest.TestCase):
         for idx in range(self.env.num_uavs):
             des_pos[idx, 0:2] = np.array([pads[idx].x, pads[idx].y])
             # set uav starting positions
-            self.env.uavs[idx].state[0:3] = np.array([pads[idx].x, pads[idx].y, 3])
+            # self.env.uavs[idx].state[0:3] = np.array([pads[idx].x, pads[idx].y, 3])
             # set obstacle positions
-            self.env.obstacles[idx].state[0:3] = np.array([pads[idx].x, pads[idx].y, 2])
+            # self.env.obstacles[idx].state[0:3] = np.array([pads[idx].x, pads[idx].y, 2])
 
         actions = {}
 

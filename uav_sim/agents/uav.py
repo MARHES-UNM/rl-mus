@@ -66,8 +66,20 @@ class Entity:
 
 
 class Obstacle(Entity):
-    def __init__(self, _id, x=0, y=0, z=0, r=0.1):
-        super().__init__(_id, x, y, z, r, _type=AgentType.O)
+    def __init__(self, _id, x=0, y=0, z=0, r=0.1, dt=0.1, _type=ObsType.S):
+        super().__init__(_id, x, y, z, r, _type=_type)
+        self.dt = dt
+
+    def step(self):
+        if self.type == ObsType.M:
+            vx = np.random.random() * 0.2
+            vy = np.random.random() * 0.2
+
+            self._state[3] = vx
+            self._state[4] = vy
+
+            self._state[0] += vx * self.dt
+            self._state[1] += vy * self.dt
 
 
 class Pad(Entity):
@@ -114,7 +126,6 @@ class Target(Entity):
             Pad(_id, pad_loc[0], pad_loc[1])
             for _id, pad_loc in enumerate(self.get_pad_offsets())
         ]
-
 
     def get_pad_offsets(self):
         x = self._state[0]
@@ -204,7 +215,6 @@ class Quad2DInt(Entity):
         self._state[2] = z
         self.done = False
         self.landed = False
-
 
     def f_dot(self, time, state, action):
         action_z = 1 / self.m * action[2] - self.g
@@ -341,7 +351,6 @@ class Quadrotor(Entity):
         self._state[7] = theta
         self._state[8] = psi
         self.done = False
-
 
     def calc_gain(self):
         # The control can be done in a decentralized style

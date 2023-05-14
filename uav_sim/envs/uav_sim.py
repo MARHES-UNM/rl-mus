@@ -2,6 +2,7 @@ from math import isclose
 import numpy as np
 
 from gym.utils import seeding
+from _archives.full_uav import ObsType
 from uav_sim.agents.uav import Obstacle, Quad2DInt, Quadrotor
 from uav_sim.agents.uav import Target
 from uav_sim.utils.gui import Gui
@@ -138,6 +139,9 @@ class UavSim:
             self.uavs[i].step(action)
 
         self.target.step(np.array([self.target_v, self.target_w]))
+
+        for obstacle in self.obstacles:
+            obstacle.step()
 
         obs = {uav.id: self._get_obs(uav) for uav in self.uavs}
         reward = {uav.id: self._get_reward(uav) for uav in self.uavs}
@@ -279,7 +283,7 @@ class UavSim:
             y = np.random.rand() * self.env_max_l
             z = np.random.rand() * self.env_max_h
 
-            obstacle = Obstacle(_id=idx, x=x, y=y, z=z)
+            obstacle = Obstacle(_id=idx, x=x, y=y, z=z, _type=ObsType.M)
             self.obstacles.append(obstacle)
 
         obs = {uav.id: self._get_obs(uav) for uav in self.uavs}
