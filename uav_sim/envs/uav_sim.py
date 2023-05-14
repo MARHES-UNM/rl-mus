@@ -84,12 +84,12 @@ class UavSim:
         # other agents
         for other_uav in self.uavs:
             if other_uav.id != uav.id:
-                G.append(uav.pos - other_uav.pos)
+                G.append(-(uav.pos - other_uav.pos).T)
                 b = self.get_b(uav, other_uav)
                 h.append(b)
 
         for obstacle in self.obstacles:
-            G.append(uav.pos - obstacle.pos)
+            G.append(-(uav.pos - obstacle.pos).T)
             b = self.get_b(uav, obstacle)
             h.append(b)
 
@@ -121,8 +121,9 @@ class UavSim:
             return des_action
 
         # if np.linalg.norm(des_action - u_out) > 1e-3:
-        if np.linalg.norm(des_action - u_out) > .0001:
-            print("safety layer in effect")
+        if np.linalg.norm(des_action - u_out) > 0.0001:
+            pass
+            # print("safety layer in effect")
 
         return u_out
 
