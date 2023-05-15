@@ -431,7 +431,7 @@ class Quadrotor(Entity):
 
         # Z Y X
         # R = np.dot(R_x, np.dot(R_y, R_z))
-        R = np.dot(R_y, np.dot(R_x, R_z))
+        R = np.dot(R_y, np.dot(R_z, R_x))
         return R
 
     def f_dot(self, time, state, action):
@@ -470,17 +470,17 @@ class Quadrotor(Entity):
         return dot_x
 
     def calc_des_action(self, des_pos):
-        kx = 0.07
-        ky = 0.07
+        kx = 0.12
+        ky = 0.12
         kz = 1
         k_x_dot = 0.6
         k_y_dot = 0.6
         k_z_dot = 2
-        k_phi = 0.1
-        k_theta = 0.1
+        k_phi = 1.2
+        k_theta = .9
         k_psi = 1
         k_phi_dot = 5
-        k_theta_dot = 5
+        k_theta_dot = 2
         k_psi_dot = 2
 
         K = self.k
@@ -518,8 +518,9 @@ class Quadrotor(Entity):
         r_ddot_des_z = kz * pos_er[2] + k_z_dot * pos_er[5] + r_ddot_3
 
         des_psi = des_pos[8]
+        # des_psi = 0
 
-        u1 = self.m * self.g + self.m * (r_ddot_des_z)
+        u1 = self.m * (self.g + r_ddot_des_z)
 
         # roll
         u2_phi = k_phi * (
