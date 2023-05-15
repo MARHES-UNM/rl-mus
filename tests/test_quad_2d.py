@@ -21,10 +21,12 @@ class TestQuad2D(unittest.TestCase):
             x = np.random.rand() * 3
             y = np.random.rand() * 3
             z = np.random.rand() * 3
-            uav = Quadrotor(0, x, y, z)
+            uav = Quad2DInt(0, x, y, z)
 
             for _ in range(10):
-                action = np.array([uav.m * uav.g, 0, 0, 0])
+                # no need to provide input step takes calculating gravity term
+                # action = np.array([0.0, 0.0, uav.m * uav.g])
+                action = np.array([0.0, 0.0, 0])
                 uav.step(action)
                 expected_traj = np.array([x, y, z])
                 np.testing.assert_array_almost_equal(expected_traj, uav.state[0:3])
@@ -33,8 +35,9 @@ class TestQuad2D(unittest.TestCase):
         """Test that the UAV fall to the ground when 0 force is applied"""
         uav = Quad2DInt(0, 5, 5, 1, dt=0.1)
 
-        for _step in range(10):
+        for _step in range(11):
             action = np.zeros(3)
+            action[2] = -uav.m * uav.g
             uav.step(action)
         np.testing.assert_almost_equal(uav.state[2], 0.0)
 
@@ -66,7 +69,7 @@ class TestQuad2D(unittest.TestCase):
             des_pos[12] = calculate_acceleration(uav_coeff[0], t)
             des_pos[13] = calculate_acceleration(uav_coeff[1], t)
             des_pos[14] = calculate_acceleration(uav_coeff[2], t)
-            des_pos[14] = uav.m * (uav.g + des_pos[14])
+            # des_pos[14] = uav.m * (uav.g + des_pos[14])
 
             uav.step(des_pos[12:])
 

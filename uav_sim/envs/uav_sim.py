@@ -82,7 +82,9 @@ class UavSim:
         G = []
         h = []
         P = np.eye(3)
-        q = -np.dot(P.T, des_action)
+        u_in = des_action.copy()
+        # u_in[2] = 1 / uav.m * u_in[2] - uav.g
+        q = -np.dot(P.T, u_in)
 
         # other agents
         for other_uav in self.uavs:
@@ -131,16 +133,20 @@ class UavSim:
             pass
             # print("safety layer in effect")
 
+        # u_out[2] = uav.m * (uav.g + u_out[2])
         return u_out
 
     def step(self, actions):
+        # step uavs
         for i, action in actions.items():
             if self._use_safe_action:
                 action = self.get_safe_action(self.uavs[i], action)
             self.uavs[i].step(action)
 
+        # step target
         self.target.step(np.array([self.target_v, self.target_w]))
 
+        # step obstacles
         for obstacle in self.obstacles:
             obstacle.step()
 
@@ -259,8 +265,12 @@ class UavSim:
         if self.gui is not None:
             self.close_gui()
 
+        if seed is None:
+            seed = self._seed
+
         self.seed(seed)
 
+        # TODO ensure we don't start in collision states
         # Reset Target
         x = np.random.rand() * self.env_max_w
         y = np.random.rand() * self.env_max_l

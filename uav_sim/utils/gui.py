@@ -290,7 +290,8 @@ class Gui:
         # for stopping simulation with the esc key
         self.fig.canvas.mpl_connect("key_press_event", self.keypress_routine)
 
-        self.ax["ax_3d"].view_init(25, 10)
+        # view is elevation and azimuth angle
+        self.ax["ax_3d"].view_init(45, 25)
         # Overhead Z
         # self.ax["ax_3d"].view_init(90, 270)
 

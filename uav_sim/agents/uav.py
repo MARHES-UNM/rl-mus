@@ -197,17 +197,10 @@ class Quad2DInt(Entity):
         # gravity constant
         self.g = 9.81  # m/s^2
 
-        self.m = 1
+        self.m = m
 
         # lenght of arms
         self.l = l  # m
-
-        self.inertia = np.eye(3)
-        self.ixx = self.inertia[0, 0]
-        self.iyy = self.inertia[1, 1]
-        self.izz = self.inertia[2, 2]
-
-        self.inv_inertia = np.linalg.pinv(self.inertia)
 
         self._state = np.zeros(12)
         self._state[0] = x
@@ -255,6 +248,9 @@ class Quad2DInt(Entity):
         r_ddot_des_y = ky * pos_er[1] + k_y_dot * pos_er[4] + r_ddot_2
         r_ddot_des_z = kz * pos_er[2] + k_z_dot * pos_er[5] + r_ddot_3
 
+        # takes care of hovering
+        # r_ddot_des_z = self.m * (self.g + r_ddot_des_z)
+
         action = np.array([r_ddot_des_x, r_ddot_des_y, r_ddot_des_z])
         return action
 
@@ -262,7 +258,7 @@ class Quad2DInt(Entity):
         """Action is propeller forces in body frame
 
         Args:
-            action (_type_, optional): _description_. Defaults to np.zeros(4).
+            action (_type_, optional): _description_. Defaults to np.zeros(3).
             state:
             x, y, z, x_dot, y_dot, z_dot, phi, theta, psi, phi_dot, theta_dot, psi_dot
         """

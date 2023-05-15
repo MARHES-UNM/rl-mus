@@ -19,7 +19,6 @@ class TestUavSim(unittest.TestCase):
         self.env = UavSim(
             {"target_v": 0, "use_safe_action": True, "num_obstacles": 4, "seed": 0}
         )
-        # self.env.gamma = 2
         obs, done = self.env.reset(), False
 
         des_pos = np.zeros((self.env.num_uavs, 15))
@@ -156,7 +155,7 @@ class TestUavSim(unittest.TestCase):
         print()
 
     def test_barrier_function_single(self):
-        env = UavSim({"num_uavs": 1, "num_obstacles": 1, "use_safe_action": False})
+        env = UavSim({"num_uavs": 1, "num_obstacles": 1, "use_safe_action": True})
         env.gamma = 6
 
         obs, done = env.reset(), False
@@ -312,14 +311,14 @@ class TestUavSim(unittest.TestCase):
             self.env.uavs[idx]._state[2] = pos[2]
 
         for i in range(20):
-            actions = {_id: np.zeros(4) for _id in range(self.env.num_uavs)}
+            u_in = np.zeros(3)
+            actions = {_id: np.zeros(3) for _id in range(self.env.num_uavs)}
             self.env.step(actions)
 
         for idx in range(self.env.num_uavs):
             np.testing.assert_array_almost_equal(
-                uav_pos[idx, 0:2], self.env.uavs[idx].state[0:2]
+                uav_pos[idx, 0:3], self.env.uavs[idx].state[0:3]
             )
-            np.testing.assert_almost_equal(self.env.uavs[idx].state[2], 0.0)
 
 
 if __name__ == "__main__":
