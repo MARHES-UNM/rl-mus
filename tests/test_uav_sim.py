@@ -16,12 +16,16 @@ class TestUavSim(unittest.TestCase):
         self.env = UavSim()
 
     def test_setting_pred_targets(self):
+        self.env = UavSim(
+            {"target_v": .1, "use_safe_action": True, "num_obstacles": 4, "seed": 0}
+        )
+
         obs, done = self.env.reset(), False
         actions = {}
         for _step in range(100):
             for idx in range(self.env.num_uavs):
                 des_pos = np.zeros(15)
-                des_pos[0:3] = self.env.uavs[idx].destination[0:3]
+                des_pos[0:6] = self.env.uavs[idx].destination[0:6]
                 actions[idx] = self.env.uavs[idx].calc_torque(des_pos)
 
             obs, rew, done, info = self.env.step(actions)
