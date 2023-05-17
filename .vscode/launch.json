@@ -78,12 +78,12 @@
             "justMyCode": true,
             "cwd": "${workspaceFolder}",
             "env": {
-                // "DISPLAY": "192.168.1.11:0.0"
+                "DISPLAY": "192.168.1.11:0.0"
             },
             "args": [
                 "-v", 
                 // "tests.test_uav_sim.TestUavSim.test_lqr_landing_cbf",
-                "tests.test_uav_sim.TestUavSim",
+                "tests.test_uav_sim.TestUavSim.test_setting_pred_targets",
                 "--failfast"
             ]
         }

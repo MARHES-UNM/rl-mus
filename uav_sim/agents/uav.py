@@ -175,15 +175,7 @@ class Target(Entity):
 
 class Quad2DInt(Entity):
     def __init__(
-        self,
-        _id,
-        x=0,
-        y=0,
-        z=0,
-        r=0.1,
-        dt=1 / 10,
-        m=0.18,
-        l=0.086,
+        self, _id, x=0, y=0, z=0, r=0.1, dt=1 / 10, m=0.18, l=0.086, dest=None
     ):
         super().__init__(_id, x, y, z, r, _type=AgentType.U)
 
@@ -208,6 +200,7 @@ class Quad2DInt(Entity):
         self._state[2] = z
         self.done = False
         self.landed = False
+        self.destination = dest
 
     def f_dot(self, time, state, action):
         action_z = 1 / self.m * action[2] - self.g
@@ -278,6 +271,11 @@ class Quad2DInt(Entity):
     def get_landed(self, pad):
         dist = np.linalg.norm(self._state[0:3] - pad._state[0:3])
         return dist <= 0.01
+
+    def check_dest_reached(self):
+        dist = np.linalg.norm(self._state[0:3] - self.destination[0:3])
+
+        return dist <= 0.01, dist
 
 
 class Quadrotor(Entity):
@@ -477,7 +475,7 @@ class Quadrotor(Entity):
         k_y_dot = 0.6
         k_z_dot = 2
         k_phi = 1.2
-        k_theta = .9
+        k_theta = 0.9
         k_psi = 1
         k_phi_dot = 5
         k_theta_dot = 2

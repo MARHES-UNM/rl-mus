@@ -187,24 +187,28 @@ class UavSim:
     def _get_obs(self, uav):
         other_uav_states = []
 
-        for other_uav in self.uavs:
-            if uav.id != other_uav.id:
-                other_uav_states.append(other_uav.state)
-
-        other_uav_states = np.array(other_uav_states)
-
         landing_pads = []
         for pad in self.target.pads:
             landing_pads.append(pad.state)
 
         landing_pads = np.array(landing_pads)
 
-        obstacles = np.array([])
+        for other_uav in self.uavs:
+            if uav.id != other_uav.id:
+                other_uav_states.append(other_uav.state)
+
+        other_uav_states = np.array(other_uav_states)
+
+        obstacle_states = []
+        for obstacle in self.obstacles:
+            obstacle_states.append(obstacle.state)
+
+        obstacles = np.array(obstacle_states)
 
         obs_dict = {
             "state": uav.state.astype(np.float32),
-            "other_uav_obs": other_uav_states.astype(np.float32),
             "landing_pads": landing_pads.astype(np.float32),
+            "other_uav_obs": other_uav_states.astype(np.float32),
             "obstacles": obstacles.astype(np.float32),
         }
 
@@ -216,12 +220,22 @@ class UavSim:
 
         reward = 0
         # pos reward if uav lands on any landing pad
-        for pad in self.target.pads:
-            if uav.get_landed(pad):
-                uav.done = True
-                uav.landed = True
-                reward += 1
-                break
+        is_reached, dest_dist = uav.check_dest_reached()
+        if is_reached:
+            uav.done = True
+            uav.landed = True
+            reward += 1
+        else:
+            reward -= dest_dist / np.linalg.norm(
+                [self.env_max_l, self.env_max_w, self.env_max_h]
+            )
+
+        # for pad in self.target.pads:
+        #     if uav.get_landed(pad):
+        #         uav.done = True
+        #         uav.landed = True
+        #         reward += 1
+        #         break
 
         # neg reward if uav collides with other uavs
         for other_uav in self.uavs:
@@ -285,7 +299,9 @@ class UavSim:
             y = np.random.rand() * self.env_max_l
             z = np.random.rand() * self.env_max_h
 
-            uav = Quad2DInt(_id=idx, x=x, y=y, z=z, dt=self.dt)
+            uav = Quad2DInt(
+                _id=idx, x=x, y=y, z=z, dt=self.dt, dest=self.target.pads[idx].state
+            )
             self.uavs.append(uav)
 
         # Reset obstacles
