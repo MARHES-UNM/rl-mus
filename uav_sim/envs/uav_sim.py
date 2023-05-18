@@ -300,7 +300,7 @@ class UavSim:
             z = np.random.rand() * self.env_max_h
 
             uav = Quad2DInt(
-                _id=idx, x=x, y=y, z=z, dt=self.dt, dest=self.target.pads[idx].state
+                _id=idx, x=x, y=y, z=z, dt=self.dt, pad=self.target.pads[idx]
             )
             self.uavs.append(uav)
 

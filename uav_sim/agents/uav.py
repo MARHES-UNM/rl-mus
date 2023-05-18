@@ -174,9 +174,7 @@ class Target(Entity):
 
 
 class Quad2DInt(Entity):
-    def __init__(
-        self, _id, x=0, y=0, z=0, r=0.1, dt=1 / 10, m=0.18, l=0.086, dest=None
-    ):
+    def __init__(self, _id, x=0, y=0, z=0, r=0.1, dt=1 / 10, m=0.18, l=0.086, pad=None):
         super().__init__(_id, x, y, z, r, _type=AgentType.U)
 
         self.ode = scipy.integrate.ode(self.f_dot).set_integrator(
@@ -200,7 +198,7 @@ class Quad2DInt(Entity):
         self._state[2] = z
         self.done = False
         self.landed = False
-        self.destination = dest
+        self.pad = pad
 
     def f_dot(self, time, state, action):
         action_z = 1 / self.m * action[2] - self.g
@@ -273,7 +271,7 @@ class Quad2DInt(Entity):
         return dist <= 0.01
 
     def check_dest_reached(self):
-        dist = np.linalg.norm(self._state[0:3] - self.destination[0:3])
+        dist = np.linalg.norm(self._state[0:3] - self.pad._state[0:3])
 
         return dist <= 0.01, dist
 
