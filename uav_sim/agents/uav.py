@@ -1,8 +1,10 @@
 from math import cos, sin
+import math
 import numpy as np
 from uav_sim.utils.utils import distance, angle, lqr
 import scipy.integrate
 import scipy
+from scipy.integrate import odeint
 from enum import IntEnum
 
 
@@ -275,6 +277,24 @@ class Quad2DInt(Entity):
 
         return dist <= 0.01, dist
 
+    def get_p(self, tf, N=1):
+        def dp_dt(time, state, tf, N=1):
+            t_go = (tf - time) ** N
+            p1 = state[0]
+            p2 = state[1]
+            p3 = state[2]
+            return np.array(
+                [t_go * p2**2, -p1 + t_go * p2 * p3, -2 * p2 + t_go * p3**2]
+            )
+
+        f1 = 2
+        f2 = 1
+        p0 = np.array([f1, 0, f2])
+        t = np.arange(9.0, 0.0, 0.1)
+        params = [tf, N]
+        p = odeint(dp_dt, p0, t, params)
+        return p
+
 
 class Quadrotor(Entity):
     def __init__(
@@ -361,8 +381,8 @@ class Quadrotor(Entity):
         )
         Bx = np.array([[0.0], [0.0], [0.0], [1 / self.ixx]])
 
-        Qx = np.diag([1, 1, 1, 1])
-        Rx = np.diag([10])
+        Qx = np.diag([1, 1, 10, 1])
+        Rx = np.diag([100])
 
         # Y-subsystem
         # The state variables are y, dot_y, roll, dot_roll
@@ -377,22 +397,22 @@ class Quadrotor(Entity):
         By = np.array([[0.0], [0.0], [0.0], [1 / self.iyy]])
 
         Qy = np.diag([1, 1, 1, 1])
-        Ry = np.diag([10])
+        Ry = np.diag([100])
 
         # Z-subsystem
         # The state variables are z, dot_z
         Az = np.array([[0.0, 1.0], [0.0, 0.0]])
         Bz = np.array([[0.0], [1 / self.m]])
 
-        Qz = np.diag([1, 1])
-        Rz = np.diag([1])
+        Qz = np.diag([100, 1])
+        Rz = np.diag([10])
 
         # Yaw-subsystem
         # The state variables are yaw, dot_yaw
         Ayaw = np.array([[0.0, 1.0], [0.0, 0.0]])
         Byaw = np.array([[0.0], [1 / self.izz]])
-        Qyaw = np.diag([1, 1])
-        Ryaw = np.diag([1])
+        Qyaw = np.diag([100, 10])
+        Ryaw = np.diag([10])
 
         ####################### solve LQR #######################
         Ks = []  # feedback gain matrices K for each subsystem
@@ -407,6 +427,17 @@ class Quadrotor(Entity):
 
         return Ks
 
+    def r_dot_matrix(self):
+        """ """
+        cp = cos(self._state[6])
+        sp = sin(self._state[6])
+        ct = cos(self._state[7])
+        st = sin(self._state[7])
+        cg = cos(self._state[8])
+        sg = sin(self._state[8])
+
+        return np.array([[ct, 0, -cp * st], [0, 1, sp], [st, 0, cp * ct]])
+
     def rotation_matrix(
         self,
     ):
@@ -416,23 +447,40 @@ class Quadrotor(Entity):
         Returns: R - 3 x 3 rotation matrix
         """
         cp = cos(self._state[6])
-        ct = cos(self._state[7])
-        cg = cos(self._state[8])
         sp = sin(self._state[6])
+        ct = cos(self._state[7])
         st = sin(self._state[7])
+        cg = cos(self._state[8])
         sg = sin(self._state[8])
         R_x = np.array([[1, 0, 0], [0, cp, -sp], [0, sp, cp]])
         R_y = np.array([[ct, 0, st], [0, 1, 0], [-st, 0, ct]])
         R_z = np.array([[cg, -sg, 0], [sg, cg, 0], [0, 0, 1]])
 
         # Z Y X
-        # R = np.dot(R_x, np.dot(R_y, R_z))
-        R = np.dot(R_y, np.dot(R_z, R_x))
+        R = np.dot(R_x, np.dot(R_y, R_z))
+        # # R = np.dot(np.dot(R_z, R_x), R_y)
+        # R = np.array(
+        #     [
+        #         [ct * cg, sp * st * cg - cp * sg, cp * st * cg + sp * sg],
+        #         [ct * sg, sp * st * sg + cp * cg, cp * st * sg - sp * cg],
+        #         [-st, sp * ct, cp * ct],
+        #     ]
+        # )
+        # R = np.array(
+        #     [
+        #         [cg * ct - sp * sg * st, -cp * sg, cg * st + ct * sp * sg],
+        #         [ct * sg + cg * sp * st, cp * cg, sg * st - cg * ct * sp],
+        #         [-cp * st, sp, cp * ct],
+        #     ]
+        # )
+        # # R = np.dot(np.dot(R_z, R_y), R_x)
+        R = np.dot(np.dot(R_z, R_x), R_y)
         return R
 
     def f_dot(self, time, state, action):
         ft, tau_x, tau_y, tau_z = action.reshape(-1).tolist()
 
+        # omega = np.dot(self.r_dot_matrix(), state[9:12].copy())
         omega = state[9:12].copy()
         tau = np.array([tau_x, tau_y, tau_z])
 
@@ -502,6 +550,7 @@ class Quadrotor(Entity):
         k_psi_dot = K_psi[1]
 
         pos_er = des_pos[0:12] - self._state
+        # pos_er[6:7] = max(min(pos_er[6:7], 0.1), -.1)
         r_ddot_1 = des_pos[12]
         r_ddot_2 = des_pos[13]
         r_ddot_3 = des_pos[14]
@@ -549,18 +598,20 @@ class Quadrotor(Entity):
             des_pos (_type_, optional): _description_. Defaults to np.arary([0, 0, 0, 0]).
         """
         pos_er = des_pos[0:12] - self._state
+        # pos_er[6:7] = np.max(np.min(pos_er[6:7], 0.1), -0.1)
         r_ddot_1 = des_pos[12]
         r_ddot_2 = des_pos[13]
         r_ddot_3 = des_pos[14]
 
-        T = np.dot(self.k[2], pos_er[[2, 5]]).squeeze() + r_ddot_3
-        u_theta = np.dot(self.k[0], pos_er[[0, 3, 7, 10]]).squeeze() + r_ddot_2
-
-        u_phi = np.dot(self.k[1], pos_er[[1, 4, 6, 9]]).squeeze() + r_ddot_1
-
+        # T = np.dot(self.k[2], pos_er[[2, 5]]).squeeze() + r_ddot_3
+        # u_theta = np.dot(self.k[0], pos_er[[0, 3, 7, 10]]).squeeze() + r_ddot_2
+        # u_phi = np.dot(self.k[1], pos_er[[1, 4, 6, 9]]).squeeze() + r_ddot_1
         # u_psi = np.dot(self.k[3], pos_er[[8, 11]]).squeeze()
 
-        u_psi = self.k[3][0, 0] * pos_er[8] + self.k[3][0, 1] * pos_er[11]
+        T = np.dot(self.k[2], pos_er[[2, 5]]).squeeze()
+        u_theta = np.dot(self.k[0], pos_er[[0, 3, 7, 10]]).squeeze()
+        u_phi = np.dot(self.k[1], pos_er[[1, 4, 6, 9]]).squeeze()
+        u_psi = np.dot(self.k[3], pos_er[[8, 11]]).squeeze()
 
         return np.array([T + self.m * self.g, u_phi, u_theta, u_psi])
 
@@ -573,10 +624,15 @@ class Quadrotor(Entity):
             x, y, z, x_dot, y_dot, z_dot, phi, theta, psi, phi_dot, theta_dot, psi_dot
         """
 
-        self.ode.set_initial_value(self._state, 0).set_f_params(action)
+        state = self._state.copy()
+        state[9:12] = np.dot(self.r_dot_matrix(), state[9:12])
+        self.ode.set_initial_value(state, 0).set_f_params(action)
         self._state = self.ode.integrate(self.ode.t + self.dt)
         assert self.ode.successful()
 
+        self._state[9:12] = np.dot(
+            np.linalg.inv(self.r_dot_matrix()), self._state[9:12]
+        )
         self._state[9:12] = self.wrap_angle(self._state[9:12])
 
         self._state[6:9] = self.wrap_angle(self._state[6:9])

@@ -79,14 +79,15 @@ class TestUav(unittest.TestCase):
         uav_trajectory = []
         for i in range(220):
             if i < 20:
-                des_pos[0:3] = np.array([1, 0, 3])
+                # des_pos[0:3] = np.array([3, 0, 1])
+                des_pos[0:2] = uav.state[0:2]
                 # des_pos[8] = np.pi / 2
             elif i > 30 and i < 60:
                 des_pos[0:3] = np.array([3, 0, 3])
                 # des_pos[8] = 0.3
             elif i > 90 and i < 140:
-                des_pos[0:3] = np.array([3, 2, 3])
-                des_pos[8] = 0.3
+                # des_pos[0:3] = np.array([3, 2, 3])
+                des_pos[8] = 1.5
             action = uav.calc_des_action(des_pos)
 
             uav.step(action)
@@ -109,17 +110,16 @@ class TestUav(unittest.TestCase):
                 des_pos[0:3] = uav.state[0:3].copy()
                 des_pos[8] = uav.state[8].copy()
             elif i > 30 and i < 60:
-                des_pos[0:3] = np.array([1, 0, 1])
-                des_pos[8] = np.pi / 2
+                des_pos[0:3] = np.array([2, 2, 1])
+                # des_pos[8] = np.pi / 2
             elif i > 90 and i < 140:
-                des_pos[0:3] = np.array([0, 3, 0])
-                des_pos[8] = 0.2
+                des_pos[0:3] = np.array([1, 0, 0])
+                # des_pos[8] = 0.2
             elif i > 150 and i < 180:
-                des_pos[0:3] = np.array([2, 1, 0.5])
-                des_pos[8] = 0.2
-
+                des_pos[0:3] = np.array([3, 1, 0.5])
+                # des_pos[8] = 0.2
             elif i > 190:
-                des_pos[0:3] = np.array([2, 1, 2])
+                des_pos[0:3] = np.array([2, 2, 2])
                 des_pos[8] = np.pi
 
             action = uav.calc_torque(des_pos)
