@@ -124,11 +124,12 @@ class Target(Entity):
         # verifies psi
         if not v == 0:
             np.testing.assert_almost_equal(self.psi, np.arctan2(self.vy, self.vx))
-        self._state = np.array([x, y, 0, 0, 0, 0, psi, self.w])
+        self._state = np.array([x, y, 0, self.vx, self.vy, 0, psi, self.w])
         self.pads = [
             Pad(_id, pad_loc[0], pad_loc[1])
             for _id, pad_loc in enumerate(self.get_pad_offsets())
         ]
+        self.update_pads_state()
 
     def get_pad_offsets(self):
         x = self._state[0]
@@ -304,7 +305,49 @@ class Quad2DInt(Entity):
         p = odeint(dp_dt, p0, t, params, tfirst=True)
         return p
 
-    def get_g(self, x, vx, p, tf, N=1):
+    def get_time_coordinated_action(self, des_pos, tf, t, N, g):
+        pos_er = des_pos[0:6] - self._state[0:6]
+
+        p1 = g[-1, 0]
+        p2 = g[-1, 1]
+        p3 = g[-1, 2]
+        g2x = g[-1, 4]
+        g2y = g[-1, 6]
+        g2z = g[-1, 8]
+        t_go = (tf - t) ** N
+
+        action = t_go * np.array(
+            [
+                g2x + p2 * pos_er[0] + p3 * pos_er[3],
+                g2y + p2 * pos_er[1] + p3 * pos_er[4],
+                g2z + p2 * pos_er[2] + p3 * pos_er[5],
+            ]
+        )
+
+        return action
+
+    def get_k(self, tf, N=1):
+        A = np.zeros((6, 6))
+        A[0, 3] = 1
+        A[1, 4] = 1
+        A[2, 5] = 1
+
+        B = np.zeros((6, 3))
+        B[3, 0] = 1
+        B[4, 1] = 1
+        B[5, 2] = 1
+
+        t_go = tf**N
+        Q = np.eye(6)
+        R = np.eye(3) * (1 / t_go)
+
+        k, _, _ = lqr(A, B, Q, R)
+
+        return k
+
+    def get_g(self, des_term_state, tf, N=1):
+        # pos_er = des_term_state[0:6] - self._state[0:6]
+        pos_er = des_term_state[0:6]
         """_summary_https://danielmuellerkomorowska.com/2021/02/16/differential-equations-with-scipy-odeint-or-solve_ivp/
 
         Args:
@@ -313,45 +356,98 @@ class Quad2DInt(Entity):
         """
         f1 = 2
         f2 = 1
-        g0 = np.array([f1, 0, f2, f1 * x, f2 * vx])
+        g0 = np.array(
+            [
+                f1,
+                0,
+                f2,
+                f1 * pos_er[0],
+                f2 * pos_er[3],
+                f1 * pos_er[1],
+                f2 * pos_er[4],
+                f1 * pos_er[2],
+                f2 * pos_er[5],
+            ]
+        )
         t = np.arange(tf, 0.0, -0.1)
         params = (tf, N)
 
-        def ret_p(p, _t):
-            dis = _t - t
-            dis[dis < 0] = np.inf
-            idx = dis.argmin()
-            print(idx)
-            return p[idx]
-
-        # def dg_dt(time, state, tf, N, p):
-        def dg_dt(time, state, ret_p, p, tf, N):
-            print(f"g_time:{time}")
-            # tf = 10
-            # N = 1
+        def dg_dt(time, state, tf, N):
             t_go = (tf - time) ** N
-            g1 = state[3]
-            g2 = state[4]
-            # _p = ret_p(p, time)
-            # p1 = _p[0]
-            # p2 = _p[1]
-            # p3 = _p[2]
             p1 = state[0]
             p2 = state[1]
             p3 = state[2]
+            g1x = state[3]
+            g2x = state[4]
+            g1y = state[5]
+            g2y = state[6]
+            g1z = state[7]
+            g2z = state[8]
             return np.array(
                 [
                     t_go * p2**2,
                     -p1 + t_go * p2 * p3,
                     -2.0 * p2 + t_go * p3**2,
-                    t_go * g2 * p2,
-                    -g1 + t_go * g2 * p3,
+                    t_go * g2x * p2,
+                    -g1x + t_go * g2x * p3,
+                    t_go * g2y * p2,
+                    -g1y + t_go * g2y * p3,
+                    t_go * g2z * p2,
+                    -g1z + t_go * g2z * p3,
                 ]
             )
-            # return np.array([t_go * p2, -g1 + t_go * g2 * p3])
 
-        g = odeint(dg_dt, g0, t, args=(ret_p, p, tf, N), tfirst=True)
+        g = odeint(dg_dt, g0, t, args=params, tfirst=True)
         return g
+
+    # def get_g(self, x, vx, p, tf, N=1):
+    #     """_summary_https://danielmuellerkomorowska.com/2021/02/16/differential-equations-with-scipy-odeint-or-solve_ivp/
+
+    #     Args:
+    #         tf (_type_): _description_
+    #         N (int, optional): _description_. Defaults to 1.
+    #     """
+    #     f1 = 2
+    #     f2 = 1
+    #     g0 = np.array([f1, 0, f2, f1 * x, f2 * vx])
+    #     t = np.arange(tf, 0.0, -0.1)
+    #     params = (tf, N)
+
+    #     def ret_p(p, _t):
+    #         dis = _t - t
+    #         dis[dis < 0] = np.inf
+    #         idx = dis.argmin()
+    #         print(idx)
+    #         return p[idx]
+
+    #     # def dg_dt(time, state, tf, N, p):
+    #     def dg_dt(time, state, ret_p, p, tf, N):
+    #         print(f"g_time:{time}")
+    #         # tf = 10
+    #         # N = 1
+    #         t_go = (tf - time) ** N
+    #         g1 = state[3]
+    #         g2 = state[4]
+    #         # _p = ret_p(p, time)
+    #         # p1 = _p[0]
+    #         # p2 = _p[1]
+    #         # p3 = _p[2]
+    #         p1 = state[0]
+    #         p2 = state[1]
+    #         p3 = state[2]
+    #         return np.array(
+    #             [
+    #                 t_go * p2**2,
+    #                 -p1 + t_go * p2 * p3,
+    #                 -2.0 * p2 + t_go * p3**2,
+    #                 t_go * g2 * p2,
+    #                 -g1 + t_go * g2 * p3,
+    #             ]
+    #         )
+    #         # return np.array([t_go * p2, -g1 + t_go * g2 * p3])
+
+    #     g = odeint(dg_dt, g0, t, args=(ret_p, p, tf, N), tfirst=True)
+    #     return g
 
 
 class Quadrotor(Entity):

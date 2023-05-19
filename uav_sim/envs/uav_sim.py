@@ -290,7 +290,7 @@ class UavSim:
         x = np.random.rand() * self.env_max_w
         y = np.random.rand() * self.env_max_l
         self.target = Target(
-            _id=0, x=x, y=y, dt=self.dt, num_landing_pads=self.num_uavs
+            _id=0, x=x, y=y, v=self.target_v, w=self.target_w, dt=self.dt, num_landing_pads=self.num_uavs
         )
 
         # Reset UAVs

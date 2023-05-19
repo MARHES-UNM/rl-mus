@@ -16,16 +16,16 @@ class TestUavSim(unittest.TestCase):
         self.env = UavSim()
 
     def test_time_coordinated_control(self):
+        tf = 30.0
         tf = 40.0
-        tf = 12
-        N = 0
+        N = 1
         self.env = UavSim(
             {
-                "target_v": 0,
-                "num_uavs": 1,
+                "target_v": 1,
+                "num_uavs": 4,
                 "use_safe_action": False,
                 "num_obstacles": 5,
-                "seed": 0,
+                # "seed": 0,
             }
         )
 
@@ -36,38 +36,54 @@ class TestUavSim(unittest.TestCase):
         uav_done_list = [[] for idx in range(self.env.num_uavs)]
         rel_pad_dist = [[] for idx in range(self.env.num_uavs)]
 
-        # self.env.uavs[0].state[0:6] = np.array([1500, 800, 350, 0, -40, 0], dtype=np.float64)
-        des_pos = np.zeros(15)
-        des_pos[0:6] = self.env.uavs[0].pad.state[0:6]
+        # self.env.uavs[0].state[0:6] = np.array(
+        #     [1500, 800, 350, 0, -40, 0], dtype=np.float64
+        # )
         # des_pos[0:6] = np.array([200, 0, 300, 0, -40, 0], dtype=np.float64)
-        pos_er = des_pos[0:12] - self.env.uavs[0].state
+        k_gain = self.env.uavs[0].get_k(tf, N)
+        g_s = []
+        for idx in range(self.env.num_uavs):
+            des_pos = np.zeros(15)
+            # des_pos[0:6] = np.array([200, 0, 300, 0, -40, 0], dtype=np.float64)
 
-        p = self.env.uavs[0].get_p(tf, N)
-        gx = self.env.uavs[0].get_g(pos_er[0], pos_er[3], p, tf, N)
-        gy = self.env.uavs[0].get_g(pos_er[1], pos_er[4], p, tf, N)
-        gz = self.env.uavs[0].get_g(pos_er[2], pos_er[5], p, tf, N)
+            des_pos[0:6] = self.env.uavs[idx].pad.state[0:6]
+            print(np.linalg.norm(des_pos[0:3]))
+            des_pos[0:6] = np.array([0, 0, 0, 0, 0, 0])
+            # des_pos[0:6] = self.env.target.state[0:6]
+
+            g = self.env.uavs[idx].get_g(des_pos, tf, N)
+            g_s.append(g)
 
         t = 0
-        for _step in range(120):
+        for _step in range(500):
+            actions = {}
+            # g_s = []
+            # for idx in range(self.env.num_uavs):
+            #     des_pos = np.zeros(15)
+            #     des_pos[0:6] = self.env.uavs[idx].pad.state[0:6]
+            #     des_pos[0:6] = np.array([0, 0, 0, 0, 0, 0])
+            #     # des_pos[0:6] = -des_pos[0:6]
+
+            #     g = self.env.uavs[idx].get_g(des_pos, tf, N)
+            #     g_s.append(g)
             for idx in range(self.env.num_uavs):
-                des_pos = np.zeros(15)
+                # des_pos = np.zeros(15)
                 des_pos[0:6] = self.env.uavs[idx].pad.state[0:6]
                 pos_er = des_pos[0:12] - self.env.uavs[idx].state
 
-                # t = self.env.time_elapsed
-                t_go = (tf - t) ** N
-                g2x = gx[-1, 4]
-                g2y = gy[-1, 4]
-                g2z = gz[-1, 4]
-                p2 = gz[-1, 1]
-                p3 = gz[-1, 2]
+                # actions[idx] = np.dot(k_gain, pos_er[0:6])
+                # # t = self.env.time_elapsed
+                # t_go = (tf - t) ** N
 
-                actions[idx] = t_go * np.array(
-                    [
-                        g2x + p2 * pos_er[0] + p3 * pos_er[3],
-                        g2y + p2 * pos_er[1] + p3 * pos_er[4],
-                        g2z + p2 * pos_er[2] + p3 * pos_er[5],
-                    ]
+                # actions[idx] = t_go * np.array(
+                #     [
+                #         g2x + p2 * pos_er[0] + p3 * pos_er[3],
+                #         g2y + p2 * pos_er[1] + p3 * pos_er[4],
+                #         g2z + p2 * pos_er[2] + p3 * pos_er[5],
+                #     ]
+                # )
+                actions[idx] = self.env.uavs[idx].get_time_coordinated_action(
+                    des_pos, tf, t, N, g_s[idx]
                 )
 
             obs, rew, done, info = self.env.step(actions)
@@ -78,7 +94,7 @@ class TestUavSim(unittest.TestCase):
                 rel_dist = np.linalg.norm(obs[k]["rel_pad"][0:3])
                 # rel_dist = np.linalg.norm(pos_er[0:3])
                 rel_pad_dist[k].append(rel_dist)
-            self.env.render()
+            # self.env.render()
             t += self.env.dt
 
             if done["__all__"]:
