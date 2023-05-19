@@ -22,17 +22,48 @@ class TestUavSim(unittest.TestCase):
 
         obs, done = self.env.reset(), False
         actions = {}
-        for _step in range(100):
+        uav_collision_list = [[] for idx in range(self.env.num_uavs)]
+        obstacle_collision_list = [[] for idx in range(self.env.num_uavs)]
+        uav_done_list = [[] for idx in range(self.env.num_uavs)]
+        rel_pad_dist = [[] for idx in range(self.env.num_uavs)]
+
+        for _step in range(120):
             for idx in range(self.env.num_uavs):
                 des_pos = np.zeros(15)
                 des_pos[0:6] = self.env.uavs[idx].pad.state[0:6]
                 actions[idx] = self.env.uavs[idx].calc_torque(des_pos)
 
             obs, rew, done, info = self.env.step(actions)
+            for k, v in info.items():
+                uav_collision_list[k].append(v["uav_collision"])
+                obstacle_collision_list[k].append(v["obstacle_collision"])
+                uav_done_list[k].append(v["uav_landed"])
+                rel_dist = np.linalg.norm(obs[k]["rel_pad"][0:3])
+                rel_pad_dist[k].append(rel_dist)
             self.env.render()
 
             if done["__all__"]:
                 break
+        uav_collision_list = np.array(uav_collision_list)
+        obstacle_collision_list = np.array(obstacle_collision_list)
+        uav_done_list = np.array(uav_done_list)
+        rel_pad_dist = np.array(rel_pad_dist)
+
+        fig = plt.figure(figsize=(10, 6))
+        ax = fig.add_subplot(311)
+        ax1 = fig.add_subplot(312)
+        ax2 = fig.add_subplot(313)
+        fig = plt.figure(figsize=(10, 6))
+        ax3 = fig.add_subplot(111)
+        for idx in range(self.env.num_uavs):
+            ax.plot(uav_collision_list[idx], label=f"id:{self.env.uavs[idx].id}")
+            ax1.plot(obstacle_collision_list[idx], label=f"id:{self.env.uavs[idx].id}")
+            ax2.plot(uav_done_list[idx], label=f"id:{self.env.uavs[idx].id}")
+            ax3.plot(rel_pad_dist[idx], label=f"id:{self.env.uavs[idx].id}")
+
+        plt.legend()
+        plt.show()
+        print()
 
     def test_lqr_landing_cbf(self):
         self.env = UavSim(

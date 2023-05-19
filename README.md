@@ -100,3 +100,22 @@ This repo is good for cbf for quadrotor
 https://github.com/hocherie/cbf_quadrotor
 accompanying pdf
 https://github.com/hocherie/cbf_quadrotor/blob/master/docs/ensuring-safety-pdf.pdf
+
+
+### Optimal Control 
+https://motion.cs.illinois.edu/RoboticSystems/OptimalControl.html
+http://e.guigon.free.fr/rsc/book/BrysonHo75.pdf
+lqr controllers:
+http://www.mwm.im/lqr-controllers-with-python/
+https://github.com/ssloy/tutorials/blob/master/tutorials/pendulum/lqr.py
+https://stanford.edu/class/ee363/lectures/clqr.pdf
+
+### solving the time optimal control problem 
+1. First create a runge_kata4 function
+https://www.youtube.com/watch?v=1FYrnwqWQNY
+https://www.geeksforgeeks.org/runge-kutta-4th-order-method-solve-differential-equation/
+2. solve the Algebraic Ricatti solution problem
+https://www.dynamicpublishers.com/Neural/NPSC2007/08-NPSC-2007-125-136.pdf
+Solution of matrix Riccati differential equation for the linear quadratic singular system using neural networks
+
+
