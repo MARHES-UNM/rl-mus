@@ -326,7 +326,7 @@ class Quad2DInt(Entity):
 
         # def dg_dt(time, state, tf, N, p):
         def dg_dt(time, state, ret_p, p, tf, N):
-            # print(f"g_time:{time}")
+            print(f"g_time:{time}")
             # tf = 10
             # N = 1
             t_go = (tf - time) ** N
@@ -344,7 +344,7 @@ class Quad2DInt(Entity):
                     t_go * p2**2,
                     -p1 + t_go * p2 * p3,
                     -2.0 * p2 + t_go * p3**2,
-                    t_go * g2* p2,
+                    t_go * g2 * p2,
                     -g1 + t_go * g2 * p3,
                 ]
             )

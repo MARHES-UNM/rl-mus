@@ -17,13 +17,13 @@ class TestUavSim(unittest.TestCase):
 
     def test_time_coordinated_control(self):
         tf = 40.0
-        tf = 20
-        N = 1.0
+        tf = 12
+        N = 0
         self.env = UavSim(
             {
                 "target_v": 0,
                 "num_uavs": 1,
-                "use_safe_action": True,
+                "use_safe_action": False,
                 "num_obstacles": 5,
                 "seed": 0,
             }
@@ -47,13 +47,14 @@ class TestUavSim(unittest.TestCase):
         gy = self.env.uavs[0].get_g(pos_er[1], pos_er[4], p, tf, N)
         gz = self.env.uavs[0].get_g(pos_er[2], pos_er[5], p, tf, N)
 
+        t = 0
         for _step in range(120):
             for idx in range(self.env.num_uavs):
                 des_pos = np.zeros(15)
                 des_pos[0:6] = self.env.uavs[idx].pad.state[0:6]
                 pos_er = des_pos[0:12] - self.env.uavs[idx].state
 
-                t = self.env.time_elapsed
+                # t = self.env.time_elapsed
                 t_go = (tf - t) ** N
                 g2x = gx[-1, 4]
                 g2y = gy[-1, 4]
@@ -63,26 +64,22 @@ class TestUavSim(unittest.TestCase):
 
                 actions[idx] = t_go * np.array(
                     [
-                        # 0.0,
-                        # 0.0,
-                        # 0.0
                         g2x + p2 * pos_er[0] + p3 * pos_er[3],
                         g2y + p2 * pos_er[1] + p3 * pos_er[4],
                         g2z + p2 * pos_er[2] + p3 * pos_er[5],
                     ]
                 )
 
-                # actions[idx] = self.env.uavs[idx].calc_torque(des_pos)
-
             obs, rew, done, info = self.env.step(actions)
             for k, v in info.items():
                 uav_collision_list[k].append(v["uav_collision"])
                 obstacle_collision_list[k].append(v["obstacle_collision"])
                 uav_done_list[k].append(v["uav_landed"])
-                # rel_dist = np.linalg.norm(obs[k]["rel_pad"][0:3])
-                rel_dist = np.linalg.norm(pos_er[0:3])
+                rel_dist = np.linalg.norm(obs[k]["rel_pad"][0:3])
+                # rel_dist = np.linalg.norm(pos_er[0:3])
                 rel_pad_dist[k].append(rel_dist)
             self.env.render()
+            t += self.env.dt
 
             if done["__all__"]:
                 break
