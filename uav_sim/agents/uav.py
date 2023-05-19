@@ -1,5 +1,6 @@
 from math import cos, sin
 import math
+from xml.dom.expatbuilder import theDOMImplementation
 import numpy as np
 from uav_sim.utils.utils import distance, angle, lqr
 import scipy.integrate
@@ -278,7 +279,15 @@ class Quad2DInt(Entity):
         return dist <= 0.01, dist
 
     def get_p(self, tf, N=1):
+        """_summary_https://danielmuellerkomorowska.com/2021/02/16/differential-equations-with-scipy-odeint-or-solve_ivp/
+
+        Args:
+            tf (_type_): _description_
+            N (int, optional): _description_. Defaults to 1.
+        """
+
         def dp_dt(time, state, tf, N=1):
+            # print(time)
             t_go = (tf - time) ** N
             p1 = state[0]
             p2 = state[1]
@@ -290,10 +299,59 @@ class Quad2DInt(Entity):
         f1 = 2
         f2 = 1
         p0 = np.array([f1, 0, f2])
-        t = np.arange(9.0, 0.0, 0.1)
-        params = [tf, N]
-        p = odeint(dp_dt, p0, t, params)
+        t = np.arange(tf, 0.0, -0.1)
+        params = (tf, N)
+        p = odeint(dp_dt, p0, t, params, tfirst=True)
         return p
+
+    def get_g(self, x, vx, p, tf, N=1):
+        """_summary_https://danielmuellerkomorowska.com/2021/02/16/differential-equations-with-scipy-odeint-or-solve_ivp/
+
+        Args:
+            tf (_type_): _description_
+            N (int, optional): _description_. Defaults to 1.
+        """
+        f1 = 2
+        f2 = 1
+        g0 = np.array([f1, 0, f2, f1 * x, f2 * vx])
+        t = np.arange(tf, 0.0, -0.1)
+        params = (tf, N)
+
+        def ret_p(p, _t):
+            dis = _t - t
+            dis[dis < 0] = np.inf
+            idx = dis.argmin()
+            print(idx)
+            return p[idx]
+
+        # def dg_dt(time, state, tf, N, p):
+        def dg_dt(time, state, ret_p, p, tf, N):
+            # print(f"g_time:{time}")
+            # tf = 10
+            # N = 1
+            t_go = (tf - time) ** N
+            g1 = state[3]
+            g2 = state[4]
+            # _p = ret_p(p, time)
+            # p1 = _p[0]
+            # p2 = _p[1]
+            # p3 = _p[2]
+            p1 = state[0]
+            p2 = state[1]
+            p3 = state[2]
+            return np.array(
+                [
+                    t_go * p2**2,
+                    -p1 + t_go * p2 * p3,
+                    -2.0 * p2 + t_go * p3**2,
+                    t_go * g2* p2,
+                    -g1 + t_go * g2 * p3,
+                ]
+            )
+            # return np.array([t_go * p2, -g1 + t_go * g2 * p3])
+
+        g = odeint(dg_dt, g0, t, args=(ret_p, p, tf, N), tfirst=True)
+        return g
 
 
 class Quadrotor(Entity):

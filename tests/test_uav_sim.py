@@ -15,6 +15,98 @@ class TestUavSim(unittest.TestCase):
     def setUp(self):
         self.env = UavSim()
 
+    def test_time_coordinated_control(self):
+        tf = 40.0
+        tf = 20
+        N = 1.0
+        self.env = UavSim(
+            {
+                "target_v": 0,
+                "num_uavs": 1,
+                "use_safe_action": True,
+                "num_obstacles": 5,
+                "seed": 0,
+            }
+        )
+
+        obs, done = self.env.reset(), False
+        actions = {}
+        uav_collision_list = [[] for idx in range(self.env.num_uavs)]
+        obstacle_collision_list = [[] for idx in range(self.env.num_uavs)]
+        uav_done_list = [[] for idx in range(self.env.num_uavs)]
+        rel_pad_dist = [[] for idx in range(self.env.num_uavs)]
+
+        # self.env.uavs[0].state[0:6] = np.array([1500, 800, 350, 0, -40, 0], dtype=np.float64)
+        des_pos = np.zeros(15)
+        des_pos[0:6] = self.env.uavs[0].pad.state[0:6]
+        # des_pos[0:6] = np.array([200, 0, 300, 0, -40, 0], dtype=np.float64)
+        pos_er = des_pos[0:12] - self.env.uavs[0].state
+
+        p = self.env.uavs[0].get_p(tf, N)
+        gx = self.env.uavs[0].get_g(pos_er[0], pos_er[3], p, tf, N)
+        gy = self.env.uavs[0].get_g(pos_er[1], pos_er[4], p, tf, N)
+        gz = self.env.uavs[0].get_g(pos_er[2], pos_er[5], p, tf, N)
+
+        for _step in range(120):
+            for idx in range(self.env.num_uavs):
+                des_pos = np.zeros(15)
+                des_pos[0:6] = self.env.uavs[idx].pad.state[0:6]
+                pos_er = des_pos[0:12] - self.env.uavs[idx].state
+
+                t = self.env.time_elapsed
+                t_go = (tf - t) ** N
+                g2x = gx[-1, 4]
+                g2y = gy[-1, 4]
+                g2z = gz[-1, 4]
+                p2 = gz[-1, 1]
+                p3 = gz[-1, 2]
+
+                actions[idx] = t_go * np.array(
+                    [
+                        # 0.0,
+                        # 0.0,
+                        # 0.0
+                        g2x + p2 * pos_er[0] + p3 * pos_er[3],
+                        g2y + p2 * pos_er[1] + p3 * pos_er[4],
+                        g2z + p2 * pos_er[2] + p3 * pos_er[5],
+                    ]
+                )
+
+                # actions[idx] = self.env.uavs[idx].calc_torque(des_pos)
+
+            obs, rew, done, info = self.env.step(actions)
+            for k, v in info.items():
+                uav_collision_list[k].append(v["uav_collision"])
+                obstacle_collision_list[k].append(v["obstacle_collision"])
+                uav_done_list[k].append(v["uav_landed"])
+                # rel_dist = np.linalg.norm(obs[k]["rel_pad"][0:3])
+                rel_dist = np.linalg.norm(pos_er[0:3])
+                rel_pad_dist[k].append(rel_dist)
+            self.env.render()
+
+            if done["__all__"]:
+                break
+        uav_collision_list = np.array(uav_collision_list)
+        obstacle_collision_list = np.array(obstacle_collision_list)
+        uav_done_list = np.array(uav_done_list)
+        rel_pad_dist = np.array(rel_pad_dist)
+
+        fig = plt.figure(figsize=(10, 6))
+        ax = fig.add_subplot(311)
+        ax1 = fig.add_subplot(312)
+        ax2 = fig.add_subplot(313)
+        fig = plt.figure(figsize=(10, 6))
+        ax3 = fig.add_subplot(111)
+        for idx in range(self.env.num_uavs):
+            ax.plot(uav_collision_list[idx], label=f"id:{self.env.uavs[idx].id}")
+            ax1.plot(obstacle_collision_list[idx], label=f"id:{self.env.uavs[idx].id}")
+            ax2.plot(uav_done_list[idx], label=f"id:{self.env.uavs[idx].id}")
+            ax3.plot(rel_pad_dist[idx], label=f"id:{self.env.uavs[idx].id}")
+
+        plt.legend()
+        plt.show()
+        print()
+
     def test_setting_pred_targets(self):
         self.env = UavSim(
             {"target_v": 1, "use_safe_action": True, "num_obstacles": 4, "seed": 0}

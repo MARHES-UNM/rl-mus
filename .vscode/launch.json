@@ -47,7 +47,8 @@
             },
             "args": [
                 "-v",
-                "${cwd}/tests/test_quad_2d.py"
+                "tests.test_quad_2d.TestQuad2D.test_time_coord_controller",
+                "--failfast"
             ]
         },
         {
@@ -81,9 +82,9 @@
                 "DISPLAY": "192.168.1.11:0.0"
             },
             "args": [
-                "-v", 
+                "-v",
                 // "tests.test_uav_sim.TestUavSim.test_lqr_landing_cbf",
-                "tests.test_uav_sim.TestUavSim.test_setting_pred_targets",
+                "tests.test_uav_sim.TestUavSim.test_time_coordinated_control",
                 "--failfast"
             ]
         }

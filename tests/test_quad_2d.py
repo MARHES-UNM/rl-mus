@@ -31,6 +31,16 @@ class TestQuad2D(unittest.TestCase):
                 expected_traj = np.array([x, y, z])
                 np.testing.assert_array_almost_equal(expected_traj, uav.state[0:3])
 
+    def test_time_coord_controller(self):
+        tf = 10
+        N = 1
+        p = self.uav.get_p(tf, N )
+        print(p)
+        
+        g = self.uav.get_g(2, 0, p, tf, N)
+        
+        print(g)
+        
     def test_uav_model_gravity(self):
         """Test that the UAV fall to the ground when 0 force is applied"""
         uav = Quad2DInt(0, 5, 5, 1, dt=0.1)
