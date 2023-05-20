@@ -308,12 +308,19 @@ class Quad2DInt(Entity):
     def get_time_coordinated_action(self, des_pos, tf, t, N, g):
         pos_er = des_pos[0:6] - self._state[0:6]
 
-        p1 = g[-1, 0]
-        p2 = g[-1, 1]
-        p3 = g[-1, 2]
-        g2x = g[-1, 4]
-        g2y = g[-1, 6]
-        g2z = g[-1, 8]
+        p1 = g[0]
+        p2 = g[1]
+        p3 = g[2]
+        g2x = g[4]
+        g2y = g[6]
+        g2z = g[8]
+
+        # p1 = g[-1, 0]
+        # p2 = g[-1, 1]
+        # p3 = g[-1, 2]
+        # g2x = g[-1, 4]
+        # g2y = g[-1, 6]
+        # g2z = g[-1, 8]
         t_go = (tf - t) ** N
 
         action = t_go * np.array(
@@ -344,6 +351,66 @@ class Quad2DInt(Entity):
         k, _, _ = lqr(A, B, Q, R)
 
         return k
+
+    def get_g_mat(self, des_term_state, tf, N=1):
+        des_term_state = des_term_state[0:6].copy()  # we only want the first 6 items
+        A = np.zeros((2, 2))
+        A[0, 1] = 1.0
+        # A[0, 3] = 1
+        # A[1, 4] = 1
+        # A[2, 5] = 1
+
+        B = np.zeros((2, 1))
+        B[1, 0] = 1.0
+        # B[3, 0] = 1
+        # B[4, 1] = 1
+        # B[5, 2] = 1
+
+        t_go = tf**N
+
+        f1 = 2.0
+        f2 = 1.0
+        Qf = np.eye(2)
+        Qf[0, 0] = f1
+        Qf[1, 1] = f2
+        # Qf[2, 2] = f1
+        # Qf[4, 4] = f1
+        # Qf[3, 3] = f2
+        # Qf[5, 5] = f2
+        gx_init = Qf @ np.array(des_term_state[[0, 3]])
+        gy_init = Qf @ np.array(des_term_state[[1, 4]])
+        gz_init = Qf @ np.array(des_term_state[[2, 5]])
+        R = 1.0 / t_go
+
+        t = np.arange(tf, 0.0, -0.1)
+        params = (tf, N, A, B, R)
+
+        g0 = np.array([*Qf.reshape((4,)), *gx_init, *gy_init, *gz_init])
+
+        def dg_dt(time, state, tf, N, A, B, R):
+            t_go = (tf - time) ** N
+            R = 1.0 / (t_go + 0.000000001)
+            P = state[0:4].reshape((2, 2))
+            gx = state[4:6]
+            gy = state[6:8]
+            gz = state[8:10]
+            p_dot = -(P @ A + A.T @ P - P @ B * (R**-1) @ B.T @ P)
+            gx_dot = -np.dot(A - B * (R**-1) @ B.T @ P, gx)
+            gy_dot = -np.dot(A - B * (R**-1) @ B.T @ P, gy)
+            gz_dot = -np.dot(A - B * (R**-1) @ B.T @ P, gz)
+            output = np.array(
+                [
+                    *p_dot.reshape((4,)),
+                    *gx_dot.reshape((2,)),
+                    *gy_dot.reshape((2,)),
+                    *gz_dot.reshape((2,)),
+                ]
+            )
+
+            return output
+
+        result = odeint(dg_dt, g0, t, args=params, tfirst=True)
+        return result
 
     def get_g(self, des_term_state, tf, N=1):
         # pos_er = des_term_state[0:6] - self._state[0:6]
