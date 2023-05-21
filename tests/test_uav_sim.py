@@ -17,14 +17,15 @@ class TestUavSim(unittest.TestCase):
 
     def test_time_coordinated_control_mat(self):
         tf = 30.0
-        tf = 30
-        N = 1
+        tf = 15
+        N = 1.0
         self.env = UavSim(
             {
-                # "target_v": 1,
+                "target_v": 0,
                 "num_uavs": 4,
-                "use_safe_action": True,
+                "use_safe_action": False,
                 "num_obstacles": 5,
+                "max_time": 25.0,
                 # "seed": 0,
             }
         )
@@ -33,8 +34,11 @@ class TestUavSim(unittest.TestCase):
         des_pos = self.env.uavs[0].pad.state[0:6] - self.env.uavs[0].state[0:6]
         g_mat = self.env.uavs[0].get_g_mat(des_pos, tf, N)
         g = self.env.uavs[0].get_g(des_pos, tf, N)
+        p = self.env.uavs[0].get_p_mat(tf, N)[-1].reshape((2, 2))
+
         print(f"\ng: {g[-1]}")
         print(f"\ng_mat: {g_mat[-1]}")
+        print(f"\np_mat{p}")
 
         obs, done = self.env.reset(), False
         actions = {}
@@ -47,55 +51,74 @@ class TestUavSim(unittest.TestCase):
         #     [1500, 800, 350, 0, -40, 0], dtype=np.float64
         # )
         # des_pos[0:6] = np.array([200, 0, 300, 0, -40, 0], dtype=np.float64)
-        k_gain = self.env.uavs[0].get_k(tf, N)
-        g_s = []
-        for idx in range(self.env.num_uavs):
-            des_pos = np.zeros(15)
-            # des_pos[0:6] = np.array([200, 0, 300, 0, -40, 0], dtype=np.float64)
+        # k_gain = self.env.uavs[0].get_k(tf, N)
+        # g_s = []
+        # for idx in range(self.env.num_uavs):
+        #     des_pos = np.zeros(15)
+        #     # des_pos[0:6] = np.array([200, 0, 300, 0, -40, 0], dtype=np.float64)
 
-            des_pos[0:6] = -self.env.uavs[idx].pad.state[0:6]
-            # des_pos[0:6] = -self.env.target.state[0:6]
-            # des_pos[0:6] = self.env.uavs[0].pad.state[0:6] - self.env.uavs[0].state[0:6]
-            # print(np.linalg.norm(des_pos[0:3]))
-            des_pos[0:6] = np.array([0, 0, 0, 0, 0, 0])
-            # des_pos[0:6] = self.env.target.state[0:6]
+        #     des_pos[0:6] = -self.env.uavs[idx].pad.state[0:6]
+        #     # des_pos[0:6] = -self.env.target.state[0:6]
+        #     # des_pos[0:6] = self.env.uavs[0].pad.state[0:6] - self.env.uavs[0].state[0:6]
+        #     # print(np.linalg.norm(des_pos[0:3]))
+        #     des_pos[0:6] = np.array([0, 0, 0, 0, 0, 0])
+        #     # des_pos[0:6] = self.env.target.state[0:6]
 
-            temp_g = self.env.uavs[idx].get_g_mat(des_pos, tf, N)
-            g = np.zeros(9)
-            g[0] = temp_g[-1, 0]
-            g[1] = temp_g[-1, 1]
-            g[2:] = temp_g[-1, 3:]
-            # g = self.env.uavs[idx].get_g(des_pos, tf, N)
-            # g = g[-1, :]
-            g_s.append(g)
+        #     temp_g = self.env.uavs[idx].get_g_mat(des_pos, tf, N)
+        #     g = np.zeros(9)
+        #     g[0] = temp_g[-1, 0]
+        #     g[1] = temp_g[-1, 1]
+        #     g[2:] = temp_g[-1, 3:]
+        #     # g = self.env.uavs[idx].get_g(des_pos, tf, N)
+        #     # g = g[-1, :]
+        #     g_s.append(g)
 
         t = 0
-        for _step in range(500):
+        # for _step in range(500):
+        while True:
             actions = {}
-            g_s = []
+            # g_s = []
+            # for idx in range(self.env.num_uavs):
+            #     des_pos = np.zeros(15)
+            #     des_pos[0:6] = self.env.uavs[idx].pad.state[0:6]
+            #     des_pos[0:6] = np.array([0, 0, 0, 0, 0, 0])
+            #     # des_pos[0:6] = -des_pos[0:6]
+            #     temp_g = self.env.uavs[idx].get_g_mat(des_pos, tf, N)
+            #     g = np.zeros(9)
+            #     g[0] = temp_g[-1, 0]
+            #     g[1] = temp_g[-1, 1]
+            #     g[2:] = temp_g[-1, 3:]
+            #     # g = self.env.uavs[idx].get_g(des_pos, tf, N)
+            #     # g = g[-1, :]
+            #     g_s.append(g)
+            # #     g = self.env.uavs[idx].get_g(des_pos, tf, N)
+            # #     g_s.append(g)
+            pos_er = np.zeros((self.env.num_uavs, 12))
             for idx in range(self.env.num_uavs):
                 des_pos = np.zeros(15)
                 des_pos[0:6] = self.env.uavs[idx].pad.state[0:6]
-                des_pos[0:6] = np.array([0, 0, 0, 0, 0, 0])
-                # des_pos[0:6] = -des_pos[0:6]
-                temp_g = self.env.uavs[idx].get_g_mat(des_pos, tf, N)
-                g = np.zeros(9)
-                g[0] = temp_g[-1, 0]
-                g[1] = temp_g[-1, 1]
-                g[2:] = temp_g[-1, 3:]
-                # g = self.env.uavs[idx].get_g(des_pos, tf, N)
-                # g = g[-1, :]
-                g_s.append(g)
-            #     g = self.env.uavs[idx].get_g(des_pos, tf, N)
-            #     g_s.append(g)
-            for idx in range(self.env.num_uavs):
-                # des_pos = np.zeros(15)
-                des_pos[0:6] = self.env.uavs[idx].pad.state[0:6]
-                pos_er = des_pos[0:12] - self.env.uavs[idx].state
+                # des_pos[0:6] = self.env.target.state[0:6]
+                pos_er[idx, :] = des_pos[0:12] - self.env.uavs[idx].state
 
                 # actions[idx] = np.dot(k_gain, pos_er[0:6])
                 # # t = self.env.time_elapsed
-                # t_go = (tf - t) ** N
+                # r = np.linalg.norm(pos_er[0:3])
+                # v = np.linalg.norm(pos_er[3:6])
+                # t_go = r / (v + .0001)
+                t_go = (tf - t) ** N
+                # t_go = (tf) ** N
+                # t_go = 40
+                # t_go = max(0, t_go)
+                # R = 1 / t_go
+                B = np.zeros((2, 1))
+                B[1, 0] = 1.0
+                actions[idx] = t_go * np.array(
+                    [
+                        B.T @ p @ pos_er[idx, [0, 3]],
+                        B.T @ p @ pos_er[idx, [1, 4]],
+                        B.T @ p @ pos_er[idx, [2, 5]],
+                    ]
+                )
 
                 # actions[idx] = t_go * np.array(
                 #     [
@@ -104,19 +127,19 @@ class TestUavSim(unittest.TestCase):
                 #         g2z + p2 * pos_er[2] + p3 * pos_er[5],
                 #     ]
                 # )
-                actions[idx] = self.env.uavs[idx].get_time_coordinated_action(
-                    des_pos, tf, t, N, g_s[idx]
-                )
+                # actions[idx] = self.env.uavs[idx].get_time_coordinated_action(
+                #     des_pos, tf, t, N, g_s[idx]
+                # )
 
             obs, rew, done, info = self.env.step(actions)
             for k, v in info.items():
                 uav_collision_list[k].append(v["uav_collision"])
                 obstacle_collision_list[k].append(v["obstacle_collision"])
                 uav_done_list[k].append(v["uav_landed"])
-                rel_dist = np.linalg.norm(obs[k]["rel_pad"][0:3])
-                # rel_dist = np.linalg.norm(pos_er[0:3])
+                # rel_dist = np.linalg.norm(obs[k]["rel_pad"][0:3])
+                rel_dist = np.linalg.norm(pos_er[k, 0:3])
                 rel_pad_dist[k].append(rel_dist)
-            self.env.render()
+            # self.env.render()
             t += self.env.dt
 
             if done["__all__"]:
@@ -178,7 +201,7 @@ class TestUavSim(unittest.TestCase):
             des_pos[0:6] = np.array([0, 0, 0, 0, 0, 0])
             # des_pos[0:6] = self.env.target.state[0:6]
 
-            des_pos[0:6] = self.env.uavs[0].pad.state[0:6] - self.env.uavs[0].state[0:6]
+            # des_pos[0:6] = self.env.uavs[0].pad.state[0:6] - self.env.uavs[0].state[0:6]
             g = self.env.uavs[idx].get_g(des_pos, tf, N)
             g = g[-1, :]
 

@@ -208,19 +208,20 @@ class Quad2DInt(Entity):
         action_z = 1 / self.m * action[2] - self.g
         return np.array(
             [
-                state[3],
-                state[4],
-                state[5],
-                action[0],
-                action[1],
-                action_z,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-            ]
+                state[3].item(),
+                state[4].item(),
+                state[5].item(),
+                action[0].item(),
+                action[1].item(),
+                action_z.item(),
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+            ],
+            dtype=np.float64,
         )
 
     def rotation_matrix(self):
@@ -351,6 +352,46 @@ class Quad2DInt(Entity):
         k, _, _ = lqr(A, B, Q, R)
 
         return k
+
+    def get_p_mat(self, tf, N=1):
+        A = np.zeros((2, 2))
+        A[0, 1] = 1.0
+
+        B = np.zeros((2, 1))
+        B[1, 0] = 1.0
+
+        t_go = tf**N
+
+        f1 = 2.0
+        f2 = 1.0
+        Qf = np.eye(2)
+        Qf[0, 0] = f1
+        Qf[1, 1] = f2
+
+        Q = np.eye(2) * 0.0
+
+        t = np.arange(tf, 0.0, -0.1)
+        params = (tf, N, A, B, Q)
+
+        g0 = np.array([*Qf.reshape((4,))])
+
+        def dp_dt(time, state, tf, N, A, B, Q):
+            t_go = (tf - time) ** N
+            # t_go = (tf) ** N
+            # R = 1.0 / (t_go + 0.00000000001)
+            # R = 1.0 / (t_go)
+            P = state[0:4].reshape((2, 2))
+            # p_dot = -(Q + P @ A + A.T @ P - P @ B * (R**-1) @ B.T @ P)
+            p_dot = -(Q + P @ A + A.T @ P - P @ B * (t_go) @ B.T @ P)
+            output = np.array(
+                [
+                    *p_dot.reshape((4,)),
+                ]
+            )
+            return output
+
+        result = odeint(dp_dt, g0, t, args=params, tfirst=True)
+        return result
 
     def get_g_mat(self, des_term_state, tf, N=1):
         des_term_state = des_term_state[0:6].copy()  # we only want the first 6 items
