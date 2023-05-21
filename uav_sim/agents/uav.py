@@ -298,7 +298,7 @@ class Quad2DInt(Entity):
                 [t_go * p2**2, -p1 + t_go * p2 * p3, -2 * p2 + t_go * p3**2]
             )
 
-        f1 = 2
+        f1 = 10
         f2 = 1
         p0 = np.array([f1, 0, f2])
         t = np.arange(tf, 0.0, -0.1)
@@ -353,7 +353,7 @@ class Quad2DInt(Entity):
 
         return k
 
-    def get_p_mat(self, tf, N=1):
+    def get_p_mat(self, tf, N=1, t0=0.0):
         A = np.zeros((2, 2))
         A[0, 1] = 1.0
 
@@ -363,14 +363,14 @@ class Quad2DInt(Entity):
         t_go = tf**N
 
         f1 = 2.0
-        f2 = 1.0
+        f2 = 2.0
         Qf = np.eye(2)
         Qf[0, 0] = f1
         Qf[1, 1] = f2
 
         Q = np.eye(2) * 0.0
 
-        t = np.arange(tf, 0.0, -0.1)
+        t = np.arange(tf, t0, -0.1)
         params = (tf, N, A, B, Q)
 
         g0 = np.array([*Qf.reshape((4,))])
@@ -453,7 +453,7 @@ class Quad2DInt(Entity):
         result = odeint(dg_dt, g0, t, args=params, tfirst=True)
         return result
 
-    def get_g(self, des_term_state, tf, N=1):
+    def get_g(self, des_term_state, tf, N=1, t0=0.0):
         # pos_er = des_term_state[0:6] - self._state[0:6]
         pos_er = des_term_state[0:6]
         """_summary_https://danielmuellerkomorowska.com/2021/02/16/differential-equations-with-scipy-odeint-or-solve_ivp/
@@ -477,7 +477,7 @@ class Quad2DInt(Entity):
                 f2 * pos_er[5],
             ]
         )
-        t = np.arange(tf, 0.0, -0.1)
+        t = np.arange(tf, t0, -0.1)
         params = (tf, N)
 
         def dg_dt(time, state, tf, N):
