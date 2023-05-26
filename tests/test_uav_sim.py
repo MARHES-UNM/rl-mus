@@ -42,6 +42,7 @@ class TestUavSim(unittest.TestCase):
 
         obs, done = self.env.reset(), False
         actions = {}
+        time_step_list = [[] for idx in range(self.env.num_uavs)]
         uav_collision_list = [[] for idx in range(self.env.num_uavs)]
         obstacle_collision_list = [[] for idx in range(self.env.num_uavs)]
         uav_done_list = [[] for idx in range(self.env.num_uavs)]
@@ -139,6 +140,7 @@ class TestUavSim(unittest.TestCase):
 
             obs, rew, done, info = self.env.step(actions)
             for k, v in info.items():
+                time_step_list[k].append(v["time_step"])
                 uav_collision_list[k].append(v["uav_collision"])
                 obstacle_collision_list[k].append(v["obstacle_collision"])
                 uav_done_list[k].append(v["uav_landed"])
@@ -147,13 +149,14 @@ class TestUavSim(unittest.TestCase):
                 rel_vel = np.linalg.norm(pos_er[k, 3:6])
                 rel_pad_dist[k].append(rel_dist)
                 rel_pad_vel[k].append(rel_vel)
-            self.env.render()
+            # self.env.render()
             t += self.env.dt
             p_idx += 1
             p_idx = int(min(p_idx, tf / self.env.dt - 2))
 
             if done["__all__"]:
                 break
+        time_step_list = np.array(time_step_list)
         uav_collision_list = np.array(uav_collision_list)
         obstacle_collision_list = np.array(obstacle_collision_list)
         uav_done_list = np.array(uav_done_list)
@@ -161,20 +164,63 @@ class TestUavSim(unittest.TestCase):
         rel_pad_vel = np.array(rel_pad_vel)
 
         fig = plt.figure(figsize=(10, 6))
-        ax = fig.add_subplot(311)
-        ax1 = fig.add_subplot(312)
-        ax2 = fig.add_subplot(313)
-        fig = plt.figure(figsize=(10, 6))
-        ax3 = fig.add_subplot(211)
-        ax4 = fig.add_subplot(212)
-        for idx in range(self.env.num_uavs):
-            ax.plot(uav_collision_list[idx], label=f"id:{self.env.uavs[idx].id}")
-            ax1.plot(obstacle_collision_list[idx], label=f"id:{self.env.uavs[idx].id}")
-            ax2.plot(uav_done_list[idx], label=f"id:{self.env.uavs[idx].id}")
-            ax3.plot(rel_pad_dist[idx], label=f"id:{self.env.uavs[idx].id}")
-            ax4.plot(rel_pad_vel[idx], label=f"id:{self.env.uavs[idx].id}")
+        ax = fig.add_subplot(121)
+        ax1 = fig.add_subplot(122)
 
-        plt.legend()
+        fig = plt.figure(figsize=(10, 6))
+        ax2 = fig.add_subplot(111)
+
+        fig = plt.figure(figsize=(10, 6))
+        ax3 = fig.add_subplot(121)
+        ax4 = fig.add_subplot(122)
+        all_axes = [ax, ax1, ax2, ax3, ax4]
+        for idx in range(self.env.num_uavs):
+            ax.plot(
+                time_step_list[idx],
+                uav_collision_list[idx],
+                label=f"uav_{self.env.uavs[idx].id}",
+            )
+            ax1.plot(
+                time_step_list[idx],
+                obstacle_collision_list[idx],
+                label=f"uav_{self.env.uavs[idx].id}",
+            )
+            ax2.plot(
+                time_step_list[idx],
+                uav_done_list[idx],
+                label=f"uav_{self.env.uavs[idx].id}",
+            )
+            ax3.plot(
+                time_step_list[idx],
+                rel_pad_dist[idx],
+                label=f"uav_{self.env.uavs[idx].id}",
+            )
+            ax4.plot(
+                time_step_list[idx],
+                rel_pad_vel[idx],
+                label=f"uav_{self.env.uavs[idx].id}",
+            )
+
+        ax.set_ylabel("# UAV collisions")
+        ax1.set_ylabel("# UAV collisions")
+        ax2.set_ylabel("UAV landed")
+        ax3.set_ylabel("$\parallel \Delta \mathbf{r} \parallel$")
+        ax4.set_ylabel("$\parallel \Delta \mathbf{v} \parallel$")
+        for ax_ in all_axes:
+            ax_.set_xlabel("t (s)")
+            # ax_.legend_.remove()
+
+        figsize = (10, 3)
+        fig_leg = plt.figure(figsize=figsize)
+        ax_leg = fig_leg.add_subplot(111)
+        # add the legend from the previous axes
+        ax_leg.legend(
+            *ax4.get_legend_handles_labels(), loc="center", ncol=self.env.num_uavs
+        )
+        # hide the axes frame and the x/y labels
+        ax_leg.axis("off")
+        # fig_leg.savefig(os.path.join(image_output_folder, 'magnet_test_legend.png'))
+
         plt.show()
         print()
 

@@ -5,6 +5,22 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "run_experiment",
+            "type": "python",
+            "request": "launch",
+            "program": "${cwd}/run_experiment.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}",
+            "env": {
+                // "DISPLAY": "192.168.1.11:0.0"
+            },
+            "args": [
+                "-v",
+                // "${cwd}/tests/test_uav.py"
+            ]
+        },
+        {
             "name": "Run All Unit Tests",
             "type": "python",
             "request": "launch",
