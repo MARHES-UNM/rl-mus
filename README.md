@@ -119,3 +119,29 @@ https://www.dynamicpublishers.com/Neural/NPSC2007/08-NPSC-2007-125-136.pdf
 Solution of matrix Riccati differential equation for the linear quadratic singular system using neural networks
 
 
+LQR example:
+https://github.com/kowshikchills/LQR_python/blob/main/LQR.ipynb
+https://ivanpapusha.com/cds270/lectures/05_DynProgLQR.pdf
+
+#### TODO: turn discrete lqr below to continuous by discretizing the continuous space. 
+``` python
+def lqr(actual_state_x, desired_state_xf, Q, R, A, B, dt):
+    x_error = actual_state_x - desired_state_xf
+    N = 100
+    P = [None] * (N + 1)
+    Qf = Q
+    P[N] = Qf
+    for i in range(N, 0, -1):
+        P[i-1] = Q + A.T @ P[i] @ A - (A.T @ P[i] @ B) @ np.linalg.pinv(
+            R + B.T @ P[i] @ B) @ (B.T @ P[i] @ A)      
+    K = [None] * N
+    u = [None] * N
+    for i in range(N):
+        K[i] = -np.linalg.pinv(R + B.T @ P[i+1] @ B) @ B.T @ P[i+1] @ A
+        u[i] = K[i] @ x_error
+    u_star = u[N-1]
+    return u_star
+```
+ 
+
+

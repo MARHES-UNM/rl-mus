@@ -40,6 +40,33 @@ class TestUav(unittest.TestCase):
             uav.step(action)
         np.testing.assert_almost_equal(0.0, uav.state[2])
 
+    def test_controller_open_loop(self):
+        """Test that we can independently control UAV x, y, z and psi"""
+        uav = Quadrotor(0, 0, 0, 2)
+
+        des_pos = np.zeros(15)
+        uav_des_traj = []
+        uav_trajectory = []
+        for i in range(200):
+            # hover
+            m = self.uav.m
+            g = self.uav.g
+            if i == 100:
+                des_acc = np.array([1., 0., 1.])
+            else:
+                des_acc = np.zeros(3)
+            # action = np.array([m*g, 0.001, 0., 0])
+            # des_acc = np.array([0.1, 0., 0.])
+            action = self.uav.get_torc_from_acc(des_acc)
+            uav.step(action)
+            uav_des_traj.append(des_pos.copy())
+            uav_trajectory.append(uav.state)
+
+        uav_des_traj = np.array(uav_des_traj)
+        uav_trajectory = np.array(uav_trajectory)
+
+        self.plot_traj(uav_des_traj, uav_trajectory)
+        
     def test_controller_independent_control(self):
         """Test that we can independently control UAV x, y, z and psi"""
         uav = Quadrotor(0, 0, 0, 2)
@@ -77,17 +104,32 @@ class TestUav(unittest.TestCase):
         des_pos = np.zeros(15)
         uav_des_traj = []
         uav_trajectory = []
-        for i in range(220):
+        for i in range(220): 
             if i < 20:
-                # des_pos[0:3] = np.array([3, 0, 1])
-                des_pos[0:2] = uav.state[0:2]
-                # des_pos[8] = np.pi / 2
+                des_pos[0:3] = uav.state[0:3].copy()
+                des_pos[8] = uav.state[8].copy()
             elif i > 30 and i < 60:
-                des_pos[0:3] = np.array([3, 0, 3])
-                # des_pos[8] = 0.3
+                des_pos[0:3] = np.array([2, 2, 1])
+                # des_pos[8] = np.pi / 2
             elif i > 90 and i < 140:
-                # des_pos[0:3] = np.array([3, 2, 3])
-                des_pos[8] = 1.5
+                des_pos[0:3] = np.array([1, 0, 0])
+                # des_pos[8] = 0.2
+            elif i > 150 and i < 180:
+                des_pos[0:3] = np.array([3, 1, 0.5])
+                # des_pos[8] = 0.2
+            elif i > 190:
+                des_pos[0:3] = np.array([2, 2, 2])
+                # des_pos[8] = np.pi
+            # if i < 20:
+            #     # des_pos[0:3] = np.array([3, 0, 1])
+            #     des_pos[0:2] = uav.state[0:2]
+            #     # des_pos[8] = np.pi / 2
+            # elif i > 30 and i < 60:
+            #     des_pos[0:3] = np.array([3, 0, 3])
+            #     # des_pos[8] = 0.3
+            # elif i > 90 and i < 140:
+            #     des_pos[0:3] = np.array([3, 2, 3])
+            #     # des_pos[8] = 1.5
             action = uav.calc_des_action(des_pos)
 
             uav.step(action)
@@ -120,7 +162,7 @@ class TestUav(unittest.TestCase):
                 # des_pos[8] = 0.2
             elif i > 190:
                 des_pos[0:3] = np.array([2, 2, 2])
-                des_pos[8] = np.pi
+                # des_pos[8] = np.pi
 
             action = uav.calc_torque(des_pos)
 
