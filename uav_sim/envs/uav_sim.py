@@ -325,7 +325,7 @@ class UavSim:
             x = np.random.rand() * self.env_max_l
             y = np.random.rand() * self.env_max_l
             z = np.random.rand() * self.env_max_h
-            z = np.random.uniform(low=0.1, high=self.env_max_h)
+            z = np.random.uniform(low=0.5, high=self.env_max_h)
             _type = random.choice(list(ObsType))
 
             obstacle = Obstacle(_id=idx, x=x, y=y, z=z, _type=_type)

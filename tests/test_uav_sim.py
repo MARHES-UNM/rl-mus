@@ -17,15 +17,15 @@ class TestUavSim(unittest.TestCase):
 
     def test_time_coordinated_control_mat(self):
         tf = 30.0
-        tf = 15
+        tf = 20.0
         N = 1.0
         self.env = UavSim(
             {
-                "target_v": 1.0,
+                "target_v": 0.0,
                 "num_uavs": 4,
-                "use_safe_action": False,
-                "num_obstacles": 10,
-                "max_time": 50.0,
+                "use_safe_action": True,
+                "num_obstacles": 30,
+                "max_time": 30.0,
                 "seed": 0,
             }
         )
@@ -186,7 +186,7 @@ class TestUavSim(unittest.TestCase):
             {
                 "target_v": 2.0,
                 "num_uavs": 4,
-                "use_safe_action": False,
+                "use_safe_action": True,
                 "num_obstacles": 5,
                 # "seed": 0,
             }
