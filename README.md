@@ -145,3 +145,6 @@ def lqr(actual_state_x, desired_state_xf, Q, R, A, B, dt):
  
 
 
+
+Calculate body rates to angle rates: 
+https://ocw.mit.edu/courses/2-154-maneuvering-and-control-of-surface-and-underwater-vehicles-13-49-fall-2004/bc67e15b31b4f30aceabef2a66a6229d_lec1.pdf

@@ -747,6 +747,7 @@ class Quadrotor(Entity):
     def f_dot(self, time, state, action):
         ft, tau_x, tau_y, tau_z = action.reshape(-1).tolist()
 
+        # TODO: convert angular velocity to angle rates here: 
         omega = state[9:12].copy()
         tau = np.array([tau_x, tau_y, tau_z])
 
@@ -768,6 +769,7 @@ class Quadrotor(Entity):
                 acc[0],
                 acc[1],
                 acc[2],
+                # TODO: use angle rates here instead
                 state[9],
                 state[10],
                 state[11],
