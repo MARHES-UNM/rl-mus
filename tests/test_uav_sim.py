@@ -433,7 +433,7 @@ class TestUavSim(unittest.TestCase):
                 break
 
     def test_landing_minimum_traj(self):
-        self.env = UavSim({"target_v": 0, "use_safe_action": True})
+        self.env = UavSim({"target_v": 0, "use_safe_action": False})
 
         obs, done = self.env.reset(), False
 

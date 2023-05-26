@@ -573,6 +573,7 @@ class Quadrotor(Entity):
         l=0.086,
         use_ode=True,
         k=None,
+        pad=None,
     ):
         super().__init__(_id=_id, x=x, y=y, z=z, _type=AgentType.U)
 
@@ -626,6 +627,8 @@ class Quadrotor(Entity):
         self._state[7] = theta
         self._state[8] = psi
         self.done = False
+        self.landed = False
+        self.pad = pad
 
     def calc_gain(self):
         # The control can be done in a decentralized style
@@ -643,7 +646,7 @@ class Quadrotor(Entity):
         )
         Bx = np.array([[0.0], [0.0], [0.0], [1 / self.ixx]])
 
-        Qx =  Qy = np.diag([1, 1, 1, 1])
+        Qx = Qy = np.diag([1, 1, 1, 1])
         Rx = Ry = np.diag([1])
         # Qx = np.diag([.1, 10, 1, 1])
         # Rx = np.diag([10])
@@ -777,7 +780,7 @@ class Quadrotor(Entity):
         return dot_x
 
     def get_torc_from_acc(self, des_acc):
-        kx = ky = .5
+        kx = ky = 0.5
         # ky = 0.1
         kz = 1
         k_x_dot = k_y_dot = 1
@@ -845,7 +848,7 @@ class Quadrotor(Entity):
         return action
 
     def calc_des_action(self, des_pos):
-        kx = ky = .5
+        kx = ky = 0.5
         # ky = 0.1
         kz = 1
         k_x_dot = k_y_dot = 1
@@ -965,6 +968,8 @@ class Quadrotor(Entity):
             x, y, z, x_dot, y_dot, z_dot, phi, theta, psi, phi_dot, theta_dot, psi_dot
         """
 
+        if len(action) == 3:
+            action = self.get_torc_from_acc(action)
         state = self._state.copy()
         # state[9:12] = np.dot(self.r_dot_matrix(), state[9:12])
         self.ode.set_initial_value(state, 0).set_f_params(action)
@@ -988,3 +993,8 @@ class Quadrotor(Entity):
         dist = np.linalg.norm(self._state[0:3] - pad._state[0:3])
 
         return dist <= 0.01
+
+    def check_dest_reached(self):
+        dist = np.linalg.norm(self._state[0:3] - self.pad._state[0:3])
+
+        return dist <= 0.01, dist
