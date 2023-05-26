@@ -73,10 +73,10 @@ class Obstacle(Entity):
         super().__init__(_id, x, y, z, r, _type=_type)
         self.dt = dt
 
-    def step(self):
+    def step(self, action=np.zeros(2)):
         if self.type == ObsType.M:
-            vx = np.random.random() * 0.2
-            vy = np.random.random() * 0.2
+            vx = action[0] + np.random.random() * 0.2
+            vy = action[1] + np.random.random() * 0.2
 
             self._state[3] = vx
             self._state[4] = vy
@@ -747,7 +747,7 @@ class Quadrotor(Entity):
     def f_dot(self, time, state, action):
         ft, tau_x, tau_y, tau_z = action.reshape(-1).tolist()
 
-        # TODO: convert angular velocity to angle rates here: 
+        # TODO: convert angular velocity to angle rates here:
         omega = state[9:12].copy()
         tau = np.array([tau_x, tau_y, tau_z])
 

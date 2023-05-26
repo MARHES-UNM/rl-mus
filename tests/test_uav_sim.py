@@ -21,9 +21,9 @@ class TestUavSim(unittest.TestCase):
         N = 1.0
         self.env = UavSim(
             {
-                "target_v": 0.0,
+                "target_v": 1.0,
                 "num_uavs": 4,
-                "use_safe_action": True,
+                "use_safe_action": False,
                 "num_obstacles": 10,
                 "max_time": 50.0,
                 "seed": 0,

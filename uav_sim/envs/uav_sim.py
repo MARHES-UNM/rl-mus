@@ -148,7 +148,7 @@ class UavSim:
 
         # step obstacles
         for obstacle in self.obstacles:
-            obstacle.step()
+            obstacle.step(np.array([self.target.vx, self.target.vy]))
 
         obs = {uav.id: self._get_obs(uav) for uav in self.uavs}
         reward = {uav.id: self._get_reward(uav) for uav in self.uavs}
@@ -289,8 +289,16 @@ class UavSim:
         # Reset Target
         x = np.random.rand() * self.env_max_w
         y = np.random.rand() * self.env_max_l
+        x = self.env_max_w / 2.0
+        y = self.env_max_h / 2.0
         self.target = Target(
-            _id=0, x=x, y=y, v=self.target_v, w=self.target_w, dt=self.dt, num_landing_pads=self.num_uavs
+            _id=0,
+            x=x,
+            y=y,
+            v=self.target_v,
+            w=self.target_w,
+            dt=self.dt,
+            num_landing_pads=self.num_uavs,
         )
 
         # Reset UAVs
@@ -301,8 +309,13 @@ class UavSim:
             z = np.random.rand() * self.env_max_h
 
             uav = Quad2DInt(
-            # uav = Quadrotor(
-                _id=idx, x=x, y=y, z=z, dt=self.dt, pad=self.target.pads[idx]
+                # uav = Quadrotor(
+                _id=idx,
+                x=x,
+                y=y,
+                z=z,
+                dt=self.dt,
+                pad=self.target.pads[idx],
             )
             self.uavs.append(uav)
 
@@ -312,6 +325,7 @@ class UavSim:
             x = np.random.rand() * self.env_max_l
             y = np.random.rand() * self.env_max_l
             z = np.random.rand() * self.env_max_h
+            z = np.random.uniform(low=0.1, high=self.env_max_h)
             _type = random.choice(list(ObsType))
 
             obstacle = Obstacle(_id=idx, x=x, y=y, z=z, _type=_type)
