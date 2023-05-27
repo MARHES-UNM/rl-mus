@@ -280,6 +280,8 @@ class UavSim:
         if self.gui is not None:
             self.close_gui()
 
+        self._time_elapsed = 0.0
+
         if seed is None:
             seed = self._seed
 
@@ -353,3 +355,6 @@ class UavSim:
         if self.gui is not None:
             self.gui.close()
         self.gui = None
+
+    def close(self):
+        self.close_gui()
