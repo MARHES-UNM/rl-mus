@@ -68,6 +68,7 @@ def experiment(config={}):
 
         if done["__all__"]:
             break
+
     time_step_list = np.array(time_step_list)
     uav_collision_list = np.array(uav_collision_list)
     obstacle_collision_list = np.array(obstacle_collision_list)
@@ -114,32 +115,29 @@ def experiment(config={}):
             label=f"uav_{env.uavs[idx].id}",
         )
 
-    all_axes[0].set_ylabel("# UAV collisions")
-    all_axes[1].set_ylabel("# UAV collisions")
+    all_axes[0].set_ylabel("UAV collisions")
+    all_axes[1].set_ylabel("UAV collisions")
     all_axes[2].set_ylabel("UAV landed")
     all_axes[3].set_ylabel("$\parallel \Delta \mathbf{r} \parallel$")
     all_axes[4].set_ylabel("$\parallel \Delta \mathbf{v} \parallel$")
 
     for ax_ in all_axes:
         ax_.set_xlabel("t (s)")
-        # ax_.legend_.remove()
-
-    figsize = (10, 3)
-    fig_leg = plt.figure(figsize=figsize)
-    ax_leg = fig_leg.add_subplot(111)
-    # add the legend from the previous axes
-    ax_leg.legend(*all_axes[0].get_legend_handles_labels(), loc="center", ncol=env.num_uavs)
-    # hide the axes frame and the x/y labels
-    ax_leg.axis("off")
-    # fig_leg.savefig(os.path.join(image_output_folder, 'magnet_test_legend.png'))
 
     plt.show()
+
+    labels = [*all_axes[0].get_legend_handles_labels()]
+    return labels
 
 
 def main():
     target_v = [0.0, 1.0]
     use_safe_action = [False, True]
     num_obstacles = [20, 30]
+
+    target_v = [0.0]
+    use_safe_action = [False]
+    num_obstacles = [1]
 
     for target in target_v:
         for action in use_safe_action:
@@ -152,7 +150,18 @@ def main():
                     "max_time": 30.0,
                     "seed": 0,
                 }
-                experiment(config)
+                labels = experiment(config)
+
+    figsize = (10, 3)
+    fig_leg = plt.figure(figsize=figsize)
+    ax_leg = fig_leg.add_subplot(111)
+    # add the legend from the previous axes
+    ax_leg.legend(*labels, loc="center", ncol=len(labels[1]))
+    # hide the axes frame and the x/y labels
+    ax_leg.axis("off")
+    # fig_leg.savefig(os.path.join(image_output_folder, 'magnet_test_legend.png'))
+
+    plt.show()
 
 
 if __name__ == "__main__":
