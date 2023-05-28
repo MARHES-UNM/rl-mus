@@ -92,8 +92,8 @@ if __name__ == "__main__":
     # seeds = [0, 5000, 173]
 
     target_v = [0.0]
-    use_safe_action = [False]
-    num_obstacles = [1]
+    use_safe_action = [False, True]
+    num_obstacles = [30]
     seeds = [0]
 
     exp_configs = []
