@@ -5,6 +5,17 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Run Multi Experiment",
+            "type": "python",
+            "request": "launch",
+            "program": "${cwd}/run_multi_experiment.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}",
+            "env": {},
+            "args": []
+        },
+        {
             "name": "run_experiment",
             "type": "python",
             "request": "launch",

@@ -24,8 +24,13 @@ logger.setLevel(logging.DEBUG)
 max_num_cpus = os.cpu_count() - 1
 
 
-def experiment(exp_config={}, output_folder="", max_num_episodes=1, experiment_num=0):
+def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
+    fname = exp_config.setdefault("fname", None)
+    # max_num_episodes = exp_config.setdefault("max_num_episodes", 1)
+    write_experiment = exp_config.setdefault("write_experiment", False)
+    # experiment_num = exp_config.setdefault("experiment_num", 0)
     env_config = exp_config["env_config"]
+
     env = UavSim(env_config)
     N = env.t_go_n
     tf = env.time_final
@@ -130,22 +135,23 @@ def experiment(exp_config={}, output_folder="", max_num_episodes=1, experiment_n
 
     env.close()
 
-    file_prefix = {
-        "tgt_v": env_config["target_v"],
-        "sa": env_config["use_safe_action"],
-        "obs": env_config["num_obstacles"],
-        "seed": env_config["seed"],
-    }
-    file_prefix = "_".join([f"{k}_{str(int(v))}" for k, v in file_prefix.items()])
+    if write_experiment:
+        if fname is None:
+            file_prefix = {
+                "tgt_v": env_config["target_v"],
+                "sa": env_config["use_safe_action"],
+                "obs": env_config["num_obstacles"],
+                "seed": env_config["seed"],
+            }
+            file_prefix = "_".join(
+                [f"{k}_{str(int(v))}" for k, v in file_prefix.items()]
+            )
 
-    if not output_folder.exists():
-        output_folder.mkdir(parents=True, exist_ok=True)
-
-    fname = output_folder / f"exp_{experiment_num}_{file_prefix}_result.json"
-    results["env_config"] = env.env_config
-    results["time_total_s"] = end_time
-    with open(fname, "w") as f:
-        json.dump(results, f)
+            fname = f"exp_{experiment_num}_{file_prefix}_result.json"
+        results["env_config"] = env.env_config
+        results["time_total_s"] = end_time
+        with open(fname, "w") as f:
+            json.dump(results, f)
 
     logger.debug("done")
 
@@ -175,36 +181,37 @@ def main():
 
     logger.debug(f"config: {args.config}")
 
-    branch_hash = (
-        subprocess.check_output(["git", "rev-parse", "--short", "HEAD"])
-        .strip()
-        .decode()
-    )
+    # branch_hash = (
+    #     subprocess.check_output(["git", "rev-parse", "--short", "HEAD"])
+    #     .strip()
+    #     .decode()
+    # )
 
-    dir_timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M")
+    # dir_timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M")
 
-    if not args.log_dir:
-        args.log_dir = f"./results/uas_{dir_timestamp}_{branch_hash}"
+    # if not args.log_dir:
+    #     args.log_dir = f"./results/uas_{dir_timestamp}_{branch_hash}"
 
     max_num_episodes = args.max_num_episodes
     experiment_num = args.experiment_num
 
-    output_folder = Path(args.log_dir)
+    # output_folder = Path(args.log_dir)
 
-    exp_config = {
-        "env_config": {
-            "target_v": 0.0,
-            "num_uavs": 4,
-            "use_safe_action": False,
-            "num_obstacles": 30,
-            "max_time": 30.0,
-            "seed": 0,
-        }
-    }
+    # exp_config = {
+    #     "env_config": {
+    #         "target_v": 0.0,
+    #         "num_uavs": 4,
+    #         "use_safe_action": False,
+    #         "num_obstacles": 30,
+    #         "max_time": 30.0,
+    #         "seed": 0,
+    #     }
+    # }
+    experiment(args.config, max_num_episodes, experiment_num)
 
-    experiment(
-        exp_config, output_folder, max_num_episodes, experiment_num=experiment_num
-    )
+    # experiment(
+    #     exp_config, output_folder, max_num_episodes, experiment_num=experiment_num
+    # )
 
 
 if __name__ == "__main__":
