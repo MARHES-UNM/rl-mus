@@ -1,3 +1,6 @@
+import argparse
+from datetime import datetime
+import subprocess
 from time import time
 from matplotlib import pyplot as plt
 import numpy as np
@@ -8,6 +11,7 @@ import os
 import logging
 import json
 
+PATH = Path(__file__).parent.absolute().resolve()
 
 formatter = "%(asctime)s: %(name)s - %(levelname)s - <%(module)s:%(funcName)s:%(lineno)d> - %(message)s"
 logging.basicConfig(
@@ -17,14 +21,14 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-max_num_episodes = 3
 max_num_cpus = os.cpu_count() - 1
 
 
-def experiment(config={}, output_folder="", max_num_episodes=1, experiment_num=0):
-    tf = 20.0
-    N = 1.0
-    env = UavSim(config)
+def experiment(exp_config={}, output_folder="", max_num_episodes=1, experiment_num=0):
+    env_config = exp_config["env_config"]
+    env = UavSim(env_config)
+    N = env.t_go_n
+    tf = env.time_final
 
     actions = {}
     time_step_list = [[] for idx in range(env.num_uavs)]
@@ -39,6 +43,7 @@ def experiment(config={}, output_folder="", max_num_episodes=1, experiment_num=0
         "uav_collision": 0.0,
         "obs_collision": 0.0,
         "uav_done": 0.0,
+        "episode_time": [],
     }
 
     num_episodes = 0
@@ -91,6 +96,7 @@ def experiment(config={}, output_folder="", max_num_episodes=1, experiment_num=0
         if done["__all__"]:
             num_episodes += 1
             results["num_episodes"] = num_episodes
+            results["episode_time"].append(env.time_elapsed)
             if num_episodes == max_num_episodes:
                 end_time = time() - start_time
                 break
@@ -164,10 +170,10 @@ def experiment(config={}, output_folder="", max_num_episodes=1, experiment_num=0
         output_folder.mkdir(parents=True, exist_ok=True)
 
     plt_prefix = {
-        "tgt_v": config["target_v"],
-        "sa": config["use_safe_action"],
-        "obs": config["num_obstacles"],
-        "seed": config["seed"],
+        "tgt_v": env_config["target_v"],
+        "sa": env_config["use_safe_action"],
+        "obs": env_config["num_obstacles"],
+        "seed": env_config["seed"],
     }
     plt_prefix = "_".join([f"{k}_{str(int(v))}" for k, v in plt_prefix.items()])
 
@@ -179,7 +185,7 @@ def experiment(config={}, output_folder="", max_num_episodes=1, experiment_num=0
         plt.close(fig_)
 
     fname = output_folder / f"exp_{experiment_num}_{plt_prefix}_result.json"
-    results["config"] = config
+    results["config"] = env.env_config
     results["time_total_s"] = end_time
     with open(fname, "w") as f:
         json.dump(results, f)
@@ -189,17 +195,53 @@ def experiment(config={}, output_folder="", max_num_episodes=1, experiment_num=0
     return labels
 
 
+def parse_arguments():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--load_config", default=f"{PATH}/configs/sim_config.cfg")
+    parser.add_argument(
+        "--log_dir",
+    )
+    parser.add_argument("-d", "--debug")
+    parser.add_argument("-v", help="version number of experiment")
+
+    args = parser.parse_args()
+
+    return args
+
+
 def main():
+    args = parse_arguments()
+
+    # if args.load_config:
+    #     with open(args.load_config, "rt") as f:
+    #         args.config = json.load(f)
+
+    # logger.debug(f"config: {args.config}")
+
+    branch_hash = (
+        subprocess.check_output(["git", "rev-parse", "--short", "HEAD"])
+        .strip()
+        .decode()
+    )
+
+    dir_timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M")
+
+    if not args.log_dir:
+        args.log_dir = f"./results/uas_{dir_timestamp}_{branch_hash}"
+
     target_v = [0.0, 1.0]
     use_safe_action = [False, True]
     num_obstacles = [20, 30]
 
-    # target_v = [0.0]
-    # use_safe_action = [False]
-    # num_obstacles = [1]
+    target_v = [0.0]
+    use_safe_action = [False]
+    num_obstacles = [30]
+    max_num_episodes = 2
 
-    output_folder = Path(r"/home/prime/Documents/workspace/uav_sim/results")
-    output_folder = output_folder / r"images"
+    # output_folder = Path(r"/home/prime/Documents/workspace/uav_sim/results")
+    # output_folder = output_folder / r"images"
+
+    output_folder = Path(args.log_dir)
 
     for target in target_v:
         for action in use_safe_action:
@@ -212,7 +254,9 @@ def main():
                     "max_time": 30.0,
                     "seed": 0,
                 }
-                labels = experiment(config, output_folder)
+                labels = experiment(
+                    config, output_folder, max_num_episodes=max_num_episodes
+                )
 
     figsize = (10, 3)
     fig_leg = plt.figure(figsize=figsize)
