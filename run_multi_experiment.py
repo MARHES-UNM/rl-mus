@@ -1,3 +1,5 @@
+from datetime import datetime
+import subprocess
 from time import time
 from matplotlib import pyplot as plt
 import numpy as np
@@ -21,6 +23,9 @@ logger.setLevel(logging.DEBUG)
 
 max_num_episodes = 3
 max_num_cpus = os.cpu_count() - 1
+
+
+PATH = Path(__file__).parent.absolute().resolve()
 
 
 def experiment(config={}, output_folder="", max_num_episodes=1, experiment_num=0):
@@ -195,7 +200,22 @@ def experiment(config={}, output_folder="", max_num_episodes=1, experiment_num=0
     return 0
 
 
-def main():
+if __name__ == "__main__":
+    branch_hash = (
+        subprocess.check_output(["git", "rev-parse", "--short", "HEAD"])
+        .strip()
+        .decode()
+    )
+
+    dir_timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M")
+
+    log_dir = Path(f"./results/test_results/exp_{dir_timestamp}_{branch_hash}")
+
+    if not log_dir.exists():
+        log_dir.mkdir(parents=True, exist_ok=True)
+    # if not os.path.exists(log_dir):
+        # os.makedirs(log_dir)
+
     target_v = [0.0, 1.0]
     use_safe_action = [False, True]
     num_obstacles = [20, 30]
@@ -255,7 +275,3 @@ def main():
     # fig_leg.savefig(output_folder / "labels.png")
 
     # plt.show()
-
-
-if __name__ == "__main__":
-    main()

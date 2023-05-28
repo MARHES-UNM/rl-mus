@@ -30,7 +30,6 @@ def experiment(exp_config={}, output_folder="", max_num_episodes=1, experiment_n
     N = env.t_go_n
     tf = env.time_final
 
-    actions = {}
     time_step_list = [[] for idx in range(env.num_uavs)]
     uav_collision_list = [[] for idx in range(env.num_uavs)]
     obstacle_collision_list = [[] for idx in range(env.num_uavs)]
@@ -44,6 +43,15 @@ def experiment(exp_config={}, output_folder="", max_num_episodes=1, experiment_n
         "obs_collision": 0.0,
         "uav_done": 0.0,
         "episode_time": [],
+        "episode_data": {
+            "time_step_list": [],
+            "time_step_list": [],
+            "uav_collision_list": [],
+            "obstacle_collision_list": [],
+            "uav_done_list": [],
+            "rel_pad_dist": [],
+            "rel_pad_vel": [],
+        },
     }
 
     num_episodes = 0
@@ -55,11 +63,10 @@ def experiment(exp_config={}, output_folder="", max_num_episodes=1, experiment_n
     start_time = time()
 
     while num_episodes < max_num_episodes:
-        actions = {}
         pos_er = np.zeros((env.num_uavs, 12))
         t = env.time_elapsed
+        actions = {}
         for idx in range(env.num_uavs):
-            actions[idx] = np.zeros(3)
             des_pos = np.zeros(12)
             des_pos[0:6] = env.uavs[idx].pad.state[0:6]
             pos_er[idx, :] = des_pos[0:12] - env.uavs[idx].state
@@ -97,6 +104,15 @@ def experiment(exp_config={}, output_folder="", max_num_episodes=1, experiment_n
             num_episodes += 1
             results["num_episodes"] = num_episodes
             results["episode_time"].append(env.time_elapsed)
+            results["episode_data"]["time_step_list"].append(time_step_list)
+            results["episode_data"]["uav_collision_list"].append(uav_collision_list)
+            results["episode_data"]["obstacle_collision_list"].append(
+                obstacle_collision_list
+            )
+            results["episode_data"]["uav_done_list"].append(uav_done_list)
+            results["episode_data"]["rel_pad_dist"].append(rel_pad_dist)
+            results["episode_data"]["rel_pad_vel"].append(rel_pad_vel)
+
             if num_episodes == max_num_episodes:
                 end_time = time() - start_time
                 break
@@ -104,95 +120,34 @@ def experiment(exp_config={}, output_folder="", max_num_episodes=1, experiment_n
             done["__all__"] = False
             env.reset()
 
-    logger.debug("close env")
+            # reinitialize data arrays
+            time_step_list = [[] for idx in range(env.num_uavs)]
+            uav_collision_list = [[] for idx in range(env.num_uavs)]
+            obstacle_collision_list = [[] for idx in range(env.num_uavs)]
+            uav_done_list = [[] for idx in range(env.num_uavs)]
+            rel_pad_dist = [[] for idx in range(env.num_uavs)]
+            rel_pad_vel = [[] for idx in range(env.num_uavs)]
+
     env.close()
 
-    time_step_list = np.array(time_step_list)
-    uav_collision_list = np.array(uav_collision_list)
-    obstacle_collision_list = np.array(obstacle_collision_list)
-    uav_done_list = np.array(uav_done_list)
-    rel_pad_dist = np.array(rel_pad_dist)
-    rel_pad_vel = np.array(rel_pad_vel)
-
-    all_axes = []
-    all_figs = []
-    fig = plt.figure(figsize=(10, 6))
-    all_axes.append(fig.add_subplot(121))
-    all_axes.append(fig.add_subplot(122))
-    all_figs.append(fig)
-
-    fig = plt.figure(figsize=(10, 6))
-    all_axes.append(fig.add_subplot(111))
-    all_figs.append(fig)
-
-    fig = plt.figure(figsize=(10, 6))
-    all_axes.append(fig.add_subplot(121))
-    all_axes.append(fig.add_subplot(122))
-    all_figs.append(fig)
-
-    for idx in range(env.num_uavs):
-        all_axes[0].plot(
-            time_step_list[idx],
-            uav_collision_list[idx],
-            label=f"uav_{env.uavs[idx].id}",
-        )
-        all_axes[1].plot(
-            time_step_list[idx],
-            obstacle_collision_list[idx],
-            label=f"uav_{env.uavs[idx].id}",
-        )
-        all_axes[2].plot(
-            time_step_list[idx],
-            uav_done_list[idx],
-            label=f"uav_{env.uavs[idx].id}",
-        )
-        all_axes[3].plot(
-            time_step_list[idx],
-            rel_pad_dist[idx],
-            label=f"uav_{env.uavs[idx].id}",
-        )
-        all_axes[4].plot(
-            time_step_list[idx],
-            rel_pad_vel[idx],
-            label=f"uav_{env.uavs[idx].id}",
-        )
-
-    all_axes[0].set_ylabel("UAV collisions")
-    all_axes[1].set_ylabel("NCFO collisions")
-    all_axes[2].set_ylabel("UAV landed")
-    all_axes[3].set_ylabel("$\parallel \Delta \mathbf{r} \parallel$")
-    all_axes[4].set_ylabel("$\parallel \Delta \mathbf{v} \parallel$")
-
-    for ax_ in all_axes:
-        ax_.set_xlabel("t (s)")
-
-    if not output_folder.exists():
-        output_folder.mkdir(parents=True, exist_ok=True)
-
-    plt_prefix = {
+    file_prefix = {
         "tgt_v": env_config["target_v"],
         "sa": env_config["use_safe_action"],
         "obs": env_config["num_obstacles"],
         "seed": env_config["seed"],
     }
-    plt_prefix = "_".join([f"{k}_{str(int(v))}" for k, v in plt_prefix.items()])
+    file_prefix = "_".join([f"{k}_{str(int(v))}" for k, v in file_prefix.items()])
 
-    suffixes = ["collisions.png", "landed.png", "r_v_time.png"]
+    if not output_folder.exists():
+        output_folder.mkdir(parents=True, exist_ok=True)
 
-    for fig_, suffix in zip(all_figs, suffixes):
-        file_name = output_folder / f"{plt_prefix}_{suffix}"
-        fig_.savefig(file_name)
-        plt.close(fig_)
-
-    fname = output_folder / f"exp_{experiment_num}_{plt_prefix}_result.json"
-    results["config"] = env.env_config
+    fname = output_folder / f"exp_{experiment_num}_{file_prefix}_result.json"
+    results["env_config"] = env.env_config
     results["time_total_s"] = end_time
     with open(fname, "w") as f:
         json.dump(results, f)
 
     logger.debug("done")
-    labels = [*all_axes[0].get_legend_handles_labels()]
-    return labels
 
 
 def parse_arguments():
@@ -203,6 +158,8 @@ def parse_arguments():
     )
     parser.add_argument("-d", "--debug")
     parser.add_argument("-v", help="version number of experiment")
+    parser.add_argument("--max_num_episodes", type=int, default=1)
+    parser.add_argument("--experiment_num", type=int, default=0)
 
     args = parser.parse_args()
 
@@ -212,11 +169,11 @@ def parse_arguments():
 def main():
     args = parse_arguments()
 
-    # if args.load_config:
-    #     with open(args.load_config, "rt") as f:
-    #         args.config = json.load(f)
+    if args.load_config:
+        with open(args.load_config, "rt") as f:
+            args.config = json.load(f)
 
-    # logger.debug(f"config: {args.config}")
+    logger.debug(f"config: {args.config}")
 
     branch_hash = (
         subprocess.check_output(["git", "rev-parse", "--short", "HEAD"])
@@ -229,45 +186,25 @@ def main():
     if not args.log_dir:
         args.log_dir = f"./results/uas_{dir_timestamp}_{branch_hash}"
 
-    target_v = [0.0, 1.0]
-    use_safe_action = [False, True]
-    num_obstacles = [20, 30]
-
-    target_v = [0.0]
-    use_safe_action = [False]
-    num_obstacles = [30]
-    max_num_episodes = 2
-
-    # output_folder = Path(r"/home/prime/Documents/workspace/uav_sim/results")
-    # output_folder = output_folder / r"images"
+    max_num_episodes = args.max_num_episodes
+    experiment_num = args.experiment_num
 
     output_folder = Path(args.log_dir)
 
-    for target in target_v:
-        for action in use_safe_action:
-            for num_obstacle in num_obstacles:
-                config = {
-                    "target_v": target,
-                    "num_uavs": 4,
-                    "use_safe_action": action,
-                    "num_obstacles": num_obstacle,
-                    "max_time": 30.0,
-                    "seed": 0,
-                }
-                labels = experiment(
-                    config, output_folder, max_num_episodes=max_num_episodes
-                )
+    exp_config = {
+        "env_config": {
+            "target_v": 0.0,
+            "num_uavs": 4,
+            "use_safe_action": False,
+            "num_obstacles": 30,
+            "max_time": 30.0,
+            "seed": 0,
+        }
+    }
 
-    figsize = (10, 3)
-    fig_leg = plt.figure(figsize=figsize)
-    ax_leg = fig_leg.add_subplot(111)
-    # add the legend from the previous axes
-    ax_leg.legend(*labels, loc="center", ncol=len(labels[1]))
-    # hide the axes frame and the x/y labels
-    ax_leg.axis("off")
-    fig_leg.savefig(output_folder / "labels.png")
-
-    # plt.show()
+    experiment(
+        exp_config, output_folder, max_num_episodes, experiment_num=experiment_num
+    )
 
 
 if __name__ == "__main__":
