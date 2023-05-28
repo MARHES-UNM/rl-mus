@@ -20,29 +20,36 @@ class UavSim:
     }
 
     def __init__(self, env_config={}):
-        self.dt = env_config.get("dt", 0.1)
-        self._seed = env_config.get("seed", None)
-        self.render_mode = env_config.get("render_mode", "human")
-        self.num_uavs = env_config.get("num_uavs", 4)
-        self.gamma = env_config.get("gamma", 1)
-        self.num_obstacles = env_config.get("num_obstacles", 4)
-        self.obstacle_collision_weight = env_config.get("obstacle_collision_weight", 1)
-        self.uav_collision_weight = env_config.get("uav_collision_weight", 1)
-        self._use_safe_action = env_config.get("use_safe_action", False)
+        self.dt = env_config.set_default("dt", 0.1)
+        self._seed = env_config.set_default("seed", None)
+        self.render_mode = env_config.set_default("render_mode", "human")
+        self.num_uavs = env_config.set_default("num_uavs", 4)
+        self.gamma = env_config.set_default("gamma", 1)
+        self.num_obstacles = env_config.set_default("num_obstacles", 4)
+        self.obstacle_collision_weight = env_config.set_default(
+            "obstacle_collision_weight", 1
+        )
+        self.uav_collision_weight = env_config.set_default("uav_collision_weight", 1)
+        self._use_safe_action = env_config.set_default("use_safe_action", False)
+        self.time_final = env_config.set_default("time_final", 20.0)
+        self.t_go_n = env_config.set_default("t_go_n", 1.0)
 
         self._agent_ids = set(range(self.num_uavs))
 
-        self.env_max_w = env_config.get("env_max_w", 4)
-        self.env_max_l = env_config.get("env_max_l", 4)
-        self.env_max_h = env_config.get("env_max_h", 4)
-        self.target_v = env_config.get("target_v", 0)
-        self.target_w = env_config.get("target_w", 0)
-        self.max_time = env_config.get("max_time", 40)
+        self.env_max_w = env_config.set_default("env_max_w", 4)
+        self.env_max_l = env_config.set_default("env_max_l", 4)
+        self.env_max_h = env_config.set_default("env_max_h", 4)
+        self.target_v = env_config.set_default("target_v", 0)
+        self.target_w = env_config.set_default("target_w", 0)
+        self.max_time = env_config.set_default("max_time", 40)
+
+        self.env_config = env_config
 
         self.gui = None
         self._time_elapsed = 0
         self.action_space = self._get_action_space()
         self.observation_space = self._get_observation_space()
+        self.seed(self._seed)
 
         self.reset()
 
@@ -282,10 +289,10 @@ class UavSim:
 
         self._time_elapsed = 0.0
 
-        if seed is None:
-            seed = self._seed
+        # if seed is None:
+        #     seed = self._seed
 
-        self.seed(seed)
+        # self.seed(seed)
 
         # TODO ensure we don't start in collision states
         # Reset Target
