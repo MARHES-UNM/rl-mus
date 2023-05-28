@@ -20,28 +20,28 @@ class UavSim:
     }
 
     def __init__(self, env_config={}):
-        self.dt = env_config.set_default("dt", 0.1)
-        self._seed = env_config.set_default("seed", None)
-        self.render_mode = env_config.set_default("render_mode", "human")
-        self.num_uavs = env_config.set_default("num_uavs", 4)
-        self.gamma = env_config.set_default("gamma", 1)
-        self.num_obstacles = env_config.set_default("num_obstacles", 4)
-        self.obstacle_collision_weight = env_config.set_default(
+        self.dt = env_config.setdefault("dt", 0.1)
+        self._seed = env_config.setdefault("seed", None)
+        self.render_mode = env_config.setdefault("render_mode", "human")
+        self.num_uavs = env_config.setdefault("num_uavs", 4)
+        self.gamma = env_config.setdefault("gamma", 1)
+        self.num_obstacles = env_config.setdefault("num_obstacles", 4)
+        self.obstacle_collision_weight = env_config.setdefault(
             "obstacle_collision_weight", 1
         )
-        self.uav_collision_weight = env_config.set_default("uav_collision_weight", 1)
-        self._use_safe_action = env_config.set_default("use_safe_action", False)
-        self.time_final = env_config.set_default("time_final", 20.0)
-        self.t_go_n = env_config.set_default("t_go_n", 1.0)
+        self.uav_collision_weight = env_config.setdefault("uav_collision_weight", 1)
+        self._use_safe_action = env_config.setdefault("use_safe_action", False)
+        self.time_final = env_config.setdefault("time_final", 20.0)
+        self.t_go_n = env_config.setdefault("t_go_n", 1.0)
 
         self._agent_ids = set(range(self.num_uavs))
 
-        self.env_max_w = env_config.set_default("env_max_w", 4)
-        self.env_max_l = env_config.set_default("env_max_l", 4)
-        self.env_max_h = env_config.set_default("env_max_h", 4)
-        self.target_v = env_config.set_default("target_v", 0)
-        self.target_w = env_config.set_default("target_w", 0)
-        self.max_time = env_config.set_default("max_time", 40)
+        self.env_max_w = env_config.setdefault("env_max_w", 4)
+        self.env_max_l = env_config.setdefault("env_max_l", 4)
+        self.env_max_h = env_config.setdefault("env_max_h", 4)
+        self.target_v = env_config.setdefault("target_v", 0)
+        self.target_w = env_config.setdefault("target_w", 0)
+        self.max_time = env_config.setdefault("max_time", 40)
 
         self.env_config = env_config
 
