@@ -187,6 +187,7 @@ class UavSim:
                 "obstacle_collision": obstacle_collision,
                 "uav_collision": uav_collision,
                 "uav_landed": 1.0 if uav.landed else 0.0,
+                "uav_done_time": uav.done_time,
             }
 
         return info
@@ -232,6 +233,7 @@ class UavSim:
         if is_reached:
             uav.done = True
             uav.landed = True
+            uav.done_time = self.time_elapsed
             reward += 1
         else:
             reward -= dest_dist / np.linalg.norm(

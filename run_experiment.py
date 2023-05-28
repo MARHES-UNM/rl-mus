@@ -46,7 +46,8 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
         "num_episodes": 0.0,
         "uav_collision": 0.0,
         "obs_collision": 0.0,
-        "uav_done": 0.0,
+        "uav_done": [[] for idx in range(env.num_uavs)],
+        "uav_done_time": [[] for idx in range(env.num_uavs)],
         "episode_time": [],
         "episode_data": {
             "time_step_list": [],
@@ -91,7 +92,7 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
 
         obs, rew, done, info = env.step(actions)
         for k, v in info.items():
-            results["uav_done"] += v["uav_landed"]
+            # results["uav_done"][k] = v["uav_landed"]
             results["uav_collision"] += v["uav_collision"]
             results["obs_collision"] += v["obstacle_collision"]
 
@@ -107,6 +108,9 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
 
         if done["__all__"]:
             num_episodes += 1
+            for k, v in info.items():
+                results["uav_done"][k].append(v["uav_landed"])
+                results["uav_done_time"][k].append(v["uav_done_time"])
             results["num_episodes"] = num_episodes
             results["episode_time"].append(env.time_elapsed)
             results["episode_data"]["time_step_list"].append(time_step_list)

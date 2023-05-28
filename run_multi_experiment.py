@@ -1,10 +1,5 @@
 from datetime import datetime
 import subprocess
-from time import time
-from matplotlib import pyplot as plt
-import numpy as np
-from torch import exp_
-from uav_sim.envs.uav_sim import UavSim
 from pathlib import Path
 
 import os

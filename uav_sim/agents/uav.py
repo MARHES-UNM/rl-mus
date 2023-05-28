@@ -203,6 +203,7 @@ class Quad2DInt(Entity):
         self.done = False
         self.landed = False
         self.pad = pad
+        self.done_time = None
 
     def f_dot(self, time, state, action):
         action_z = 1 / self.m * action[2] - self.g
