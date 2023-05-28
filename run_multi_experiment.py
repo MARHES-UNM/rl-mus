@@ -17,7 +17,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-max_num_episodes = 3
+max_num_episodes = 500
 max_num_cpus = os.cpu_count() - 1
 
 
@@ -81,15 +81,15 @@ if __name__ == "__main__":
     if not log_dir.exists():
         log_dir.mkdir(parents=True, exist_ok=True)
 
-    # target_v = [0.0, 1.0]
-    # use_safe_action = [False, True]
-    # num_obstacles = [20, 30]
-    # seeds = [0, 5000, 173]
-
-    target_v = [0.0]
+    target_v = [0.0, 1.0]
     use_safe_action = [False, True]
-    num_obstacles = [30]
-    seeds = [0]
+    num_obstacles = [20, 30]
+    seeds = [0, 5000, 173]
+
+    # target_v = [0.0]
+    # use_safe_action = [False, True]
+    # num_obstacles = [30]
+    # seeds = [0]
 
     exp_configs = []
     experiment_num = 0
@@ -114,11 +114,11 @@ if __name__ == "__main__":
                     }
                     file_prefix = "_".join(
                         [
-                            f"exp_{experiment_num}_{k}_{str(int(v))}"
+                            f"{experiment_num}_{k}_{str(int(v))}"
                             for k, v in file_prefix.items()
                         ]
                     )
-                    exp_config["exp_name"] = file_prefix
+                    exp_config["exp_name"] = f"exp_{file_prefix}"
                     exp_config["experiment_num"] = experiment_num
 
                     exp_configs.append(exp_config)
