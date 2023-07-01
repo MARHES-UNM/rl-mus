@@ -15,6 +15,9 @@ class TestUav(unittest.TestCase):
             self.uav._state[6:9] = np.random.rand(3) * (np.pi + np.pi) - np.pi
             rot_mat = self.uav.rotation_matrix()
             np.testing.assert_almost_equal(np.linalg.det(rot_mat), 1.0)
+            phi, theta, psi = np.random.rand(3) * (np.pi + np.pi) - np.pi
+            rot_mat = self.uav.get_r_matrix(phi, theta, psi)
+            np.testing.assert_almost_equal(np.linalg.det(rot_mat), 1.0)
 
     def test_uav_hover(self):
         """Test that the uav can hover with the specified input"""
@@ -51,11 +54,11 @@ class TestUav(unittest.TestCase):
             # hover
             m = self.uav.m
             g = self.uav.g
-            if i == 100:
-                des_acc = np.array([1., 0., 1.])
+            if i == 50:
+                des_acc = np.array([1.0, 0.0, 1.0])
             else:
                 des_acc = np.zeros(3)
-            # action = np.array([m*g, 0.001, 0., 0])
+            action = np.array([m * g, 0.00, 0.00, 0.001])
             # des_acc = np.array([0.1, 0., 0.])
             action = self.uav.get_torc_from_acc(des_acc)
             uav.step(action)
@@ -66,7 +69,7 @@ class TestUav(unittest.TestCase):
         uav_trajectory = np.array(uav_trajectory)
 
         self.plot_traj(uav_des_traj, uav_trajectory)
-        
+
     def test_controller_independent_control(self):
         """Test that we can independently control UAV x, y, z and psi"""
         uav = Quadrotor(0, 0, 0, 2)
@@ -104,7 +107,7 @@ class TestUav(unittest.TestCase):
         des_pos = np.zeros(15)
         uav_des_traj = []
         uav_trajectory = []
-        for i in range(220): 
+        for i in range(220):
             if i < 20:
                 des_pos[0:3] = uav.state[0:3].copy()
                 des_pos[8] = uav.state[8].copy()

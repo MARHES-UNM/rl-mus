@@ -593,7 +593,7 @@ class Quadrotor(Entity):
 
         # mass
         self.m = m  # kg
-        self.m = 1
+        # self.m = 1
 
         # lenght of arms
         self.l = l  # m
@@ -602,7 +602,12 @@ class Quadrotor(Entity):
             [[0.00025, 0, 2.55e-6], [0, 0.000232, 0], [2.55e-6, 0, 0.0003738]]
         )
 
+        ## parameters from: https://upcommons.upc.edu/bitstream/handle/2117/187223/final-thesis.pdf?sequence=1&isAllowed=y
         self.inertia = np.eye(3)
+        # self.inertia[0, 0] = 0.0034  # kg*m^2
+        # self.inertia[1, 1] = 0.0034  # kg*m^2
+        # self.inertia[2, 2] = 0.006  # kg*m^2
+        self.m = 0.698
         self.ixx = self.inertia[0, 0]
         self.iyy = self.inertia[1, 1]
         self.izz = self.inertia[2, 2]
@@ -695,14 +700,14 @@ class Quadrotor(Entity):
 
         return Ks
 
-    def r_dot_matrix(self):
+    def get_r_dot_matrix(self, phi, theta, psi):
         """ """
-        cp = cos(self._state[6])
-        sp = sin(self._state[6])
-        ct = cos(self._state[7])
-        st = sin(self._state[7])
-        cg = cos(self._state[8])
-        sg = sin(self._state[8])
+        cp = cos(phi)
+        sp = sin(phi)
+        ct = cos(theta)
+        st = sin(theta)
+        cg = cos(psi)
+        sg = sin(psi)
 
         return np.array([[ct, 0, -cp * st], [0, 1, sp], [st, 0, cp * ct]])
 
@@ -745,10 +750,33 @@ class Quadrotor(Entity):
         R = np.dot(np.dot(R_z, R_x), R_y)
         return R
 
+    def get_r_matrix(self, phi, theta, psi):
+        """Calculates the Z-Y-X rotation matrix.
+           Based on Different Linearization Control Techniques for a Quadrotor System
+
+        Returns: R - 3 x 3 rotation matrix
+        """
+        cp = cos(phi)
+        sp = sin(phi)
+        ct = cos(theta)
+        st = sin(theta)
+        cg = cos(psi)
+        sg = sin(psi)
+        R_x = np.array([[1, 0, 0], [0, cp, -sp], [0, sp, cp]])
+        R_y = np.array([[ct, 0, st], [0, 1, 0], [-st, 0, ct]])
+        R_z = np.array([[cg, -sg, 0], [sg, cg, 0], [0, 0, 1]])
+
+        R = np.dot(np.dot(R_z, R_x), R_y)
+        return R
+
     def f_dot(self, time, state, action):
         ft, tau_x, tau_y, tau_z = action.reshape(-1).tolist()
 
         # TODO: convert angular velocity to angle rates here:
+        phi = state[6]
+        theta = state[7]
+        psi = state[8]
+
         omega = state[9:12].copy()
         tau = np.array([tau_x, tau_y, tau_z])
 
@@ -756,13 +784,21 @@ class Quadrotor(Entity):
             self.inv_inertia, (tau - np.cross(omega, np.dot(self.inertia, omega)))
         )
 
-        R = self.rotation_matrix()
+        # R = self.rotation_matrix()
+        # TODO: need to update the rotation matrix here using information from the ODE
+        R = self.get_r_matrix(phi, theta, psi)
         acc = (
             np.dot(R, np.array([0, 0, ft], dtype=np.float64).T)
             - np.array([0, 0, self.m * self.g], dtype=np.float64).T
         ) / self.m
 
-        dot_x = np.array(
+        # TODO: troubleshoot why we get small deviations in psi when doing this conversion
+        # rot_dot = np.dot(np.linalg.inv(self.get_r_dot_matrix(phi, theta, psi)), omega)
+        # rot_dot = np.dot(self.get_r_dot_matrix(phi, theta, psi), omega)
+        rot_dot = omega.copy()
+
+        # TODO: fix the x derivative matrix. This matrix doesn't provide angle rates
+        x_dot = np.array(
             [
                 state[3],
                 state[4],
@@ -771,16 +807,16 @@ class Quadrotor(Entity):
                 acc[1],
                 acc[2],
                 # TODO: use angle rates here instead
-                state[9],
-                state[10],
-                state[11],
+                rot_dot[0],
+                rot_dot[1],
+                rot_dot[2],
                 omega_dot[0],
                 omega_dot[1],
                 omega_dot[2],
             ]
         )
 
-        return dot_x
+        return x_dot
 
     def get_torc_from_acc(self, des_acc):
         kx = ky = 0.5
@@ -973,15 +1009,12 @@ class Quadrotor(Entity):
 
         if len(action) == 3:
             action = self.get_torc_from_acc(action)
+
         state = self._state.copy()
-        # state[9:12] = np.dot(self.r_dot_matrix(), state[9:12])
         self.ode.set_initial_value(state, 0).set_f_params(action)
         self._state = self.ode.integrate(self.ode.t + self.dt)
         assert self.ode.successful()
 
-        # self._state[9:12] = np.dot(
-        #     np.linalg.inv(self.r_dot_matrix()), self._state[9:12]
-        # )
         self._state[9:12] = self.wrap_angle(self._state[9:12])
 
         self._state[6:9] = self.wrap_angle(self._state[6:9])
