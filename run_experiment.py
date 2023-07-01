@@ -31,6 +31,7 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
     # experiment_num = exp_config.setdefault("experiment_num", 0)
     env_config = exp_config["env_config"]
     render = exp_config["render"]
+    plot_results = exp_config["plot_results"]
 
     env = UavSim(env_config)
     N = env.t_go_n
@@ -93,7 +94,6 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
 
         obs, rew, done, info = env.step(actions)
         for k, v in info.items():
-            # results["uav_done"][k] = v["uav_landed"]
             results["uav_collision"] += v["uav_collision"]
             results["obs_collision"] += v["obstacle_collision"]
 
@@ -124,6 +124,16 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
             results["episode_data"]["uav_done_list"].append(uav_done_list)
             results["episode_data"]["rel_pad_dist"].append(rel_pad_dist)
             results["episode_data"]["rel_pad_vel"].append(rel_pad_vel)
+
+            if plot_results:
+                plot_uav_states(
+                    env.num_uavs,
+                    uav_collision_list,
+                    obstacle_collision_list,
+                    uav_done_list,
+                    rel_pad_dist,
+                    rel_pad_vel,
+                )
 
             if num_episodes == max_num_episodes:
                 end_time = time() - start_time
@@ -163,6 +173,31 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
     logger.debug("done")
 
 
+def plot_uav_states(
+    num_uavs,
+    uav_collision_list,
+    obstacle_collision_list,
+    uav_done_list,
+    rel_pad_dist,
+    rel_pad_vel,
+):
+    fig = plt.figure(figsize=(10, 6))
+    ax = fig.add_subplot(311)
+    ax1 = fig.add_subplot(312)
+    ax2 = fig.add_subplot(313)
+    fig = plt.figure(figsize=(10, 6))
+    ax3 = fig.add_subplot(211)
+    ax4 = fig.add_subplot(212)
+    for idx in range(num_uavs):
+        ax.plot(uav_collision_list[idx], label=f"uav_id:{idx}")
+        ax1.plot(obstacle_collision_list[idx], label=f"uav_id:{idx}")
+        ax2.plot(uav_done_list[idx], label=f"uav_id:{idx}")
+        ax3.plot(rel_pad_dist[idx], label=f"uav_id:{idx}")
+        ax4.plot(rel_pad_vel[idx], label=f"uav_id:{idx}")
+    plt.legend()
+    plt.show()
+
+
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument("--load_config", default=f"{PATH}/configs/sim_config.cfg")
@@ -174,6 +209,8 @@ def parse_arguments():
     parser.add_argument("--max_num_episodes", type=int, default=1)
     parser.add_argument("--experiment_num", type=int, default=0)
     parser.add_argument("--render", action="store_true", default=False)
+    parser.add_argument("--write_exp", action="store_true")
+    parser.add_argument("--plot_results", action="store_true", default=False)
 
     args = parser.parse_args()
 
@@ -189,38 +226,31 @@ def main():
 
     logger.debug(f"config: {args.config}")
 
-    # branch_hash = (
-    #     subprocess.check_output(["git", "rev-parse", "--short", "HEAD"])
-    #     .strip()
-    #     .decode()
-    # )
+    if not args.log_dir:
+        branch_hash = (
+            subprocess.check_output(["git", "rev-parse", "--short", "HEAD"])
+            .strip()
+            .decode()
+        )
 
-    # dir_timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M")
-
-    # if not args.log_dir:
-    #     args.log_dir = f"./results/uas_{dir_timestamp}_{branch_hash}"
+        dir_timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M")
+        args.log_dir = f"./results/test_results/exp_{dir_timestamp}_{branch_hash}"
 
     max_num_episodes = args.max_num_episodes
     experiment_num = args.experiment_num
     args.config["render"] = args.render
+    args.config["plot_results"] = args.plot_results
 
-    # output_folder = Path(args.log_dir)
+    if args.write_exp:
+        args.config["write_experiment"] = True
 
-    # exp_config = {
-    #     "env_config": {
-    #         "target_v": 0.0,
-    #         "num_uavs": 4,
-    #         "use_safe_action": False,
-    #         "num_obstacles": 30,
-    #         "max_time": 30.0,
-    #         "seed": 0,
-    #     }
-    # }
+        output_folder = Path(args.log_dir)
+        if not output_folder.exists():
+            output_folder.mkdir(parents=True, exist_ok=True)
+
+        args.config["fname"] = output_folder / "result.json"
+
     experiment(args.config, max_num_episodes, experiment_num)
-
-    # experiment(
-    #     exp_config, output_folder, max_num_episodes, experiment_num=experiment_num
-    # )
 
 
 if __name__ == "__main__":
