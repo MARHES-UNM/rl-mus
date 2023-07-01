@@ -30,6 +30,7 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
     write_experiment = exp_config.setdefault("write_experiment", False)
     # experiment_num = exp_config.setdefault("experiment_num", 0)
     env_config = exp_config["env_config"]
+    render = exp_config["render"]
 
     env = UavSim(env_config)
     N = env.t_go_n
@@ -104,7 +105,9 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
             rel_vel = np.linalg.norm(pos_er[k, 3:6])
             rel_pad_dist[k].append(rel_dist)
             rel_pad_vel[k].append(rel_vel)
-        # env.render()
+
+        if render:
+            env.render()
 
         if done["__all__"]:
             num_episodes += 1
@@ -170,6 +173,7 @@ def parse_arguments():
     parser.add_argument("-v", help="version number of experiment")
     parser.add_argument("--max_num_episodes", type=int, default=1)
     parser.add_argument("--experiment_num", type=int, default=0)
+    parser.add_argument("--render", action="store_true", default=False)
 
     args = parser.parse_args()
 
@@ -198,6 +202,7 @@ def main():
 
     max_num_episodes = args.max_num_episodes
     experiment_num = args.experiment_num
+    args.config["render"] = args.render
 
     # output_folder = Path(args.log_dir)
 

@@ -24,9 +24,10 @@
             "justMyCode": true,
             "cwd": "${workspaceFolder}",
             "env": {
-                // "DISPLAY": "192.168.1.11:0.0"
+                // "DISPLAY": "192.168.1.13:0.0"
             },
             "args": [
+                "--render"
                 // "${cwd}/tests/test_uav.py"
             ]
         },
@@ -87,7 +88,7 @@
             "justMyCode": true,
             "cwd": "${workspaceFolder}",
             "env": {
-                "DISPLAY": "192.168.1.11:0.0"
+                "DISPLAY": "192.168.1.13:0.0"
                 // "DISPLAY": "192.168.243.10:0.0"
             },
             "args": [
@@ -105,7 +106,7 @@
             "justMyCode": true,
             "cwd": "${workspaceFolder}",
             "env": {
-                // "DISPLAY": "192.168.1.11:0.0"
+                "DISPLAY": "192.168.1.13:0.0"
             },
             "args": [
                 "-v",

@@ -1,7 +1,5 @@
 import sys
-from turtle import color
 import matplotlib
-from matplotlib import cm
 
 matplotlib.use("TKAgg")
 import matplotlib.pyplot as plt
