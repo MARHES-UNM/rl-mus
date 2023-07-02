@@ -94,8 +94,8 @@
             "args": [
                 "-v",
                 // "${cwd}/tests/test_uav.py",
-                // "tests.test_uav.TestUav.test_controller_des_controller",
-                "tests.test_uav.TestUav.test_traj_line",
+                "tests.test_uav.TestUav.test_controller_des_controller",
+                // "tests.test_uav.TestUav.test_traj_line",
                 "--failfast"
             ]
         },

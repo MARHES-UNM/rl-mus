@@ -586,7 +586,8 @@ class Quadrotor(Entity):
                 "vode", nsteps=500, method="bdf"
             )
             # self.ode = scipy.integrate.ode(self.f_dot).set_integrator(
-            #     "dopri5", nsteps=500, verbosity=1
+            #     # "dopri5", nsteps=500, verbosity=1
+            #     "dopri5"
             # )
 
         # timestep
@@ -602,7 +603,8 @@ class Quadrotor(Entity):
         self.l = l  # m
 
         self.inertia = np.array(
-            [[0.00025, 0, 2.55e-6], [0, 0.000232, 0], [2.55e-6, 0, 0.0003738]]
+            [[0.00025, 0, 2.55e-6], [0, 0.000232, 0], [2.55e-6, 0, 0.0003738]],
+            dtype=np.float64,
         )
 
         ## parameters from: https://upcommons.upc.edu/bitstream/handle/2117/187223/final-thesis.pdf?sequence=1&isAllowed=y
@@ -844,9 +846,9 @@ class Quadrotor(Entity):
         ) / self.m
 
         # TODO: troubleshoot why we get small deviations in psi when doing this conversion
-        # rot_dot = np.dot(np.linalg.inv(self.get_r_dot_matrix(phi, theta, psi)), omega)
+        rot_dot = np.dot(np.linalg.inv(self.get_r_dot_matrix(phi, theta, psi)), omega)
         # rot_dot = np.dot(self.get_r_dot_matrix(phi, theta, psi), omega)
-        rot_dot = omega.copy()
+        # rot_dot = omega.copy()
 
         # TODO: fix the x derivative matrix. This matrix doesn't provide angle rates
         x_dot = np.array(
@@ -938,24 +940,30 @@ class Quadrotor(Entity):
         return action
 
     def calc_des_action(self, des_pos):
-        kx = ky = 0.5
+        kx = ky = 1
         # ky = 0.1
         kz = 1
-        k_x_dot = k_y_dot = 1
+        k_x_dot = k_y_dot = 2
+        # k_x_dot = k_y_dot = 1
         # k_y_dot = 0.5
         k_z_dot = 2
-        k_phi = k_theta = 5
+        # k_phi = k_theta = 5
+        k_phi = 40
+        k_theta = 30
         # k_theta = 0.5
-        k_psi = 1
-        k_phi_dot = k_theta_dot = 2.1
+        k_psi = 19
+        # k_psi = 1
+        k_phi_dot = k_theta_dot = 5
+        # k_phi_dot = k_theta_dot = 2.1
         # k_theta_dot = 1
-        k_psi_dot = 1
+        k_psi_dot = 2
+        # k_psi_dot = 1
 
         # kx = ky = 10.0
-        # kz = 7.0
+        # kz = 15
         # k_x_dot = k_y_dot = 1.5
         # k_z_dot = 1.5
-        # k_phi = k_theta = k_psi = 2000
+        # k_phi = k_theta = k_psi = 35
         # k_phi_dot = k_theta_dot = k_psi_dot = 10.0
 
         pos_er = des_pos[0:12] - self._state
