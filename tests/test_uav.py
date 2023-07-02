@@ -105,12 +105,12 @@ class TestUav(unittest.TestCase):
         """Test uav can follow a line trajectory"""
         uav = Quadrotor(0, 1, 0, 1)
         uav = Quadrotor(0, 0, 0, 0)
-        des_pos = np.zeros(15)
         uav_des_traj = []
         uav_trajectory = []
         t = 0
         t_max = 4
         while t < 10:  # 20 s
+            des_pos = np.zeros(15)
             t_func = max(0, min(t, t_max))
             t_func = t_func / t_max
 
