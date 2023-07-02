@@ -101,6 +101,42 @@ class TestUav(unittest.TestCase):
 
         self.plot_traj(uav_des_traj, uav_trajectory)
 
+    def test_traj_line(self):
+        """Test uav can follow a line trajectory"""
+        uav = Quadrotor(0, 1, 0, 1)
+        des_pos = np.zeros(15)
+        uav_des_traj = []
+        uav_trajectory = []
+        t = 0
+        t_max = 4
+        while t < 7:  # 20 s
+            t_func = max(0, min(t, t_max))
+            t_func = t_func / t_max
+
+            des_pos[0:3] = 10 * t_func**3 - 15 * t_func**4 + 6 * t_func**5
+            des_pos[3:6] = (
+                (30 / t_max) * t_func * 2
+                - (60 / t_max) * t_func**3
+                + (30 / t_max) * t_func**4
+            )
+            des_pos[12:] = (
+                (60 / t_max**2) * t
+                - (180 / t_max**2) * t_func**2
+                + (120 / t_max**2) * t_func**3
+            )
+
+            action = uav.calc_des_action(des_pos)
+
+            uav.step(action)
+            uav_des_traj.append(des_pos.copy())
+            uav_trajectory.append(uav.state)
+
+            t += uav.dt
+        uav_des_traj = np.array(uav_des_traj)
+        uav_trajectory = np.array(uav_trajectory)
+
+        self.plot_traj(uav_des_traj, uav_trajectory)
+
     def test_controller_des_controller(self):
         """Test uav can reach a desired position."""
         uav = Quadrotor(0, 1, 0, 1)
@@ -123,16 +159,6 @@ class TestUav(unittest.TestCase):
             elif i > 190:
                 des_pos[0:3] = np.array([2, 2, 2])
                 # des_pos[8] = np.pi
-            # if i < 20:
-            #     # des_pos[0:3] = np.array([3, 0, 1])
-            #     des_pos[0:2] = uav.state[0:2]
-            #     # des_pos[8] = np.pi / 2
-            # elif i > 30 and i < 60:
-            #     des_pos[0:3] = np.array([3, 0, 3])
-            #     # des_pos[8] = 0.3
-            # elif i > 90 and i < 140:
-            #     des_pos[0:3] = np.array([3, 2, 3])
-            #     # des_pos[8] = 1.5
             action = uav.calc_des_action(des_pos)
 
             uav.step(action)
