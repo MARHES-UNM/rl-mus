@@ -109,7 +109,7 @@ class TestUav(unittest.TestCase):
         uav_trajectory = []
         t = 0
         t_max = 4
-        while t < 10:  # 20 s
+        while t < 20:  # 20 s
             des_pos = np.zeros(15)
             t_func = max(0, min(t, t_max))
             t_func = t_func / t_max
@@ -118,20 +118,20 @@ class TestUav(unittest.TestCase):
             des_pos[0:3] = 10 * t_func**3 - 15 * t_func**4 + 6 * t_func**5
             des_pos[8] = des_pos[0]
 
-            # # velocity
-            # des_pos[3:6] = (
-            #     (30 / t_max) * t_func * 2
-            #     - (60 / t_max) * t_func**3
-            #     + (30 / t_max) * t_func**4
-            # )
-            # des_pos[11] = des_pos[3]
+            # velocity
+            des_pos[3:6] = (
+                (30 / t_max) * t_func**2
+                - (60 / t_max) * t_func**3
+                + (30 / t_max) * t_func**4
+            )
+            des_pos[11] = des_pos[3]
 
             # acceleration
-            # des_pos[12:] = (
-            #     (60 / t_max**2) * t
-            #     - (180 / t_max**2) * t_func**2
-            #     + (120 / t_max**2) * t_func**3
-            # )
+            des_pos[12:] = (
+                (60 / t_max**2) * t_func
+                - (180 / t_max**2) * t_func**2
+                + (120 / t_max**2) * t_func**3
+            )
 
             action = uav.calc_des_action(des_pos)
 

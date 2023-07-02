@@ -582,12 +582,12 @@ class Quadrotor(Entity):
         self.use_ode = use_ode
 
         if self.use_ode:
-            # self.ode = scipy.integrate.ode(self.f_dot).set_integrator(
-            #     "vode", nsteps=500, method="bdf"
-            # )
             self.ode = scipy.integrate.ode(self.f_dot).set_integrator(
-                "dopri5", nsteps=500, verbosity=1
+                "vode", nsteps=500, method="bdf"
             )
+            # self.ode = scipy.integrate.ode(self.f_dot).set_integrator(
+            #     "dopri5", nsteps=500, verbosity=1
+            # )
 
         # timestep
         self.dt = dt  # s
@@ -829,7 +829,7 @@ class Quadrotor(Entity):
         psi = state[8]
 
         omega = state[9:12].copy()
-        tau = np.array([tau_x, tau_y, tau_z])
+        # tau = np.array([tau_x, tau_y, tau_z])
 
         omega_dot = np.dot(
             self.inv_inertia, (tau - np.cross(omega, np.dot(self.inertia, omega)))
