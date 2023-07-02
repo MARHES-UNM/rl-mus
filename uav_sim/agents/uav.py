@@ -788,7 +788,7 @@ class Quadrotor(Entity):
         #     ]
         # )
         # R = R.transpose()
-        # R = np.dot(np.dot(R_z, R_x), R_y)
+        R = np.dot(np.dot(R_z, R_x), R_y)
         # R = np.dot(R_z, np.dot(R_y, R_x))
         return R
 
@@ -807,18 +807,18 @@ class Quadrotor(Entity):
             self.inv_inertia, (tau - np.cross(omega, np.dot(self.inertia, omega)))
         )
 
-        R = self.rotation_matrix()
+        # R = self.rotation_matrix()
         # TODO: need to update the rotation matrix here using information from the ODE
-        # R = self.get_r_matrix(phi, theta, psi)
+        R = self.get_r_matrix(phi, theta, psi)
         acc = (
             np.dot(R, np.array([0, 0, ft], dtype=np.float64).T)
             - np.array([0, 0, self.m * self.g], dtype=np.float64).T
         ) / self.m
 
         # TODO: troubleshoot why we get small deviations in psi when doing this conversion
-        # rot_dot = np.dot(np.linalg.inv(self.get_r_dot_matrix(phi, theta, psi)), omega)
+        rot_dot = np.dot(np.linalg.inv(self.get_r_dot_matrix(phi, theta, psi)), omega)
         # rot_dot = np.dot(self.get_r_dot_matrix(phi, theta, psi), omega)
-        rot_dot = omega.copy()
+        # rot_dot = omega.copy()
 
         # TODO: fix the x derivative matrix. This matrix doesn't provide angle rates
         x_dot = np.array(
@@ -945,11 +945,11 @@ class Quadrotor(Entity):
         # k_psi = K_psi[0]
         # k_psi_dot = K_psi[1]
 
-        # kx = ky = 10
-        # kz = 1
-        # k_x_dot = k_y_dot = k_z_dot = 1.5
-        # k_phi = k_theta = k_psi = 2000
-        # k_phi_dot = k_theta_dot = k_psi_dot = 10
+        kx = ky = 10
+        kz = 7
+        k_x_dot = k_y_dot = k_z_dot = 1.5
+        k_phi = k_theta = k_psi = 2000
+        k_phi_dot = k_theta_dot = k_psi_dot = 10
 
         pos_er = des_pos[0:12] - self._state
         r_ddot_1 = des_pos[12]
@@ -957,23 +957,20 @@ class Quadrotor(Entity):
         r_ddot_3 = des_pos[14]
 
         # https://upcommons.upc.edu/bitstream/handle/2117/112404/Thesis-Jesus_Valle.pdf?sequence=1&isAllowed=y
-        # r_ddot_des_x = des_x_acc + kx * state_error[0] + k_x_dot * state_error[3]
-        # r_ddot_des_y = des_y_acc + ky * state_error[1] + k_y_dot * state_error[4]
         r_ddot_des_x = kx * pos_er[0] + k_x_dot * pos_er[3] + r_ddot_1
         r_ddot_des_y = ky * pos_er[1] + k_y_dot * pos_er[4] + r_ddot_2
         r_ddot_des_z = kz * pos_er[2] + k_z_dot * pos_er[5] + r_ddot_3
 
         des_psi = des_pos[8]
-        # des_psi = 0
 
         u1 = self.m * (self.g + r_ddot_des_z)
 
-        # roll
+        # desired angles
         phi_des = (r_ddot_des_x * sin(des_psi) - r_ddot_des_y * cos(des_psi)) / self.g
-        u2_phi = k_phi * (phi_des - self._state[6]) + k_phi_dot * (-self._state[9])
-
-        # pitch
         theta_des = (r_ddot_des_x * cos(des_psi) + r_ddot_des_y * sin(des_psi)) / self.g
+
+        # desired torques
+        u2_phi = k_phi * (phi_des - self._state[6]) + k_phi_dot * (-self._state[9])
         u2_theta = k_theta * (theta_des - self._state[7]) + k_theta_dot * (
             -self._state[10]
         )
