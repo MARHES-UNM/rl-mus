@@ -110,7 +110,7 @@ class TestUav(unittest.TestCase):
         uav_trajectory = []
         t = 0
         t_max = 4
-        while t < 5:  # 20 s
+        while t < 10:  # 20 s
             t_func = max(0, min(t, t_max))
             t_func = t_func / t_max
 

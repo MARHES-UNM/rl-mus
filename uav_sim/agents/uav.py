@@ -788,20 +788,44 @@ class Quadrotor(Entity):
         #     ]
         # )
         # R = R.transpose()
-        R = np.dot(np.dot(R_z, R_x), R_y)
+        # R = np.dot(np.dot(R_z, R_x), R_y)
         # R = np.dot(R_z, np.dot(R_y, R_x))
         return R
 
     def f_dot(self, time, state, action):
         ft, tau_x, tau_y, tau_z = action.reshape(-1).tolist()
 
+        A = np.array(
+            [
+                [0.25, 0, -0.5 / self.l],
+                [0.25, 0.5 / self.l, 0],
+                [0.25, 0, 0.5 / self.l],
+                [0.25, -0.5 / self.l, 0],
+            ]
+        )
+        prop_thrusts = np.dot(A, np.array([ft, tau_x, tau_y]))
+        prop_thrusts_clamped = np.clip(prop_thrusts, self.min_f / 4.0, self.max_f / 4.0)
+
+        B = np.array(
+            [
+                [1, 1, 1, 1],
+                [0, self.l, 0, -self.l],
+                [-self.l, 0, self.l, 0],
+            ]
+        )
+
+        ft = np.dot(B[0, :], prop_thrusts_clamped)
+        M = np.dot(B[1:, :], prop_thrusts_clamped)
+        tau = np.array([*M, tau_z])
+
         # TODO: convert angular velocity to angle rates here:
+        # state[6:9] = self.wrap_angle(state[6:9])
         phi = state[6]
         theta = state[7]
         psi = state[8]
 
         omega = state[9:12].copy()
-        tau = np.array([tau_x, tau_y, tau_z])
+        # tau = np.array([tau_x, tau_y, tau_z])
 
         omega_dot = np.dot(
             self.inv_inertia, (tau - np.cross(omega, np.dot(self.inertia, omega)))
@@ -818,7 +842,7 @@ class Quadrotor(Entity):
         # TODO: troubleshoot why we get small deviations in psi when doing this conversion
         rot_dot = np.dot(np.linalg.inv(self.get_r_dot_matrix(phi, theta, psi)), omega)
         # rot_dot = np.dot(self.get_r_dot_matrix(phi, theta, psi), omega)
-        # rot_dot = omega.copy()
+        rot_dot = omega.copy()
 
         # TODO: fix the x derivative matrix. This matrix doesn't provide angle rates
         x_dot = np.array(
@@ -923,33 +947,11 @@ class Quadrotor(Entity):
         # k_theta_dot = 1
         k_psi_dot = 1
 
-        # K = self.k
-        # Kx = K[0].squeeze()
-        # Ky = K[1].squeeze()
-        # Kz = K[2].squeeze()
-        # K_psi = K[3].squeeze()
-
-        # kx = Kx[0]
-        # k_x_dot = Kx[1]
-        # k_theta = Kx[2]
-        # k_theta_dot = Kx[3]
-
-        # ky = Ky[0]
-        # k_y_dot = Ky[1]
-        # k_phi = Ky[2]
-        # k_phi_dot = Ky[3]
-
-        # kz = Kz[0]
-        # k_z_dot = Kz[1]
-
-        # k_psi = K_psi[0]
-        # k_psi_dot = K_psi[1]
-
-        kx = ky = 10
-        kz = 7
-        k_x_dot = k_y_dot = k_z_dot = 1.5
-        k_phi = k_theta = k_psi = 2000
-        k_phi_dot = k_theta_dot = k_psi_dot = 10
+        # kx = ky = 10
+        # kz = 7
+        # k_x_dot = k_y_dot = k_z_dot = 1.5
+        # k_phi = k_theta = k_psi = 2000
+        # k_phi_dot = k_theta_dot = k_psi_dot = 10
 
         pos_er = des_pos[0:12] - self._state
         r_ddot_1 = des_pos[12]
@@ -977,7 +979,6 @@ class Quadrotor(Entity):
 
         # yaw
         u2_psi = k_psi * pos_er[8] + k_psi_dot * pos_er[11]
-        u2_psi = 0
 
         M = np.dot(self.inertia, np.array([u2_phi, u2_theta, u2_psi]))
         # M = np.dot(self.inertia, np.zeros(3))
@@ -1029,9 +1030,9 @@ class Quadrotor(Entity):
         self._state = self.ode.integrate(self.ode.t + self.dt)
         # assert self.ode.successful()
 
-        self._state[9:12] = self.wrap_angle(self._state[9:12])
+        # self._state[9:12] = self.wrap_angle(self._state[9:12])
 
-        self._state[6:9] = self.wrap_angle(self._state[6:9])
+        # self._state[6:9] = self.wrap_angle(self._state[6:9])
         self._state[2] = max(0, self._state[2])
 
     def in_collision(self, entity):
