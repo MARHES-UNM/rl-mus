@@ -842,7 +842,7 @@ class Quadrotor(Entity):
         # TODO: troubleshoot why we get small deviations in psi when doing this conversion
         rot_dot = np.dot(np.linalg.inv(self.get_r_dot_matrix(phi, theta, psi)), omega)
         # rot_dot = np.dot(self.get_r_dot_matrix(phi, theta, psi), omega)
-        rot_dot = omega.copy()
+        # rot_dot = omega.copy()
 
         # TODO: fix the x derivative matrix. This matrix doesn't provide angle rates
         x_dot = np.array(
@@ -947,11 +947,12 @@ class Quadrotor(Entity):
         # k_theta_dot = 1
         k_psi_dot = 1
 
-        # kx = ky = 10
-        # kz = 7
-        # k_x_dot = k_y_dot = k_z_dot = 1.5
-        # k_phi = k_theta = k_psi = 2000
-        # k_phi_dot = k_theta_dot = k_psi_dot = 10
+        kx = ky = 10.0
+        kz = 7.0
+        k_x_dot = k_y_dot = 1.5
+        k_z_dot = 1.5
+        k_phi = k_theta = k_psi = 2000
+        k_phi_dot = k_theta_dot = k_psi_dot = 10.0
 
         pos_er = des_pos[0:12] - self._state
         r_ddot_1 = des_pos[12]
@@ -1032,7 +1033,7 @@ class Quadrotor(Entity):
 
         # self._state[9:12] = self.wrap_angle(self._state[9:12])
 
-        # self._state[6:9] = self.wrap_angle(self._state[6:9])
+        self._state[6:9] = self.wrap_angle(self._state[6:9])
         self._state[2] = max(0, self._state[2])
 
     def in_collision(self, entity):
