@@ -602,7 +602,7 @@ class Quadrotor(Entity):
         )
 
         ## parameters from: https://upcommons.upc.edu/bitstream/handle/2117/187223/final-thesis.pdf?sequence=1&isAllowed=y
-        self.inertia = np.eye(3)
+        # self.inertia = np.eye(3)
         # self.inertia[0, 0] = 0.0034  # kg*m^2
         # self.inertia[1, 1] = 0.0034  # kg*m^2
         # self.inertia[2, 2] = 0.006  # kg*m^2
@@ -745,7 +745,13 @@ class Quadrotor(Entity):
         #         [-cp * st, sp, cp * ct],
         #     ]
         # )
-        # R = np.dot(np.dot(R_z, R_y), R_x)
+        R = np.array(
+            [
+                [cg * ct - sp * sg * st, ct * sg + cg * sp * st, -cp * st],
+                [-cp * sg, cp * cg, sp],
+                [cg * st + ct * sp * sg, sg * st - cg * ct * sp, cp * ct],
+            ]
+        )
         R = np.dot(np.dot(R_z, R_x), R_y)
         return R
 
@@ -765,7 +771,25 @@ class Quadrotor(Entity):
         R_y = np.array([[ct, 0, st], [0, 1, 0], [-st, 0, ct]])
         R_z = np.array([[cg, -sg, 0], [sg, cg, 0], [0, 0, 1]])
 
-        R = np.dot(np.dot(R_z, R_x), R_y)
+        # R = np.dot(np.dot(R_x, R_y), R_z)
+        # ZXY matrix
+        R = np.array(
+            [
+                [cg * ct - sp * sg * st, -cp * sg, cg * st + ct * sp * sg],
+                [ct * sg + cg * sp * st, cp * cg, sg * st - cg * ct * sp],
+                [-cp * st, sp, cp * ct],
+            ]
+        )
+        # R = np.array(
+        #     [
+        #         [cg * ct - sp * sg * st, ct * sg + cg * sp * st, -cp * st],
+        #         [-cp * sg, cp * cg, sp],
+        #         [cg * st + ct * sp * sg, sg * st - cg * ct * sp, cp * ct],
+        #     ]
+        # )
+        # R = R.transpose()
+        # R = np.dot(np.dot(R_z, R_x), R_y)
+        # R = np.dot(R_z, np.dot(R_y, R_x))
         return R
 
     def f_dot(self, time, state, action):
@@ -783,9 +807,9 @@ class Quadrotor(Entity):
             self.inv_inertia, (tau - np.cross(omega, np.dot(self.inertia, omega)))
         )
 
-        # R = self.rotation_matrix()
+        R = self.rotation_matrix()
         # TODO: need to update the rotation matrix here using information from the ODE
-        R = self.get_r_matrix(phi, theta, psi)
+        # R = self.get_r_matrix(phi, theta, psi)
         acc = (
             np.dot(R, np.array([0, 0, ft], dtype=np.float64).T)
             - np.array([0, 0, self.m * self.g], dtype=np.float64).T
@@ -922,7 +946,7 @@ class Quadrotor(Entity):
         # k_psi_dot = K_psi[1]
 
         # kx = ky = 10
-        # kz = 7
+        # kz = 1
         # k_x_dot = k_y_dot = k_z_dot = 1.5
         # k_phi = k_theta = k_psi = 2000
         # k_phi_dot = k_theta_dot = k_psi_dot = 10
@@ -956,10 +980,12 @@ class Quadrotor(Entity):
 
         # yaw
         u2_psi = k_psi * pos_er[8] + k_psi_dot * pos_er[11]
+        u2_psi = 0
 
         M = np.dot(self.inertia, np.array([u2_phi, u2_theta, u2_psi]))
-        # action = np.array([u1, *M])
-        action = np.array([u1, u2_phi, u2_theta, u2_psi])
+        # M = np.dot(self.inertia, np.zeros(3))
+        action = np.array([u1, *M])
+        # action = np.array([u1, u2_phi, u2_theta, u2_psi])
         return action
 
     def calc_torque(self, des_pos=np.zeros(15)):
