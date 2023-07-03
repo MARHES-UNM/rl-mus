@@ -657,7 +657,7 @@ class Quadrotor(Entity):
         )
         Bx = np.array([[0.0], [0.0], [0.0], [1 / self.ixx]])
 
-        Qx = Qy = np.diag([1, 1, 1, 1])
+        Qx = Qy = np.diag([900, 2, 2, 100])
         Rx = Ry = np.diag([1])
         # Qx = np.diag([.1, 10, 1, 1])
         # Rx = np.diag([10])
@@ -682,15 +682,15 @@ class Quadrotor(Entity):
         Az = np.array([[0.0, 1.0], [0.0, 0.0]])
         Bz = np.array([[0.0], [1 / self.m]])
 
-        Qz = np.diag([100, 1])
-        Rz = np.diag([10])
+        Qz = np.diag([100, 10])
+        Rz = np.diag([1])
 
         # Yaw-subsystem
         # The state variables are yaw, dot_yaw
         Ayaw = np.array([[0.0, 1.0], [0.0, 0.0]])
         Byaw = np.array([[0.0], [1 / self.izz]])
-        Qyaw = np.diag([100, 10])
-        Ryaw = np.diag([10])
+        Qyaw = np.diag([2, 1])
+        Ryaw = np.diag([1])
 
         ####################### solve LQR #######################
         Ks = []  # feedback gain matrices K for each subsystem
@@ -872,46 +872,37 @@ class Quadrotor(Entity):
         return x_dot
 
     def get_torc_from_acc(self, des_acc):
-        kx = ky = 0.5
+        kx = ky = 1
         # ky = 0.1
         kz = 1
-        k_x_dot = k_y_dot = 1
+        k_x_dot = k_y_dot = 2
+        # k_x_dot = k_y_dot = 1
         # k_y_dot = 0.5
         k_z_dot = 2
-        k_phi = k_theta = 5
+        # k_phi = k_theta = 5
+        k_phi = 40
+        k_theta = 30
         # k_theta = 0.5
-        k_psi = 1
-        k_phi_dot = k_theta_dot = 2.1
+        k_psi = 19
+        # k_psi = 1
+        k_phi_dot = k_theta_dot = 5
+        # k_phi_dot = k_theta_dot = 2.1
         # k_theta_dot = 1
-        k_psi_dot = 1
+        k_psi_dot = 2
+        # k_psi_dot = 1
 
-        # K = self.k
-        # Kx = K[0].squeeze()
-        # Ky = K[1].squeeze()
-        # Kz = K[2].squeeze()
-        # K_psi = K[3].squeeze()
-
-        # kx = Kx[0]
-        # k_x_dot = Kx[1]
-        # k_theta = Kx[2]
-        # k_theta_dot = Kx[3]
-
-        # ky = Ky[0]
-        # k_y_dot = Ky[1]
-        # k_phi = Ky[2]
-        # k_phi_dot = Ky[3]
-
-        # kz = Kz[0]
-        # k_z_dot = Kz[1]
-
-        # k_psi = K_psi[0]
-        # k_psi_dot = K_psi[1]
-
-        # pos_er = des_pos[0:12] - self._state
-        # # pos_er[6:7] = max(min(pos_er[6:7], 0.1), -.1)
-        # r_ddot_1 = des_pos[12]
-        # r_ddot_2 = des_pos[13]
-        # r_ddot_3 = des_pos[14]
+        # kx = ky = 0.5
+        # # ky = 0.1
+        # kz = 1
+        # k_x_dot = k_y_dot = 1
+        # # k_y_dot = 0.5
+        # k_z_dot = 2
+        # k_phi = k_theta = 5
+        # # k_theta = 0.5
+        # k_psi = 1
+        # k_phi_dot = k_theta_dot = 2.1
+        # # k_theta_dot = 1
+        # k_psi_dot = 1
 
         # https://upcommons.upc.edu/bitstream/handle/2117/112404/Thesis-Jesus_Valle.pdf?sequence=1&isAllowed=y
         r_ddot_des_x = des_acc[0]
@@ -922,21 +913,21 @@ class Quadrotor(Entity):
 
         u1 = self.m * (self.g + r_ddot_des_z)
 
-        # roll
+        # desired angles
         phi_des = (r_ddot_des_x * sin(des_psi) - r_ddot_des_y * cos(des_psi)) / self.g
-        u2_phi = k_phi * (phi_des - self._state[6]) + k_phi_dot * (-self._state[9])
-
-        # pitch
         theta_des = (r_ddot_des_x * cos(des_psi) + r_ddot_des_y * sin(des_psi)) / self.g
+
+        # desired torques
+        u2_phi = k_phi * (phi_des - self._state[6]) + k_phi_dot * (-self._state[9])
         u2_theta = k_theta * (theta_des - self._state[7]) + k_theta_dot * (
             -self._state[10]
         )
 
         # yaw
-        # u2_psi = k_psi * pos_er[8] + k_psi_dot * pos_er[11]
-        u2_psi = 0
+        u2_psi = k_psi * (-self._state[8]) + k_psi_dot * (-self._state[11])
 
-        action = np.array([u1, u2_phi, u2_theta, u2_psi])
+        M = np.dot(self.inertia, np.array([u2_phi, u2_theta, u2_psi]))
+        action = np.array([u1, *M])
         return action
 
     def calc_des_action(self, des_pos):
@@ -1023,6 +1014,11 @@ class Quadrotor(Entity):
         u_theta = np.dot(self.k[0], pos_er[[0, 3, 7, 10]]).squeeze()
         u_phi = np.dot(self.k[1], pos_er[[1, 4, 6, 9]]).squeeze()
         u_psi = np.dot(self.k[3], pos_er[[8, 11]]).squeeze()
+
+        u1 = self.m * (T + self.g)
+        M = np.dot(self.inertia, np.array([u_phi, u_theta, u_psi]))
+        action = np.array([u1, *M])
+        return action
 
         return np.array([T + self.m * self.g, u_phi, u_theta, u_psi])
 

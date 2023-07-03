@@ -55,10 +55,10 @@ class TestUav(unittest.TestCase):
             m = self.uav.m
             g = self.uav.g
             if i == 50:
-                des_acc = np.array([1.0, 0.0, 1.0])
+                des_acc = np.array([0.0, 0.001, 0.0])
             else:
                 des_acc = np.zeros(3)
-            action = np.array([m * g, 0.00, 0.00, 0.001])
+            # action = np.array([m * g, 0.00, 0.00, 0.001])
             # des_acc = np.array([0.1, 0., 0.])
             action = self.uav.get_torc_from_acc(des_acc)
             uav.step(action)
