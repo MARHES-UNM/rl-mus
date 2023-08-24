@@ -1,7 +1,16 @@
+import subprocess
 import scipy.integrate
 import scipy
 import numpy as np
 from math import sqrt, atan2
+
+
+def get_git_hash() -> str:
+    return (
+        subprocess.check_output(["git", "rev-parse", "--short", "HEAD"])
+        .decode("ascii")
+        .strip()
+    )
 
 
 def cartesian2polar(point1=(0, 0), point2=(0, 0)):
@@ -42,22 +51,23 @@ def lqr(A, B, Q, R):
 
     return K, P, eig_vals
 
-def dlqr(A,B,Q,R):
+
+def dlqr(A, B, Q, R):
     """Solve the discrete time lqr controller.
-    
+
     x[k+1] = A x[k] + B u[k]
-    
+
     cost = sum x[k].T*Q*x[k] + u[k].T*R*u[k]
     http://www.mwm.im/lqr-controllers-with-python/
     """
-    #ref Bertsekas, p.151
-    
-    #first, try to solve the ricatti equation
+    # ref Bertsekas, p.151
+
+    # first, try to solve the ricatti equation
     P = np.matrix(scipy.linalg.solve_discrete_are(A, B, Q, R))
-    
-    #compute the LQR gain
-    K = np.matrix(scipy.linalg.inv(B.T*P*B+R)*(B.T*P*A))
-    
-    eigVals, eigVecs = scipy.linalg.eig(A-B*K)
-    
+
+    # compute the LQR gain
+    K = np.matrix(scipy.linalg.inv(B.T * P * B + R) * (B.T * P * A))
+
+    eigVals, eigVecs = scipy.linalg.eig(A - B * K)
+
     return K, P, eigVals

@@ -118,6 +118,23 @@
                 "tests.test_uav_sim.TestUavSim.test_time_coordinated_control_mat",
                 "--failfast"
             ]
+        },
+        {
+            "name": "unittest_test_utils",
+            "type": "python",
+            "request": "launch",
+            "module": "unittest",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "DISPLAY": "192.168.1.13:0.0"
+            },
+            "args": [
+                "-v",
+                "tests.test_utils",
+                "--failfast"
+            ]
         }
     ]
 }
