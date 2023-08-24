@@ -319,8 +319,8 @@ class UavSim:
             y = np.random.rand() * self.env_max_l
             z = np.random.rand() * self.env_max_h
 
-            uav = Quad2DInt(
-                # uav = Quadrotor(
+            # uav = Quad2DInt(
+            uav = Quadrotor(
                 _id=idx,
                 x=x,
                 y=y,

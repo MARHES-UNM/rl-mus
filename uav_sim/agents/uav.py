@@ -573,6 +573,7 @@ class Quadrotor(Entity):
         use_ode=True,
         k=None,
         pad=None,
+
     ):
         super().__init__(_id=_id, x=x, y=y, z=z, _type=AgentType.U)
 
@@ -637,6 +638,7 @@ class Quadrotor(Entity):
         self.done = False
         self.landed = False
         self.pad = pad
+        self.done_time = None
 
     def calc_gain(self):
         # The control can be done in a decentralized style
