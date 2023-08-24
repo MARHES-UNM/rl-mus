@@ -88,15 +88,15 @@
             "justMyCode": true,
             "cwd": "${workspaceFolder}",
             "env": {
-                "DISPLAY": "192.168.1.13:0.0"
+                "DISPLAY": "192.168.1.18:0.0"
                 // "DISPLAY": "192.168.243.10:0.0"
             },
             "args": [
                 "-v",
-                // "${cwd}/tests/test_uav.py",
+                "${cwd}/tests/test_uav.py",
                 // "tests.test_uav.TestUav.test_controller_des_controller",
                 // "tests.test_uav.TestUav.test_traj_line",
-                "tests.test_uav.TestUav.test_controller_des_pos",
+                // "tests.test_uav.TestUav.test_controller_des_pos",
                 "--failfast"
             ]
         },

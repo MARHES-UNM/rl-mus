@@ -1,7 +1,4 @@
-from heapq import nsmallest
 from math import cos, sin
-import math
-from xml.dom.expatbuilder import theDOMImplementation
 import numpy as np
 from uav_sim.utils.utils import distance, angle, lqr
 import scipy.integrate
