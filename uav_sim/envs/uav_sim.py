@@ -1,4 +1,5 @@
 from math import isclose
+from gym import spaces
 import numpy as np
 
 from gym.utils import seeding
@@ -47,21 +48,102 @@ class UavSim:
 
         self.gui = None
         self._time_elapsed = 0
+        self.seed(self._seed)
+        self.reset()
         self.action_space = self._get_action_space()
         self.observation_space = self._get_observation_space()
-        self.seed(self._seed)
-
-        self.reset()
 
     def _get_action_space(self):
-        pass
+        """The action of the UAV. We don't normalize the action space in this environment. It is recommended to normalize using a wrapper function. The uav action consist of acceleration in x, y, and z component."""
+        return spaces.Dict(
+            {
+                i: spaces.Box(low=-np.inf, high=np.inf, shape=(3,), dtype=np.float32)
+                for i in range(self.num_uavs)
+            }
+        )
 
     def _get_observation_space(self):
-        pass
+        if self.num_obstacles == 0:
+            num_obstacle_shape = 6
+        else:
+            num_obstacle_shape = self.obstacles[0].state.shape[0]
+        obs_space = spaces.Dict(
+            {
+                i: spaces.Dict(
+                    {
+                        "state": spaces.Box(
+                            low=-np.inf,
+                            high=np.inf,
+                            shape=self.uavs[0].state.shape,
+                            dtype=np.float32,
+                        ),
+                        "rel_pad": spaces.Box(
+                            low=-np.inf,
+                            high=np.inf,
+                            shape=self.uavs[0].pad.state.shape,
+                            dtype=np.float32,
+                        ),
+                        "constraint": spaces.Box(
+                            low=-np.inf,
+                            high=np.inf,
+                            shape=(self.num_uavs - 1 + self.num_obstacles,),
+                            dtype=np.float32,
+                        ),
+                        "other_uav_obs": spaces.Box(
+                            low=-np.inf,
+                            high=np.inf,
+                            shape=(self.num_uavs - 1, self.uavs[0].state.shape[0]),
+                            dtype=np.float32,
+                        ),
+                        "obstacles": spaces.Box(
+                            low=-np.inf,
+                            high=np.inf,
+                            shape=(
+                                self.num_obstacles,
+                                num_obstacle_shape,
+                            ),
+                            dtype=np.float32,
+                        ),
+                    }
+                )
+                for i in range(self.num_uavs)
+            }
+        )
+
+        for k in obs_space.keys():
+            if self.num_uavs > 1:
+                obs_space[k]["other_uav_obs"] = spaces.Box(
+                    low=-np.inf,
+                    high=np.inf,
+                    shape=(self.num_uavs - 1, self.uavs[0].state.shape[0]),
+                    dtype=np.float32,
+                )
+
+        return obs_space
 
     @property
     def time_elapsed(self):
         return self._time_elapsed
+
+    def _get_uav_constraint(self, uav):
+        """Return single uav constraint"""
+        constraints = []
+
+        for other_uav in self.uavs:
+            if other_uav.id != uav.id:
+                delta_p = uav.pos - other_uav.pos
+
+                constraints.append(np.linalg.norm(delta_p) - (uav.r + other_uav.r))
+
+        for obstacle in self.obstacles:
+            delta_p = uav.pos - obstacle.pos
+
+            constraints.append(np.linalg.norm(delta_p) - (uav.r + obstacle.r))
+
+        return np.array(constraints)
+
+    def get_constraints(self):
+        return {uav.id: self._get_uav_constraint(uav) for uav in self.uavs}
 
     def get_h(self, uav, entity):
         del_p = uav.pos - entity.pos
@@ -219,6 +301,7 @@ class UavSim:
             # "landing_pads": landing_pads.astype(np.float32),
             "other_uav_obs": other_uav_states.astype(np.float32),
             "obstacles": obstacles.astype(np.float32),
+            "constraint": self._get_uav_constraint(uav).astype(np.float32),
         }
 
         return obs_dict
@@ -319,8 +402,8 @@ class UavSim:
             y = np.random.rand() * self.env_max_l
             z = np.random.rand() * self.env_max_h
 
-            # uav = Quad2DInt(
-            uav = Quadrotor(
+            uav = Quad2DInt(
+                # uav = Quadrotor(
                 _id=idx,
                 x=x,
                 y=y,

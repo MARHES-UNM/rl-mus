@@ -24,7 +24,7 @@
             "justMyCode": true,
             "cwd": "${workspaceFolder}",
             "env": {
-                // "DISPLAY": "192.168.1.13:0.0"
+                // "DISPLAY": "192.168.1.18:0.0"
             },
             "args": [
                 // "--plot_results"
@@ -110,13 +110,31 @@
             "justMyCode": true,
             "cwd": "${workspaceFolder}",
             "env": {
-                // "DISPLAY": "192.168.1.13:0.0"
+                // "DISPLAY": "192.168.1.18:0.0"
             },
             "args": [
                 "-v",
                 // "tests.test_uav_sim.TestUavSim.test_lqr_landing_cbf",
                 // "tests.test_uav_sim.TestUavSim.test_time_coordinated_control_mat",
-                "tests.test_uav_sim.TestUavSim.test_landing_minimum_traj",
+                // "tests.test_uav_sim.TestUavSim.test_landing_minimum_traj",
+                "tests.test_uav_sim.TestUavSim.test_observation_space",
+                "--failfast"
+            ]
+        },
+        {
+            "name": "unittest_replay_buffer",
+            "type": "python",
+            "request": "launch",
+            "module": "unittest",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "DISPLAY": "192.168.1.18:0.0"
+            },
+            "args": [
+                "-v",
+                "tests.test_replay_buffer",
                 "--failfast"
             ]
         },
@@ -129,7 +147,7 @@
             "justMyCode": true,
             "cwd": "${workspaceFolder}",
             "env": {
-                "DISPLAY": "192.168.1.13:0.0"
+                "DISPLAY": "192.168.1.18:0.0"
             },
             "args": [
                 "-v",

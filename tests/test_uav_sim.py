@@ -15,6 +15,41 @@ class TestUavSim(unittest.TestCase):
     def setUp(self):
         self.env = UavSim()
 
+    def test_observation_space(self):
+        env = UavSim({"num_uavs":1, "num_obstacles": 0})
+        obs_space = env.observation_space
+        self.assertEqual(len(obs_space.spaces), 1)
+        self.assertEqual(obs_space[0]["obstacles"].shape[0], 0)
+        self.assertEqual(obs_space[0]["other_uav_obs"].shape[0], 0)
+
+        env = UavSim({"num_uavs":1, "num_obstacles": 1})
+        obs_space = env.observation_space
+        self.assertEqual(len(obs_space.spaces), 1)
+        self.assertEqual(obs_space[0]["obstacles"].shape[0], 1)
+        self.assertEqual(obs_space[0]["other_uav_obs"].shape[0], 0)
+
+        env = UavSim({"num_uavs":2, "num_obstacles": 0})
+        obs_space = env.observation_space
+        self.assertEqual(len(obs_space.spaces), 2)
+        self.assertEqual(obs_space[0]["obstacles"].shape[0], 0)
+        self.assertEqual(obs_space[0]["other_uav_obs"].shape[0], 1)
+
+        env = UavSim({"num_uavs":2, "num_obstacles": 1})
+        obs_space = env.observation_space
+        self.assertEqual(len(obs_space.spaces), 2)
+        self.assertEqual(obs_space[0]["obstacles"].shape[0], 1)
+        self.assertEqual(obs_space[0]["other_uav_obs"].shape[0], 1)
+
+
+    def test_random_action_sample(self):
+        obs = self.env.reset()
+
+        for i in range(100):
+            actions = self.env.action_space.sample()
+
+            obs, reward, done, info = self.env.step(actions)
+            self.env.render()
+
     def test_time_coordinated_control_mat(self):
         tf = 30.0
         tf = 20.0
