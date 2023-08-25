@@ -67,6 +67,7 @@ class UavSim:
             num_obstacle_shape = 6
         else:
             num_obstacle_shape = self.obstacles[0].state.shape[0]
+
         obs_space = spaces.Dict(
             {
                 i: spaces.Dict(
@@ -109,15 +110,6 @@ class UavSim:
                 for i in range(self.num_uavs)
             }
         )
-
-        for k in obs_space.keys():
-            if self.num_uavs > 1:
-                obs_space[k]["other_uav_obs"] = spaces.Box(
-                    low=-np.inf,
-                    high=np.inf,
-                    shape=(self.num_uavs - 1, self.uavs[0].state.shape[0]),
-                    dtype=np.float32,
-                )
 
         return obs_space
 
