@@ -148,3 +148,45 @@ def lqr(actual_state_x, desired_state_xf, Q, R, A, B, dt):
 
 Calculate body rates to angle rates: 
 https://ocw.mit.edu/courses/2-154-maneuvering-and-control-of-surface-and-underwater-vehicles-13-49-fall-2004/bc67e15b31b4f30aceabef2a66a6229d_lec1.pdf
+
+
+## Create Neural Network CBF
+
+Construct a network
+crate a safe mask
+create an unsafe mask
+
+create a linear approximation of the system to sample
+
+$ C = \{ x \in R^n: h(x) \geq 0 \}, $
+$ \partial C = \{ x \in R^n: h(x) = 0 \}, $
+$ \text{Int}( C ) = \{ x \in R^n: h(x) < 0 \}, $
+
+$\partial C$ is the boundary of the set and $\text{Int}(C)$ is the interial of the set. 
+
+Create loss function: 
+``` python 
+    loss = (
+        0.0
+        + h_safe_weight * (F.relu(eps - h_safe)).mean()
+        + h_unsafe_weight * (F.relu(eps + h_unsafe)).mean()
+        + h_deriv_weight * (F.relu(eps - h_deriv)).mean()
+        + 0.01 * ((u - u_nom) ** 2).mean()
+    )
+```
+
+$\dot h$ is difficult to approximate, instead use a linear approximation. Start with the linear model `f_linear`. Get the next state. 
+
+See : https://github.com/MIT-REALM/sablas/blob/main/modules/trainer.py#L176 for more info.
+
+
+# implementation of this paper
+# https://arxiv.org/abs/2206.03568
+# see example: 
+# https://github.com/ChoiJangho/CBF-CLF-Helper/blob/master/demos/run_clf_simulation_inverted_pendulum.m
+# impolement this from scratch
+# https://github.com/MIT-REALM/neural_clbf/blob/main/neural_clbf/systems/inverted_pendulum.py
+# https://yachienchang.github.io/NeurIPS2019/
+
+# https://github.com/YaChienChang/Neural-Lyapunov-Control
+# https://openreview.net/pdf?id=8K5kisAnb_p
