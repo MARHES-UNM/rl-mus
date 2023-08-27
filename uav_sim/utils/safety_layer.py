@@ -7,6 +7,7 @@ import numpy as np
 import scipy as sp
 import torch
 import torch.nn.functional as F
+from uav_sim.networks.cbf import CBF
 from uav_sim.utils.replay_buffer import ReplayBuffer
 from torch.optim import Adam
 import ray.tune as tune
@@ -25,25 +26,7 @@ class SafetyLayer:
         torch.manual_seed(self._seed)
         np.random.seed(self._seed)
 
-        # self._action_dim = self._env.action_space[0].shape[0]
-
-        # orig_space = getattr(
-        #     self._env.observation_space[0],
-        #     "original_space",
-        #     self._env.observation_space[0],
-        # )
-        # assert (
-        #     isinstance(orig_space, gym.spaces.Dict)
-        #     and "observations" in orig_space.spaces
-        # )
-        # self._observation_dim = orig_space["observations"].shape[0]
-
-        # self.model = SafeActionModel(self._observation_dim, self._action_dim)
-
-        self.cbf_model = None
-        self.nn_action_model = None
-        # self.cbf_model = CBFModel()
-        # self.nn_action_model = NNController()
+        self._init_model()
 
         # TODO: add method to upload saved models
         # if self._checkpoint_dir:
@@ -53,29 +36,27 @@ class SafetyLayer:
         if self._load_buffer:
             pass
 
-        # self._cbf_optimizer = Adam(self.cbf_model.parameters(), lr=self._lr)
-        # self._nn_action_optimizer = Adam(self.nn_action_model.parameters(), lr=self._lr)
+        self._optimizer = Adam(self.model.parameters(), lr=self._lr)
 
         self._replay_buffer = ReplayBuffer(self._replay_buffer_size)
 
         self._train_global_step = 0
         self._eval_global_step = 0
 
-        # # use gpu if available
-        # # https://wandb.ai/wandb/common-ml-errors/reports/How-To-Use-GPU-with-PyTorch---VmlldzozMzAxMDk
-        # self._device = "cpu"
-        # if torch.cuda.is_available():
-        #     print("using cuda")
-        #     self._device = "cuda"
-        # self.cbf_model.to(self._device)
-        # self.nn_action_model.to(self._device)
+        # use gpu if available
+        # https://wandb.ai/wandb/common-ml-errors/reports/How-To-Use-GPU-with-PyTorch---VmlldzozMzAxMDk
+        self._device = "cpu"
+        if torch.cuda.is_available():
+            print("using cuda")
+            self._device = "cuda"
+        self.model.to(self._device)
 
     def _parse_config(self):
         # TODO: update config inputs
         # default 1000000
         self._replay_buffer_size = self._config.get("replay_buffer_size", 1000000)
         self._episode_length = self._config.get("episode_length", 400)
-        self._lr = self._config.get("lr", 0.0001)
+        self._lr = self._config.get("lr", 0.01)
         # default 256
         self._batch_size = self._config.get("batch_size", 256)
         self._num_eval_steps = self._config.get("num_eval_step", 1500)
@@ -85,6 +66,18 @@ class SafetyLayer:
         self._seed = self._config.get("seed", 123)
         self._checkpoint_dir = self._config.get("checkpoint_dir", None)
         self._load_buffer = self._config.get("buffer", None)
+        self._n_hidden = self._config.get("n_hidden", 32)
+
+    def _init_model(self):
+        obs_space = self._env.observation_space
+        n_state = obs_space[0]["state"].shape[0]
+        n_rel_pad_state = obs_space[0]["rel_pad"].shape[0]
+        k_obstacle = obs_space[0]["obstacles"].shape[1]  # (num_obstacle, state)
+        m_control = self._env.action_space[0].shape[0]
+
+        self.model = CBF(
+            n_state, n_rel_pad_state, k_obstacle, m_control, self._n_hidden
+        )
 
     def _as_tensor(self, ndarray, requires_grad=False):
         tensor = torch.Tensor(ndarray)
@@ -126,8 +119,8 @@ class SafetyLayer:
                 episode_length = 0
 
     def _get_mask(self, constraints):
-        safe_mask = [[arr >= (0.0).any() for arr in constraints]]
-        unsafe_mask = [[arr < (0.0).any() for arr in constraints]]
+        safe_mask = [[(arr >= 0.0).any() for arr in constraints]]
+        unsafe_mask = [[(arr < 0.0).any() for arr in constraints]]
 
         return safe_mask, unsafe_mask
 
@@ -147,18 +140,21 @@ class SafetyLayer:
         constraints = self._as_tensor(batch["constraint"])
         u_nominal = self._as_tensor(batch["action"])
         state_next = self._as_tensor(batch["state_next"])
+        rel_pad_next = self._as_tensor(batch["rel_pad_next"])
         other_uav_obs_next = self._as_tensor(batch["other_uav_obs_next"])
         obstacles_next = self._as_tensor(batch["obstacles_next"])
 
         safe_mask, unsafe_mask = self._get_mask(constraints)
 
-        h = self.model(state, other_uav_obs, obstacles)
-        u = self.model(state, rel_pad, other_uav_obs, obstacles, u_nominal)
+        # h = self.model(state, other_uav_obs, obstacles)
+        h, u = self.model(state, rel_pad, other_uav_obs, obstacles, u_nominal)
 
         # TODO: calculate the the nomimal state using https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=9681233
         # state_nominal = state + f_linear(state, u) * self._env.dt
 
-        h_next = self.model(state_next, other_uav_obs_next, obstacles_next)
+        h_next, _ = self.model(
+            state_next, rel_pad_next, other_uav_obs_next, obstacles_next, u_nominal
+        )
         h_deriv = (h_next - h) / self._env.dt + h
 
         h_safe = h[safe_mask]
@@ -177,14 +173,15 @@ class SafetyLayer:
             + action_weight * ((u - u_nominal) ** 2).mean()
         )
 
-        observation = self._as_tensor(batch["observations"])
-        target_safe_action = self._as_tensor(batch["safe_action"])
+        acc_h_safe = ((h[safe_mask] >= 0).float()).mean()
+        acc_h_dang = ((h[unsafe_mask] < 0).float()).mean()
+        acc_h_deriv = ((h_deriv > 0).float()).mean()
 
-        predict_safe_action = self.model(observation)
-
-        loss = self._loss_function(predict_safe_action, target_safe_action)
-
-        return loss
+        return loss, (
+            acc_h_safe.detach().cpu().numpy(),
+            acc_h_dang.detach().cpu().numpy(),
+            acc_h_deriv.detach().cpu().numpy(),
+        )
 
     def _train_batch(self):
         """Sample batch from replay buffer and calculate loss
@@ -198,11 +195,11 @@ class SafetyLayer:
         self._optimizer.zero_grad()
 
         # forward + backward + optimize
-        loss = self._evaluate_batch(batch)
+        loss, acc_stats = self._evaluate_batch(batch)
         loss.backward()
         self._optimizer.step()
 
-        return loss.item()
+        return loss.item(), acc_stats
 
     def evaluate(self):
         """Validation Step"""
@@ -210,24 +207,32 @@ class SafetyLayer:
         self._sample_steps(self._num_eval_steps)
 
         self.model.eval()
-        loss = list(
-            map(
-                lambda x: x.item(),
-                [
-                    self._evaluate_batch(batch)
-                    for batch in self._replay_buffer.get_sequential(self._batch_size)
-                ],
-            )
-        )
 
-        loss = np.mean(np.array(loss))
+        def parse_results(eval_results):
+            loss_array = []
+            acc_stat_array = []
+            for x in eval_results:
+                loss_array.append(x[0].item())
+                acc_stat_array.append([x[1][0], x[1][1], x[1][2]])
+
+            loss = np.array(loss_array).mean()
+            acc_stat = np.array(acc_stat_array).mean(axis=0)
+
+            return loss, acc_stat
+
+        eval_results = [
+            self._evaluate_batch(batch)
+            for batch in self._replay_buffer.get_sequential(self._batch_size)
+        ]
+
+        loss, acc_stat = parse_results(eval_results)
 
         self._replay_buffer.clear()
 
         self._eval_global_step += 1
         self.model.train()
 
-        return loss
+        return loss, acc_stat
 
     # def get_action(self, obs):
     #     obs_tensor = self._as_tensor(obs)
@@ -247,40 +252,36 @@ class SafetyLayer:
             # sample episodes from whole epoch
             self._sample_steps(self._num_steps_per_epoch)
 
-            loss = self._train_batch()
-            loss = np.mean(
-                np.array(
-                    [
-                        self._train_batch(batch)
-                        for batch in self._replay_buffer.get_sequential(
-                            self._batch_size
-                        )
-                    ]
-                )
-            )
+            loss, train_acc_stats = self._train_batch()
             self._replay_buffer.clear()
             self._train_global_step += 1
-            training_iteration = self._train_global_step
 
             print(f"Finished epoch {epoch} with loss: {loss}. Running validation ...")
 
-            # val_loss = self.evaluate()
-            # print(f"validation completed, average loss {val_loss}")
+            val_loss, val_acc_stats = self.evaluate()
+            print(f"validation completed, average loss {val_loss}")
 
-            # if self._report_tune:
-            #     tune.report(
-            #         training_loss=loss,
-            #         training_iteration=training_iteration,
-            #         validation_loss=val_loss,
-            #     )
+            if self._report_tune:
+                tune.report(
+                    training_iteration=self._train_global_step,
+                    train_loss=loss,
+                    train_acc_h_safe=train_acc_stats[0],
+                    train_acc_h_dang=train_acc_stats[1],
+                    train_acc_h_deriv=train_acc_stats[2],
+                    val_loss=val_loss,
+                    val_acc_h_safe=val_acc_stats[0],
+                    val_acc_h_dang=val_acc_stats[1],
+                    val_acc_h_deriv=val_acc_stats[2],
+                )
 
-            #     if epoch % 5 == 0:
-            #         with tune.checkpoint_dir(epoch) as checkpoint_dir:
-            #             path = os.path.join(checkpoint_dir, "checkpoint")
-            #             torch.save(
-            #                 (self.model.state_dict(), self._optimizer.state_dict()),
-            #                 path,
-            #             )
+                if epoch % 5 == 0:
+                    with tune.checkpoint_dir(epoch) as checkpoint_dir:
+                        path = os.path.join(checkpoint_dir, "checkpoint")
+                        torch.save(
+                            (self.model.state_dict(), self._optimizer.state_dict()),
+                            path,
+                        )
+
         print("==========================================================")
         print(
             f"Finished training constraint model. Time spent: {(time() - start_time) // 1} secs"
