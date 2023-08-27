@@ -159,6 +159,31 @@ class UavSim:
         b += np.linalg.norm(del_v) ** 2
         return b
 
+    def get_time_coord_action(self, uav):
+        t = self.time_elapsed
+        tf = self.time_final
+        N = self.t_go_n
+
+        des_pos = np.zeros(12)
+        des_pos[0:6] = uav.pad.state[0:6]
+        pos_er = des_pos - uav.state
+
+        t0 = min(t, tf - 0.1)
+        t_go = (tf - t0) ** N
+        p = uav.get_p_mat(tf, N, t0)
+        B = np.zeros((2, 1))
+        B[1, 0] = 1.0
+
+        action = t_go * np.array(
+            [
+                B.T @ p[-1].reshape((2, 2)) @ pos_er[[0, 3]],
+                B.T @ p[-1].reshape((2, 2)) @ pos_er[[1, 4]],
+                B.T @ p[-1].reshape((2, 2)) @ pos_er[[2, 5]],
+            ]
+        )
+
+        return action
+
     def get_safe_action(self, uav, des_action):
         G = []
         h = []

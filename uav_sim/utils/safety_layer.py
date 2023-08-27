@@ -93,7 +93,10 @@ class SafetyLayer:
         obs = self._env.reset()
 
         for _ in range(num_steps):
-            actions = self._env.action_space.sample()
+            # actions = self._env.action_space.sample()
+            actions = {}
+            for i in range(self._env.num_uavs):
+                actions[i] = self._env.get_time_coord_action(self._env.uavs[i]).squeeze()
             obs_next, _, done, _ = self._env.step(actions)
 
             for (_, action), (_, observation), (_, observation_next) in zip(
