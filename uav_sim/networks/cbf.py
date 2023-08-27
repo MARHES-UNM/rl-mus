@@ -85,6 +85,7 @@ class CBF(nn.Module):
         x = self.last_state(x)  # (bs, n_hidden)
 
         h_out = self.h_fn(x)
+        h_out = torch.squeeze(h_out, dim=1)
 
         action_out = torch.cat((x, u_nominal), dim=1)
         action_out = self.action_fn(action_out)
