@@ -31,8 +31,8 @@ class SafetyLayer:
         self._init_model()
 
         # TODO: add method to upload saved models
-        # if self._checkpoint_dir:
-        #     self.model.load_model(self._checkpoint_dir)
+        if self._checkpoint_dir:
+            self.model.load_model(self._checkpoint_dir)
 
         # TODO: load the buffer with the save states
         if self._load_buffer:
@@ -312,10 +312,17 @@ class SafetyLayer:
 
         return loss, acc_stat
 
-    # def get_action(self, obs):
-    #     obs_tensor = self._as_tensor(obs)
-    #     with torch.no_grad():
-    #         return self.model(obs_tensor).cpu().numpy()
+    def get_action(self, obs, action):
+        state = torch.unsqueeze(self._as_tensor(obs["state"]), dim=0)
+        rel_pad = torch.unsqueeze(self._as_tensor(obs["rel_pad"]), dim=0)
+        other_uav_obs = torch.unsqueeze(self._as_tensor(obs["other_uav_obs"]), dim=0)
+        obstacles = torch.unsqueeze(self._as_tensor(obs["obstacles"]), dim=0)
+        constraint = torch.unsqueeze(self._as_tensor(obs["constraint"]), dim=0)
+        u_nominal = torch.unsqueeze(self._as_tensor(action.squeeze()), dim=0)
+        with torch.no_grad():
+            h, u = self.model(state, rel_pad, other_uav_obs, obstacles, u_nominal)
+
+            return u.detach().cpu().numpy().squeeze()
 
     def train(self):
         """Train Step"""

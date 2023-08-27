@@ -10,6 +10,7 @@ import numpy as np
 from ray import tune
 
 from uav_sim.envs.uav_sim import UavSim
+from uav_sim.utils import safety_layer
 from uav_sim.utils.safety_layer import SafetyLayer
 from uav_sim.utils.utils import get_git_hash
 
@@ -74,77 +75,61 @@ def train_safety_layer(config, checkpoint_dir=None):
     safe_action_layer.train()
 
 
-# TODO: implement function to test safe action
-# def test_safe_action(config):
-#     num_iterations = int(config.get("num_iterations", 100))
-#     tune_run = config.get("tune_run", False)
-#     config["env_config"]["seed"] = None
-#     env = CuasEnvMultiAgentV1(config["env_config"])
+def test_safe_action(config):
+    num_iterations = int(config.get("num_iterations", 100))
+    tune_run = config.get("tune_run", False)
+    config["env_config"]["seed"] = None
+    env = UavSim(config["env_config"])
+    # render = config["render"]
+    # plot_results = config["plot_results"]
 
-#     config["safety_layer_cfg"][
-#         "checkpoint_dir"
-#     ] = r"/home/marcus/Documents/workspace/cuas/results/safe_action/safe_action_2022-11-06-01-56_63424d7/safe_action_layer/train_safe_action_2163c_00000_0_2022-11-06_01-56-25/checkpoint_000045/checkpoint"
+    config["safety_layer_cfg"][
+        "checkpoint_dir"
+    ] = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-08-27-13-35_8cf1248/debug/train_safety_layer_16c16_00000_0_2023-08-27_13-35-18/checkpoint_000045/checkpoint"
 
-#     safe_action_layer = SafeActionLayer(env, config["safety_layer_cfg"])
+    safe_layer = SafetyLayer(env, config["safety_layer_cfg"])
 
-#     obs, dones = env.reset(), {i.id: False for i in env.agents}
-#     dones["__all__"] = False
+    obs, dones = env.reset(), {uav.id: False for uav in env.uavs}
+    dones["__all__"] = False
 
-#     results = {
-#         "episode_reward": 0,
-#         "timesteps_total": 0,
-#         "agent_collisions": 0,
-#         "target_collisions": 0,
-#         "target_breached": 0,
-#         "obstacle_collisions": 0,
-#     }
+    results = {
+        "timesteps_total": 0.0,
+        "uav_collision": 0.0,
+        "obs_collision": 0.0,
+        "uav_done": 0.0,
+        "uav_done_time": 0.0,
+    }
 
-#     logger.debug("running experiment")
-#     for _ in range(num_iterations):
-#         actions = env.action_space.sample()
+    logger.debug("running experiment")
+    for _ in range(num_iterations):
+        actions = env.action_space.sample()
 
-#         if config["use_safe_action"]:
-#             # print("using safe action")
-#             for agent_id, action in actions.items():
-#                 safe_action = safe_action_layer.get_action(
-#                     obs[agent_id]["observations"]
-#                 )
-#                 action += safe_action
+        for uav_id, action in actions.items():
+            action = env.get_time_coord_action(env.uavs[uav_id])
 
-#                 actions[agent_id] = np.clip(action, -1, 1)
+            # computer safe action with default from nominal action
+            if config["use_safe_action"]:
+                action = safe_layer.get_action(obs[uav_id], action)
 
-#         # actions = {}
-#         # for agent in env.agents:
-#         #     actions[agent.id] = ppo_agent.compute_single_action(
-#         #         observation=obs[agent.id], policy_id="pursuer"
-#         #     )
+            actions[uav_id] = action
 
-#         obs, rewards, dones, infos = env.step(actions)
-#         results["episode_reward"] += sum([v for k, v in rewards.items()])
-#         results["agent_collisions"] += sum(
-#             [v["agent_collision"] for k, v in infos.items()]
-#         )
-#         results["target_collisions"] += sum(
-#             [v["target_collision"] for k, v in infos.items()]
-#         )
-#         results["obstacle_collisions"] += sum(
-#             [v["obstacle_collision"] for k, v in infos.items()]
-#         )
-#         results["target_breached"] += sum(
-#             [v["target_breached"] for k, v in infos.items()]
-#         )
+        obs, rewards, dones, infos = env.step(actions)
+        results["uav_collision"] += sum([v["uav_collision"] for k, v in infos.items()])
+        results["obs_collision"] += sum(
+            [v["obstacle_collision"] for k, v in infos.items()]
+        )
+        results["timesteps_total"] += 1
 
-#         results["timesteps_total"] += 1
+        env.render()
 
-#         env.render()
-
-#         if dones["__all__"]:
-#             if tune_run:
-#                 # print("reporting tune")
-#                 tune.report(**results)
-#             obs, dones = env.reset(), {agent.id: False for agent in env.agents}
-#             dones["__all__"] = False
-#             results["episode_reward"] = 0
+        if dones["__all__"]:
+            for k, v in infos.items():
+                results["uav_done"] += v["uav_landed"]
+                results["uav_done_time"] += v["uav_done_time"]
+            if tune_run:
+                tune.report(**results)
+            obs = env.reset()
+            dones["__all__"] = False
 
 
 def train(args):
@@ -168,26 +153,24 @@ def train(args):
 
 
 def test(args):
-    pass
-
-# def test(args):
-#     args.config["tune_run"] = args.tune_run
-#     args.config["use_safe_action"] = tune.grid_search([True, False])
-#     if args.tune_run:
-#         results = tune.run(
-#             test_safe_action,
-#             stop={
-#                 # "timesteps_total": 20,
-#                 #     "training_iteration": 100,
-#                 #     "time_total_s": args.duration,
-#             },
-#             config=args.config,
-#             local_dir=args.log_dir,
-#             name=args.name,
-#             resources_per_trial={"cpu": 1, "gpu": 0},
-#         )
-#     else:
-#         test_safe_action(args.config)
+    args.config["tune_run"] = args.tune_run
+    # args.config["use_safe_action"] = tune.grid_search([True, False])
+    args.config["use_safe_action"] = False
+    if args.tune_run:
+        results = tune.run(
+            test_safe_action,
+            stop={
+                # "timesteps_total": 20,
+                #     "training_iteration": 100,
+                #     "time_total_s": args.duration,
+            },
+            config=args.config,
+            local_dir=args.log_dir,
+            name=args.name,
+            resources_per_trial={"cpu": 1, "gpu": 0},
+        )
+    else:
+        test_safe_action(args.config)
 
 
 # # def test(args):
