@@ -115,7 +115,7 @@ class SafetyLayer:
             obs = obs_next
             episode_length += 1
 
-            # self._env.render()
+            self._env.render()
             if done["__all__"] or (episode_length == self._episode_length):
                 obs = self._env.reset()
                 episode_length = 0
@@ -232,7 +232,19 @@ class SafetyLayer:
         loss.backward()
         self._optimizer.step()
 
-        return loss.item(), acc_stats
+        return loss, acc_stats
+
+    def parse_results(self, results):
+        loss_array = []
+        acc_stat_array = []
+        for x in results:
+            loss_array.append(x[0].item())
+            acc_stat_array.append([acc for acc in x[1]])
+
+        loss = np.array(loss_array).mean()
+        acc_stat = np.array(acc_stat_array).mean(axis=0)
+
+        return loss, acc_stat
 
     def evaluate(self):
         """Validation Step"""
@@ -241,24 +253,12 @@ class SafetyLayer:
 
         self.model.eval()
 
-        def parse_results(eval_results):
-            loss_array = []
-            acc_stat_array = []
-            for x in eval_results:
-                loss_array.append(x[0].item())
-                acc_stat_array.append([acc for acc in x[1]])
-
-            loss = np.array(loss_array).mean()
-            acc_stat = np.array(acc_stat_array).mean(axis=0)
-
-            return loss, acc_stat
-
         eval_results = [
             self._evaluate_batch(batch)
             for batch in self._replay_buffer.get_sequential(self._batch_size)
         ]
 
-        loss, acc_stat = parse_results(eval_results)
+        loss, acc_stat = self.parse_results(eval_results)
 
         self._replay_buffer.clear()
 
@@ -285,7 +285,13 @@ class SafetyLayer:
             # sample episodes from whole epoch
             self._sample_steps(self._num_steps_per_epoch)
 
-            loss, train_acc_stats = self._train_batch()
+            # iterate through the buffer and get batches at a time
+            train_results = [
+                self._train_batch()
+                for _ in range(self._num_steps_per_epoch // self._batch_size)
+            ]
+
+            loss, train_acc_stats = self.parse_results(train_results)
             self._replay_buffer.clear()
             self._train_global_step += 1
 

@@ -59,17 +59,17 @@ def parse_arguments():
 
 def train_safety_layer(config, checkpoint_dir=None):
     env = UavSim(config["env_config"])
-    config["safe_action_config"]["report_tune"] = True
-    # config["safe_action_config"]["replay_buffer_size"] = 1000
-    # config["safe_action_config"]["episode_length"] = 10
-    # config["safe_action_config"]["num_epochs"] = 10
+    config["safety_layer_cfg"]["report_tune"] = True
+    # config["safety_layer_cfg"]["replay_buffer_size"] = 1000
+    # config["safety_layer_cfg"]["episode_length"] = 10
+    # config["safety_layer_cfg"]["num_epochs"] = 10
 
     if checkpoint_dir:
-        config["safe_action_config"]["checkpoint_dir"] = os.path.join(
+        config["safety_layer_cfg"]["checkpoint_dir"] = os.path.join(
             checkpoint_dir, "checkpoint"
         )
 
-    safe_action_layer = SafetyLayer(env, config["safe_action_config"])
+    safe_action_layer = SafetyLayer(env, config["safety_layer_cfg"])
 
     safe_action_layer.train()
 
@@ -81,11 +81,11 @@ def train_safety_layer(config, checkpoint_dir=None):
 #     config["env_config"]["seed"] = None
 #     env = CuasEnvMultiAgentV1(config["env_config"])
 
-#     config["safe_action_config"][
+#     config["safety_layer_cfg"][
 #         "checkpoint_dir"
 #     ] = r"/home/marcus/Documents/workspace/cuas/results/safe_action/safe_action_2022-11-06-01-56_63424d7/safe_action_layer/train_safe_action_2163c_00000_0_2022-11-06_01-56-25/checkpoint_000045/checkpoint"
 
-#     safe_action_layer = SafeActionLayer(env, config["safe_action_config"])
+#     safe_action_layer = SafeActionLayer(env, config["safety_layer_cfg"])
 
 #     obs, dones = env.reset(), {i.id: False for i in env.agents}
 #     dones["__all__"] = False
@@ -152,7 +152,7 @@ def train(args):
         train_safety_layer,
         stop={
             # "timesteps_total": args.num_timesteps,
-            "training_iteration": args.config["safe_action_config"]["num_epochs"],
+            "training_iteration": args.config["safety_layer_cfg"]["num_epochs"],
             "time_total_s": args.duration,
         },
         # num_samples=10,
