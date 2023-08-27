@@ -96,7 +96,9 @@ class SafetyLayer:
             # actions = self._env.action_space.sample()
             actions = {}
             for i in range(self._env.num_uavs):
-                actions[i] = self._env.get_time_coord_action(self._env.uavs[i]).squeeze()
+                actions[i] = self._env.get_time_coord_action(
+                    self._env.uavs[i]
+                ).squeeze()
             obs_next, _, done, _ = self._env.step(actions)
 
             for (_, action), (_, observation), (_, observation_next) in zip(
@@ -118,7 +120,7 @@ class SafetyLayer:
             obs = obs_next
             episode_length += 1
 
-            self._env.render()
+            # self._env.render()
             if done["__all__"] or (episode_length == self._episode_length):
                 obs = self._env.reset()
                 episode_length = 0
@@ -308,15 +310,17 @@ class SafetyLayer:
                 tune.report(
                     training_iteration=self._train_global_step,
                     train_loss=loss,
-                    train_acc_stats=train_acc_stats,
-                    # train_acc_h_safe=train_acc_stats[0],
-                    # train_acc_h_dang=train_acc_stats[1],
-                    # train_acc_h_deriv=train_acc_stats[2],
+                    train_acc_h_safe=train_acc_stats[0],
+                    train_acc_h_dang=train_acc_stats[1],
+                    train_acc_h_deriv_safe=train_acc_stats[2],
+                    train_acc_h_deriv_dang=train_acc_stats[3],
+                    train_acc_h_deriv_mid=train_acc_stats[4],
                     val_loss=val_loss,
-                    val_acc_stats=val_acc_stats,
-                    # val_acc_h_safe=val_acc_stats[0],
-                    # val_acc_h_dang=val_acc_stats[1],
-                    # val_acc_h_deriv=val_acc_stats[2],
+                    val_acc_h_safe=val_acc_stats[0],
+                    val_acc_h_dang=val_acc_stats[1],
+                    val_acc_h_deriv_safe=val_acc_stats[2],
+                    val_acc_h_deriv_dang=val_acc_stats[3],
+                    val_acc_h_deriv_mid=val_acc_stats[4],
                 )
 
                 if epoch % 5 == 0:
