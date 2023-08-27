@@ -133,6 +133,14 @@ def test_safe_action(config):
 
 
 def train(args):
+    args.config["safety_layer_cfg"]["eps_safe"] = tune.loguniform(1e-5, 1)
+    args.config["safety_layer_cfg"]["eps_dang"] = tune.loguniform(1e-5, 1)
+    args.config["safety_layer_cfg"]["eps_deriv"] = tune.loguniform(1e-5, 1)
+    args.config["safety_layer_cfg"]["eps_action"] = tune.loguniform(1e-5, 1)
+    args.config["safety_layer_cfg"]["lr"] = tune.loguniform(1e-5, 1)
+    args.config["safety_layer_cfg"]["weight_decay"] = tune.loguniform(1e-5, 1)
+    args.config["safety_layer_cfg"]["loss_action_weight"] = tune.loguniform(1e-5, 1)
+
     results = tune.run(
         train_safety_layer,
         stop={
@@ -140,8 +148,8 @@ def train(args):
             "training_iteration": args.config["safety_layer_cfg"]["num_epochs"],
             "time_total_s": args.duration,
         },
-        # num_samples=10,
-        resources_per_trial={"cpu": 6, "gpu": 1},
+        num_samples=10,
+        resources_per_trial={"cpu": 6, "gpu": 0.2},
         config=args.config,
         # checkpoint_freq=10,
         # checkpoint_at_end=True,
