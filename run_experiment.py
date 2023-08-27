@@ -11,6 +11,8 @@ import os
 import logging
 import json
 
+from uav_sim.utils.utils import get_git_hash
+
 PATH = Path(__file__).parent.absolute().resolve()
 
 formatter = "%(asctime)s: %(name)s - %(levelname)s - <%(module)s:%(funcName)s:%(lineno)d> - %(message)s"
@@ -227,11 +229,7 @@ def main():
     logger.debug(f"config: {args.config}")
 
     if not args.log_dir:
-        branch_hash = (
-            subprocess.check_output(["git", "rev-parse", "--short", "HEAD"])
-            .strip()
-            .decode()
-        )
+        branch_hash = get_git_hash()
 
         dir_timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M")
         args.log_dir = f"./results/test_results/exp_{dir_timestamp}_{branch_hash}"

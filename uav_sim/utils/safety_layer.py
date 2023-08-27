@@ -207,6 +207,7 @@ class SafetyLayer:
             + loss_action * loss_action_weight
         )
 
+        # TODO: use a dictionary to store acc_h_items instead.
         return loss, (
             acc_h_safe.detach().cpu().numpy(),
             acc_h_dang.detach().cpu().numpy(),
@@ -245,7 +246,7 @@ class SafetyLayer:
             acc_stat_array = []
             for x in eval_results:
                 loss_array.append(x[0].item())
-                acc_stat_array.append([x[1][0], x[1][1], x[1][2]])
+                acc_stat_array.append([acc for acc in x[1]])
 
             loss = np.array(loss_array).mean()
             acc_stat = np.array(acc_stat_array).mean(axis=0)
@@ -293,17 +294,20 @@ class SafetyLayer:
             val_loss, val_acc_stats = self.evaluate()
             print(f"validation completed, average loss {val_loss}")
 
+            # TODO: fix report h items
             if self._report_tune:
                 tune.report(
                     training_iteration=self._train_global_step,
                     train_loss=loss,
-                    train_acc_h_safe=train_acc_stats[0],
-                    train_acc_h_dang=train_acc_stats[1],
-                    train_acc_h_deriv=train_acc_stats[2],
+                    train_acc_stats=train_acc_stats,
+                    # train_acc_h_safe=train_acc_stats[0],
+                    # train_acc_h_dang=train_acc_stats[1],
+                    # train_acc_h_deriv=train_acc_stats[2],
                     val_loss=val_loss,
-                    val_acc_h_safe=val_acc_stats[0],
-                    val_acc_h_dang=val_acc_stats[1],
-                    val_acc_h_deriv=val_acc_stats[2],
+                    val_acc_stats=val_acc_stats,
+                    # val_acc_h_safe=val_acc_stats[0],
+                    # val_acc_h_dang=val_acc_stats[1],
+                    # val_acc_h_deriv=val_acc_stats[2],
                 )
 
                 if epoch % 5 == 0:
