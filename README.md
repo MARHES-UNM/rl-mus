@@ -190,3 +190,8 @@ See : https://github.com/MIT-REALM/sablas/blob/main/modules/trainer.py#L176 for 
 
 # https://github.com/YaChienChang/Neural-Lyapunov-Control
 # https://openreview.net/pdf?id=8K5kisAnb_p
+
+
+To reference:
+https://github.com/AgrawalAmey/safe-explorer
+https://github.com/zisikons/deep-rl/tree/main

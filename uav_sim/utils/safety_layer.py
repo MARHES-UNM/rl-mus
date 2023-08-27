@@ -49,6 +49,10 @@ class SafetyLayer:
         # if self._checkpoint_dir:
         #     self.model.load_model(self._checkpoint_dir)
 
+        # TODO: load the buffer with the save states
+        if self._load_buffer:
+            pass
+
         # self._cbf_optimizer = Adam(self.cbf_model.parameters(), lr=self._lr)
         # self._nn_action_optimizer = Adam(self.nn_action_model.parameters(), lr=self._lr)
 
@@ -80,6 +84,7 @@ class SafetyLayer:
         self._report_tune = self._config.get("report_tune", False)
         self._seed = self._config.get("seed", 123)
         self._checkpoint_dir = self._config.get("checkpoint_dir", None)
+        self._load_buffer = self._config.get("buffer", None)
 
     def _as_tensor(self, ndarray, requires_grad=False):
         tensor = torch.Tensor(ndarray)

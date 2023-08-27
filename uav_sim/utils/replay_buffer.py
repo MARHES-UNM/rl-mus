@@ -2,7 +2,9 @@ import numpy as np
 
 
 class ReplayBuffer:
-    """A FIFO buffer implemented with fixed size numpy array"""
+    """A FIFO buffer implemented with fixed size numpy array. 
+    Original implementation: https://github.com/AgrawalAmey/safe-explorer/blob/master/safe_explorer/core/replay_buffer.py
+    """
 
     # TODO: add buffer for each item, observation, action, next observation
     def __init__(self, buffer_size):
