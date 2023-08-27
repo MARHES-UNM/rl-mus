@@ -69,6 +69,11 @@ class SafetyLayer:
         self._checkpoint_dir = self._config.get("checkpoint_dir", None)
         self._load_buffer = self._config.get("buffer", None)
         self._n_hidden = self._config.get("n_hidden", 32)
+        self.eps_safe = self._config.get("eps_safe", 0.1)
+        self.eps_dang = self._config.get("eps_dang", 0.1)
+        self.eps_action = self._config.get("eps_action", 0.2)
+        self.eps_deriv = self._config.get("eps_deriv", 0.03)
+        self.loss_action_weight = self._config.get("loss_action_weight", 0.08)
 
     def _init_model(self):
         obs_space = self._env.observation_space
@@ -89,6 +94,14 @@ class SafetyLayer:
 
     def _sample_steps(self, num_steps):
         episode_length = 0
+        num_episodes = 0
+
+        results = {
+            "uav_collision": 0.0,
+            "obs_collision": 0.0,
+            "uav_done": 0.0,
+            "uav_done_time": 0.0,
+        }
 
         obs = self._env.reset()
 
@@ -99,7 +112,11 @@ class SafetyLayer:
                 actions[i] = self._env.get_time_coord_action(
                     self._env.uavs[i]
                 ).squeeze()
-            obs_next, _, done, _ = self._env.step(actions)
+            obs_next, _, done, info = self._env.step(actions)
+
+            for k, v in info.items():
+                results["uav_collision"] += v["uav_collision"]
+                results["obs_collision"] += v["obstacle_collision"]
 
             for (_, action), (_, observation), (_, observation_next) in zip(
                 actions.items(), obs.items(), obs_next.items()
@@ -122,8 +139,26 @@ class SafetyLayer:
 
             # self._env.render()
             if done["__all__"] or (episode_length == self._episode_length):
+                num_episodes += 1
+                for k, v in info.items():
+                    results["uav_done"] += v["uav_landed"]
+                    results["uav_done_time"] += v["uav_done_time"]
+
                 obs = self._env.reset()
                 episode_length = 0
+
+        results["obs_collision"] = (
+            results["obs_collision"] / num_episodes / self._env.num_uavs
+        )
+        results["uav_collision"] = (
+            results["uav_collision"] / num_episodes / self._env.num_uavs
+        )
+        results["uav_done"] = results["uav_done"] / num_episodes / self._env.num_uavs
+        results["uav_done_time"] = (
+            results["uav_done_time"] / num_episodes / self._env.num_uavs
+        )
+        results["num_ts_per_episode"] = num_steps / num_episodes
+        return results
 
     def _get_mask(self, constraints):
         safe_mask = self._as_tensor([(arr >= 0.0).any() for arr in constraints]).float()
@@ -168,28 +203,27 @@ class SafetyLayer:
         )
         h_deriv = (h_next - h) / self._env.dt + h
 
-        eps = 0.1
-        eps_action = 0.2
-        eps_deriv = 0.03
-        loss_action_weight = 0.08
-
         num_safe = torch.sum(safe_mask)
         num_unsafe = torch.sum(unsafe_mask)
         num_mid = torch.sum(mid_mask)
 
-        loss_h_safe = torch.sum(F.relu(eps - h) * safe_mask) / (1e-5 + num_safe)
-        loss_h_dang = torch.sum(F.relu(h + eps) * unsafe_mask) / (1e-5 + num_unsafe)
+        loss_h_safe = torch.sum(F.relu(self.eps_safe - h) * safe_mask) / (
+            1e-5 + num_safe
+        )
+        loss_h_dang = torch.sum(F.relu(h + self.eps_dang) * unsafe_mask) / (
+            1e-5 + num_unsafe
+        )
 
         acc_h_safe = torch.sum((h >= 0).float() * safe_mask) / (1e-5 + num_safe)
         acc_h_dang = torch.sum((h < 0).float() * unsafe_mask) / (1e-5 + num_unsafe)
 
-        loss_deriv_safe = torch.sum(F.relu(eps_deriv - h_deriv) * safe_mask) / (
+        loss_deriv_safe = torch.sum(F.relu(self.eps_deriv - h_deriv) * safe_mask) / (
             1e-5 + num_safe
         )
-        loss_deriv_dang = torch.sum(F.relu(eps_deriv - h_deriv) * unsafe_mask) / (
+        loss_deriv_dang = torch.sum(F.relu(self.eps_deriv - h_deriv) * unsafe_mask) / (
             1e-5 + num_unsafe
         )
-        loss_deriv_mid = torch.sum(F.relu(eps_deriv - h_deriv) * mid_mask) / (
+        loss_deriv_mid = torch.sum(F.relu(self.eps_deriv - h_deriv) * mid_mask) / (
             1e-5 + num_mid
         )
 
@@ -201,7 +235,7 @@ class SafetyLayer:
         )
         acc_deriv_mid = torch.sum((h_deriv > 0).float() * mid_mask) / (1e-5 + num_mid)
 
-        loss_action = torch.mean(F.relu(torch.abs(u - u_nominal) - eps_action))
+        loss_action = torch.mean(F.relu(torch.abs(u - u_nominal) - self.eps_action))
 
         loss = (
             loss_h_safe
@@ -209,7 +243,7 @@ class SafetyLayer:
             + loss_deriv_safe
             + loss_deriv_dang
             + loss_deriv_mid
-            + loss_action * loss_action_weight
+            + loss_action * self.loss_action_weight
         )
 
         # TODO: use a dictionary to store acc_h_items instead.
@@ -288,7 +322,7 @@ class SafetyLayer:
 
         for epoch in range(self._num_epochs):
             # sample episodes from whole epoch
-            self._sample_steps(self._num_steps_per_epoch)
+            sample_stats = self._sample_steps(self._num_steps_per_epoch)
 
             # iterate through the buffer and get batches at a time
             train_results = [
@@ -321,6 +355,7 @@ class SafetyLayer:
                     val_acc_h_deriv_safe=val_acc_stats[2],
                     val_acc_h_deriv_dang=val_acc_stats[3],
                     val_acc_h_deriv_mid=val_acc_stats[4],
+                    **sample_stats,
                 )
 
                 if epoch % 5 == 0:
