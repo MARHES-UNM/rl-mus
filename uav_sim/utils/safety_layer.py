@@ -38,7 +38,9 @@ class SafetyLayer:
         if self._load_buffer:
             pass
 
-        self._optimizer = Adam(self.model.parameters(), lr=self._lr)
+        self._optimizer = Adam(
+            self.model.parameters(), lr=self._lr, weight_decay=self._weight_decay
+        )
 
         self._replay_buffer = ReplayBuffer(self._replay_buffer_size)
 
@@ -59,6 +61,7 @@ class SafetyLayer:
         self._replay_buffer_size = self._config.get("replay_buffer_size", 1000000)
         self._episode_length = self._config.get("episode_length", 400)
         self._lr = self._config.get("lr", 0.01)
+        self._weight_decay = self._config.get("weight_decay", 1e-5)
         # default 256
         self._batch_size = self._config.get("batch_size", 256)
         self._num_eval_steps = self._config.get("num_eval_step", 1500)
@@ -235,6 +238,8 @@ class SafetyLayer:
         )
         acc_deriv_mid = torch.sum((h_deriv > 0).float() * mid_mask) / (1e-5 + num_mid)
 
+        acc_action = torch.sum(torch.abs(u - u_nominal))
+
         loss_action = torch.mean(F.relu(torch.abs(u - u_nominal) - self.eps_action))
 
         loss = (
@@ -253,6 +258,7 @@ class SafetyLayer:
             acc_deriv_safe.detach().cpu().numpy(),
             acc_deriv_dang.detach().cpu().numpy(),
             acc_deriv_mid.detach().cpu().numpy(),
+            acc_action.detach().cpu().numpy(),
         )
 
     def _train_batch(self):
@@ -349,12 +355,14 @@ class SafetyLayer:
                     train_acc_h_deriv_safe=train_acc_stats[2],
                     train_acc_h_deriv_dang=train_acc_stats[3],
                     train_acc_h_deriv_mid=train_acc_stats[4],
+                    train_acc_action=train_acc_stats[5],
                     val_loss=val_loss,
                     val_acc_h_safe=val_acc_stats[0],
                     val_acc_h_dang=val_acc_stats[1],
                     val_acc_h_deriv_safe=val_acc_stats[2],
                     val_acc_h_deriv_dang=val_acc_stats[3],
                     val_acc_h_deriv_mid=val_acc_stats[4],
+                    val_acc_action=val_acc_stats[5],
                     **sample_stats,
                 )
 
