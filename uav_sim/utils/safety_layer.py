@@ -1,3 +1,4 @@
+from csv import unix_dialect
 import os
 from datetime import datetime
 import random
@@ -7,6 +8,7 @@ import numpy as np
 import scipy as sp
 import torch
 import torch.nn.functional as F
+from torch import nn
 from uav_sim.networks.cbf import CBF
 from uav_sim.utils.replay_buffer import ReplayBuffer
 from torch.optim import Adam
@@ -119,10 +121,14 @@ class SafetyLayer:
                 episode_length = 0
 
     def _get_mask(self, constraints):
-        safe_mask = [[(arr >= 0.0).any() for arr in constraints]]
-        unsafe_mask = [[(arr < 0.0).any() for arr in constraints]]
+        safe_mask = self._as_tensor([(arr >= 0.0).any() for arr in constraints]).float()
+        unsafe_mask = self._as_tensor(
+            [(arr < 0.0).any() for arr in constraints]
+        ).float()
 
-        return safe_mask, unsafe_mask
+        mid_mask = (1 - safe_mask) * (1 - unsafe_mask)
+
+        return safe_mask, unsafe_mask, mid_mask
 
     def _evaluate_batch(self, batch):
         """Gets the observation and calculate h and action from model.
@@ -144,7 +150,7 @@ class SafetyLayer:
         other_uav_obs_next = self._as_tensor(batch["other_uav_obs_next"])
         obstacles_next = self._as_tensor(batch["obstacles_next"])
 
-        safe_mask, unsafe_mask = self._get_mask(constraints)
+        safe_mask, unsafe_mask, mid_mask = self._get_mask(constraints)
 
         # h = self.model(state, other_uav_obs, obstacles)
         h, u = self.model(state, rel_pad, other_uav_obs, obstacles, u_nominal)
@@ -157,30 +163,56 @@ class SafetyLayer:
         )
         h_deriv = (h_next - h) / self._env.dt + h
 
-        h_safe = h[safe_mask]
-        h_unsafe = h[unsafe_mask]
+        eps = 0.1
+        eps_action = 0.2
+        eps_deriv = 0.03
+        loss_action_weight = 0.08
 
-        eps_safe = 0.1
-        eps_unsafe = 0.1
-        eps_deriv = 0.01
-        action_weight = 0.01
+        num_safe = torch.sum(safe_mask)
+        num_unsafe = torch.sum(unsafe_mask)
+        num_mid = torch.sum(mid_mask)
 
-        loss = (
-            0.0
-            + (F.relu(eps_safe - h_safe)).mean()
-            + (F.relu(eps_unsafe + h_unsafe)).mean()
-            + (F.relu(eps_deriv - h_deriv)).mean()
-            + action_weight * ((u - u_nominal) ** 2).mean()
+        loss_h_safe = torch.sum(F.relu(eps - h) * safe_mask) / (1e-5 + num_safe)
+        loss_h_dang = torch.sum(F.relu(h + eps) * unsafe_mask) / (1e-5 + num_unsafe)
+
+        acc_h_safe = torch.sum((h >= 0).float() * safe_mask) / (1e-5 + num_safe)
+        acc_h_dang = torch.sum((h < 0).float() * unsafe_mask) / (1e-5 + num_unsafe)
+
+        loss_deriv_safe = torch.sum(F.relu(eps_deriv - h_deriv) * safe_mask) / (
+            1e-5 + num_safe
+        )
+        loss_deriv_dang = torch.sum(F.relu(eps_deriv - h_deriv) * unsafe_mask) / (
+            1e-5 + num_unsafe
+        )
+        loss_deriv_mid = torch.sum(F.relu(eps_deriv - h_deriv) * mid_mask) / (
+            1e-5 + num_mid
         )
 
-        acc_h_safe = ((h[safe_mask] >= 0).float()).mean()
-        acc_h_dang = ((h[unsafe_mask] < 0).float()).mean()
-        acc_h_deriv = ((h_deriv > 0).float()).mean()
+        acc_deriv_safe = torch.sum((h_deriv > 0).float() * safe_mask) / (
+            1e-5 + num_safe
+        )
+        acc_deriv_dang = torch.sum((h_deriv > 0).float() * unsafe_mask) / (
+            1e-5 + num_unsafe
+        )
+        acc_deriv_mid = torch.sum((h_deriv > 0).float() * mid_mask) / (1e-5 + num_mid)
+
+        loss_action = torch.mean(F.relu(torch.abs(u - u_nominal) - eps_action))
+
+        loss = (
+            loss_h_safe
+            + loss_h_dang
+            + loss_deriv_safe
+            + loss_deriv_dang
+            + loss_deriv_mid
+            + loss_action * loss_action_weight
+        )
 
         return loss, (
             acc_h_safe.detach().cpu().numpy(),
             acc_h_dang.detach().cpu().numpy(),
-            acc_h_deriv.detach().cpu().numpy(),
+            acc_deriv_safe.detach().cpu().numpy(),
+            acc_deriv_dang.detach().cpu().numpy(),
+            acc_deriv_mid.detach().cpu().numpy(),
         )
 
     def _train_batch(self):
