@@ -173,6 +173,26 @@ class SafetyLayer:
 
         return safe_mask, unsafe_mask, mid_mask
 
+    def f_dot_torch(self, state, action):
+        u = action.clone()
+        u[:, 2] = 1 / self._env.uavs[0].m * u[:, 2] - self._env.uavs[0].g
+
+        A = np.zeros((12, 12), dtype=np.float32)
+        A[0, 3] = 1.0
+        A[1, 4] = 1.0
+        A[2, 5] = 1.0
+
+        B = np.zeros((12, 3), dtype=np.float32)
+        B[3, 0] = 1.0
+        B[4, 1] = 1.0
+        B[5, 2] = 1.0
+        A_T = self._as_tensor(A.T)
+        B_T = self._as_tensor(B.T)
+
+        dxdt = torch.matmul(state, A_T) + torch.matmul(u, B_T)
+
+        return dxdt
+    
     def _evaluate_batch(self, batch):
         """Gets the observation and calculate h and action from model.
 
@@ -199,7 +219,7 @@ class SafetyLayer:
         h, u = self.model(state, rel_pad, other_uav_obs, obstacles, u_nominal)
 
         # TODO: calculate the the nomimal state using https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=9681233
-        # state_nominal = state + f_linear(state, u) * self._env.dt
+        state_next = state + self.f_dot_torch(state, u) * self._env.dt
 
         h_next, _ = self.model(
             state_next, rel_pad_next, other_uav_obs_next, obstacles_next, u_nominal
@@ -269,11 +289,11 @@ class SafetyLayer:
         """
         batch = self._replay_buffer.sample(self._batch_size)
 
-        # zero parameter gradients
-        self._optimizer.zero_grad()
-
         # forward + backward + optimize
         loss, acc_stats = self._evaluate_batch(batch)
+
+        # zero parameter gradients
+        self._optimizer.zero_grad()
         loss.backward()
         self._optimizer.step()
 

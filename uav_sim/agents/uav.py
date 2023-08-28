@@ -1,5 +1,6 @@
 from math import cos, sin
 import numpy as np
+import torch
 from uav_sim.utils.utils import distance, angle, lqr
 import scipy.integrate
 import scipy
@@ -207,12 +208,12 @@ class Quad2DInt(Entity):
         action_z = 1 / self.m * action[2] - self.g
         return np.array(
             [
-                state[3].item(),
-                state[4].item(),
-                state[5].item(),
-                action[0].item(),
-                action[1].item(),
-                action_z.item(),
+                state[3],
+                state[4],
+                state[5],
+                action[0],
+                action[1],
+                action_z,
                 0.0,
                 0.0,
                 0.0,
@@ -222,6 +223,27 @@ class Quad2DInt(Entity):
             ],
             dtype=np.float64,
         )
+
+    # TODO: this may not be needed because of moving tensors from and to cpu. delete later
+    def f_dot_torch(self, state, action):
+        u = action.clone()
+        u[:, 2] = 1 / self.m * u[:, 2] - self.g
+
+        A = np.zeros((12, 12), dtype=np.float32)
+        A[0, 3] = 1.0
+        A[1, 4] = 1.0
+        A[2, 5] = 1.0
+
+        B = np.zeros((12, 3), dtype=np.float32)
+        B[3, 0] = 1.0
+        B[4, 1] = 1.0
+        B[5, 2] = 1.0
+        A_T = torch.from_numpy(A.T)
+        B_T = torch.from_numpy(B.T)
+
+        dxdt = torch.matmul(state, A_T) + torch.matmul(u, B_T)
+
+        return dxdt
 
     def rotation_matrix(self):
         return np.eye(3)
@@ -573,7 +595,6 @@ class Quadrotor(Entity):
         use_ode=True,
         k=None,
         pad=None,
-
     ):
         super().__init__(_id=_id, x=x, y=y, z=z, _type=AgentType.U)
 

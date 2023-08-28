@@ -83,9 +83,10 @@ def test_safe_action(config):
     # render = config["render"]
     # plot_results = config["plot_results"]
 
-    config["safety_layer_cfg"][
-        "checkpoint_dir"
-    ] = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-08-27-13-35_8cf1248/debug/train_safety_layer_16c16_00000_0_2023-08-27_13-35-18/checkpoint_000045/checkpoint"
+    # config["safety_layer_cfg"][
+    # "checkpoint_dir"
+    # ] = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-08-27-17-47_07e3223/debug/train_safety_layer_50b66_00010_10_eps_action=0.0002,eps_dang=0.0007,eps_deriv=0.0001,eps_safe=0.0049,loss_action_weight=0.2435,lr=_2023-08-27_19-16-48/checkpoint_000035/checkpoint"
+    config["safety_layer_cfg"]["checkpoint_dir"] = None
 
     safe_layer = SafetyLayer(env, config["safety_layer_cfg"])
 
@@ -133,13 +134,13 @@ def test_safe_action(config):
 
 
 def train(args):
-    args.config["safety_layer_cfg"]["eps_safe"] = tune.loguniform(1e-5, 1)
-    args.config["safety_layer_cfg"]["eps_dang"] = tune.loguniform(1e-5, 1)
-    args.config["safety_layer_cfg"]["eps_deriv"] = tune.loguniform(1e-5, 1)
-    args.config["safety_layer_cfg"]["eps_action"] = tune.loguniform(1e-5, 1)
-    args.config["safety_layer_cfg"]["lr"] = tune.loguniform(1e-5, 1)
-    args.config["safety_layer_cfg"]["weight_decay"] = tune.loguniform(1e-5, 1)
-    args.config["safety_layer_cfg"]["loss_action_weight"] = tune.loguniform(1e-5, 1)
+    # args.config["safety_layer_cfg"]["eps_safe"] = tune.loguniform(1e-5, 1)
+    # args.config["safety_layer_cfg"]["eps_dang"] = tune.loguniform(1e-5, 1)
+    # args.config["safety_layer_cfg"]["eps_deriv"] = tune.loguniform(1e-5, 1)
+    # args.config["safety_layer_cfg"]["eps_action"] = tune.loguniform(1e-5, 1)
+    # args.config["safety_layer_cfg"]["lr"] = tune.loguniform(1e-5, 1)
+    # args.config["safety_layer_cfg"]["weight_decay"] = tune.loguniform(1e-5, 1)
+    # args.config["safety_layer_cfg"]["loss_action_weight"] = tune.loguniform(1e-5, 1)
 
     results = tune.run(
         train_safety_layer,
@@ -163,7 +164,7 @@ def train(args):
 def test(args):
     args.config["tune_run"] = args.tune_run
     # args.config["use_safe_action"] = tune.grid_search([True, False])
-    args.config["use_safe_action"] = False
+    args.config["use_safe_action"] = True
     if args.tune_run:
         results = tune.run(
             test_safe_action,

@@ -91,7 +91,7 @@
             },
             "args": [
                 "-v",
-                "tests.test_quad_2d.TestQuad2D.test_time_coord_controller",
+                "tests.test_quad_2d.TestQuad2D.test_f_dot_torch",
                 "--failfast"
             ]
         },

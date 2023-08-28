@@ -1,4 +1,5 @@
 from matplotlib import pyplot as plt
+import torch
 
 from uav_sim.agents.uav import Obstacle, Pad, Quadrotor, Quad2DInt, Target
 import unittest
@@ -14,6 +15,15 @@ from uav_sim.utils.trajectory_generator import (
 class TestQuad2D(unittest.TestCase):
     def setUp(self):
         self.uav = Quad2DInt(0, 2, 2, 2)
+
+    def test_f_dot_torch(self):
+        state = torch.from_numpy(self.uav.state.astype(np.float32))
+        action = torch.tensor([[1.0, 1.0, 1.0]])
+
+        dxdt = self.uav.f_dot_torch(state, action)
+        dxdt_np = self.uav.f_dot(0, self.uav.state, [1.0, 1.0, 1.0])
+
+        print(dxdt)
 
     def test_uav_hover(self):
         """Test that the uav can hover with the specified input"""
@@ -34,13 +44,13 @@ class TestQuad2D(unittest.TestCase):
     def test_time_coord_controller(self):
         tf = 10
         N = 1
-        p = self.uav.get_p(tf, N )
+        p = self.uav.get_p(tf, N)
         print(p)
-        
+
         g = self.uav.get_g(2, 0, p, tf, N)
-        
+
         print(g)
-        
+
     def test_uav_model_gravity(self):
         """Test that the UAV fall to the ground when 0 force is applied"""
         uav = Quad2DInt(0, 5, 5, 1, dt=0.1)
