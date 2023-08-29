@@ -90,7 +90,7 @@ def test_safe_action(config):
     # ] = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-08-27-17-47_07e3223/debug/train_safety_layer_50b66_00010_10_eps_action=0.0002,eps_dang=0.0007,eps_deriv=0.0001,eps_safe=0.0049,loss_action_weight=0.2435,lr=_2023-08-27_19-16-48/checkpoint_000035/checkpoint"
     config["safety_layer_cfg"][
         "checkpoint_dir"
-    ] = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-08-27-23-32_c7dc4f3/debug/train_safety_layer_8508c_00000_0_2023-08-27_23-32-31/checkpoint_000015/checkpoint"
+    ] = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-08-27-23-58_ea3f609/debug/train_safety_layer_30ade_00097_97_eps_action=0.0480,eps_dang=0.0142,eps_deriv=0.5726,eps_safe=0.0017,loss_action_weight=0.0004,lr=_2023-08-28_14-04-45/checkpoint_000045/checkpoint"
 
     safe_layer = SafetyLayer(env, config["safety_layer_cfg"])
 
@@ -138,8 +138,8 @@ def test_safe_action(config):
 
 
 def train(args):
-    args.config["safety_layer_cfg"]["eps_safe"] = tune.loguniform(1e-5, 10)
-    args.config["safety_layer_cfg"]["eps_dang"] = tune.loguniform(1e-5, 10)
+    args.config["safety_layer_cfg"]["eps_safe"] = tune.loguniform(1e-5, 1)
+    args.config["safety_layer_cfg"]["eps_dang"] = tune.loguniform(1e-5, 11)
     args.config["safety_layer_cfg"]["eps_deriv"] = tune.loguniform(1e-5, 1)
     args.config["safety_layer_cfg"]["eps_action"] = tune.loguniform(1e-5, 1)
     args.config["safety_layer_cfg"]["lr"] = tune.loguniform(1e-5, 1)
@@ -153,7 +153,7 @@ def train(args):
             "training_iteration": args.config["safety_layer_cfg"]["num_epochs"],
             "time_total_s": args.duration,
         },
-        num_samples=100,
+        num_samples=5,
         resources_per_trial={"cpu": 1, "gpu": 0.20},
         config=args.config,
         # checkpoint_freq=10,

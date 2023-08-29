@@ -95,6 +95,7 @@ class SafetyLayer:
         tensor = tensor.to(self._device)
         return tensor
 
+    # TODO: create static buffer so that we can sample from saved data.
     def _sample_steps(self, num_steps):
         episode_length = 0
         num_episodes = 0
@@ -112,29 +113,29 @@ class SafetyLayer:
             # actions = self._env.action_space.sample()
             actions = {}
             for i in range(self._env.num_uavs):
-                actions[i] = self._env.get_time_coord_action(
+                nom_action = self._env.get_time_coord_action(
                     self._env.uavs[i]
                 ).squeeze()
+
+                actions[i] = self.get_action(obs[i], nom_action)
+
             obs_next, _, done, info = self._env.step(actions)
 
             for k, v in info.items():
                 results["uav_collision"] += v["uav_collision"]
                 results["obs_collision"] += v["obstacle_collision"]
 
-            for (_, action), (_, observation), (_, observation_next) in zip(
-                actions.items(), obs.items(), obs_next.items()
-            ):
+            for i in range(self._env.num_uavs):
                 buffer_dictionary = {}
-                for k, v in observation.items():
+                for k, v in obs[i].items():
                     buffer_dictionary[k] = v
 
-                buffer_dictionary["action"] = action
+                buffer_dictionary["u_nominal"] = nom_action
 
-                for k, v in observation_next.items():
+                for k, v in obs_next[i].items():
                     new_key = f"{k}_next"
-                    buffer_dictionary[new_key] = v
 
-                # print(buffer_dictionary)
+                    buffer_dictionary[new_key] = v
                 self._replay_buffer.add(buffer_dictionary)
 
             obs = obs_next
@@ -150,6 +151,7 @@ class SafetyLayer:
                 obs = self._env.reset()
                 episode_length = 0
 
+        num_episodes += 1
         results["obs_collision"] = (
             results["obs_collision"] / num_episodes / self._env.num_uavs
         )
@@ -192,7 +194,7 @@ class SafetyLayer:
         dxdt = torch.matmul(state, A_T) + torch.matmul(u, B_T)
 
         return dxdt
-    
+
     def _evaluate_batch(self, batch):
         """Gets the observation and calculate h and action from model.
 
@@ -207,7 +209,7 @@ class SafetyLayer:
         other_uav_obs = self._as_tensor(batch["other_uav_obs"])
         obstacles = self._as_tensor(batch["obstacles"])
         constraints = self._as_tensor(batch["constraint"])
-        u_nominal = self._as_tensor(batch["action"])
+        u_nominal = self._as_tensor(batch["u_nominal"])
         state_next = self._as_tensor(batch["state_next"])
         rel_pad_next = self._as_tensor(batch["rel_pad_next"])
         other_uav_obs_next = self._as_tensor(batch["other_uav_obs_next"])

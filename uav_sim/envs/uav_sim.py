@@ -286,7 +286,7 @@ class UavSim:
                 "obstacle_collision": obstacle_collision,
                 "uav_collision": uav_collision,
                 "uav_landed": 1.0 if uav.landed else 0.0,
-                "uav_done_time": uav.done_time,
+                "uav_done_time": uav.done_time if uav.landed else 0.0,
             }
 
         return info
