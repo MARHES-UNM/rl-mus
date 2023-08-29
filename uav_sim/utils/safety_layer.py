@@ -118,6 +118,7 @@ class SafetyLayer:
                 ).squeeze()
 
                 actions[i] = self.get_action(obs[i], nom_action)
+                # actions[i] = nom_action
 
             obs_next, _, done, info = self._env.step(actions)
 

@@ -224,6 +224,23 @@ class Quad2DInt(Entity):
             dtype=np.float64,
         )
 
+    def f_dot_np(self, state, action):
+        action[2] = 1 / self.m * action[2] - self.g
+
+        A = np.zeros((12, 12), dtype=np.float32)
+        A[0, 3] = 1.0
+        A[1, 4] = 1.0
+        A[2, 5] = 1.0
+
+        B = np.zeros((12, 3), dtype=np.float32)
+        B[3, 0] = 1.0
+        B[4, 1] = 1.0
+        B[5, 2] = 1.0
+
+        dxdt = A.dot(state) + B.dot(action)
+
+        return dxdt
+
     # TODO: this may not be needed because of moving tensors from and to cpu. delete later
     def f_dot_torch(self, state, action):
         u = action.clone()
@@ -282,9 +299,11 @@ class Quad2DInt(Entity):
         # keeps uav hovering
         action[2] = self.m * (self.g + action[2])
 
-        self.ode.set_initial_value(self._state, 0).set_f_params(action)
-        self._state = self.ode.integrate(self.ode.t + self.dt)
-        assert self.ode.successful()
+        self._state = self._state + self.f_dot_np(self._state, action) * self.dt
+
+        # self.ode.set_initial_value(self._state, 0).set_f_params(action)
+        # self._state = self.ode.integrate(self.ode.t + self.dt)
+        # assert self.ode.successful()
 
         self._state[2] = max(0, self._state[2])
 

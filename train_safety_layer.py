@@ -76,7 +76,7 @@ def train_safety_layer(config, checkpoint_dir=None):
 
 
 def test_safe_action(config):
-    num_iterations = int(config.get("num_iterations", 100))
+    num_iterations = int(config.get("num_iterations", 400))
     tune_run = config.get("tune_run", False)
     config["env_config"]["seed"] = None
     # config["env_config"]["num_obstacles"] = 1
@@ -90,7 +90,7 @@ def test_safe_action(config):
     # ] = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-08-27-17-47_07e3223/debug/train_safety_layer_50b66_00010_10_eps_action=0.0002,eps_dang=0.0007,eps_deriv=0.0001,eps_safe=0.0049,loss_action_weight=0.2435,lr=_2023-08-27_19-16-48/checkpoint_000035/checkpoint"
     config["safety_layer_cfg"][
         "checkpoint_dir"
-    ] = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-08-27-23-58_ea3f609/debug/train_safety_layer_30ade_00097_97_eps_action=0.0480,eps_dang=0.0142,eps_deriv=0.5726,eps_safe=0.0017,loss_action_weight=0.0004,lr=_2023-08-28_14-04-45/checkpoint_000045/checkpoint"
+    ] = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-08-28-21-25_3788a8a/debug/train_safety_layer_ed2f1_00003_3_eps_action=0.0257,eps_dang=0.0000,eps_deriv=0.0018,eps_safe=0.0024,loss_action_weight=0.2776,lr=0_2023-08-28_21-25-25/checkpoint_000045/checkpoint"
 
     safe_layer = SafetyLayer(env, config["safety_layer_cfg"])
 
@@ -153,7 +153,7 @@ def train(args):
             "training_iteration": args.config["safety_layer_cfg"]["num_epochs"],
             "time_total_s": args.duration,
         },
-        num_samples=5,
+        num_samples=100,
         resources_per_trial={"cpu": 1, "gpu": 0.20},
         config=args.config,
         # checkpoint_freq=10,
