@@ -58,15 +58,15 @@ class SafetyLayer:
     def _parse_config(self):
         # TODO: update config inputs
         # default 1000000
-        self._replay_buffer_size = self._config.get("replay_buffer_size", 1000000)
+        self._replay_buffer_size = self._config.get("replay_buffer_size", 100000)
         self._episode_length = self._config.get("episode_length", 400)
         self._lr = self._config.get("lr", 0.01)
         self._weight_decay = self._config.get("weight_decay", 1e-5)
         # default 256
-        self._batch_size = self._config.get("batch_size", 256)
-        self._num_eval_steps = self._config.get("num_eval_step", 1500)
-        self._num_steps_per_epoch = self._config.get("num_steps_per_epoch", 6000)
-        self._num_epochs = self._config.get("num_epochs", 25)
+        self._batch_size = self._config.get("batch_size", 64)
+        self._num_eval_steps = self._config.get("num_eval_steps", 1500)
+        self._num_training_steps = self._config.get("num_training_steps", 6000)
+        self._num_training_iter = self._config.get("num_training_iter", 25)
         self._report_tune = self._config.get("report_tune", False)
         self._seed = self._config.get("seed", 123)
         self._checkpoint_dir = self._config.get("checkpoint_dir", None)
@@ -356,21 +356,23 @@ class SafetyLayer:
         print(f"Start time: {datetime.fromtimestamp(start_time)}")
         print("==========================================================")
 
-        for epoch in range(self._num_epochs):
-            # sample episodes from whole epoch
-            sample_stats = self._sample_steps(self._num_steps_per_epoch)
+        for training_iter in range(self._num_training_iter):
+            # sample episodes for training iteration
+            sample_stats = self._sample_steps(self._num_training_steps)
 
             # iterate through the buffer and get batches at a time
             train_results = [
                 self._train_batch()
-                for _ in range(self._num_steps_per_epoch // self._batch_size)
+                for _ in range(self._num_training_steps // self._batch_size)
             ]
 
             loss, train_acc_stats = self.parse_results(train_results)
             self._replay_buffer.clear()
             self._train_global_step += 1
 
-            print(f"Finished epoch {epoch} with loss: {loss}. Running validation ...")
+            print(
+                f"Finished training iter {training_iter} with loss: {loss}. Running validation ..."
+            )
 
             val_loss, val_acc_stats = self.evaluate()
             print(f"validation completed, average loss {val_loss}")
@@ -396,8 +398,8 @@ class SafetyLayer:
                     **sample_stats,
                 )
 
-                if epoch % 5 == 0:
-                    with tune.checkpoint_dir(epoch) as checkpoint_dir:
+                if training_iter % 5 == 0:
+                    with tune.checkpoint_dir(training_iter) as checkpoint_dir:
                         path = os.path.join(checkpoint_dir, "checkpoint")
                         torch.save(
                             (self.model.state_dict(), self._optimizer.state_dict()),

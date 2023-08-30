@@ -61,9 +61,6 @@ def parse_arguments():
 def train_safety_layer(config, checkpoint_dir=None):
     env = UavSim(config["env_config"])
     config["safety_layer_cfg"]["report_tune"] = True
-    # config["safety_layer_cfg"]["replay_buffer_size"] = 1000
-    # config["safety_layer_cfg"]["episode_length"] = 10
-    # config["safety_layer_cfg"]["num_epochs"] = 10
 
     if checkpoint_dir:
         config["safety_layer_cfg"]["checkpoint_dir"] = os.path.join(
@@ -73,6 +70,55 @@ def train_safety_layer(config, checkpoint_dir=None):
     safe_action_layer = SafetyLayer(env, config["safety_layer_cfg"])
 
     safe_action_layer.train()
+
+
+def train(args):
+    # args.config["safety_layer_cfg"]["eps_safe"] = tune.loguniform(1e-5, 1)
+    # args.config["safety_layer_cfg"]["eps_dang"] = tune.loguniform(1e-5, 11)
+    # args.config["safety_layer_cfg"]["eps_deriv"] = tune.loguniform(1e-5, 1)
+    # args.config["safety_layer_cfg"]["eps_action"] = tune.loguniform(1e-5, 1)
+    # args.config["safety_layer_cfg"]["lr"] = tune.loguniform(1e-5, 1)
+    # args.config["safety_layer_cfg"]["weight_decay"] = tune.loguniform(1e-5, 1)
+    # args.config["safety_layer_cfg"]["loss_action_weight"] = tune.loguniform(1e-5, 1)
+
+    results = tune.run(
+        train_safety_layer,
+        stop={
+            # "timesteps_total": args.num_timesteps,
+            "training_iteration": args.config["safety_layer_cfg"]["num_training_iter"],
+            "time_total_s": args.duration,
+        },
+        # num_samples=100,
+        resources_per_trial={"cpu": 1, "gpu": 0.50},
+        config=args.config,
+        # checkpoint_freq=10,
+        # checkpoint_at_end=True,
+        local_dir=args.log_dir,
+        name=args.name,
+        restore=args.restore,
+        resume=args.resume,
+    )
+
+
+def test(args):
+    args.config["tune_run"] = args.tune_run
+    # args.config["use_safe_action"] = tune.grid_search([True, False])
+    args.config["use_safe_action"] = True
+    if args.tune_run:
+        results = tune.run(
+            test_safe_action,
+            stop={
+                # "timesteps_total": 20,
+                #     "training_iteration": 100,
+                #     "time_total_s": args.duration,
+            },
+            config=args.config,
+            local_dir=args.log_dir,
+            name=args.name,
+            resources_per_trial={"cpu": 1, "gpu": 0},
+        )
+    else:
+        test_safe_action(args.config)
 
 
 def test_safe_action(config):
@@ -90,7 +136,7 @@ def test_safe_action(config):
     # ] = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-08-27-17-47_07e3223/debug/train_safety_layer_50b66_00010_10_eps_action=0.0002,eps_dang=0.0007,eps_deriv=0.0001,eps_safe=0.0049,loss_action_weight=0.2435,lr=_2023-08-27_19-16-48/checkpoint_000035/checkpoint"
     config["safety_layer_cfg"][
         "checkpoint_dir"
-    ] = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-08-28-21-25_3788a8a/debug/train_safety_layer_ed2f1_00003_3_eps_action=0.0257,eps_dang=0.0000,eps_deriv=0.0018,eps_safe=0.0024,loss_action_weight=0.2776,lr=0_2023-08-28_21-25-25/checkpoint_000045/checkpoint"
+    ] = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-08-28-23-23_b13e4e3/debug/train_safety_layer_7e25e_00072_72_eps_action=0.0002,eps_dang=0.1414,eps_deriv=0.0000,eps_safe=0.0185,loss_action_weight=0.7270,lr=_2023-08-29_15-00-23/checkpoint_000045/checkpoint"
 
     safe_layer = SafetyLayer(env, config["safety_layer_cfg"])
 
@@ -135,104 +181,6 @@ def test_safe_action(config):
                 tune.report(**results)
             obs = env.reset()
             dones["__all__"] = False
-
-
-def train(args):
-    args.config["safety_layer_cfg"]["eps_safe"] = tune.loguniform(1e-5, 1)
-    args.config["safety_layer_cfg"]["eps_dang"] = tune.loguniform(1e-5, 11)
-    args.config["safety_layer_cfg"]["eps_deriv"] = tune.loguniform(1e-5, 1)
-    args.config["safety_layer_cfg"]["eps_action"] = tune.loguniform(1e-5, 1)
-    args.config["safety_layer_cfg"]["lr"] = tune.loguniform(1e-5, 1)
-    args.config["safety_layer_cfg"]["weight_decay"] = tune.loguniform(1e-5, 1)
-    args.config["safety_layer_cfg"]["loss_action_weight"] = tune.loguniform(1e-5, 1)
-
-    results = tune.run(
-        train_safety_layer,
-        stop={
-            # "timesteps_total": args.num_timesteps,
-            "training_iteration": args.config["safety_layer_cfg"]["num_epochs"],
-            "time_total_s": args.duration,
-        },
-        num_samples=100,
-        resources_per_trial={"cpu": 1, "gpu": 0.20},
-        config=args.config,
-        # checkpoint_freq=10,
-        # checkpoint_at_end=True,
-        local_dir=args.log_dir,
-        name=args.name,
-        restore=args.restore,
-        resume=args.resume,
-    )
-
-
-def test(args):
-    args.config["tune_run"] = args.tune_run
-    # args.config["use_safe_action"] = tune.grid_search([True, False])
-    args.config["use_safe_action"] = True
-    if args.tune_run:
-        results = tune.run(
-            test_safe_action,
-            stop={
-                # "timesteps_total": 20,
-                #     "training_iteration": 100,
-                #     "time_total_s": args.duration,
-            },
-            config=args.config,
-            local_dir=args.log_dir,
-            name=args.name,
-            resources_per_trial={"cpu": 1, "gpu": 0},
-        )
-    else:
-        test_safe_action(args.config)
-
-
-# # def test(args):
-# #     args.config["tune_run"] = args.tune_run
-
-# #     if args.experiment:
-# #         args.config["analysis"] = ExperimentAnalysis(args.experiment)
-# #         if not args.tune_run:
-# #             args.config["trial"] = args.config["analysis"].trials[1]
-# #         else:
-# #             args.config["trial"] = tune.grid_search(
-# #                 [trial for trial in args.config["analysis"].trials]
-# #             )
-# #     elif args.checkpoint:
-# #         args.config["checkpoint"] = args.checkpoint
-# #         args.config["restore_checkpoint"] = True
-# #     else:
-# #         args.config["restore_checkpoint"] = False
-
-# #     # args.config["train_config"]["model"]["custom_model_config"][
-# #     #     "use_safe_action"
-# #     # ] = tune.grid_search([True, False])
-# #     # args.config["env_config"]["use_safety_layer"] = tune.grid_search([True, False])
-# #     # args.config["env_config"]["safety_layer_type"] = tune.grid_search(["hard", "soft"])
-# #     args.config["env_config"]["use_safe_action"] = tune.grid_search([True, False])
-# #     # args.config["env_config"]["use_safe_action"] = tune.grid_search([True])
-# #     # args.config["env_config"]["constraint_k"] = 1
-# #     # args.config["env_config"]["constraint_slack"] = 0.2
-
-# #     # args.config["env_config"]["use_safe_action"] = tune.grid_search([False, True])
-# #     # args.config["env_config"]["constraint_slack"] = tune.loguniform(0, 10)
-# #     # args.config["env_config"]["constraint_k"] = tune.loguniform(0, 100)
-# #     if args.tune_run:
-# #         results = tune.run(
-# #             experiment,
-# #             stop={
-# #                 # "timesteps_total": 20,
-# #                 #     "training_iteration": 100,
-# #                 #     "time_total_s": args.duration,
-# #             },
-# #             config=args.config,
-# #             # checkpoint_freq=10,
-# #             checkpoint_at_end=True,
-# #             local_dir=args.log_dir,
-# #             name=args.name,
-# #             resources_per_trial={"cpu": 1, "gpu": 0},
-# #         )
-# #     else:
-# #         experiment(args.config)
 
 
 def main():
