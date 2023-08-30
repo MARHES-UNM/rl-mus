@@ -3,7 +3,6 @@ import json
 import logging
 import os
 import pathlib
-import subprocess
 from datetime import datetime
 import numpy as np
 
@@ -73,9 +72,10 @@ def train_safety_layer(config, checkpoint_dir=None):
 
 
 def train(args):
+    args.config["safety_layer_cfg"]["eps_safe"] = tune.grid_search([0.1, 1])
     # args.config["safety_layer_cfg"]["eps_safe"] = tune.loguniform(1e-5, 1)
     # args.config["safety_layer_cfg"]["eps_dang"] = tune.loguniform(1e-5, 11)
-    # args.config["safety_layer_cfg"]["eps_deriv"] = tune.loguniform(1e-5, 1)
+    args.config["safety_layer_cfg"]["eps_deriv"] = tune.grid_search([0.1, 0.01])
     # args.config["safety_layer_cfg"]["eps_action"] = tune.loguniform(1e-5, 1)
     # args.config["safety_layer_cfg"]["lr"] = tune.loguniform(1e-5, 1)
     # args.config["safety_layer_cfg"]["weight_decay"] = tune.loguniform(1e-5, 1)
@@ -89,7 +89,7 @@ def train(args):
             "time_total_s": args.duration,
         },
         # num_samples=100,
-        resources_per_trial={"cpu": 1, "gpu": 0.50},
+        resources_per_trial={"cpu": 1, "gpu": 0.20},
         config=args.config,
         # checkpoint_freq=10,
         # checkpoint_at_end=True,

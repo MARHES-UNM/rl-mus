@@ -398,7 +398,7 @@ class SafetyLayer:
                     **sample_stats,
                 )
 
-                if training_iter % 5 == 0:
+                if (training_iter + 1) % 5 == 0:
                     with tune.checkpoint_dir(training_iter) as checkpoint_dir:
                         path = os.path.join(checkpoint_dir, "checkpoint")
                         torch.save(
