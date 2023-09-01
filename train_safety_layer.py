@@ -74,6 +74,7 @@ def train_safety_layer(config, checkpoint_dir=None):
 def train(args):
     args.config["safety_layer_cfg"]["eps_safe"] = tune.grid_search([0.1, 1])
     # args.config["safety_layer_cfg"]["eps_safe"] = tune.loguniform(1e-5, 1)
+    # args.config["safety_layer_cfg"]["eps_safe"] = tune.loguniform(1e-5, 1)
     # args.config["safety_layer_cfg"]["eps_dang"] = tune.loguniform(1e-5, 11)
     args.config["safety_layer_cfg"]["eps_deriv"] = tune.grid_search([0.1, 0.01])
     # args.config["safety_layer_cfg"]["eps_action"] = tune.loguniform(1e-5, 1)

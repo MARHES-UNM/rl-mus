@@ -41,9 +41,6 @@ class SafetyLayer:
         self._optimizer = Adam(
             self.model.parameters(), lr=self._lr, weight_decay=self._weight_decay
         )
-        self._u_optimizer = Adam(
-            self.u_model.parameters(), lr=self._lr, weight_decay=self._weight_decay
-        )
 
         self._replay_buffer = ReplayBuffer(self._replay_buffer_size)
 
@@ -57,7 +54,6 @@ class SafetyLayer:
             print("using cuda")
             self._device = "cuda"
         self.model.to(self._device)
-        self.u_model.to(self._device)
 
     def _parse_config(self):
         # TODO: update config inputs
@@ -90,9 +86,6 @@ class SafetyLayer:
         m_control = self._env.action_space[0].shape[0]
 
         self.model = CBF(
-            n_state, n_rel_pad_state, k_obstacle, m_control, self._n_hidden
-        )
-        self.u_model = CBF(
             n_state, n_rel_pad_state, k_obstacle, m_control, self._n_hidden
         )
 
@@ -225,8 +218,8 @@ class SafetyLayer:
 
         safe_mask, unsafe_mask, mid_mask = self._get_mask(constraints)
 
-        h, _ = self.model(state, rel_pad, other_uav_obs, obstacles, u_nominal)
-        _, u = self.u_model(state, rel_pad, other_uav_obs, obstacles, u_nominal)
+        # h = self.model(state, other_uav_obs, obstacles)
+        h, u = self.model(state, rel_pad, other_uav_obs, obstacles, u_nominal)
 
         # TODO: calculate the the nomimal state using https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=9681233
         state_next = state + self.f_dot_torch(state, u) * self._env.dt
@@ -304,11 +297,8 @@ class SafetyLayer:
 
         # zero parameter gradients
         self._optimizer.zero_grad()
-        self._u_optimizer.zero_grad()
-
         loss.backward()
         self._optimizer.step()
-        self._u_optimizer.step()
 
         return loss, acc_stats
 
@@ -353,7 +343,7 @@ class SafetyLayer:
         constraint = torch.unsqueeze(self._as_tensor(obs["constraint"]), dim=0)
         u_nominal = torch.unsqueeze(self._as_tensor(action.squeeze()), dim=0)
         with torch.no_grad():
-            _, u = self.u_model(state, rel_pad, other_uav_obs, obstacles, u_nominal)
+            h, u = self.model(state, rel_pad, other_uav_obs, obstacles, u_nominal)
 
             return u.detach().cpu().numpy().squeeze()
 
