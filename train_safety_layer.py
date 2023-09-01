@@ -72,15 +72,15 @@ def train_safety_layer(config, checkpoint_dir=None):
 
 
 def train(args):
-    args.config["safety_layer_cfg"]["eps"] = tune.grid_search([0.1])
-    args.config["safety_layer_cfg"]["eps_deriv"] = tune.grid_search([0.0017, 0.050])
-    args.config["safety_layer_cfg"]["eps_action"] = tune.grid_search([])
-    args.config["safety_layer_cfg"]["lr"] = tune.grid_search([0.00407])
-    args.config["safety_layer_cfg"]["weight_decay"] = tune.grid_search([0.0042277])
-    args.config["safety_layer_cfg"]["eps_action"] = tune.grid_search([0.01, 0.001])
-    args.config["safety_layer_cfg"]["loss_action_weight"] = tune.grid_search([0.2])
-    # args.config["safety_layer_cfg"]["lr"] = tune.loguniform(1e-5, 1)
-    # args.config["safety_layer_cfg"]["weight_decay"] = tune.loguniform(1e-5, 1)
+    args.config["safety_layer_cfg"]["num_training_iter"] = 200
+    args.config["safety_layer_cfg"]["eps"] = tune.grid_search([0.14, 0.01])
+    args.config["safety_layer_cfg"]["eps_deriv"] = tune.grid_search([0.000042737, 0.01])
+    args.config["safety_layer_cfg"]["eps_action"] = 0.00019
+    # args.config["safety_layer_cfg"]["lr"] = 0.00407
+    # args.config["safety_layer_cfg"]["weight_decay"] = 0.0042277
+    args.config["safety_layer_cfg"]["loss_action_weight"] = 0.1
+    args.config["safety_layer_cfg"]["lr"] = tune.loguniform(5e-4, 0.01)
+    args.config["safety_layer_cfg"]["weight_decay"] = tune.loguniform(1e-5, 0.01)
 
     results = tune.run(
         train_safety_layer,
@@ -89,7 +89,7 @@ def train(args):
             "training_iteration": args.config["safety_layer_cfg"]["num_training_iter"],
             "time_total_s": args.duration,
         },
-        # num_samples=100,
+        num_samples=10,
         resources_per_trial={"cpu": 1, "gpu": 0.20},
         config=args.config,
         # checkpoint_freq=10,
