@@ -58,7 +58,7 @@ class SafetyLayer:
     def _parse_config(self):
         # TODO: update config inputs
         # default 1000000
-        self._replay_buffer_size = self._config.get("replay_buffer_size", 100000)
+        self._replay_buffer_size = self._config.get("replay_buffer_size", 1000000)
         self._episode_length = self._config.get("episode_length", 400)
         self._lr = self._config.get("lr", 0.01)
         self._weight_decay = self._config.get("weight_decay", 1e-5)

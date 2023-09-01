@@ -313,13 +313,9 @@ class UavSim:
         obstacle_states = np.array([obs.state for obs in self.obstacles])
         dist = np.linalg.norm(obstacle_states[:, :3] - uav.state[:3][None, :], axis=1)
         argsort = np.argsort(dist)[: self.num_obstacles]
-        obstacle_to_add = obstacle_states[argsort]
+        obstacles_to_add = obstacle_states[argsort]
 
-        return obstacle_to_add
-        # for obstacle in self.obstacles:
-        #     obstacle_states.append(obstacle.state)
-
-        # obstacles = np.array(obstacle_states)
+        return obstacles_to_add
 
         obs_dict = {
             "state": uav.state.astype(np.float32),
