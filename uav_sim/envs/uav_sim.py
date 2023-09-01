@@ -27,6 +27,10 @@ class UavSim:
         self.num_uavs = env_config.setdefault("num_uavs", 4)
         self.gamma = env_config.setdefault("gamma", 1)
         self.num_obstacles = env_config.setdefault("num_obstacles", 4)
+        self.max_num_obstacles = env_config.setdefault("max_num_obstacles", 30)
+        assert self.max_num_obstacles >= self.num_obstacles, print(
+            f"Max number of obstacles {self.max_num_obstacles} is less than number of obstacles {self.num_obstacles}"
+        )
         self.obstacle_collision_weight = env_config.setdefault(
             "obstacle_collision_weight", 1
         )
@@ -306,11 +310,16 @@ class UavSim:
 
         other_uav_states = np.array(other_uav_states)
 
-        obstacle_states = []
-        for obstacle in self.obstacles:
-            obstacle_states.append(obstacle.state)
+        obstacle_states = np.array([obs.state for obs in self.obstacles])
+        dist = np.linalg.norm(obstacle_states[:, :3] - uav.state[:3][None, :], axis=1)
+        argsort = np.argsort(dist)[: self.num_obstacles]
+        obstacle_to_add = obstacle_states[argsort]
 
-        obstacles = np.array(obstacle_states)
+        return obstacle_to_add
+        # for obstacle in self.obstacles:
+        #     obstacle_states.append(obstacle.state)
+
+        # obstacles = np.array(obstacle_states)
 
         obs_dict = {
             "state": uav.state.astype(np.float32),
@@ -432,7 +441,7 @@ class UavSim:
 
         # Reset obstacles
         self.obstacles = []
-        for idx in range(self.num_obstacles):
+        for idx in range(self.max_num_obstacles):
             x = np.random.rand() * self.env_max_l
             y = np.random.rand() * self.env_max_l
             z = np.random.rand() * self.env_max_h

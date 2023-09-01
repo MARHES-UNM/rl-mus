@@ -142,7 +142,6 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
                 break
             obs, done = env.reset(), {agent.id: False for agent in env.uavs}
             done["__all__"] = False
-            env.reset()
 
             # reinitialize data arrays
             time_step_list = [[] for idx in range(env.num_uavs)]
