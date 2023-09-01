@@ -315,14 +315,12 @@ class UavSim:
         argsort = np.argsort(dist)[: self.num_obstacles]
         obstacles_to_add = obstacle_states[argsort]
 
-        return obstacles_to_add
-
         obs_dict = {
             "state": uav.state.astype(np.float32),
             "rel_pad": (uav.state[0:6] - uav.pad.state[0:6]).astype(np.float32),
             # "landing_pads": landing_pads.astype(np.float32),
             "other_uav_obs": other_uav_states.astype(np.float32),
-            "obstacles": obstacles.astype(np.float32),
+            "obstacles": obstacles_to_add.astype(np.float32),
             "constraint": self._get_uav_constraint(uav).astype(np.float32),
         }
 
