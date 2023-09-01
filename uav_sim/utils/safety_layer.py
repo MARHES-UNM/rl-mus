@@ -72,8 +72,8 @@ class SafetyLayer:
         self._checkpoint_dir = self._config.get("checkpoint_dir", None)
         self._load_buffer = self._config.get("buffer", None)
         self._n_hidden = self._config.get("n_hidden", 32)
-        self.eps_safe = self._config.get("eps_safe", 0.1)
-        self.eps_dang = self._config.get("eps_dang", 0.1)
+        self.eps = self._config.get("eps", 0.1)
+        self.eps = self._config.get("eps", 0.1)
         self.eps_action = self._config.get("eps_action", 0.2)
         self.eps_deriv = self._config.get("eps_deriv", 0.03)
         self.loss_action_weight = self._config.get("loss_action_weight", 0.08)
@@ -233,10 +233,8 @@ class SafetyLayer:
         num_unsafe = torch.sum(unsafe_mask)
         num_mid = torch.sum(mid_mask)
 
-        loss_h_safe = torch.sum(F.relu(self.eps_safe - h) * safe_mask) / (
-            1e-5 + num_safe
-        )
-        loss_h_dang = torch.sum(F.relu(h + self.eps_dang) * unsafe_mask) / (
+        loss_h_safe = torch.sum(F.relu(self.eps - h) * safe_mask) / (1e-5 + num_safe)
+        loss_h_dang = torch.sum(F.relu(h + self.eps) * unsafe_mask) / (
             1e-5 + num_unsafe
         )
 

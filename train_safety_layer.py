@@ -72,15 +72,15 @@ def train_safety_layer(config, checkpoint_dir=None):
 
 
 def train(args):
-    args.config["safety_layer_cfg"]["eps_safe"] = tune.grid_search([0.1, 1])
-    # args.config["safety_layer_cfg"]["eps_safe"] = tune.loguniform(1e-5, 1)
-    # args.config["safety_layer_cfg"]["eps_safe"] = tune.loguniform(1e-5, 1)
-    # args.config["safety_layer_cfg"]["eps_dang"] = tune.loguniform(1e-5, 11)
-    args.config["safety_layer_cfg"]["eps_deriv"] = tune.grid_search([0.1, 0.01])
-    # args.config["safety_layer_cfg"]["eps_action"] = tune.loguniform(1e-5, 1)
+    args.config["safety_layer_cfg"]["eps"] = tune.grid_search([0.1])
+    args.config["safety_layer_cfg"]["eps_deriv"] = tune.grid_search([0.0017, 0.050])
+    args.config["safety_layer_cfg"]["eps_action"] = tune.grid_search([])
+    args.config["safety_layer_cfg"]["lr"] = tune.grid_search([0.00407])
+    args.config["safety_layer_cfg"]["weight_decay"] = tune.grid_search([0.0042277])
+    args.config["safety_layer_cfg"]["eps_action"] = tune.grid_search([0.01, 0.001])
+    args.config["safety_layer_cfg"]["loss_action_weight"] = tune.grid_search([0.2])
     # args.config["safety_layer_cfg"]["lr"] = tune.loguniform(1e-5, 1)
     # args.config["safety_layer_cfg"]["weight_decay"] = tune.loguniform(1e-5, 1)
-    # args.config["safety_layer_cfg"]["loss_action_weight"] = tune.loguniform(1e-5, 1)
 
     results = tune.run(
         train_safety_layer,
