@@ -73,7 +73,7 @@ def train_safety_layer(config, checkpoint_dir=None):
 
 def train(args):
     args.config["safety_layer_cfg"]["num_training_iter"] = 200
-    args.config["safety_layer_cfg"]["eps"] = tune.grid_search([0.14, 0.01])
+    args.config["safety_layer_cfg"]["eps"] = tune.grid_search([0.0001, 0.01])
     args.config["safety_layer_cfg"]["eps_deriv"] = tune.grid_search([0.000042737, 0.01])
     args.config["safety_layer_cfg"]["eps_action"] = 0.00019
     # args.config["safety_layer_cfg"]["lr"] = 0.00407
