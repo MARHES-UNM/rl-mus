@@ -7,14 +7,18 @@ from uav_sim.utils.safety_layer import SafetyLayer
 class TestSafetyLayer(unittest.TestCase):
     def setUp(self):
         self.env = UavSim({"num_uavs": 2, "num_obstacles": 1, "time_final": 10.0})
-        # config = {"replay_buffer_size": 64 * 10, "batch_size": 64, "num_training_iter": 10}
         config = {
-            "num_eval_steps": 3000,
-            "num_training_steps": 12800,
-            "replay_buffer_size": 100000,
-            "batch_size": 512,
+            "replay_buffer_size": 64 * 10,
+            "batch_size": 32,
             "num_training_iter": 10,
         }
+        # config = {
+        #     "num_eval_steps": 3000,
+        #     "num_training_steps": 12800,
+        #     "replay_buffer_size": 100000,
+        #     "batch_size": 512,
+        #     "num_training_iter": 10,
+        # }
         self.sl = SafetyLayer(self.env, config=config)
 
     def test_init(self):
