@@ -82,12 +82,13 @@ if __name__ == "__main__":
         log_dir.mkdir(parents=True, exist_ok=True)
 
     target_v = [0.0, 1.0]
-    use_safe_action = [False, True]
+    # use_safe_action = [False, True]
+    safe_action_type = [None, "cbf", "nn_cbf"]
     num_obstacles = [20, 30]
     seeds = [0, 5000, 173]
 
     target_v = [0.0]
-    use_safe_action = [False, True]
+    safe_action_type = [None, "cbf", "nn_cbf"]
     num_obstacles = [30]
     seeds = [0]
 
@@ -95,12 +96,11 @@ if __name__ == "__main__":
     experiment_num = 0
     for seed in seeds:
         for target in target_v:
-            for action in use_safe_action:
+            for action_type in safe_action_type:
                 for num_obstacle in num_obstacles:
-                    exp_config = {}
+                    exp_config = {"safe_action_type": action_type}
                     env_config = {
                         "target_v": target,
-                        "use_safe_action": action,
                         "num_obstacles": num_obstacle,
                         "seed": seed,
                     }
@@ -108,7 +108,7 @@ if __name__ == "__main__":
 
                     file_prefix = {
                         "tgt_v": target,
-                        "sa": action,
+                        "sa": action_type,
                         "o": num_obstacle,
                         "s": seed,
                     }

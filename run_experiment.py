@@ -10,6 +10,7 @@ from pathlib import Path
 import os
 import logging
 import json
+from uav_sim.utils.safety_layer import SafetyLayer
 
 from uav_sim.utils.utils import get_git_hash
 
@@ -36,8 +37,13 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
     plot_results = exp_config["plot_results"]
 
     env = UavSim(env_config)
-    N = env.t_go_n
-    tf = env.time_final
+
+    sl_config = exp_config["safety_layer_cfg"]
+    sl_config[
+        "checkpoint_dir"
+    ] = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-09-01-06-54_6a6ba7e/debug/train_safety_layer_00757_00017_17_eps=0.0100,eps_deriv=0.0000,lr=0.0013,weight_decay=0.0005_2023-09-01_23-56-57/checkpoint_000244/checkpoint"
+
+    sl = SafetyLayer(env, sl_config)
 
     time_step_list = [[] for idx in range(env.num_uavs)]
     uav_collision_list = [[] for idx in range(env.num_uavs)]
@@ -73,26 +79,19 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
     start_time = time()
 
     while num_episodes < max_num_episodes:
-        pos_er = np.zeros((env.num_uavs, 12))
-        t = env.time_elapsed
         actions = {}
         for idx in range(env.num_uavs):
-            des_pos = np.zeros(12)
-            des_pos[0:6] = env.uavs[idx].pad.state[0:6]
-            pos_er[idx, :] = des_pos[0:12] - env.uavs[idx].state
+            action = env.get_time_coord_action(env.uavs[idx])
 
-            t0 = min(t, tf - 0.1)
-            t_go = (tf - t0) ** N
-            p = env.uavs[idx].get_p_mat(tf, N, t0)
-            B = np.zeros((2, 1))
-            B[1, 0] = 1.0
-            actions[idx] = t_go * np.array(
-                [
-                    B.T @ p[-1].reshape((2, 2)) @ pos_er[idx, [0, 3]],
-                    B.T @ p[-1].reshape((2, 2)) @ pos_er[idx, [1, 4]],
-                    B.T @ p[-1].reshape((2, 2)) @ pos_er[idx, [2, 5]],
-                ]
-            )
+            if exp_config["exp_config"]["safe_action_type"] is not None:
+                if exp_config["exp_config"]["safe_action_type"] == "cbf":
+                    action = env.get_safe_action(env.uavs[idx], action)
+                elif exp_config["exp_config"]["safe_action_type"] == "nn_cbf":
+                    action = sl.get_action(obs[idx], action)
+                else:
+                    print("unknow safe action type")
+
+            actions[idx] = action
 
         obs, rew, done, info = env.step(actions)
         for k, v in info.items():
@@ -103,10 +102,8 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
             uav_collision_list[k].append(v["uav_collision"])
             obstacle_collision_list[k].append(v["obstacle_collision"])
             uav_done_list[k].append(v["uav_landed"])
-            rel_dist = np.linalg.norm(pos_er[k, 0:3])
-            rel_vel = np.linalg.norm(pos_er[k, 3:6])
-            rel_pad_dist[k].append(rel_dist)
-            rel_pad_vel[k].append(rel_vel)
+            rel_pad_dist[k].append(v["uav_rel_dist"])
+            rel_pad_vel[k].append(v["uav_rel_vel"])
 
         if render:
             env.render()

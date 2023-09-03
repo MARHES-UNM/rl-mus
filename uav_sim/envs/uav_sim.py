@@ -58,8 +58,8 @@ class UavSim:
         self.observation_space = self._get_observation_space()
 
     def _get_action_space(self):
-        """The action of the UAV. We don't normalize the action space in this environment. 
-        It is recommended to normalize using a wrapper function. 
+        """The action of the UAV. We don't normalize the action space in this environment.
+        It is recommended to normalize using a wrapper function.
         The uav action consist of acceleration in x, y, and z component."""
         return spaces.Dict(
             {
@@ -188,7 +188,7 @@ class UavSim:
             ]
         )
 
-        return action
+        return action.squeeze()
 
     def get_safe_action(self, uav, des_action):
         G = []
@@ -287,9 +287,13 @@ class UavSim:
             for obstacle in self.obstacles:
                 obstacle_collision += 1 if uav.in_collision(obstacle) else 0
 
+            pos_er = uav.pad.state[0:6] - uav.state[0:6]
+
             info[uav.id] = {
                 "time_step": self.time_elapsed,
                 "obstacle_collision": obstacle_collision,
+                "uav_rel_dist": np.linalg.norm(pos_er[:3]),
+                "uav_rel_vel": np.linalg.norm(pos_er[3:6]),
                 "uav_collision": uav_collision,
                 "uav_landed": 1.0 if uav.landed else 0.0,
                 "uav_done_time": uav.done_time if uav.landed else 0.0,
