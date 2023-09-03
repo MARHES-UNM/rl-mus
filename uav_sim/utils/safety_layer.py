@@ -30,6 +30,7 @@ class SafetyLayer:
 
         self._init_model()
 
+        # TODO: This is not the best way to load hte model because we also need to upload the optimizer. Need to change later.
         if self._checkpoint_dir:
             self.model.load_model(self._checkpoint_dir)
 
@@ -43,7 +44,7 @@ class SafetyLayer:
 
         self._replay_buffer = ReplayBuffer(self._replay_buffer_size)
 
-        # TODO: add method to upload saved models
+        # TODO: need to turn this into a ray trainable class but the api is not stable yet with ray 2.2
         if self._checkpoint:
             checkpoint_state = self._checkpoint.to_dict()
             self._train_global_step = checkpoint_state["epoch"]
@@ -381,6 +382,16 @@ class SafetyLayer:
 
             # TODO: fix report h items
             if self._report_tune:
+                print(f"**** TRAINING ITER {training_iter + 1} **** ")
+                if (training_iter + 1) % 5 == 0:
+                    print("**** SAVING CHECKPOINT ****")
+                    with tune.checkpoint_dir(training_iter) as checkpoint_dir:
+                        path = os.path.join(checkpoint_dir, "checkpoint")
+                        torch.save(
+                            (self.model.state_dict(), self._optimizer.state_dict()),
+                            path,
+                        )
+
                 train_val_stats = {}
                 train_val_stats["train_loss"] = loss
                 train_val_stats["train_acc_h_safe"] = train_acc_stats[0]
@@ -398,26 +409,21 @@ class SafetyLayer:
                 train_val_stats["val_err_action"] = val_acc_stats[5]
 
                 train_val_stats.update(sample_stats)
+                tune.report(**train_val_stats)
 
-                if (training_iter + 1) % 5 == 0:
-                    checkpoint_data = {
-                        "epoch": self._train_global_step,
-                        "net_state_dict": self.model.state_dict(),
-                        "optimizer_state_dict": self._optimizer.state_dict(),
-                    }
-                    checkpoint = Checkpoint.from_dict(checkpoint_data)
+                # TODO: This should work with session report but api is not stable yet.
 
-                    session.report(train_val_stats, checkpoint=checkpoint)
-                else:
-                    session.report(
-                        train_val_stats,
-                    )
+                #     checkpoint_data = {
+                #         "epoch": self._train_global_step,
+                #         "net_state_dict": self.model.state_dict(),
+                #         "optimizer_state_dict": self._optimizer.state_dict(),
+                #     }
+                #     checkpoint = Checkpoint.from_dict(checkpoint_data)
 
-                # with tune.checkpoint_dir(step=training_iter) as checkpoint_dir:
-                #     path = os.path.join(checkpoint_dir, "checkpoint")
-                #     torch.save(
-                #         (self.model.state_dict(), self._optimizer.state_dict()),
-                #         path,
+                #     session.report(train_val_stats, checkpoint=checkpoint)
+                # else:
+                #     session.report(
+                #         train_val_stats,
                 #     )
 
         print("==========================================================")
