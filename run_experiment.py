@@ -83,7 +83,7 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
         for idx in range(env.num_uavs):
             action = env.get_time_coord_action(env.uavs[idx])
 
-            if exp_config["exp_config"]["safe_action_type"] is not None:
+            if exp_config["exp_config"]["safe_action_type"] != "none":
                 if exp_config["exp_config"]["safe_action_type"] == "cbf":
                     action = env.get_safe_action(env.uavs[idx], action)
                 elif exp_config["exp_config"]["safe_action_type"] == "nn_cbf":
@@ -164,6 +164,7 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
 
             fname = f"exp_{experiment_num}_{file_prefix}_result.json"
         results["env_config"] = env.env_config
+        results["exp_config"] = exp_config["exp_config"]
         results["time_total_s"] = end_time
         with open(fname, "w") as f:
             json.dump(results, f)

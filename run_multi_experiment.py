@@ -17,7 +17,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-max_num_episodes = 500
+max_num_episodes = 2
 max_num_cpus = os.cpu_count() - 1
 
 
@@ -30,6 +30,7 @@ def run_experiment(exp_config):
     with open(default_config, "rt") as f:
         config = json.load(f)
 
+    config["exp_config"].update(exp_config["exp_config"])
     config["env_config"].update(exp_config["env_config"])
 
     output_folder = os.path.join(log_dir, exp_config["exp_name"])
@@ -83,14 +84,14 @@ if __name__ == "__main__":
 
     target_v = [0.0, 1.0]
     # use_safe_action = [False, True]
-    safe_action_type = [None, "cbf", "nn_cbf"]
+    safe_action_type = ["none", "cbf"]
     num_obstacles = [20, 30]
     seeds = [0, 5000, 173]
 
-    target_v = [0.0]
-    safe_action_type = [None, "cbf", "nn_cbf"]
-    num_obstacles = [30]
-    seeds = [0]
+    # target_v = [0.0
+    # safe_action_type = [None, "cbf", "nn_cbf"]
+    # num_obstacles = [30]
+    # seeds = [0]
 
     exp_configs = []
     experiment_num = 0
@@ -98,14 +99,14 @@ if __name__ == "__main__":
         for target in target_v:
             for action_type in safe_action_type:
                 for num_obstacle in num_obstacles:
-                    exp_config = {"safe_action_type": action_type}
-                    env_config = {
+                    exp_config = {}
+                    exp_config["exp_config"] = {"safe_action_type": action_type}
+
+                    exp_config["env_config"] = {
                         "target_v": target,
                         "num_obstacles": num_obstacle,
                         "seed": seed,
                     }
-                    exp_config["env_config"] = env_config
-
                     file_prefix = {
                         "tgt_v": target,
                         "sa": action_type,
@@ -113,12 +114,9 @@ if __name__ == "__main__":
                         "s": seed,
                     }
                     file_prefix = "_".join(
-                        [
-                            f"{experiment_num}_{k}_{str(int(v))}"
-                            for k, v in file_prefix.items()
-                        ]
+                        [f"{k}_{str(v)}" for k, v in file_prefix.items()]
                     )
-                    exp_config["exp_name"] = f"exp_{file_prefix}"
+                    exp_config["exp_name"] = f"exp_{experiment_num}_{file_prefix}"
                     exp_config["experiment_num"] = experiment_num
 
                     exp_configs.append(exp_config)
