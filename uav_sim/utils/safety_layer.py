@@ -1,4 +1,3 @@
-from csv import unix_dialect
 import os
 from datetime import datetime
 import random
@@ -218,7 +217,6 @@ class SafetyLayer:
 
         safe_mask, unsafe_mask, mid_mask = self._get_mask(constraints)
 
-        # h = self.model(state, other_uav_obs, obstacles)
         h, u = self.model(state, rel_pad, other_uav_obs, obstacles, u_nominal)
 
         # TODO: calculate the the nomimal state using https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=9681233
@@ -341,7 +339,7 @@ class SafetyLayer:
         constraint = torch.unsqueeze(self._as_tensor(obs["constraint"]), dim=0)
         u_nominal = torch.unsqueeze(self._as_tensor(action.squeeze()), dim=0)
         with torch.no_grad():
-            h, u = self.model(state, rel_pad, other_uav_obs, obstacles, u_nominal)
+            _, u = self.model(state, rel_pad, other_uav_obs, obstacles, u_nominal)
 
             return u.detach().cpu().numpy().squeeze()
 
@@ -396,13 +394,12 @@ class SafetyLayer:
                     **sample_stats,
                 )
 
-                if (training_iter + 1) % 5 == 0:
-                    with tune.checkpoint_dir(training_iter) as checkpoint_dir:
-                        path = os.path.join(checkpoint_dir, "checkpoint")
-                        torch.save(
-                            (self.model.state_dict(), self._optimizer.state_dict()),
-                            path,
-                        )
+                with tune.checkpoint_dir(step=training_iter) as checkpoint_dir:
+                    path = os.path.join(checkpoint_dir, "checkpoint")
+                    torch.save(
+                        (self.model.state_dict(), self._optimizer.state_dict()),
+                        path,
+                    )
 
         print("==========================================================")
         print(

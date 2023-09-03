@@ -58,7 +58,9 @@ class UavSim:
         self.observation_space = self._get_observation_space()
 
     def _get_action_space(self):
-        """The action of the UAV. We don't normalize the action space in this environment. It is recommended to normalize using a wrapper function. The uav action consist of acceleration in x, y, and z component."""
+        """The action of the UAV. We don't normalize the action space in this environment. 
+        It is recommended to normalize using a wrapper function. 
+        The uav action consist of acceleration in x, y, and z component."""
         return spaces.Dict(
             {
                 i: spaces.Box(low=-np.inf, high=np.inf, shape=(3,), dtype=np.float32)

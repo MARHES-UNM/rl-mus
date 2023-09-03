@@ -72,15 +72,15 @@ def train_safety_layer(config, checkpoint_dir=None):
 
 
 def train(args):
-    args.config["safety_layer_cfg"]["num_training_iter"] = 200
-    args.config["safety_layer_cfg"]["eps"] = tune.grid_search([0.0001, 0.01])
-    args.config["safety_layer_cfg"]["eps_deriv"] = tune.grid_search([0.000042737, 0.01])
-    args.config["safety_layer_cfg"]["eps_action"] = 0.00019
+    args.config["safety_layer_cfg"]["num_training_iter"] = 10
+    # args.config["safety_layer_cfg"]["eps"] = tune.grid_search([0.0001, 0.01])
+    # args.config["safety_layer_cfg"]["eps_deriv"] = tune.grid_search([0.000042737, 0.01])
+    # args.config["safety_layer_cfg"]["eps_action"] = 0.00019
     # args.config["safety_layer_cfg"]["lr"] = 0.00407
     # args.config["safety_layer_cfg"]["weight_decay"] = 0.0042277
-    args.config["safety_layer_cfg"]["loss_action_weight"] = 0.1
-    args.config["safety_layer_cfg"]["lr"] = tune.loguniform(5e-4, 0.01)
-    args.config["safety_layer_cfg"]["weight_decay"] = tune.loguniform(1e-5, 0.01)
+    # args.config["safety_layer_cfg"]["loss_action_weight"] = 0.1
+    # args.config["safety_layer_cfg"]["lr"] = tune.loguniform(5e-4, 0.01)
+    # args.config["safety_layer_cfg"]["weight_decay"] = tune.loguniform(1e-5, 0.01)
 
     results = tune.run(
         train_safety_layer,
@@ -92,8 +92,8 @@ def train(args):
         num_samples=10,
         resources_per_trial={"cpu": 1, "gpu": 0.20},
         config=args.config,
-        # checkpoint_freq=10,
-        # checkpoint_at_end=True,
+        checkpoint_freq=10,
+        checkpoint_at_end=True,
         local_dir=args.log_dir,
         name=args.name,
         restore=args.restore,
@@ -137,7 +137,8 @@ def test_safe_action(config):
     # ] = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-08-27-17-47_07e3223/debug/train_safety_layer_50b66_00010_10_eps_action=0.0002,eps_dang=0.0007,eps_deriv=0.0001,eps_safe=0.0049,loss_action_weight=0.2435,lr=_2023-08-27_19-16-48/checkpoint_000035/checkpoint"
     config["safety_layer_cfg"][
         "checkpoint_dir"
-    ] = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-08-28-23-23_b13e4e3/debug/train_safety_layer_7e25e_00072_72_eps_action=0.0002,eps_dang=0.1414,eps_deriv=0.0000,eps_safe=0.0185,loss_action_weight=0.7270,lr=_2023-08-29_15-00-23/checkpoint_000045/checkpoint"
+        # ] = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-08-28-23-23_b13e4e3/debug/train_safety_layer_7e25e_00072_72_eps_action=0.0002,eps_dang=0.1414,eps_deriv=0.0000,eps_safe=0.0185,loss_action_weight=0.7270,lr=_2023-08-29_15-00-23/checkpoint_000045/checkpoint"
+    ] = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-09-01-06-54_6a6ba7e/debug/train_safety_layer_00757_00011_11_eps=0.0100,eps_deriv=0.0100,lr=0.0020,weight_decay=0.0001_2023-09-01_17-58-53/checkpoint_000244/checkpoint"
 
     safe_layer = SafetyLayer(env, config["safety_layer_cfg"])
 
@@ -192,14 +193,6 @@ def main():
             args.config = json.load(f)
 
     logger.debug(f"config: {args.config}")
-    # config = Config(args.config)
-
-    # env_config = config.env_config
-
-    # env_suffix = (
-    #     f"{env_config.num_pursuers}v{env_config.num_evaders}o{env_config.num_obstacles}"
-    # )
-    # env_name = f"cuas_multi_agent-v1_{env_suffix}"
 
     if not args.log_dir:
         branch_hash = get_git_hash()
@@ -208,10 +201,6 @@ def main():
         args.log_dir = (
             f"./results/safety_layer/safety_layer{dir_timestamp}_{branch_hash}"
         )
-
-    # # Must register by passing env_config if wanting to grid search over environment variables
-    # args.config["env_name"] = env_name
-    # tune.register_env(env_name, lambda env_config: CuasEnvMultiAgentV1(env_config))
 
     # https://stackoverflow.com/questions/27529610/call-function-based-on-argparse
     args.func(args)
