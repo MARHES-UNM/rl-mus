@@ -12,6 +12,7 @@ from uav_sim.networks.cbf import CBF
 from uav_sim.utils.replay_buffer import ReplayBuffer
 from torch.optim import Adam
 import ray.tune as tune
+from ray.air import Checkpoint, session
 
 PATH = os.path.dirname(os.path.abspath(__file__))
 
@@ -29,7 +30,6 @@ class SafetyLayer:
 
         self._init_model()
 
-        # TODO: add method to upload saved models
         if self._checkpoint_dir:
             self.model.load_model(self._checkpoint_dir)
 
@@ -43,8 +43,14 @@ class SafetyLayer:
 
         self._replay_buffer = ReplayBuffer(self._replay_buffer_size)
 
-        self._train_global_step = 0
-        self._eval_global_step = 0
+        # TODO: add method to upload saved models
+        if self._checkpoint:
+            checkpoint_state = self._checkpoint.to_dict()
+            self._train_global_step = checkpoint_state["epoch"]
+            self.model.load_state_dict(checkpoint_state["net_state_dict"])
+            self._optimizer.load_state_dict(checkpoint_state["optimizer_state_dict"])
+        else:
+            self._train_global_step = 0
 
         # use gpu if available
         # https://wandb.ai/wandb/common-ml-errors/reports/How-To-Use-GPU-with-PyTorch---VmlldzozMzAxMDk
@@ -69,6 +75,7 @@ class SafetyLayer:
         self._report_tune = self._config.get("report_tune", False)
         self._seed = self._config.get("seed", 123)
         self._checkpoint_dir = self._config.get("checkpoint_dir", None)
+        self._checkpoint = self._config.get("checkpoint", None)
         self._load_buffer = self._config.get("buffer", None)
         self._n_hidden = self._config.get("n_hidden", 32)
         self.eps = self._config.get("eps", 0.1)
@@ -326,7 +333,6 @@ class SafetyLayer:
 
         self._replay_buffer.clear()
 
-        self._eval_global_step += 1
         self.model.train()
 
         return loss, acc_stat
@@ -375,31 +381,44 @@ class SafetyLayer:
 
             # TODO: fix report h items
             if self._report_tune:
-                tune.report(
-                    training_iteration=self._train_global_step,
-                    train_loss=loss,
-                    train_acc_h_safe=train_acc_stats[0],
-                    train_acc_h_dang=train_acc_stats[1],
-                    train_acc_h_deriv_safe=train_acc_stats[2],
-                    train_acc_h_deriv_dang=train_acc_stats[3],
-                    train_acc_h_deriv_mid=train_acc_stats[4],
-                    train_err_action=train_acc_stats[5],
-                    val_loss=val_loss,
-                    val_acc_h_safe=val_acc_stats[0],
-                    val_acc_h_dang=val_acc_stats[1],
-                    val_acc_h_deriv_safe=val_acc_stats[2],
-                    val_acc_h_deriv_dang=val_acc_stats[3],
-                    val_acc_h_deriv_mid=val_acc_stats[4],
-                    val_err_action=val_acc_stats[5],
-                    **sample_stats,
-                )
+                train_val_stats = {}
+                train_val_stats["train_loss"] = loss
+                train_val_stats["train_acc_h_safe"] = train_acc_stats[0]
+                train_val_stats["train_acc_h_dang"] = train_acc_stats[1]
+                train_val_stats["train_acc_h_deriv_safe"] = train_acc_stats[2]
+                train_val_stats["train_acc_h_deriv_dang"] = train_acc_stats[3]
+                train_val_stats["train_acc_h_deriv_mid"] = train_acc_stats[4]
+                train_val_stats["train_err_action"] = train_acc_stats[5]
+                train_val_stats["val_loss"] = val_loss
+                train_val_stats["val_acc_h_safe"] = val_acc_stats[0]
+                train_val_stats["val_acc_h_dang"] = val_acc_stats[1]
+                train_val_stats["val_acc_h_deriv_safe"] = val_acc_stats[2]
+                train_val_stats["val_acc_h_deriv_dang"] = val_acc_stats[3]
+                train_val_stats["val_acc_h_deriv_mid"] = val_acc_stats[4]
+                train_val_stats["val_err_action"] = val_acc_stats[5]
 
-                with tune.checkpoint_dir(step=training_iter) as checkpoint_dir:
-                    path = os.path.join(checkpoint_dir, "checkpoint")
-                    torch.save(
-                        (self.model.state_dict(), self._optimizer.state_dict()),
-                        path,
+                train_val_stats.update(sample_stats)
+
+                if (training_iter + 1) % 5 == 0:
+                    checkpoint_data = {
+                        "epoch": self._train_global_step,
+                        "net_state_dict": self.model.state_dict(),
+                        "optimizer_state_dict": self._optimizer.state_dict(),
+                    }
+                    checkpoint = Checkpoint.from_dict(checkpoint_data)
+
+                    session.report(train_val_stats, checkpoint=checkpoint)
+                else:
+                    session.report(
+                        train_val_stats,
                     )
+
+                # with tune.checkpoint_dir(step=training_iter) as checkpoint_dir:
+                #     path = os.path.join(checkpoint_dir, "checkpoint")
+                #     torch.save(
+                #         (self.model.state_dict(), self._optimizer.state_dict()),
+                #         path,
+                #     )
 
         print("==========================================================")
         print(
