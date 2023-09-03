@@ -380,11 +380,8 @@ class SafetyLayer:
             val_loss, val_acc_stats = self.evaluate()
             print(f"validation completed, average loss {val_loss}")
 
-            # TODO: fix report h items
             if self._report_tune:
-                print(f"**** TRAINING ITER {training_iter + 1} **** ")
                 if (training_iter + 1) % 5 == 0:
-                    print("**** SAVING CHECKPOINT ****")
                     with tune.checkpoint_dir(training_iter) as checkpoint_dir:
                         path = os.path.join(checkpoint_dir, "checkpoint")
                         torch.save(
