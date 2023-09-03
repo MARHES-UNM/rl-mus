@@ -91,7 +91,3 @@ class CBF(nn.Module):
         action_out = self.action_fn(action_out)
 
         return h_out, action_out
-
-    def load_model(self, model_dir, device="cpu"):
-        model_state, _ = torch.load(model_dir, map_location=torch.device(device))
-        self.load_state_dict(model_state)

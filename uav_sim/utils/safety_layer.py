@@ -30,17 +30,20 @@ class SafetyLayer:
 
         self._init_model()
 
-        # TODO: This is not the best way to load hte model because we also need to upload the optimizer. Need to change later.
+        self._optimizer = Adam(
+            self.model.parameters(), lr=self._lr, weight_decay=self._weight_decay
+        )
+
         if self._checkpoint_dir:
-            self.model.load_model(self._checkpoint_dir)
+            model_state, parameter_state = torch.load(
+                self._checkpoint_dir, map_location=torch.device("cpu")
+            )
+            self.model.load_state_dict(model_state)
+            self._optimizer.load_state_dict(parameter_state)
 
         # TODO: load the buffer with the save states
         if self._load_buffer:
             pass
-
-        self._optimizer = Adam(
-            self.model.parameters(), lr=self._lr, weight_decay=self._weight_decay
-        )
 
         self._replay_buffer = ReplayBuffer(self._replay_buffer_size)
 

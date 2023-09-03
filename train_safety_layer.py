@@ -150,7 +150,8 @@ def test_safe_action(config):
     config["safety_layer_cfg"][
         "checkpoint_dir"
         # ] = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-08-28-23-23_b13e4e3/debug/train_safety_layer_7e25e_00072_72_eps_action=0.0002,eps_dang=0.1414,eps_deriv=0.0000,eps_safe=0.0185,loss_action_weight=0.7270,lr=_2023-08-29_15-00-23/checkpoint_000045/checkpoint"
-    ] = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-09-01-06-54_6a6ba7e/debug/train_safety_layer_00757_00011_11_eps=0.0100,eps_deriv=0.0100,lr=0.0020,weight_decay=0.0001_2023-09-01_17-58-53/checkpoint_000244/checkpoint"
+    # ] = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-09-01-06-54_6a6ba7e/debug/train_safety_layer_00757_00011_11_eps=0.0100,eps_deriv=0.0100,lr=0.0020,weight_decay=0.0001_2023-09-01_17-58-53/checkpoint_000244/checkpoint"
+    ] = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-09-01-06-54_6a6ba7e/debug/train_safety_layer_00757_00017_17_eps=0.0100,eps_deriv=0.0000,lr=0.0013,weight_decay=0.0005_2023-09-01_23-56-57/checkpoint_000244/checkpoint"
 
     safe_layer = SafetyLayer(env, config["safety_layer_cfg"])
 

@@ -86,10 +86,10 @@ if __name__ == "__main__":
     num_obstacles = [20, 30]
     seeds = [0, 5000, 173]
 
-    # target_v = [0.0]
-    # use_safe_action = [False, True]
-    # num_obstacles = [30]
-    # seeds = [0]
+    target_v = [0.0]
+    use_safe_action = [False, True]
+    num_obstacles = [30]
+    seeds = [0]
 
     exp_configs = []
     experiment_num = 0
