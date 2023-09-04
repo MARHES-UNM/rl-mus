@@ -84,8 +84,14 @@ def train(args):
     # args.config["safety_layer_cfg"]["loss_action_weight"] = tune.grid_search(
     # [0.01, 0.08]
     # )
-    args.config["safety_layer_cfg"]["eps"] = tune.loguniform(1e-5, 1.0)
-    args.config["safety_layer_cfg"]["eps_deriv"] = tune.loguniform(1e-5, 1.0)
+    args.config["safety_layer_cfg"]["lr"] = tune.grid_search([0.0098821])
+    args.config["safety_layer_cfg"]["eps"] = tune.grid_search([0.1])
+    args.config["safety_layer_cfg"]["eps_deriv"] = tune.grid_search([0.03])
+    args.config["safety_layer_cfg"]["batch_size"] = tune.grid_search(
+        [128, 256, 512, 1024]
+    )
+    # args.config["safety_layer_cfg"]["eps"] = tune.loguniform(1e-5, 1.0)
+    # args.config["safety_layer_cfg"]["eps_deriv"] = tune.loguniform(1e-5, 1.0)
     # args.config["safety_layer_cfg"]["num_training_iter"] = 10
     # args.config["safety_layer_cfg"]["replay_buffer_size"] = 64 * 10
     # args.config["safety_layer_cfg"]["batch_size"] = 32
@@ -109,7 +115,7 @@ def train(args):
             "training_iteration": args.config["safety_layer_cfg"]["num_training_iter"],
             "time_total_s": args.duration,
         },
-        num_samples=10,
+        # num_samples=10,
         resources_per_trial={"cpu": 1, "gpu": 0.20},
         config=args.config,
         # checkpoint_freq=5,

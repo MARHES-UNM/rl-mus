@@ -31,7 +31,9 @@ class SafetyLayer:
         self._init_model()
 
         self._optimizer = Adam(
-            self.model.parameters(), lr=self._lr, weight_decay=self._weight_decay
+            self.model.parameters(),
+            lr=self._lr,
+            # weight_decay=self._weight_decay
         )
 
         if self._checkpoint_dir:
@@ -177,9 +179,13 @@ class SafetyLayer:
         return results
 
     def _get_mask(self, constraints):
-        safe_mask = self._as_tensor([(arr >= 0.0).any() for arr in constraints]).float()
+        safe_dist = 1.0
+        unsafe_dist = 0.6
+        safe_mask = self._as_tensor(
+            [(arr >= safe_dist).any() for arr in constraints]
+        ).float()
         unsafe_mask = self._as_tensor(
-            [(arr < 0.0).any() for arr in constraints]
+            [(arr <= unsafe_dist).any() for arr in constraints]
         ).float()
 
         mid_mask = (1 - safe_mask) * (1 - unsafe_mask)
