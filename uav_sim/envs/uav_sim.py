@@ -442,9 +442,9 @@ class UavSim:
         # Reset obstacles
         self.obstacles = []
         for idx in range(self.max_num_obstacles):
-            x = np.random.rand() * self.env_max_l
+            x = np.random.rand() * self.env_max_w
             y = np.random.rand() * self.env_max_l
-            z = np.random.rand() * self.env_max_h
+            # no obstacles close to target
             z = np.random.uniform(low=0.5, high=self.env_max_h)
             _type = random.choice(list(ObsType))
 

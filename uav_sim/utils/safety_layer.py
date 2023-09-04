@@ -83,7 +83,6 @@ class SafetyLayer:
         self._load_buffer = self._config.get("buffer", None)
         self._n_hidden = self._config.get("n_hidden", 32)
         self.eps = self._config.get("eps", 0.1)
-        self.eps = self._config.get("eps", 0.1)
         self.eps_action = self._config.get("eps_action", 0.2)
         self.eps_deriv = self._config.get("eps_deriv", 0.03)
         self.loss_action_weight = self._config.get("loss_action_weight", 0.08)
