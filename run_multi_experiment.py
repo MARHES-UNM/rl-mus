@@ -17,7 +17,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-max_num_episodes = 2
+max_num_episodes = 10
 max_num_cpus = os.cpu_count() - 1
 
 
@@ -31,6 +31,7 @@ def run_experiment(exp_config):
         config = json.load(f)
 
     config["exp_config"].update(exp_config["exp_config"])
+    config["safety_layer_cfg"].update(exp_config["safety_layer_cfg"])
     config["env_config"].update(exp_config["env_config"])
 
     output_folder = os.path.join(log_dir, exp_config["exp_name"])
@@ -84,7 +85,7 @@ if __name__ == "__main__":
 
     target_v = [0.0, 1.0]
     # use_safe_action = [False, True]
-    safe_action_type = ["none", "cbf"]
+    safe_action_type = ["none", "cbf", "nn_cbf"]
     num_obstacles = [20, 30]
     seeds = [0, 5000, 173]
 
@@ -101,6 +102,9 @@ if __name__ == "__main__":
                 for num_obstacle in num_obstacles:
                     exp_config = {}
                     exp_config["exp_config"] = {"safe_action_type": action_type}
+                    exp_config["safety_layer_cfg"] = {
+                        "checkpoint_dir": r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-09-01-06-54_6a6ba7e/debug/train_safety_layer_00757_00017_17_eps=0.0100,eps_deriv=0.0000,lr=0.0013,weight_decay=0.0005_2023-09-01_23-56-57/checkpoint_000244/checkpoint"
+                    }
 
                     exp_config["env_config"] = {
                         "target_v": target,

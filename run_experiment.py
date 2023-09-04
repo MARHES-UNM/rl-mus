@@ -38,12 +38,8 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
 
     env = UavSim(env_config)
 
-    sl_config = exp_config["safety_layer_cfg"]
-    sl_config[
-        "checkpoint_dir"
-    ] = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-09-01-06-54_6a6ba7e/debug/train_safety_layer_00757_00017_17_eps=0.0100,eps_deriv=0.0000,lr=0.0013,weight_decay=0.0005_2023-09-01_23-56-57/checkpoint_000244/checkpoint"
-
-    sl = SafetyLayer(env, sl_config)
+    if exp_config["exp_config"]["safe_action_type"] == "nn_cbf":
+        sl = SafetyLayer(env, exp_config["safety_layer_cfg"])
 
     time_step_list = [[] for idx in range(env.num_uavs)]
     uav_collision_list = [[] for idx in range(env.num_uavs)]

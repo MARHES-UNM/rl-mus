@@ -11,6 +11,7 @@ class TestSafetyLayer(unittest.TestCase):
             "replay_buffer_size": 64 * 10,
             "batch_size": 32,
             "num_training_iter": 10,
+            "device": "cuda",
         }
         # config = {
         #     "num_eval_steps": 3000,

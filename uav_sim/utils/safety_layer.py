@@ -58,8 +58,8 @@ class SafetyLayer:
 
         # use gpu if available
         # https://wandb.ai/wandb/common-ml-errors/reports/How-To-Use-GPU-with-PyTorch---VmlldzozMzAxMDk
-        self._device = "cpu"
-        if torch.cuda.is_available():
+        # self._device = "cpu"
+        if torch.cuda.is_available() and self._device == "cuda":
             print("using cuda")
             self._device = "cuda"
         self.model.to(self._device)
@@ -87,6 +87,7 @@ class SafetyLayer:
         self.eps_action = self._config.get("eps_action", 0.2)
         self.eps_deriv = self._config.get("eps_deriv", 0.03)
         self.loss_action_weight = self._config.get("loss_action_weight", 0.08)
+        self._device = self._config.get("device", "cpu")
 
     def _init_model(self):
         obs_space = self._env.observation_space

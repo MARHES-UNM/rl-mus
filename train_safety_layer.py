@@ -78,6 +78,7 @@ def train_safety_layer(config, checkpoint_dir=None):
 
 
 def train(args):
+    args.config["safety_layer_cfg"]["device"] = "cuda"
     args.config["safety_layer_cfg"]["num_training_iter"] = 10
     args.config["safety_layer_cfg"]["replay_buffer_size"] = 64 * 10
     args.config["safety_layer_cfg"]["batch_size"] = 32
