@@ -88,7 +88,9 @@ if __name__ == "__main__":
     safe_action_type = ["none", "cbf", "nn_cbf"]
     num_obstacles = [20, 30]
     seeds = [0, 5000, 173]
-    checkpoint_dir = r'/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-09-01-06-54_6a6ba7e/debug/train_safety_layer_00757_00000_0_eps=0.0001,eps_deriv=0.0000,lr=0.0029,weight_decay=0.0000_2023-09-01_06-55-02/checkpoint_000244/checkpoint'
+    checkpoint_dir = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-09-01-06-54_6a6ba7e/debug/train_safety_layer_00757_00000_0_eps=0.0001,eps_deriv=0.0000,lr=0.0029,weight_decay=0.0000_2023-09-01_06-55-02/checkpoint_000244/checkpoint"
+    checkpoint_dir = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-09-04-00-12_fd3b073/debug/train_safety_layer_545fd_00007_7_num_obstacles=8,target_v=1.0000,loss_action_weight=0.0800_2023-09-04_04-48-25/checkpoint_000199/checkpoint"
+    checkpoint_dir = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-09-04-00-12_fd3b073/debug/train_safety_layer_545fd_00001_1_num_obstacles=8,target_v=0.0000,loss_action_weight=0.0100_2023-09-04_00-12-59/checkpoint_000199/checkpoint"
 
     # target_v = [0.0
     # safe_action_type = [None, "cbf", "nn_cbf"]
@@ -103,9 +105,7 @@ if __name__ == "__main__":
                 for num_obstacle in num_obstacles:
                     exp_config = {}
                     exp_config["exp_config"] = {"safe_action_type": action_type}
-                    exp_config["safety_layer_cfg"] = {
-                        "checkpoint_dir": checkpoint_dir
-                    }
+                    exp_config["safety_layer_cfg"] = {"checkpoint_dir": checkpoint_dir}
 
                     exp_config["env_config"] = {
                         "target_v": target,

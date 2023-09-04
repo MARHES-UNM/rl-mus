@@ -196,3 +196,8 @@ To reference:
 https://github.com/AgrawalAmey/safe-explorer
 https://github.com/zisikons/deep-rl/tree/main
 https://github.com/MIT-REALM/sablas
+
+
+## TODO: 
+update to use ray air session: https://pytorch.org/tutorials/beginner/hyperparameter_tuning_tutorial.html
+reference this paper: https://ieeexplore.ieee.org/document/9849119/authors#authors
