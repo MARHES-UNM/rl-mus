@@ -237,10 +237,14 @@ class SafetyLayer:
         h, u = self.model(state, rel_pad, other_uav_obs, obstacles, u_nominal)
 
         # TODO: calculate the the nomimal state using https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=9681233
-        state_next = state + self.f_dot_torch(state, u) * self._env.dt
+        state_next_nominal = state + self.f_dot_torch(state, u) * self._env.dt
+
+        state_next_grad = (
+            state_next_nominal + (state_next - state_next_nominal).detach()
+        )
 
         h_next, _ = self.model(
-            state_next, rel_pad_next, other_uav_obs_next, obstacles_next, u_nominal
+            state_next_grad, rel_pad_next, other_uav_obs_next, obstacles_next, u_nominal
         )
         h_deriv = (h_next - h) / self._env.dt + h
 
@@ -359,6 +363,22 @@ class SafetyLayer:
 
             return u.detach().cpu().numpy().squeeze()
 
+    # TODO: use this function for training and return training stats
+    def fit(self):
+        sample_stats = self._sample_steps(self._num_training_steps)
+
+        # iterate through the buffer and get batches at a time
+        train_results = [
+            self._train_batch()
+            for _ in range(self._num_training_steps // self._batch_size)
+        ]
+
+        loss, train_acc_stats = self.parse_results(train_results)
+        self._replay_buffer.clear()
+        self._train_global_step += 1
+
+        return loss, train_acc_stats, sample_stats
+
     def train(self):
         """Train Step"""
         start_time = time()
@@ -369,6 +389,7 @@ class SafetyLayer:
         print("==========================================================")
 
         for training_iter in range(self._num_training_iter):
+            # TODO: refactor to use fit function instead
             # sample episodes for training iteration
             sample_stats = self._sample_steps(self._num_training_steps)
 

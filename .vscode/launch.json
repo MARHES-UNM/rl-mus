@@ -156,6 +156,19 @@
             ]
         },
         {
+            "name": "plot_results",
+            "type": "python",
+            "request": "launch",
+            "program": "${cwd}/plot_results.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "DISPLAY": "192.168.1.18:0.0"
+            },
+            "args": ["--exp_folder", "/home/prime/Documents/workspace/uav_sim/results/test_results/exp_2023-09-04-22-33_4d077de"],
+        },
+        {
             "name": "unittest_safety_layer",
             "type": "python",
             "request": "launch",
