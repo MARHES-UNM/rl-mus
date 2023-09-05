@@ -133,7 +133,9 @@ class UavSim:
 
                 constraints.append(np.linalg.norm(delta_p) - (uav.r + other_uav.r))
 
-        for obstacle in self.obstacles:
+        closest_obstacles = self._get_closest_obstacles(uav)
+        
+        for obstacle in closest_obstacles:
             delta_p = uav.pos - obstacle.pos
 
             constraints.append(np.linalg.norm(delta_p) - (uav.r + obstacle.r))
@@ -301,6 +303,13 @@ class UavSim:
 
         return info
 
+    def _get_closest_obstacles(self, uav):
+        obstacle_states = np.array([obs.state for obs in self.obstacles])
+        dist = np.linalg.norm(obstacle_states[:, :3] - uav.state[:3][None, :], axis=1)
+        argsort = np.argsort(dist)[: self.num_obstacles]
+        closest_obstacles = [self.obstacles[idx] for idx in argsort]
+        return closest_obstacles
+
     def _get_obs(self, uav):
         other_uav_states = []
 
@@ -316,10 +325,7 @@ class UavSim:
 
         other_uav_states = np.array(other_uav_states)
 
-        obstacle_states = np.array([obs.state for obs in self.obstacles])
-        dist = np.linalg.norm(obstacle_states[:, :3] - uav.state[:3][None, :], axis=1)
-        argsort = np.argsort(dist)[: self.num_obstacles]
-        obstacles_to_add = obstacle_states[argsort]
+        obstacles_to_add = np.array([obs.state for obs in self._get_closest_obstacles(uav)])
 
         obs_dict = {
             "state": uav.state.astype(np.float32),

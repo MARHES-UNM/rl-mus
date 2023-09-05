@@ -182,7 +182,7 @@ class SafetyLayer:
         safe_dist = 1.0
         unsafe_dist = 0.6
         safe_mask = self._as_tensor(
-            [(arr >= safe_dist).any() for arr in constraints]
+            [(arr >= safe_dist).all() for arr in constraints]
         ).float()
         unsafe_mask = self._as_tensor(
             [(arr <= unsafe_dist).any() for arr in constraints]

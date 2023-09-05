@@ -29,6 +29,14 @@ class TestSafetyLayer(unittest.TestCase):
     def test_train(self):
         self.sl.train()
 
+    def test_get_mask(self):
+        self.sl._sample_steps(200)
+        batch = self.sl._replay_buffer.sample(self.sl._batch_size)
+        constraints = self.sl._as_tensor(batch["constraint"])
+        safe_mask, unsafe_mask, mid_mask = self.sl._get_mask(constraints)
+
+        print(safe_mask)
+
 
 if __name__ == "__main__":
     unittest.main()
