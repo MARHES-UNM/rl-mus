@@ -239,12 +239,13 @@ class SafetyLayer:
         # TODO: calculate the the nomimal state using https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=9681233
         state_next_nominal = state + self.f_dot_torch(state, u) * self._env.dt
 
-        state_next_grad = (
-            state_next_nominal + (state_next - state_next_nominal).detach()
-        )
+        # TODO: need to troubleshoot issue with state_next_grad not converging. 
+        # state_next_grad = (
+        #     state_next_nominal + (state_next - state_next_nominal).detach()
+        # )
 
         h_next, _ = self.model(
-            state_next_grad, rel_pad_next, other_uav_obs_next, obstacles_next, u_nominal
+            state_next_nominal, rel_pad_next, other_uav_obs_next, obstacles_next, u_nominal
         )
         h_deriv = (h_next - h) / self._env.dt + h
 
