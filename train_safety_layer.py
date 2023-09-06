@@ -93,7 +93,7 @@ def train(args):
     )
     # args.config["safety_layer_cfg"]["eps"] = tune.loguniform(1e-5, 1.0)
     # args.config["safety_layer_cfg"]["eps_deriv"] = tune.loguniform(1e-5, 1.0)
-    # args.config["safety_layer_cfg"]["num_training_iter"] = 10
+    # args.config["safety_layer_cfg"]["num_epochs"] = 10
     # args.config["safety_layer_cfg"]["replay_buffer_size"] = 64 * 10
     # args.config["safety_layer_cfg"]["batch_size"] = 32
     # args.config["safety_layer_cfg"]["num_eval_steps"] = 64
@@ -113,7 +113,7 @@ def train(args):
         train_safety_layer,
         stop={
             # "timesteps_total": args.num_timesteps,
-            "training_iteration": args.config["safety_layer_cfg"]["num_training_iter"],
+            "training_iteration": args.config["safety_layer_cfg"]["num_epochs"],
             "time_total_s": args.duration,
         },
         # num_samples=10,

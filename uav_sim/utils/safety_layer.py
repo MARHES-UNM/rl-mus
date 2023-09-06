@@ -77,7 +77,10 @@ class SafetyLayer:
         self._batch_size = self._config.get("batch_size", 64)
         self._num_eval_steps = self._config.get("num_eval_steps", 1500)
         self._num_training_steps = self._config.get("num_training_steps", 6000)
-        self._num_training_iter = self._config.get("num_training_iter", 25)
+        self._num_epochs = self._config.get("num_epochs", 25)
+        self._num_iter_per_epoch = self._config.get(
+            "num_iter_per_epoch", self._num_training_steps // self._batch_size
+        )
         self._report_tune = self._config.get("report_tune", False)
         self._seed = self._config.get("seed", 123)
         self._checkpoint_dir = self._config.get("checkpoint_dir", None)
@@ -239,13 +242,17 @@ class SafetyLayer:
         # TODO: calculate the the nomimal state using https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=9681233
         state_next_nominal = state + self.f_dot_torch(state, u) * self._env.dt
 
-        # TODO: need to troubleshoot issue with state_next_grad not converging. 
+        # TODO: need to troubleshoot issue with state_next_grad not converging.
         # state_next_grad = (
         #     state_next_nominal + (state_next - state_next_nominal).detach()
         # )
 
         h_next, _ = self.model(
-            state_next_nominal, rel_pad_next, other_uav_obs_next, obstacles_next, u_nominal
+            state_next_nominal,
+            rel_pad_next,
+            other_uav_obs_next,
+            obstacles_next,
+            u_nominal,
         )
         h_deriv = (h_next - h) / self._env.dt + h
 
@@ -389,15 +396,14 @@ class SafetyLayer:
         print(f"Start time: {datetime.fromtimestamp(start_time)}")
         print("==========================================================")
 
-        for training_iter in range(self._num_training_iter):
+        for epoch in range(self._num_epochs):
             # TODO: refactor to use fit function instead
             # sample episodes for training iteration
             sample_stats = self._sample_steps(self._num_training_steps)
 
             # iterate through the buffer and get batches at a time
             train_results = [
-                self._train_batch()
-                for _ in range(self._num_training_steps // self._batch_size)
+                self._train_batch() for _ in range(self._num_iter_per_epoch)
             ]
 
             loss, train_acc_stats = self.parse_results(train_results)
@@ -405,15 +411,15 @@ class SafetyLayer:
             self._train_global_step += 1
 
             print(
-                f"Finished training iter {training_iter} with loss: {loss}. Running validation ..."
+                f"Finished training epoch {epoch} with loss: {loss}. Running validation ..."
             )
 
             val_loss, val_acc_stats = self.evaluate()
             print(f"validation completed, average loss {val_loss}")
 
             if self._report_tune:
-                if (training_iter + 1) % 5 == 0:
-                    with tune.checkpoint_dir(training_iter) as checkpoint_dir:
+                if (epoch + 1) % 5 == 0:
+                    with tune.checkpoint_dir(epoch) as checkpoint_dir:
                         path = os.path.join(checkpoint_dir, "checkpoint")
                         torch.save(
                             (self.model.state_dict(), self._optimizer.state_dict()),

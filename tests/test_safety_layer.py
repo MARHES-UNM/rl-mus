@@ -10,7 +10,7 @@ class TestSafetyLayer(unittest.TestCase):
         config = {
             "replay_buffer_size": 64 * 10,
             "batch_size": 32,
-            "num_training_iter": 10,
+            "num_epochs": 10,
             "device": "cuda",
         }
         # config = {
@@ -18,7 +18,7 @@ class TestSafetyLayer(unittest.TestCase):
         #     "num_training_steps": 12800,
         #     "replay_buffer_size": 100000,
         #     "batch_size": 512,
-        #     "num_training_iter": 10,
+        #     "num_epochs": 10,
         # }
         self.sl = SafetyLayer(self.env, config=config)
 
