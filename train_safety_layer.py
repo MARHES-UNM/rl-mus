@@ -84,10 +84,11 @@ def train(args):
     # args.config["safety_layer_cfg"]["loss_action_weight"] = tune.grid_search(
     # [0.01, 0.08]
     # )
+    args.config["safety_layer_cfg"]["n_hidden"] = tune.grid_search([256])
     args.config["safety_layer_cfg"]["num_training_steps"] = tune.grid_search([10000])
-    args.config["safety_layer_cfg"]["num_epochs"] = tune.grid_search([2000])
+    args.config["safety_layer_cfg"]["num_epochs"] = 2000
     args.config["safety_layer_cfg"]["num_iter_per_epoch"] = tune.grid_search([100])
-    args.config["safety_layer_cfg"]["lr"] = tune.grid_search([1e-5])
+    args.config["safety_layer_cfg"]["lr"] = tune.grid_search([5e-4])
     args.config["safety_layer_cfg"]["eps"] = tune.grid_search([0.1, 0.0004])
     args.config["safety_layer_cfg"]["eps_deriv"] = tune.grid_search([0.03, 0.0005])
     args.config["safety_layer_cfg"]["batch_size"] = tune.grid_search(
@@ -135,7 +136,7 @@ def test(args):
     args.config["tune_run"] = args.tune_run
     # args.config["use_safe_action"] = tune.grid_search([True, False])
     args.config["use_safe_action"] = True
-    args.config["env_config"]["target_v"] = 1.0
+    args.config["env_config"]["target_v"] = 0.0
     if args.tune_run:
         results = tune.run(
             test_safe_action,
@@ -172,7 +173,7 @@ def test_safe_action(config):
         # ] = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-09-01-06-54_6a6ba7e/debug/train_safety_layer_00757_00011_11_eps=0.0100,eps_deriv=0.0100,lr=0.0020,weight_decay=0.0001_2023-09-01_17-58-53/checkpoint_000244/checkpoint"
         # ] = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-09-01-06-54_6a6ba7e/debug/train_safety_layer_00757_00017_17_eps=0.0100,eps_deriv=0.0000,lr=0.0013,weight_decay=0.0005_2023-09-01_23-56-57/checkpoint_000244/checkpoint"
         # ] = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-09-04-00-12_fd3b073/debug/train_safety_layer_545fd_00007_7_num_obstacles=8,target_v=1.0000,loss_action_weight=0.0800_2023-09-04_04-48-25/checkpoint_000199/checkpoint"
-    ] = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-09-04-00-12_fd3b073/debug/train_safety_layer_545fd_00001_1_num_obstacles=8,target_v=0.0000,loss_action_weight=0.0100_2023-09-04_00-12-59/checkpoint_000199/checkpoint"
+    ] = r""
 
     safe_layer = SafetyLayer(env, config["safety_layer_cfg"])
 

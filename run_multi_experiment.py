@@ -91,7 +91,7 @@ if __name__ == "__main__":
     checkpoint_dir = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-09-01-06-54_6a6ba7e/debug/train_safety_layer_00757_00000_0_eps=0.0001,eps_deriv=0.0000,lr=0.0029,weight_decay=0.0000_2023-09-01_06-55-02/checkpoint_000244/checkpoint"
     checkpoint_dir = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-09-04-00-12_fd3b073/debug/train_safety_layer_545fd_00007_7_num_obstacles=8,target_v=1.0000,loss_action_weight=0.0800_2023-09-04_04-48-25/checkpoint_000199/checkpoint"
     checkpoint_dir = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-09-04-00-12_fd3b073/debug/train_safety_layer_545fd_00001_1_num_obstacles=8,target_v=0.0000,loss_action_weight=0.0100_2023-09-04_00-12-59/checkpoint_000199/checkpoint"
-    checkpoint_dir = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-09-04-17-41_4d077de/debug/train_safety_layer_d6bf6_00000_0_batch_size=128,eps=0.1000,eps_deriv=0.0300,lr=0.0099_2023-09-04_17-41-43/checkpoint_000199/checkpoint"
+    checkpoint_dir = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-09-06-19-08_db7fb82/debug/train_safety_layer_44e59_00000_0_batch_size=1024,eps=0.1000,eps_deriv=0.0300,lr=0.0000,num_epochs=2000,num_iter_per_epoch=100,num__2023-09-06_19-08-19/checkpoint_000734/checkpoint"
 
     # target_v = [0.0
     # safe_action_type = [None, "cbf", "nn_cbf"]
