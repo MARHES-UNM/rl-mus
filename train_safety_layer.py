@@ -84,16 +84,16 @@ def train(args):
     # args.config["safety_layer_cfg"]["loss_action_weight"] = tune.grid_search(
     # [0.01, 0.08]
     # )
-    args.config["safety_layer_cfg"]["n_hidden"] = tune.grid_search([256])
-    args.config["safety_layer_cfg"]["num_training_steps"] = tune.grid_search([10000])
-    args.config["safety_layer_cfg"]["num_epochs"] = 2000
+    args.config["safety_layer_cfg"]["n_hidden"] = tune.grid_search([32])
+    args.config["safety_layer_cfg"]["num_training_steps"] = tune.grid_search([6000])
+    args.config["safety_layer_cfg"]["num_epochs"] = 200
     args.config["safety_layer_cfg"]["num_iter_per_epoch"] = tune.grid_search([100])
     args.config["safety_layer_cfg"]["lr"] = tune.grid_search([5e-4])
     args.config["safety_layer_cfg"]["eps"] = tune.grid_search([0.1, 0.0004])
     args.config["safety_layer_cfg"]["eps_deriv"] = tune.grid_search([0.03, 0.0005])
     args.config["safety_layer_cfg"]["batch_size"] = tune.grid_search(
         # [128, 256, 512, 1024]
-        [1024]
+        [128]
     )
     # args.config["safety_layer_cfg"]["eps"] = tune.loguniform(1e-5, 1.0)
     # args.config["safety_layer_cfg"]["eps_deriv"] = tune.loguniform(1e-5, 1.0)
