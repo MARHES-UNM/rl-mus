@@ -1,3 +1,4 @@
+import argparse
 from datetime import datetime
 import subprocess
 from pathlib import Path
@@ -7,6 +8,7 @@ import concurrent.futures
 from functools import partial
 import logging
 import json
+from uav_sim.utils.utils import get_git_hash
 
 
 formatter = "%(asctime)s: %(name)s - %(levelname)s - <%(module)s:%(funcName)s:%(lineno)d> - %(message)s"
@@ -24,7 +26,7 @@ max_num_cpus = os.cpu_count() - 1
 PATH = Path(__file__).parent.absolute().resolve()
 
 
-def run_experiment(exp_config):
+def run_experiment(exp_config, log_dir, max_num_episodes):
     logger.debug(f"exp_config:{exp_config}")
     default_config = f"{PATH}/configs/sim_config.cfg"
     with open(default_config, "rt") as f:
@@ -69,35 +71,49 @@ def run_experiment(exp_config):
     return rv
 
 
-if __name__ == "__main__":
-    branch_hash = (
-        subprocess.check_output(["git", "rev-parse", "--short", "HEAD"])
-        .strip()
-        .decode()
+def parse_arguments():
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("--log_dir", type=str, help="folder to log experiment")
+    parser.add_argument(
+        "--exp_config",
+        help="load experiment configuration.",
+        default=f"{PATH}/configs/exp_basic_cfg.json",
     )
+    parser.add_argument("--nn_cbf_dir", help="checkpoint for learned cbf")
 
-    dir_timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M")
+    args = parser.parse_args()
 
-    log_dir = Path(f"./results/test_results/exp_{dir_timestamp}_{branch_hash}")
+    return args
 
-    if not log_dir.exists():
-        log_dir.mkdir(parents=True, exist_ok=True)
 
-    target_v = [0.0, 1.0]
-    # use_safe_action = [False, True]
-    safe_action_type = ["none", "cbf", "nn_cbf"]
-    num_obstacles = [20, 30]
-    seeds = [0, 5000, 173]
-    checkpoint_dir = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-09-01-06-54_6a6ba7e/debug/train_safety_layer_00757_00000_0_eps=0.0001,eps_deriv=0.0000,lr=0.0029,weight_decay=0.0000_2023-09-01_06-55-02/checkpoint_000244/checkpoint"
-    checkpoint_dir = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-09-04-00-12_fd3b073/debug/train_safety_layer_545fd_00007_7_num_obstacles=8,target_v=1.0000,loss_action_weight=0.0800_2023-09-04_04-48-25/checkpoint_000199/checkpoint"
-    checkpoint_dir = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-09-04-00-12_fd3b073/debug/train_safety_layer_545fd_00001_1_num_obstacles=8,target_v=0.0000,loss_action_weight=0.0100_2023-09-04_00-12-59/checkpoint_000199/checkpoint"
-    checkpoint_dir = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-09-06-19-08_db7fb82/debug/train_safety_layer_44e59_00000_0_batch_size=1024,eps=0.1000,eps_deriv=0.0300,lr=0.0000,num_epochs=2000,num_iter_per_epoch=100,num__2023-09-06_19-08-19/checkpoint_000734/checkpoint"
-    checkpoint_dir = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-09-09-14-08_d056fbe/small_1_dist/train_safety_layer_d1e8e_00001_1_batch_size=128,eps=0.1000,eps_deriv=0.0300,loss_action_weight=0.0000,lr=0.0005,n_hidden=32,num_it_2023-09-09_14-08-05/checkpoint_000034/checkpoint"
+if __name__ == "__main__":
+    args = parse_arguments()
 
-    # target_v = [0.0
-    # safe_action_type = [None, "cbf", "nn_cbf"]
-    # num_obstacles = [30]
-    # seeds = [0]
+    if args.exp_config:
+        with open(args.exp_config, "rt") as f:
+            args.exp_config = json.load(f)
+
+    if not args.log_dir:
+        branch_hash = get_git_hash()
+
+        dir_timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M")
+
+        args.log_dir = Path(f"./results/test_results/exp_{dir_timestamp}_{branch_hash}")
+
+    if not args.log_dir.exists():
+        args.log_dir.mkdir(parents=True, exist_ok=True)
+
+    max_num_episodes = args.exp_config["exp_config"]["max_num_episodes"]
+    target_v = args.exp_config["env_config"]["target_v"]
+    safe_action_type = args.exp_config["exp_config"]["safe_action_type"]
+    num_obstacles = args.exp_config["env_config"]["num_obstacles"]
+    seeds = args.exp_config["exp_config"]["seed"]
+
+    if args.nn_cbf_dir is not None:
+        checkpoint_dir = args.nn_cbf_dir
+    else:
+        checkpoint_dir = args.exp_config["safety_layer_cfg"]["checkpoint_dir"]
 
     exp_configs = []
     experiment_num = 0
@@ -132,11 +148,14 @@ if __name__ == "__main__":
                     exp_configs.append(exp_config)
                     experiment_num += 1
 
-    starter = partial(run_experiment)
+    starter = partial(
+        run_experiment, max_num_episodes=max_num_episodes, log_dir=args.log_dir
+    )
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_num_cpus) as executor:
         future_run_experiment = [
-            executor.submit(starter, exp_config) for exp_config in exp_configs
+            executor.submit(starter, exp_config=exp_config)
+            for exp_config in exp_configs
         ]
         for future in concurrent.futures.as_completed(future_run_experiment):
             rv = future.result()

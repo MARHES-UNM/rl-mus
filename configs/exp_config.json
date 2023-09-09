@@ -1,0 +1,26 @@
+{
+    "env_config": {
+        "target_v": [
+            0.0
+        ],
+        "num_obstacles": [
+            8
+        ]
+    },
+    "exp_config": {
+        "name": "basic",
+        "safe_action_type": [
+            "none",
+            "cbf",
+            "nn_cbf"
+        ],
+        "seed": [
+            0,
+            5000,
+            173
+        ]
+    },
+    "safety_layer_cfg": {
+        "checkpoint_dir": ""
+    }
+}

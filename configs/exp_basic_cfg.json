@@ -1,0 +1,25 @@
+{
+    "env_config": {
+        "target_v": [
+            0.0
+        ],
+        "num_obstacles": [
+            30
+        ]
+    },
+    "exp_config": {
+        "name": "basic",
+        "max_num_episodes": 10,
+        "safe_action_type": [
+            "none",
+            "cbf",
+            "nn_cbf"
+        ],
+        "seed": [
+            0
+        ]
+    },
+    "safety_layer_cfg": {
+        "checkpoint_dir": null
+    }
+}
