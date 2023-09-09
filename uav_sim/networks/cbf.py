@@ -30,18 +30,19 @@ class CBF(nn.Module):
         self.rho_obstacles = nn.Sequential(nn.Linear(n_hidden, n_hidden), nn.ReLU())
 
         self.last_state = nn.Sequential(
+            # uav_state + rel_pad_state + other_uav_states + obstacles
             nn.Linear(
-                n_state
-                + n_rel_pad
-                + n_hidden
-                + n_hidden,  # uav_state + other_uav_states + obstacles
+                n_state + n_rel_pad + n_hidden + n_hidden,
                 n_hidden,
             ),
             nn.ReLU(),
             nn.Linear(n_hidden, n_hidden),
         )
 
-        self.h_fn = nn.Linear(n_hidden, 1)
+        # self.h_fn = nn.Linear(n_hidden, 1)
+        self.h_fn = nn.Sequential(
+            nn.Linear(n_hidden, n_hidden), nn.ReLU(), nn.Linear(n_hidden, 1)
+        )
         self.action_fn = nn.Sequential(
             nn.Linear(n_hidden + m_control, n_hidden),
             nn.ReLU(),
