@@ -74,7 +74,6 @@ def plot_groups(groups, items, output_folder, labels_to_plot, plot_type="box"):
             # print(f'group_key{group["group_key"]}')
             group_to_plot = group["group"].get_group(group["group_key"])
             group_to_plot.safe_action = group_to_plot.safe_action.astype("category")
-            # # group_to_plot.checkpoint = group_to_plot.checkpoint.astype("category")
             group_to_plot.safe_action = group_to_plot.safe_action.cat.set_categories(
                 labels_to_plot
             )
@@ -95,6 +94,7 @@ def plot_groups(groups, items, output_folder, labels_to_plot, plot_type="box"):
                     output_folder, f"img_{plot_type}_{group['group_title']}_{key}.png"
                 )
             )
+            plt.close(fig)
 
     # We're going to create a separate figure with legends.
     # https://stackoverflow.com/questions/4534480/get-legend-as-a-separate-picture-in-matplotlib
@@ -111,6 +111,7 @@ def plot_groups(groups, items, output_folder, labels_to_plot, plot_type="box"):
     # hide the axes frame and the x/y labels
     ax_leg.axis("off")
     fig_leg.savefig(os.path.join(output_folder, "plt_label.png"))
+    plt.close(fig_leg)
 
 
 def parse_arguments():
@@ -138,21 +139,28 @@ def main():
             "group": df.groupby(["target_v"]),
             "group_x": "num_obs",
             "group_key": (0),
-            "group_title": "vary_safe_action_tgt_v_0",
+            "group_title": "vary_num_obs_tgt_v_0",
             "x_label": "Number of Obstacles",
         },
         {
             "group": df.groupby(["target_v"]),
             "group_x": "num_obs",
             "group_key": (1),
-            "group_title": "vary_safe_action_tgt_v_1",
+            "group_title": "vary_num_obs_tgt_v_1",
             "x_label": "Number of Obstacles",
+        },
+        {
+            "group": df.groupby(["num_obs", "target_v"]),
+            "group_x": "seed",
+            "group_key": (30, 0.0),
+            "group_title": "vary_seed_num_obs_30",
+            "x_label": "Seed",
         },
         {
             "group": df.groupby(["num_obs"]),
             "group_x": "target_v",
             "group_key": (30),
-            "group_title": "vary_safe_action_obs_30",
+            "group_title": "vary_tgt_num_obs_30",
             "x_label": "Target Vel (m/s)",
         },
         # {
@@ -206,18 +214,42 @@ def main():
     groups_to_plot
 
     num_uavs = 4
+    # %%
+    # TODO: convert to dataframe, pad the data to make them all the same lengths. plot the mean and std
     for group_to_plot in groups_to_plot:
         data_group = obs_group.get_group(group_to_plot)["episode_data"]
+        # there's only one group so only one key
         key = [key for key in data_group.keys()][0]
         print(f"key: {key}")
         print(f"group: {group_to_plot}")
         data = data_group[key]
 
-        time_step_list = np.array(data["time_step_list"][0])
-        uav_collision_list = np.array(data["uav_collision_list"][0])
-        obstacle_collision_list = np.array(data["obstacle_collision_list"][0])
-        rel_pad_dist = np.array(data["rel_pad_dist"][0])
-        rel_pad_vel = np.array(data["rel_pad_vel"][0])
+        
+        # TODO: get true number of episdes from json file
+        # TODO: get number of uavs from json file
+        num_episodes = 10
+
+        def get_padded_array(d):
+            # get max list
+            max_len = max([len(y) for eps in d for y in eps])
+
+            new_array = np.array(
+                [y + [0] * (max_len - len(y)) for eps in d for y in eps]
+            )
+
+            new_array = new_array.reshape((num_uavs, num_episodes, -1))
+
+            return new_array
+
+        time_step_list = get_padded_array(data['time_step_list'])[0, 0]
+        uav_collision_list = get_padded_array(data["uav_collision_list"])
+        obstacle_collision_list = get_padded_array(data["obstacle_collision_list"])
+        rel_pad_dist = get_padded_array(data["rel_pad_dist"])
+        rel_pad_vel = get_padded_array(data["rel_pad_vel"])
+        # uav_collision_list = np.array(data["uav_collision_list"][0])
+        # obstacle_collision_list = np.array(data["obstacle_collision_list"][0])
+        # rel_pad_dist = np.array(data["rel_pad_dist"][0])
+        # rel_pad_vel = np.array(data["rel_pad_vel"][0])
 
         all_axes = []
         all_figs = []
@@ -225,36 +257,27 @@ def main():
             fig = plt.figure(figsize=(12, 8))
             all_axes.append(fig.add_subplot(111))
             all_figs.append(fig)
-        # all_axes.append(fig.add_subplot(121))
-        # all_axes.append(fig.add_subplot(122))
-        # all_figs.append(fig)
 
-        # fig = plt.figure(figsize=(12, 6))
-        # fig.tight_layout()
-        # fig.subplots_adjust(wspace=0.35)
-        # all_axes.append(fig.add_subplot(121))
-        # all_axes.append(fig.add_subplot(122))
-        # all_figs.append(fig)
-
+        # TODO: plot mean and stad for each param
         for idx in range(num_uavs):
             all_axes[0].plot(
-                time_step_list[idx],
-                uav_collision_list[idx],
+                time_step_list,
+                uav_collision_list[idx].mean(axis=0),
                 label=f"uav_{idx}",
             )
             all_axes[1].plot(
-                time_step_list[idx],
-                obstacle_collision_list[idx],
+                time_step_list,
+                obstacle_collision_list[idx].mean(axis=0),
                 label=f"uav_{idx}",
             )
             all_axes[2].plot(
-                time_step_list[idx],
-                rel_pad_dist[idx],
+                time_step_list,
+                rel_pad_dist[idx].mean(axis=0),
                 label=f"uav_{idx}",
             )
             all_axes[3].plot(
-                time_step_list[idx],
-                rel_pad_vel[idx],
+                time_step_list,
+                rel_pad_vel[idx].mean(axis=0),
                 label=f"uav_{idx}",
             )
 
@@ -265,6 +288,7 @@ def main():
 
         for ax_ in all_axes:
             ax_.set_xlabel("t (s)")
+            ax_.legend()
 
         plt_prefix = {
             "seed": group_to_plot[0],

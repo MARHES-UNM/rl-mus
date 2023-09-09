@@ -25,8 +25,8 @@ class SafetyLayer:
 
         self._parse_config()
         random.seed(self._seed)
-        torch.manual_seed(self._seed)
         np.random.seed(self._seed)
+        torch.manual_seed(self._seed)
 
         self._init_model()
 
@@ -125,7 +125,6 @@ class SafetyLayer:
         obs = self._env.reset()
 
         for _ in range(num_steps):
-            # actions = self._env.action_space.sample()
             actions = {}
             for i in range(self._env.num_uavs):
                 nom_action = self._env.get_time_coord_action(

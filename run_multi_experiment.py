@@ -17,7 +17,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-max_num_episodes = 10
+max_num_episodes = 500
 max_num_cpus = os.cpu_count() - 1
 
 
@@ -92,6 +92,7 @@ if __name__ == "__main__":
     checkpoint_dir = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-09-04-00-12_fd3b073/debug/train_safety_layer_545fd_00007_7_num_obstacles=8,target_v=1.0000,loss_action_weight=0.0800_2023-09-04_04-48-25/checkpoint_000199/checkpoint"
     checkpoint_dir = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-09-04-00-12_fd3b073/debug/train_safety_layer_545fd_00001_1_num_obstacles=8,target_v=0.0000,loss_action_weight=0.0100_2023-09-04_00-12-59/checkpoint_000199/checkpoint"
     checkpoint_dir = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-09-06-19-08_db7fb82/debug/train_safety_layer_44e59_00000_0_batch_size=1024,eps=0.1000,eps_deriv=0.0300,lr=0.0000,num_epochs=2000,num_iter_per_epoch=100,num__2023-09-06_19-08-19/checkpoint_000734/checkpoint"
+    checkpoint_dir = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-09-08-14-27_e4ffe87/debug/train_safety_layer_5e647_00002_2_batch_size=128,eps=0.1000,eps_action=0.0100,eps_deriv=0.0300,lr=0.0005,n_hidden=32,num_iter_per_e_2023-09-08_14-27-31/checkpoint_000199/checkpoint"
 
     # target_v = [0.0
     # safe_action_type = [None, "cbf", "nn_cbf"]
@@ -106,7 +107,10 @@ if __name__ == "__main__":
                 for num_obstacle in num_obstacles:
                     exp_config = {}
                     exp_config["exp_config"] = {"safe_action_type": action_type}
-                    exp_config["safety_layer_cfg"] = {"checkpoint_dir": checkpoint_dir}
+                    exp_config["safety_layer_cfg"] = {
+                        "checkpoint_dir": checkpoint_dir,
+                        "seed": seed,
+                    }
 
                     exp_config["env_config"] = {
                         "target_v": target,
