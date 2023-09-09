@@ -163,27 +163,6 @@ def main():
             "group_title": "vary_tgt_num_obs_30",
             "x_label": "Target Vel (m/s)",
         },
-        # {
-        #     "group": df.groupby(["num_obs"]),
-        #     "group_x": "safe_action",
-        #     "group_key": (30),
-        #     "group_title": "fix_obs_vary_pursuer",
-        #     "x_label": "Use Safe Layer",
-        # },
-        # {
-        #     "group": df.groupby(["num_pursuers", "observation_radius"]),
-        #     "group_x": "num_obstacles",
-        #     "group_key": (NUM_PURSUERS, OBSERVATION_RADIUS),
-        #     "group_title": "fix_pursuers_vary_obs",
-        #     "x_label": "Number of Obstacles",
-        # },
-        # {
-        #     "group": df.groupby(["observation_radius"]),
-        #     "group_x": "num_pursuers",
-        #     "group_key": (OBSERVATION_RADIUS),
-        #     "group_title": "fix_obs_vary_pursuer_all",
-        #     "x_label": "Number of Pursuers",
-        # },
     ]
 
     items_to_plot = {

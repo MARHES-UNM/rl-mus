@@ -159,3 +159,10 @@ if __name__ == "__main__":
         ]
         for future in concurrent.futures.as_completed(future_run_experiment):
             rv = future.result()
+
+    args = ["python", "plot_results.py", "--exp_folder", f"{args.log_dir}"]
+
+    logger.debug(f"plotting results")
+    rv = subprocess.call(args)
+
+    logger.debug(f"Done!")
