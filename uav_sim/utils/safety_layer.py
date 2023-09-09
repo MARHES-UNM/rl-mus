@@ -181,8 +181,8 @@ class SafetyLayer:
         return results
 
     def _get_mask(self, constraints):
-        safe_dist = 1.0
-        unsafe_dist = 0.6
+        safe_dist = 0.2
+        unsafe_dist = 0.05
         safe_mask = self._as_tensor(
             [(arr >= safe_dist).all() for arr in constraints]
         ).float()
@@ -247,8 +247,8 @@ class SafetyLayer:
         )
 
         h_next, _ = self.model(
-            state_next_grad,
-            # state_next_nominal,
+            # state_next_grad,
+            state_next_nominal,
             rel_pad_next,
             other_uav_obs_next,
             obstacles_next,
