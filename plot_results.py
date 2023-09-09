@@ -213,43 +213,35 @@ def main():
 
     groups_to_plot
 
-    num_uavs = 4
+    # num_uavs = 4
     # %%
     # TODO: convert to dataframe, pad the data to make them all the same lengths. plot the mean and std
     for group_to_plot in groups_to_plot:
-        data_group = obs_group.get_group(group_to_plot)["episode_data"]
-        # there's only one group so only one key
-        key = [key for key in data_group.keys()][0]
-        print(f"key: {key}")
-        print(f"group: {group_to_plot}")
-        data = data_group[key]
-
-        
-        # TODO: get true number of episdes from json file
-        # TODO: get number of uavs from json file
-        num_episodes = 10
+        # There's only one group so only one key
+        num_episodes = obs_group.get_group(group_to_plot)["num_episodes"].to_numpy()[0]
+        num_uavs = obs_group.get_group(group_to_plot)["env_config"].to_numpy()[0][
+            "num_uavs"
+        ]
+        data = obs_group.get_group(group_to_plot)["episode_data"].to_numpy()[0]
 
         def get_padded_array(d):
-            # get max list
-            max_len = max([len(y) for eps in d for y in eps])
-
-            new_array = np.array(
-                [y + [0] * (max_len - len(y)) for eps in d for y in eps]
-            )
-
+            # get max number of episode length
+            # max_len = max([len(y) for eps in d for y in eps])
+            # new_array = np.array(
+            #     [y + [0] * (max_len - len(y)) for eps in d for y in eps]
+            # )
+            min_episode_len = min([len(y) for eps in d for y in eps])
+            # pad data to be equal size
+            new_array = np.array([y[:min_episode_len] for eps in d for y in eps])
+            # (num_uavs, num_episodes, episode_length)
             new_array = new_array.reshape((num_uavs, num_episodes, -1))
-
             return new_array
 
-        time_step_list = get_padded_array(data['time_step_list'])[0, 0]
+        time_step_list = get_padded_array(data["time_step_list"])[0, 0]
         uav_collision_list = get_padded_array(data["uav_collision_list"])
         obstacle_collision_list = get_padded_array(data["obstacle_collision_list"])
         rel_pad_dist = get_padded_array(data["rel_pad_dist"])
         rel_pad_vel = get_padded_array(data["rel_pad_vel"])
-        # uav_collision_list = np.array(data["uav_collision_list"][0])
-        # obstacle_collision_list = np.array(data["obstacle_collision_list"][0])
-        # rel_pad_dist = np.array(data["rel_pad_dist"][0])
-        # rel_pad_vel = np.array(data["rel_pad_vel"][0])
 
         all_axes = []
         all_figs = []
