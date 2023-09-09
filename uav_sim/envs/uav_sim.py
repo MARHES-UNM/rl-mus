@@ -313,12 +313,6 @@ class UavSim:
     def _get_obs(self, uav):
         other_uav_states = []
 
-        landing_pads = []
-        for pad in self.target.pads:
-            landing_pads.append(pad.state)
-
-        landing_pads = np.array(landing_pads)
-
         for other_uav in self.uavs:
             if uav.id != other_uav.id:
                 other_uav_states.append(other_uav.state)
@@ -331,7 +325,6 @@ class UavSim:
         obs_dict = {
             "state": uav.state.astype(np.float32),
             "rel_pad": (uav.state[0:6] - uav.pad.state[0:6]).astype(np.float32),
-            # "landing_pads": landing_pads.astype(np.float32),
             "other_uav_obs": other_uav_states.astype(np.float32),
             "obstacles": obstacles_to_add.astype(np.float32),
             "constraint": self._get_uav_constraint(uav).astype(np.float32),
@@ -355,13 +348,6 @@ class UavSim:
             reward -= dest_dist / np.linalg.norm(
                 [self.env_max_l, self.env_max_w, self.env_max_h]
             )
-
-        # for pad in self.target.pads:
-        #     if uav.get_landed(pad):
-        #         uav.done = True
-        #         uav.landed = True
-        #         reward += 1
-        #         break
 
         # neg reward if uav collides with other uavs
         for other_uav in self.uavs:

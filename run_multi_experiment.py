@@ -17,7 +17,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-max_num_episodes = 15
+max_num_episodes = 10
 max_num_cpus = os.cpu_count() - 1
 
 
@@ -92,7 +92,7 @@ if __name__ == "__main__":
     checkpoint_dir = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-09-04-00-12_fd3b073/debug/train_safety_layer_545fd_00007_7_num_obstacles=8,target_v=1.0000,loss_action_weight=0.0800_2023-09-04_04-48-25/checkpoint_000199/checkpoint"
     checkpoint_dir = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-09-04-00-12_fd3b073/debug/train_safety_layer_545fd_00001_1_num_obstacles=8,target_v=0.0000,loss_action_weight=0.0100_2023-09-04_00-12-59/checkpoint_000199/checkpoint"
     checkpoint_dir = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-09-06-19-08_db7fb82/debug/train_safety_layer_44e59_00000_0_batch_size=1024,eps=0.1000,eps_deriv=0.0300,lr=0.0000,num_epochs=2000,num_iter_per_epoch=100,num__2023-09-06_19-08-19/checkpoint_000734/checkpoint"
-    checkpoint_dir = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-09-09-08-30_6649b78/debug/train_safety_layer_b3f67_00001_1_batch_size=128,eps=0.1000,eps_deriv=0.0300,loss_action_weight=0.0050,lr=0.0005,n_hidden=32,num_it_2023-09-09_08-30-48/checkpoint_000059/checkpoint"
+    checkpoint_dir = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-09-09-14-08_d056fbe/small_1_dist/train_safety_layer_d1e8e_00001_1_batch_size=128,eps=0.1000,eps_deriv=0.0300,loss_action_weight=0.0000,lr=0.0005,n_hidden=32,num_it_2023-09-09_14-08-05/checkpoint_000034/checkpoint"
 
     # target_v = [0.0
     # safe_action_type = [None, "cbf", "nn_cbf"]
