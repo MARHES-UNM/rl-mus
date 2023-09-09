@@ -130,7 +130,7 @@ if __name__ == "__main__":
 
                     exp_config["env_config"] = {
                         "target_v": target,
-                        "num_obstacles": num_obstacle,
+                        "max_num_obstacles": num_obstacle,
                         "seed": seed,
                     }
                     file_prefix = {
