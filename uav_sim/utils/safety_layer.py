@@ -247,8 +247,8 @@ class SafetyLayer:
         )
 
         h_next, _ = self.model(
-            # state_next_grad,
-            state_next_nominal,
+            state_next_grad,
+            # state_next_nominal,
             rel_pad_next,
             other_uav_obs_next,
             obstacles_next,
