@@ -107,8 +107,8 @@ if __name__ == "__main__":
     max_num_episodes = args.exp_config["exp_config"]["max_num_episodes"]
     target_v = args.exp_config["env_config"]["target_v"]
     safe_action_type = args.exp_config["exp_config"]["safe_action_type"]
-    num_obstacles = args.exp_config["env_config"]["num_obstacles"]
-    seeds = args.exp_config["exp_config"]["seed"]
+    max_num_obstacles = args.exp_config["env_config"]["max_num_obstacles"]
+    seeds = args.exp_config["exp_config"]["seeds"]
 
     if args.nn_cbf_dir is not None:
         checkpoint_dir = args.nn_cbf_dir
@@ -120,7 +120,7 @@ if __name__ == "__main__":
     for seed in seeds:
         for target in target_v:
             for action_type in safe_action_type:
-                for num_obstacle in num_obstacles:
+                for num_obstacle in max_num_obstacles:
                     exp_config = {}
                     exp_config["exp_config"] = {"safe_action_type": action_type}
                     exp_config["safety_layer_cfg"] = {

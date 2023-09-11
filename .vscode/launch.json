@@ -164,9 +164,12 @@
             "justMyCode": true,
             "cwd": "${workspaceFolder}",
             "env": {
-                "DISPLAY": "192.168.1.18:0.0"
+                // "DISPLAY": "192.168.1.18:0.0"
             },
-            "args": ["--exp_folder", "/home/prime/Documents/workspace/uav_sim/results/test_results/exp_2023-09-08-15-36_e4ffe87"],
+            "args": [
+                "--exp_folder",
+                "/home/prime/Documents/workspace/uav_sim/results/test_results/exp_2023-09-09-19-01_7f28f11"
+            ],
         },
         {
             "name": "unittest_safety_layer",

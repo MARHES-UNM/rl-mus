@@ -23,6 +23,8 @@ import numpy as np
 
 from pathlib import Path
 
+PATH = Path(__file__).parent.absolute().resolve()
+
 
 def get_data(all_progress):
     # data_dict = {parameter: [] for parameter in parameter_list}
@@ -38,9 +40,8 @@ def get_data(all_progress):
                 print(f"error reading {progress.absolute()} skipping.")
                 continue
             data["target_v"] = data["env_config"]["target_v"]
-            # data["safe_action"] = data["env_config"]["use_safe_action"]
             data["safe_action"] = data["exp_config"]["safe_action_type"]
-            data["num_obs"] = data["env_config"]["num_obstacles"]
+            data["num_obs"] = data["env_config"]["max_num_obstacles"]
             data["seed"] = data["env_config"]["seed"]
             data["uav_done"] = np.average(data["uav_done"], axis=1).sum()
             uav_done_time = np.nan_to_num(
@@ -67,7 +68,6 @@ def plot_groups(groups, items, output_folder, labels_to_plot, plot_type="box"):
         raise NameError("unknown plot_type")
     for group in groups:
         for key, value in items.items():
-            # fig, ax = plt.subplots(figsize=(12, 10))
             fig, ax = plt.subplots()
             # ax.set_prop_cycle('color', sns.color_palette("colorblind",len(labels_to_plot)))
             # ax.set_prop_cycle('color', sns.color_palette("tab10",len(labels_to_plot)))
@@ -117,6 +117,11 @@ def plot_groups(groups, items, output_folder, labels_to_plot, plot_type="box"):
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument("--exp_folder", help="Path to experiments")
+    parser.add_argument(
+        "--exp_config",
+        help="experiment config",
+        default=f"{PATH}/configs/exp_basic_cfg.json",
+    )
 
     args = parser.parse_args()
 
@@ -125,6 +130,10 @@ def parse_arguments():
 
 def main():
     args = parse_arguments()
+
+    with open(args.exp_config, "rt") as f:
+        exp_config = json.load(f)
+
     basedir_path = Path(args.exp_folder)
     basedir_list = list(basedir_path.glob("**/result.json"))
     image_folder = basedir_path / "images"
@@ -134,43 +143,56 @@ def main():
 
     df = get_data(basedir_list)
 
-    groups_to_plot = [
-        {
-            "group": df.groupby(["target_v"]),
-            "group_x": "num_obs",
-            "group_key": (0),
-            "group_title": "vary_num_obs_tgt_v_0",
-            "x_label": "Number of Obstacles",
-        },
-        {
-            "group": df.groupby(["target_v"]),
-            "group_x": "num_obs",
-            "group_key": (1),
-            "group_title": "vary_num_obs_tgt_v_1",
-            "x_label": "Number of Obstacles",
-        },
-        {
-            "group": df.groupby(["num_obs", "target_v"]),
-            "group_x": "seed",
-            "group_key": (30, 0.0),
-            "group_title": "vary_seed_num_obs_30",
-            "x_label": "Seed",
-        },
-        {
-            "group": df.groupby(["num_obs"]),
-            "group_x": "target_v",
-            "group_key": (30),
-            "group_title": "vary_tgt_num_obs_30",
-            "x_label": "Target Vel (m/s)",
-        },
-    ]
+    groups_to_plot = exp_config["groups_to_plot"]
 
-    items_to_plot = {
-        "uav_collision": "Total UAV Collisions",
-        "obs_collision": "Total NCFO Collision",
-        "uav_done_time": "Time Landed",
-        "uav_done": "UAV Landed",
-    }
+    for idx, group in enumerate(groups_to_plot):
+        val = group["group_key"]
+        group_key = val[0] if len(val) == 1 else tuple(val)
+        groups_to_plot[idx].update(
+            {
+                "group": df.groupby(group["group"]),
+                "group_key": group_key,
+            }
+        )
+
+    items_to_plot = exp_config["items_to_plot"]
+    # groups_to_plot = [
+    #     {
+    #         "group": df.groupby(["target_v"]),
+    #         "group_x": "num_obs",
+    #         "group_key": (0),
+    #         "group_title": "vary_num_obs_tgt_v_0",
+    #         "x_label": "Number of Obstacles",
+    #     },
+    #     {
+    #         "group": df.groupby(["target_v"]),
+    #         "group_x": "num_obs",
+    #         "group_key": (1),
+    #         "group_title": "vary_num_obs_tgt_v_1",
+    #         "x_label": "Number of Obstacles",
+    #     },
+    #     {
+    #         "group": df.groupby(["num_obs", "target_v"]),
+    #         "group_x": "seed",
+    #         "group_key": (30, 0.0),
+    #         "group_title": "vary_seed_num_obs_30",
+    #         "x_label": "Seed",
+    #     },
+    #     {
+    #         "group": df.groupby(["num_obs"]),
+    #         "group_x": "target_v",
+    #         "group_key": (30),
+    #         "group_title": "vary_tgt_num_obs_30",
+    #         "x_label": "Target Vel (m/s)",
+    #     },
+    # ]
+
+    # items_to_plot = {
+    #     "uav_collision": "Total UAV Collisions",
+    #     "obs_collision": "Total NCFO Collision",
+    #     "uav_done_time": "Time Landed",
+    #     "uav_done": "UAV Landed",
+    # }
 
     sns.color_palette("colorblind")
 
@@ -182,13 +204,16 @@ def main():
     obs_group = df.groupby(["seed", "num_obs", "safe_action", "target_v"])
     obs_group.groups.keys()
 
-    safe_action = ["none", "cbf", "nn_cbf"]
-    target_v = [0.0, 1.0]
+    safe_action_type = exp_config["exp_config"]["safe_action_type"]
+
+    target_v = exp_config["env_config"]["target_v"]
+    max_num_obstacles = exp_config["env_config"]["max_num_obstacles"]
+    seeds = exp_config["exp_config"]["seeds"]
 
     groups_to_plot = []
-    for action in safe_action:
+    for action in safe_action_type:
         for v in target_v:
-            groups_to_plot.append((5000, 30, action, v))
+            groups_to_plot.append((seeds[0], max_num_obstacles[0], action, v))
 
     groups_to_plot
 
@@ -288,8 +313,6 @@ def main():
     # hide the axes frame and the x/y labels
     ax_leg.axis("off")
     fig_leg.savefig(image_folder / "uav_labels.png")
-
-    # plt.show()
 
 
 if __name__ == "__main__":
