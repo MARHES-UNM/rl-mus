@@ -81,6 +81,7 @@ def parse_arguments():
         default=f"{PATH}/configs/exp_basic_cfg.json",
     )
     parser.add_argument("--nn_cbf_dir", help="checkpoint for learned cbf")
+    parser.add_argument("--num_eps", help="Maximum number of episodes to run for.")
 
     args = parser.parse_args()
 
@@ -103,7 +104,11 @@ if __name__ == "__main__":
     if not args.log_dir.exists():
         args.log_dir.mkdir(parents=True, exist_ok=True)
 
-    max_num_episodes = exp_config["exp_config"]["max_num_episodes"]
+    if args.num_eps:
+        max_num_episodes = args.num_eps
+    else:
+        max_num_episodes = exp_config["exp_config"]["max_num_episodes"]
+
     target_v = exp_config["env_config"]["target_v"]
     safe_action_type = exp_config["exp_config"]["safe_action_type"]
     max_num_obstacles = exp_config["env_config"]["max_num_obstacles"]
