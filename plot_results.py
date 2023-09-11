@@ -59,7 +59,9 @@ def get_data(all_progress):
     return df
 
 
-def plot_groups(groups, items, output_folder, labels_to_plot, plot_type="box"):
+def plot_groups(
+    groups, items, output_folder, labels_to_plot, plot_type="box", skip_legend=False
+):
     if plot_type == "bar":
         plot_func = sns.barplot
     elif plot_type == "box":
@@ -85,9 +87,12 @@ def plot_groups(groups, items, output_folder, labels_to_plot, plot_type="box"):
             # if item == "episode_reward":
             #     ax.invert_yaxis()
             ax.grid()
-            ax.legend()
-            # don't plot legends here. see below
-            # ax.legend_.remove()
+
+            if skip_legend:
+                # don't plot legends here. see below
+                ax.legend_.remove()
+            else:
+                ax.legend()
 
             fig.savefig(
                 os.path.join(
@@ -121,6 +126,12 @@ def parse_arguments():
         "--exp_config",
         help="experiment config",
         default=f"{PATH}/configs/exp_basic_cfg.json",
+    )
+    parser.add_argument(
+        "--skip_legend",
+        help="Don't plot legends on indvidual plots. ",
+        action="store_true",
+        default=False,
     )
 
     args = parser.parse_args()
@@ -196,22 +207,28 @@ def main():
 
     sns.color_palette("colorblind")
 
-    # labels_to_plot = ["Safe_Action_None", "Safe_Action_CBF", "Safe_Action_NNCBF"]
-    labels_to_plot = ["none", "cbf", "nn_cbf"]
-
-    plot_groups(groups_to_plot, items_to_plot, image_folder, labels_to_plot)
+    safe_action_type = exp_config["exp_config"]["safe_action_type"]
+    labels_to_plot = exp_config["labels_to_plot"]
+    df["safe_action"] = df["safe_action"].replace(
+        {sa_type: label for sa_type, label in zip(safe_action_type, labels_to_plot)}
+    )
+    plot_groups(
+        groups_to_plot,
+        items_to_plot,
+        image_folder,
+        labels_to_plot,
+        skip_legend=args.skip_legend,
+    )
 
     obs_group = df.groupby(["seed", "num_obs", "safe_action", "target_v"])
     obs_group.groups.keys()
-
-    safe_action_type = exp_config["exp_config"]["safe_action_type"]
 
     target_v = exp_config["env_config"]["target_v"]
     max_num_obstacles = exp_config["env_config"]["max_num_obstacles"]
     seeds = exp_config["exp_config"]["seeds"]
 
     groups_to_plot = []
-    for action in safe_action_type:
+    for action in labels_to_plot:
         for v in target_v:
             groups_to_plot.append((seeds[0], max_num_obstacles[0], action, v))
 

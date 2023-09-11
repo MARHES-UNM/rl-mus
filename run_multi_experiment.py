@@ -90,9 +90,8 @@ def parse_arguments():
 if __name__ == "__main__":
     args = parse_arguments()
 
-    if args.exp_config:
-        with open(args.exp_config, "rt") as f:
-            args.exp_config = json.load(f)
+    with open(args.exp_config, "rt") as f:
+        exp_config = json.load(f)
 
     if not args.log_dir:
         branch_hash = get_git_hash()
@@ -104,16 +103,16 @@ if __name__ == "__main__":
     if not args.log_dir.exists():
         args.log_dir.mkdir(parents=True, exist_ok=True)
 
-    max_num_episodes = args.exp_config["exp_config"]["max_num_episodes"]
-    target_v = args.exp_config["env_config"]["target_v"]
-    safe_action_type = args.exp_config["exp_config"]["safe_action_type"]
-    max_num_obstacles = args.exp_config["env_config"]["max_num_obstacles"]
-    seeds = args.exp_config["exp_config"]["seeds"]
+    max_num_episodes = exp_config["exp_config"]["max_num_episodes"]
+    target_v = exp_config["env_config"]["target_v"]
+    safe_action_type = exp_config["exp_config"]["safe_action_type"]
+    max_num_obstacles = exp_config["env_config"]["max_num_obstacles"]
+    seeds = exp_config["exp_config"]["seeds"]
 
     if args.nn_cbf_dir is not None:
         checkpoint_dir = args.nn_cbf_dir
     else:
-        checkpoint_dir = args.exp_config["safety_layer_cfg"]["checkpoint_dir"]
+        checkpoint_dir = exp_config["safety_layer_cfg"]["checkpoint_dir"]
 
     exp_configs = []
     experiment_num = 0
@@ -160,7 +159,14 @@ if __name__ == "__main__":
         for future in concurrent.futures.as_completed(future_run_experiment):
             rv = future.result()
 
-    args = ["python", "plot_results.py", "--exp_folder", f"{args.log_dir}"]
+    args = [
+        "python",
+        "plot_results.py",
+        "--exp_folder",
+        f"{args.log_dir}",
+        "--exp_config",
+        f"{args.exp_config}",
+    ]
 
     logger.debug(f"plotting results")
     rv = subprocess.call(args)

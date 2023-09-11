@@ -168,7 +168,8 @@
             },
             "args": [
                 "--exp_folder",
-                "/home/prime/Documents/workspace/uav_sim/results/test_results/exp_2023-09-09-19-01_7f28f11"
+                "/home/prime/Documents/workspace/uav_sim/results/test_results/exp_2023-09-09-19-01_7f28f11",
+                // "--skip_legend"
             ],
         },
         {

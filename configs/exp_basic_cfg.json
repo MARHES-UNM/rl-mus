@@ -8,7 +8,6 @@
         ]
     },
     "exp_config": {
-        "name": "basic",
         "max_num_episodes": 10,
         "safe_action_type": [
             "none",
@@ -64,5 +63,10 @@
             "group_title": "vary_tgt_num_obs_30",
             "x_label": "Target Vel (m/s)"
         }
+    ],
+    "labels_to_plot": [
+        "None",
+        "CBF",
+        "NN_CBF"
     ]
 }

@@ -4,25 +4,85 @@
             0.0,
             1.0
         ],
-        "num_obstacles": [
+        "max_num_obstacles": [
             8,
             20,
             30
         ]
     },
     "exp_config": {
-        "name": "long",
         "max_num_episodes": 10,
         "safe_action_type": [
             "none",
             "cbf",
             "nn_cbf"
         ],
-        "seed": [
-            0, 5000, 173
+        "seeds": [
+            0,
+            5000,
+            173
         ]
     },
     "safety_layer_cfg": {
-        "checkpoint_dir": "/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-09-09-14-08_d056fbe/small_1_dist/train_safety_layer_d1e8e_00001_1_batch_size=128,eps=0.1000,eps_deriv=0.0300,loss_action_weight=0.0000,lr=0.0005,n_hidden=32,num_it_2023-09-09_14-08-05/checkpoint_000034/checkpoint"
-    }
+        "checkpoint_dir": null
+    },
+    "items_to_plot": {
+        "uav_collision": "Total UAV Collisions",
+        "obs_collision": "Total NCFO Collision",
+        "uav_done_time": "Time Landed",
+        "uav_done": "UAV Landed"
+    },
+    "groups_to_plot": [
+        {
+            "group": [
+                "target_v"
+            ],
+            "group_x": "num_obs",
+            "group_key": [
+                0.0
+            ],
+            "group_title": "vary_num_obs_tgt_v_0",
+            "x_label": "Number of Obstacles"
+        },
+        {
+            "group": [
+                "target_v"
+            ],
+            "group_x": "num_obs",
+            "group_key": [
+                1.0
+            ],
+            "group_title": "vary_num_obs_tgt_v_1",
+            "x_label": "Number of Obstacles"
+        },
+        {
+            "group": [
+                "num_obs",
+                "target_v"
+            ],
+            "group_x": "seed",
+            "group_key": [
+                30,
+                0.0
+            ],
+            "group_title": "vary_seed_num_obs_30",
+            "x_label": "Seed"
+        },
+        {
+            "group": [
+                "num_obs"
+            ],
+            "group_x": "target_v",
+            "group_key": [
+                30
+            ],
+            "group_title": "vary_tgt_num_obs_30",
+            "x_label": "Target Vel (m/s)"
+        }
+    ],
+    "labels_to_plot": [
+        "None",
+        "CBF",
+        "NN_CBF"
+    ]
 }
