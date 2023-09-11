@@ -167,44 +167,6 @@ def main():
         )
 
     items_to_plot = exp_config["items_to_plot"]
-    # groups_to_plot = [
-    #     {
-    #         "group": df.groupby(["target_v"]),
-    #         "group_x": "num_obs",
-    #         "group_key": (0),
-    #         "group_title": "vary_num_obs_tgt_v_0",
-    #         "x_label": "Number of Obstacles",
-    #     },
-    #     {
-    #         "group": df.groupby(["target_v"]),
-    #         "group_x": "num_obs",
-    #         "group_key": (1),
-    #         "group_title": "vary_num_obs_tgt_v_1",
-    #         "x_label": "Number of Obstacles",
-    #     },
-    #     {
-    #         "group": df.groupby(["num_obs", "target_v"]),
-    #         "group_x": "seed",
-    #         "group_key": (30, 0.0),
-    #         "group_title": "vary_seed_num_obs_30",
-    #         "x_label": "Seed",
-    #     },
-    #     {
-    #         "group": df.groupby(["num_obs"]),
-    #         "group_x": "target_v",
-    #         "group_key": (30),
-    #         "group_title": "vary_tgt_num_obs_30",
-    #         "x_label": "Target Vel (m/s)",
-    #     },
-    # ]
-
-    # items_to_plot = {
-    #     "uav_collision": "Total UAV Collisions",
-    #     "obs_collision": "Total NCFO Collision",
-    #     "uav_done_time": "Time Landed",
-    #     "uav_done": "UAV Landed",
-    # }
-
     sns.color_palette("colorblind")
 
     safe_action_type = exp_config["exp_config"]["safe_action_type"]
@@ -234,8 +196,6 @@ def main():
 
     groups_to_plot
 
-    # num_uavs = 4
-    # %%
     # TODO: convert to dataframe, pad the data to make them all the same lengths. plot the mean and std
     for group_to_plot in groups_to_plot:
         # There's only one group so only one key
