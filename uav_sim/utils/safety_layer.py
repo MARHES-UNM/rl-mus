@@ -8,7 +8,7 @@ import scipy as sp
 import torch
 import torch.nn.functional as F
 from torch import nn
-from uav_sim.networks.cbf import CBF
+from uav_sim.networks.cbf import CBF, NN_Action
 from uav_sim.utils.replay_buffer import ReplayBuffer
 from torch.optim import Adam
 import ray.tune as tune
@@ -30,8 +30,14 @@ class SafetyLayer:
 
         self._init_model()
 
-        self._optimizer = Adam(
-            self.model.parameters(),
+        self._cbf_optimizer = Adam(
+            self._cbf_model.parameters(),
+            lr=self._lr,
+            # weight_decay=self._weight_decay
+        )
+
+        self._nn_action_optimizer = Adam(
+            self._nn_action_model.parameters(),
             lr=self._lr,
             # weight_decay=self._weight_decay
         )
@@ -40,8 +46,8 @@ class SafetyLayer:
             model_state, parameter_state = torch.load(
                 self._checkpoint_dir, map_location=torch.device("cpu")
             )
-            self.model.load_state_dict(model_state)
-            self._optimizer.load_state_dict(parameter_state)
+            self._nn_action_model.load_state_dict(model_state)
+            self._nn_action_optimizer.load_state_dict(parameter_state)
 
         # TODO: load the buffer with the save states
         if self._load_buffer:
@@ -53,8 +59,10 @@ class SafetyLayer:
         if self._checkpoint:
             checkpoint_state = self._checkpoint.to_dict()
             self._train_global_step = checkpoint_state["epoch"]
-            self.model.load_state_dict(checkpoint_state["net_state_dict"])
-            self._optimizer.load_state_dict(checkpoint_state["optimizer_state_dict"])
+            self._nn_action_model.load_state_dict(checkpoint_state["net_state_dict"])
+            self._nn_action_optimizer.load_state_dict(
+                checkpoint_state["optimizer_state_dict"]
+            )
         else:
             self._train_global_step = 0
 
@@ -64,7 +72,8 @@ class SafetyLayer:
         if torch.cuda.is_available() and self._device == "cuda":
             print("using cuda")
             self._device = "cuda"
-        self.model.to(self._device)
+        self._cbf_model.to(self._device)
+        self._nn_action_model.to(self._device)
 
     def _parse_config(self):
         # TODO: update config inputs
@@ -100,7 +109,9 @@ class SafetyLayer:
         k_obstacle = obs_space[0]["obstacles"].shape[1]  # (num_obstacle, state)
         m_control = self._env.action_space[0].shape[0]
 
-        self.model = CBF(
+        self._cbf_model = CBF(n_state=k_obstacle, n_hidden=self._n_hidden)
+
+        self._nn_action_model = NN_Action(
             n_state, n_rel_pad_state, k_obstacle, m_control, self._n_hidden
         )
 
@@ -183,12 +194,8 @@ class SafetyLayer:
     def _get_mask(self, constraints):
         safe_dist = 0.05
         unsafe_dist = 0.01
-        safe_mask = self._as_tensor(
-            [(arr >= safe_dist).all() for arr in constraints]
-        ).float()
-        unsafe_mask = self._as_tensor(
-            [(arr <= unsafe_dist).any() for arr in constraints]
-        ).float()
+        safe_mask = (constraints >= safe_dist).float()
+        unsafe_mask = (constraints <= unsafe_dist).float()
 
         mid_mask = (1 - safe_mask) * (1 - unsafe_mask)
 
@@ -236,7 +243,8 @@ class SafetyLayer:
 
         safe_mask, unsafe_mask, mid_mask = self._get_mask(constraints)
 
-        h, u = self.model(state, rel_pad, other_uav_obs, obstacles, u_nominal)
+        h = self._cbf_model(state, other_uav_obs, obstacles)
+        u = self._nn_action_model(state, rel_pad, other_uav_obs, obstacles, u_nominal)
 
         # TODO: calculate the the nomimal state using https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=9681233
         state_next_nominal = state + self.f_dot_torch(state, u) * self._env.dt
@@ -246,13 +254,11 @@ class SafetyLayer:
             state_next_nominal + (state_next - state_next_nominal).detach()
         )
 
-        h_next, _ = self.model(
+        h_next = self._cbf_model(
             # state_next_grad,
             state_next_nominal,
-            rel_pad_next,
             other_uav_obs_next,
             obstacles_next,
-            u_nominal,
         )
         h_deriv = (h_next - h) / self._env.dt + h
 
@@ -321,9 +327,11 @@ class SafetyLayer:
         loss, acc_stats = self._evaluate_batch(batch)
 
         # zero parameter gradients
-        self._optimizer.zero_grad()
+        self._nn_action_optimizer.zero_grad()
+        self._cbf_optimizer.zero_grad()
         loss.backward()
-        self._optimizer.step()
+        self._cbf_optimizer.step()
+        self._nn_action_optimizer.step()
 
         return loss, acc_stats
 
@@ -344,7 +352,8 @@ class SafetyLayer:
         # sample steps
         self._sample_steps(self._num_eval_steps)
 
-        self.model.eval()
+        self._cbf_model.eval()
+        self._nn_action_model.eval()
 
         eval_results = [
             self._evaluate_batch(batch)
@@ -355,7 +364,8 @@ class SafetyLayer:
 
         self._replay_buffer.clear()
 
-        self.model.train()
+        self._cbf_model.train()
+        self._nn_action_model.train()
 
         return loss, acc_stat
 
@@ -367,7 +377,9 @@ class SafetyLayer:
         constraint = torch.unsqueeze(self._as_tensor(obs["constraint"]), dim=0)
         u_nominal = torch.unsqueeze(self._as_tensor(action.squeeze()), dim=0)
         with torch.no_grad():
-            _, u = self.model(state, rel_pad, other_uav_obs, obstacles, u_nominal)
+            u = self._nn_action_model(
+                state, rel_pad, other_uav_obs, obstacles, u_nominal
+            )
 
             return u.detach().cpu().numpy().squeeze()
 
@@ -415,7 +427,7 @@ class SafetyLayer:
             )
 
             val_loss, val_acc_stats = self.evaluate()
-            print(f"validation completed, average loss {val_loss}")
+            print(f"Validation completed, average loss {val_loss}.")
 
             if self._report_tune:
                 if (epoch + 1) % 5 == 0:
