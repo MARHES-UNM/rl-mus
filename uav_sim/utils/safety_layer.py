@@ -434,7 +434,10 @@ class SafetyLayer:
                     with tune.checkpoint_dir(epoch) as checkpoint_dir:
                         path = os.path.join(checkpoint_dir, "checkpoint")
                         torch.save(
-                            (self.model.state_dict(), self._optimizer.state_dict()),
+                            (
+                                self._nn_action_model.state_dict(),
+                                self._nn_action_optimizer.state_dict(),
+                            ),
                             path,
                         )
 
