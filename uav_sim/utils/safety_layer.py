@@ -31,15 +31,13 @@ class SafetyLayer:
         self._init_model()
 
         self._cbf_optimizer = Adam(
-            self._cbf_model.parameters(),
-            lr=self._lr,
-            # weight_decay=self._weight_decay
+            self._cbf_model.parameters(), lr=self._lr, weight_decay=self._weight_decay
         )
 
         self._nn_action_optimizer = Adam(
             self._nn_action_model.parameters(),
             lr=self._lr,
-            # weight_decay=self._weight_decay
+            weight_decay=self._weight_decay,
         )
 
         if self._checkpoint_dir:
@@ -112,7 +110,10 @@ class SafetyLayer:
         self._cbf_model = CBF(n_state=k_obstacle, n_hidden=self._n_hidden)
 
         self._nn_action_model = NN_Action(
-            n_state, n_rel_pad_state, k_obstacle, m_control, self._n_hidden
+            n_state=k_obstacle,
+            m_control=m_control,
+            n_hidden=self._n_hidden
+            # n_state, n_rel_pad_state, k_obstacle, m_control, self._n_hidden
         )
 
     def _as_tensor(self, ndarray, requires_grad=False):
