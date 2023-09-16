@@ -93,8 +93,8 @@ def train(args):
     args.config["safety_layer_cfg"]["eps_deriv"] = tune.grid_search([0.03])
     # args.config["safety_layer_cfg"]["loss_action_weight"] = tune.loguniform(1e-9, 0.08)
     args.config["safety_layer_cfg"]["loss_action_weight"] = tune.grid_search(
-        #     [0.08, 0.005, 0.0]
-        [0.08, 7.313213261801146e-08, 0.03055703454235736]
+        [0.08]
+        # [0.08, 7.313213261801146e-08, 0.03055703454235736]
     )
     args.config["safety_layer_cfg"]["batch_size"] = tune.grid_search(
         # [128, 256, 512, 1024]

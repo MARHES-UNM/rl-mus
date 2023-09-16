@@ -169,6 +169,7 @@ class SafetyLayer:
             episode_length += 1
 
             # self._env.render()
+            # TODO: remove episode length, as done["__all__"] already include max_sim_time
             if done["__all__"] or (episode_length == self._episode_length):
                 num_episodes += 1
                 for k, v in info.items():
@@ -244,17 +245,16 @@ class SafetyLayer:
         h = self._cbf_model(state, other_uav_obs, obstacles)
         u = self._nn_action_model(state, rel_pad, other_uav_obs, obstacles, u_nominal)
 
-        # TODO: calculate the the nomimal state using https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=9681233
+        # calculate the the nomimal state using https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=9681233
         state_next_nominal = state + self.f_dot_torch(state, u) * self._env.dt
 
-        # TODO: need to troubleshoot issue with state_next_grad not converging.
         state_next_grad = (
             state_next_nominal + (state_next - state_next_nominal).detach()
         )
 
         h_next = self._cbf_model(
-            state_next_grad,
-            # state_next_nominal,
+            # state_next_grad,
+            state_next_nominal,
             other_uav_obs_next,
             obstacles_next,
         )
