@@ -137,14 +137,14 @@ class SafetyLayer:
         obs = self._env.reset()
 
         for _ in range(num_steps):
+            nom_actions = {}
             actions = {}
             for i in range(self._env.num_uavs):
-                nom_action = self._env.get_time_coord_action(
+                nom_actions[i] = self._env.get_time_coord_action(
                     self._env.uavs[i]
                 ).squeeze()
 
-                actions[i] = self.get_action(obs[i], nom_action)
-                # actions[i] = nom_action
+                actions[i] = self.get_action(obs[i], nom_actions[i])
 
             obs_next, _, done, info = self._env.step(actions)
 
@@ -157,11 +157,10 @@ class SafetyLayer:
                 for k, v in obs[i].items():
                     buffer_dictionary[k] = v
 
-                buffer_dictionary["u_nominal"] = nom_action
+                buffer_dictionary["u_nominal"] = nom_actions[i]
 
                 for k, v in obs_next[i].items():
                     new_key = f"{k}_next"
-
                     buffer_dictionary[new_key] = v
                 self._replay_buffer.add(buffer_dictionary)
 
@@ -253,8 +252,8 @@ class SafetyLayer:
         )
 
         h_next = self._cbf_model(
-            # state_next_grad,
-            state_next_nominal,
+            state_next_grad,
+            # state_next_nominal,
             other_uav_obs_next,
             obstacles_next,
         )
