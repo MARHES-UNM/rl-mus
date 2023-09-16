@@ -203,9 +203,6 @@ class SafetyLayer:
         return safe_mask, unsafe_mask, mid_mask
 
     def f_dot_torch(self, state, action):
-        u = action.clone()
-        u[:, 2] = 1 / self._env.uavs[0].m * u[:, 2] - self._env.uavs[0].g
-
         A = np.zeros((12, 12), dtype=np.float32)
         A[0, 3] = 1.0
         A[1, 4] = 1.0
@@ -218,7 +215,7 @@ class SafetyLayer:
         A_T = self._as_tensor(A.T)
         B_T = self._as_tensor(B.T)
 
-        dxdt = torch.matmul(state, A_T) + torch.matmul(u, B_T)
+        dxdt = torch.matmul(state, A_T) + torch.matmul(action, B_T)
 
         return dxdt
 
@@ -256,8 +253,8 @@ class SafetyLayer:
         )
 
         h_next = self._cbf_model(
-            # state_next_grad,
-            state_next_nominal,
+            state_next_grad,
+            # state_next_nominal,
             other_uav_obs_next,
             obstacles_next,
         )
