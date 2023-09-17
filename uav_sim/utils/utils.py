@@ -2,6 +2,7 @@ import subprocess
 import scipy.integrate
 import scipy
 import numpy as np
+from matplotlib import pyplot as plt
 from math import sqrt, atan2
 
 
@@ -71,3 +72,31 @@ def dlqr(A, B, Q, R):
     eigVals, eigVecs = scipy.linalg.eig(A - B * K)
 
     return K, P, eigVals
+
+    
+def plot_traj(self, uav_des_traj, uav_trajectory):
+    fig = plt.figure(figsize=(10, 6))
+
+    ax = fig.add_subplot(411)
+    ax.plot(uav_des_traj[:, 0])
+    ax.plot(uav_trajectory[:, 0])
+    ax.set_xlabel("t(s)")
+    ax.set_ylabel("x (m)")
+
+    ax1 = fig.add_subplot(412)
+    ax1.plot(uav_des_traj[:, 1])
+    ax1.plot(uav_trajectory[:, 1])
+    ax1.set_ylabel("y (m)")
+
+    ax2 = fig.add_subplot(413)
+    ax2.plot(uav_des_traj[:, 2])
+    ax2.plot(uav_trajectory[:, 2])
+    ax2.set_ylabel("z (m)")
+
+    ax3 = fig.add_subplot(414)
+    ax3.plot(uav_des_traj[:, 8])
+    ax3.plot(uav_trajectory[:, 8])
+    ax3.set_ylabel("psi (rad)")
+
+    plt.show()
+    print()

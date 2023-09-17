@@ -176,13 +176,9 @@ class Target(Entity):
         self.update_pads_state()
 
 
-class Quad2DInt(Entity):
+class UavBase(Entity):
     def __init__(self, _id, x=0, y=0, z=0, r=0.1, dt=1 / 10, m=0.18, l=0.086, pad=None):
         super().__init__(_id, x, y, z, r, _type=AgentType.U)
-
-        self.ode = scipy.integrate.ode(self.f_dot).set_integrator(
-            "vode", nsteps=500, method="bdf"
-        )
 
         # timestep
         self.dt = dt  # s
@@ -204,47 +200,29 @@ class Quad2DInt(Entity):
         self.pad = pad
         self.done_time = None
 
-    def f_dot(self, time, state, action):
-        action_z = 1 / self.m * action[2] - self.g
-        return np.array(
-            [
-                state[3],
-                state[4],
-                state[5],
-                action[0],
-                action[1],
-                action_z,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-            ],
-            dtype=np.float64,
-        )
+    def rk4(self, state, action):
+        """Based on: https://github.com/mahaitongdae/Safety_Index_Synthesis/blob/master/envs_and_models/collision_avoidance_env.py#L194
+        https://www.geeksforgeeks.org/runge-kutta-4th-order-method-solve-differential-equation/
 
-    def f_dot_np(self, state, action):
-        action[2] = 1 / self.m * action[2] - self.g
+        Args:
+            state (_type_): _description_
+            action (_type_): _description_
+            dt (_type_): _description_
 
-        A = np.zeros((12, 12), dtype=np.float32)
-        A[0, 3] = 1.0
-        A[1, 4] = 1.0
-        A[2, 5] = 1.0
+        Returns:
+            _type_: _description_
+        """
+        dot_s1 = self.f_dot(state, action)
+        dot_s2 = self.f_dot(state + 0.5 * self.dt * dot_s1, action)
+        dot_s3 = self.f_dot(state + 0.5 * self.dt * dot_s2, action)
+        dot_s4 = self.f_dot(state + self.dt * dot_s3, action)
+        dot_s = (dot_s1 + 2 * dot_s2 + 2 * dot_s3 + dot_s4) / 6.0
+        return dot_s
 
-        B = np.zeros((12, 3), dtype=np.float32)
-        B[3, 0] = 1.0
-        B[4, 1] = 1.0
-        B[5, 2] = 1.0
-
-        dxdt = A.dot(state) + B.dot(action)
-
-        return dxdt
-
-    # TODO: this may not be needed because of moving tensors from and to cpu. delete later
-    def f_dot_torch(self, state, action):
-        u = action.clone()
-        u[:, 2] = 1 / self.m * u[:, 2] - self.g
+    def f_dot(self, state, action):
+        # copies action so we don't corrupt it.
+        temp_action = action.copy()
+        temp_action[2] = 1 / self.m * temp_action[2] - self.g
 
         A = np.zeros((12, 12), dtype=np.float32)
         A[0, 3] = 1.0
@@ -255,38 +233,13 @@ class Quad2DInt(Entity):
         B[3, 0] = 1.0
         B[4, 1] = 1.0
         B[5, 2] = 1.0
-        A_T = torch.from_numpy(A.T)
-        B_T = torch.from_numpy(B.T)
 
-        dxdt = torch.matmul(state, A_T) + torch.matmul(u, B_T)
+        dxdt = A.dot(state) + B.dot(temp_action)
 
         return dxdt
 
     def rotation_matrix(self):
         return np.eye(3)
-
-    def calc_torque(self, des_pos):
-        return self.calc_des_action(des_pos)
-
-    def calc_des_action(self, des_pos):
-        kx = ky = kz = 2
-        k_x_dot = k_y_dot = k_z_dot = 3
-
-        pos_er = des_pos[0:12] - self._state
-        r_ddot_1 = des_pos[12]
-        r_ddot_2 = des_pos[13]
-        r_ddot_3 = des_pos[14]
-
-        # https://upcommons.upc.edu/bitstream/handle/2117/112404/Thesis-Jesus_Valle.pdf?sequence=1&isAllowed=y
-        r_ddot_des_x = kx * pos_er[0] + k_x_dot * pos_er[3] + r_ddot_1
-        r_ddot_des_y = ky * pos_er[1] + k_y_dot * pos_er[4] + r_ddot_2
-        r_ddot_des_z = kz * pos_er[2] + k_z_dot * pos_er[5] + r_ddot_3
-
-        # takes care of hovering
-        # r_ddot_des_z = self.m * (self.g + r_ddot_des_z)
-
-        action = np.array([r_ddot_des_x, r_ddot_des_y, r_ddot_des_z])
-        return action
 
     def step(self, action=np.zeros(3)):
         """Action is propeller forces in body frame
@@ -296,14 +249,11 @@ class Quad2DInt(Entity):
             state:
             x, y, z, x_dot, y_dot, z_dot, phi, theta, psi, phi_dot, theta_dot, psi_dot
         """
-        # keeps uav hovering
+        # keep uav hovering
         action[2] = self.m * (self.g + action[2])
 
-        self._state = self._state + self.f_dot_np(self._state, action) * self.dt
-
-        # self.ode.set_initial_value(self._state, 0).set_f_params(action)
-        # self._state = self.ode.integrate(self.ode.t + self.dt)
-        # assert self.ode.successful()
+        dot_state = self.rk4(self._state, action)
+        self._state = self._state + dot_state * self.dt
 
         self._state[2] = max(0, self._state[2])
 
@@ -320,285 +270,8 @@ class Quad2DInt(Entity):
 
         return dist <= 0.01, dist
 
-    def get_p(self, tf, N=1):
-        """_summary_https://danielmuellerkomorowska.com/2021/02/16/differential-equations-with-scipy-odeint-or-solve_ivp/
 
-        Args:
-            tf (_type_): _description_
-            N (int, optional): _description_. Defaults to 1.
-        """
-
-        def dp_dt(time, state, tf, N=1):
-            # print(time)
-            t_go = (tf - time) ** N
-            p1 = state[0]
-            p2 = state[1]
-            p3 = state[2]
-            return np.array(
-                [t_go * p2**2, -p1 + t_go * p2 * p3, -2 * p2 + t_go * p3**2]
-            )
-
-        f1 = 10
-        f2 = 1
-        p0 = np.array([f1, 0, f2])
-        t = np.arange(tf, 0.0, -0.1)
-        params = (tf, N)
-        p = odeint(dp_dt, p0, t, params, tfirst=True)
-        return p
-
-    def get_time_coordinated_action(self, des_pos, tf, t, N, g):
-        pos_er = des_pos[0:6] - self._state[0:6]
-
-        p1 = g[0]
-        p2 = g[1]
-        p3 = g[2]
-        g2x = g[4]
-        g2y = g[6]
-        g2z = g[8]
-
-        # p1 = g[-1, 0]
-        # p2 = g[-1, 1]
-        # p3 = g[-1, 2]
-        # g2x = g[-1, 4]
-        # g2y = g[-1, 6]
-        # g2z = g[-1, 8]
-        t_go = (tf - t) ** N
-
-        action = t_go * np.array(
-            [
-                g2x + p2 * pos_er[0] + p3 * pos_er[3],
-                g2y + p2 * pos_er[1] + p3 * pos_er[4],
-                g2z + p2 * pos_er[2] + p3 * pos_er[5],
-            ]
-        )
-
-        return action
-
-    def get_k(self, tf, N=1):
-        A = np.zeros((6, 6))
-        A[0, 3] = 1
-        A[1, 4] = 1
-        A[2, 5] = 1
-
-        B = np.zeros((6, 3))
-        B[3, 0] = 1
-        B[4, 1] = 1
-        B[5, 2] = 1
-
-        t_go = tf**N
-        Q = np.eye(6)
-        R = np.eye(3) * (1 / t_go)
-
-        k, _, _ = lqr(A, B, Q, R)
-
-        return k
-
-    def get_p_mat(self, tf, N=1, t0=0.0):
-        A = np.zeros((2, 2))
-        A[0, 1] = 1.0
-
-        B = np.zeros((2, 1))
-        B[1, 0] = 1.0
-
-        t_go = tf**N
-
-        f1 = 2.0
-        f2 = 2.0
-        Qf = np.eye(2)
-        Qf[0, 0] = f1
-        Qf[1, 1] = f2
-
-        Q = np.eye(2) * 0.0
-
-        t = np.arange(tf, t0, -0.1)
-        params = (tf, N, A, B, Q)
-
-        g0 = np.array([*Qf.reshape((4,))])
-
-        def dp_dt(time, state, tf, N, A, B, Q):
-            t_go = (tf - time) ** N
-            # t_go = (tf) ** N
-            # R = 1.0 / (t_go + 0.00000000001)
-            # R = 1.0 / (t_go)
-            P = state[0:4].reshape((2, 2))
-            # p_dot = -(Q + P @ A + A.T @ P - P @ B * (R**-1) @ B.T @ P)
-            p_dot = -(Q + P @ A + A.T @ P - P @ B * (t_go) @ B.T @ P)
-            output = np.array(
-                [
-                    *p_dot.reshape((4,)),
-                ]
-            )
-            return output
-
-        result = odeint(dp_dt, g0, t, args=params, tfirst=True)
-        return result
-
-    def get_g_mat(self, des_term_state, tf, N=1):
-        des_term_state = des_term_state[0:6].copy()  # we only want the first 6 items
-        A = np.zeros((2, 2))
-        A[0, 1] = 1.0
-        # A[0, 3] = 1
-        # A[1, 4] = 1
-        # A[2, 5] = 1
-
-        B = np.zeros((2, 1))
-        B[1, 0] = 1.0
-        # B[3, 0] = 1
-        # B[4, 1] = 1
-        # B[5, 2] = 1
-
-        t_go = tf**N
-
-        f1 = 2.0
-        f2 = 1.0
-        Qf = np.eye(2)
-        Qf[0, 0] = f1
-        Qf[1, 1] = f2
-        # Qf[2, 2] = f1
-        # Qf[4, 4] = f1
-        # Qf[3, 3] = f2
-        # Qf[5, 5] = f2
-        gx_init = Qf @ np.array(des_term_state[[0, 3]])
-        gy_init = Qf @ np.array(des_term_state[[1, 4]])
-        gz_init = Qf @ np.array(des_term_state[[2, 5]])
-        R = 1.0 / t_go
-
-        t = np.arange(tf, 0.0, -0.1)
-        params = (tf, N, A, B, R)
-
-        g0 = np.array([*Qf.reshape((4,)), *gx_init, *gy_init, *gz_init])
-
-        def dg_dt(time, state, tf, N, A, B, R):
-            t_go = (tf - time) ** N
-            R = 1.0 / (t_go + 0.000000001)
-            P = state[0:4].reshape((2, 2))
-            gx = state[4:6]
-            gy = state[6:8]
-            gz = state[8:10]
-            p_dot = -(P @ A + A.T @ P - P @ B * (R**-1) @ B.T @ P)
-            gx_dot = -np.dot(A - B * (R**-1) @ B.T @ P, gx)
-            gy_dot = -np.dot(A - B * (R**-1) @ B.T @ P, gy)
-            gz_dot = -np.dot(A - B * (R**-1) @ B.T @ P, gz)
-            output = np.array(
-                [
-                    *p_dot.reshape((4,)),
-                    *gx_dot.reshape((2,)),
-                    *gy_dot.reshape((2,)),
-                    *gz_dot.reshape((2,)),
-                ]
-            )
-
-            return output
-
-        result = odeint(dg_dt, g0, t, args=params, tfirst=True)
-        return result
-
-    def get_g(self, des_term_state, tf, N=1, t0=0.0):
-        # pos_er = des_term_state[0:6] - self._state[0:6]
-        pos_er = des_term_state[0:6]
-        """_summary_https://danielmuellerkomorowska.com/2021/02/16/differential-equations-with-scipy-odeint-or-solve_ivp/
-
-        Args:
-            tf (_type_): _description_
-            N (int, optional): _description_. Defaults to 1.
-        """
-        f1 = 2
-        f2 = 1
-        g0 = np.array(
-            [
-                f1,
-                0,
-                f2,
-                f1 * pos_er[0],
-                f2 * pos_er[3],
-                f1 * pos_er[1],
-                f2 * pos_er[4],
-                f1 * pos_er[2],
-                f2 * pos_er[5],
-            ]
-        )
-        t = np.arange(tf, t0, -0.1)
-        params = (tf, N)
-
-        def dg_dt(time, state, tf, N):
-            t_go = (tf - time) ** N
-            p1 = state[0]
-            p2 = state[1]
-            p3 = state[2]
-            g1x = state[3]
-            g2x = state[4]
-            g1y = state[5]
-            g2y = state[6]
-            g1z = state[7]
-            g2z = state[8]
-            return np.array(
-                [
-                    t_go * p2**2,
-                    -p1 + t_go * p2 * p3,
-                    -2.0 * p2 + t_go * p3**2,
-                    t_go * g2x * p2,
-                    -g1x + t_go * g2x * p3,
-                    t_go * g2y * p2,
-                    -g1y + t_go * g2y * p3,
-                    t_go * g2z * p2,
-                    -g1z + t_go * g2z * p3,
-                ]
-            )
-
-        g = odeint(dg_dt, g0, t, args=params, tfirst=True)
-        return g
-
-    # def get_g(self, x, vx, p, tf, N=1):
-    #     """_summary_https://danielmuellerkomorowska.com/2021/02/16/differential-equations-with-scipy-odeint-or-solve_ivp/
-
-    #     Args:
-    #         tf (_type_): _description_
-    #         N (int, optional): _description_. Defaults to 1.
-    #     """
-    #     f1 = 2
-    #     f2 = 1
-    #     g0 = np.array([f1, 0, f2, f1 * x, f2 * vx])
-    #     t = np.arange(tf, 0.0, -0.1)
-    #     params = (tf, N)
-
-    #     def ret_p(p, _t):
-    #         dis = _t - t
-    #         dis[dis < 0] = np.inf
-    #         idx = dis.argmin()
-    #         print(idx)
-    #         return p[idx]
-
-    #     # def dg_dt(time, state, tf, N, p):
-    #     def dg_dt(time, state, ret_p, p, tf, N):
-    #         print(f"g_time:{time}")
-    #         # tf = 10
-    #         # N = 1
-    #         t_go = (tf - time) ** N
-    #         g1 = state[3]
-    #         g2 = state[4]
-    #         # _p = ret_p(p, time)
-    #         # p1 = _p[0]
-    #         # p2 = _p[1]
-    #         # p3 = _p[2]
-    #         p1 = state[0]
-    #         p2 = state[1]
-    #         p3 = state[2]
-    #         return np.array(
-    #             [
-    #                 t_go * p2**2,
-    #                 -p1 + t_go * p2 * p3,
-    #                 -2.0 * p2 + t_go * p3**2,
-    #                 t_go * g2 * p2,
-    #                 -g1 + t_go * g2 * p3,
-    #             ]
-    #         )
-    #         # return np.array([t_go * p2, -g1 + t_go * g2 * p3])
-
-    #     g = odeint(dg_dt, g0, t, args=(ret_p, p, tf, N), tfirst=True)
-    #     return g
-
-
-class Quadrotor(Entity):
+class Uav(UavBase):
     def __init__(
         self,
         _id,
@@ -608,38 +281,31 @@ class Quadrotor(Entity):
         phi=0,
         theta=0,
         psi=0,
+        r=0.1,
         dt=1 / 10,
         m=0.18,
         l=0.086,
-        use_ode=True,
         k=None,
+        use_ode=True,
         pad=None,
     ):
-        super().__init__(_id=_id, x=x, y=y, z=z, _type=AgentType.U)
+        super().__init__(
+            _id=_id,
+            x=x,
+            y=y,
+            z=z,
+            r=r,
+            dt=dt,
+            m=m,
+            l=l,
+            pad=pad,
+        )
 
         self.use_ode = use_ode
-
         if self.use_ode:
             self.ode = scipy.integrate.ode(self.f_dot).set_integrator(
                 "vode", nsteps=500, method="bdf"
             )
-            # self.ode = scipy.integrate.ode(self.f_dot).set_integrator(
-            #     # "dopri5", nsteps=500, verbosity=1
-            #     "dopri5"
-            # )
-
-        # timestep
-        self.dt = dt  # s
-
-        # gravity constant
-        self.g = 9.81  # m/s^2
-
-        # mass
-        self.m = m  # kg
-
-        # lenght of arms
-        self.l = l  # m
-
         self.inertia = np.array(
             [[0.00025, 0, 2.55e-6], [0, 0.000232, 0], [2.55e-6, 0, 0.0003738]],
             dtype=np.float64,
@@ -663,11 +329,6 @@ class Quadrotor(Entity):
         # gamma = k_M / k_F
         self.gamma = 1.5e-9 / 6.11e-8  # k_F = N / rpm^2, k_M = N*m / rpm^2
 
-        if k is None:
-            self.k = self.calc_gain()
-        else:
-            self.k = k
-
         self._state = np.zeros(12)
         self._state[0] = x
         self._state[1] = y
@@ -680,69 +341,43 @@ class Quadrotor(Entity):
         self.pad = pad
         self.done_time = None
 
-    def calc_gain(self):
-        # The control can be done in a decentralized style
-        # The linearized system is divided into four decoupled subsystems
+    def get_r_matrix(self, phi, theta, psi):
+        """Calculates the Z-Y-X rotation matrix.
+           Based on Different Linearization Control Techniques for a Quadrotor System
 
-        # X-subsystem
-        # The state variables are x, dot_x, pitch, dot_pitch
-        Ax = np.array(
+        Returns: R - 3 x 3 rotation matrix
+        """
+        cp = cos(phi)
+        sp = sin(phi)
+        ct = cos(theta)
+        st = sin(theta)
+        cg = cos(psi)
+        sg = sin(psi)
+        R_x = np.array([[1, 0, 0], [0, cp, -sp], [0, sp, cp]])
+        R_y = np.array([[ct, 0, st], [0, 1, 0], [-st, 0, ct]])
+        R_z = np.array([[cg, -sg, 0], [sg, cg, 0], [0, 0, 1]])
+
+        # R = np.dot(np.dot(R_x, R_y), R_z)
+        # ZXY matrix
+        R = np.array(
             [
-                [0.0, 1.0, 0.0, 0.0],
-                [0.0, 0.0, self.g, 0.0],
-                [0.0, 0.0, 0.0, 1.0],
-                [0.0, 0.0, 0.0, 0.0],
+                [cg * ct - sp * sg * st, -cp * sg, cg * st + ct * sp * sg],
+                [ct * sg + cg * sp * st, cp * cg, sg * st - cg * ct * sp],
+                [-cp * st, sp, cp * ct],
             ]
         )
-        Bx = np.array([[0.0], [0.0], [0.0], [1 / self.ixx]])
+        # R = np.array(
+        #     [
+        #         [cg * ct - sp * sg * st, ct * sg + cg * sp * st, -cp * st],
+        #         [-cp * sg, cp * cg, sp],
+        #         [cg * st + ct * sp * sg, sg * st - cg * ct * sp, cp * ct],
+        #     ]
+        # )
+        # R = R.transpose()
+        # R = np.dot(np.dot(R_z, R_x), R_y)
+        # R = np.dot(R_z, np.dot(R_y, R_x))
+        return R
 
-        Qx = Qy = np.diag([900, 2, 2, 100])
-        Rx = Ry = np.diag([1])
-        # Qx = np.diag([.1, 10, 1, 1])
-        # Rx = np.diag([10])
-
-        # Y-subsystem
-        # The state variables are y, dot_y, roll, dot_roll
-        Ay = np.array(
-            [
-                [0.0, 1.0, 0.0, 0.0],
-                [0.0, 0.0, -self.g, 0.0],
-                [0.0, 0.0, 0.0, 1.0],
-                [0.0, 0.0, 0.0, 0.0],
-            ]
-        )
-        By = np.array([[0.0], [0.0], [0.0], [1 / self.iyy]])
-
-        # Qy = np.diag([.1, 10, 1, 1])
-        # Ry = np.diag([10])
-
-        # Z-subsystem
-        # The state variables are z, dot_z
-        Az = np.array([[0.0, 1.0], [0.0, 0.0]])
-        Bz = np.array([[0.0], [1 / self.m]])
-
-        Qz = np.diag([100, 10])
-        Rz = np.diag([1])
-
-        # Yaw-subsystem
-        # The state variables are yaw, dot_yaw
-        Ayaw = np.array([[0.0, 1.0], [0.0, 0.0]])
-        Byaw = np.array([[0.0], [1 / self.izz]])
-        Qyaw = np.diag([2, 1])
-        Ryaw = np.diag([1])
-
-        ####################### solve LQR #######################
-        Ks = []  # feedback gain matrices K for each subsystem
-        for A, B, Q, R in (
-            (Ax, Bx, Qx, Rx),
-            (Ay, By, Qy, Ry),
-            (Az, Bz, Qz, Rz),
-            (Ayaw, Byaw, Qyaw, Ryaw),
-        ):
-            K, _, _ = lqr(A, B, Q, R)
-            Ks.append(K)
-
-        return Ks
 
     def get_r_dot_matrix(self, phi, theta, psi):
         """ """
@@ -798,43 +433,6 @@ class Quadrotor(Entity):
             ]
         )
         R = np.dot(np.dot(R_z, R_x), R_y)
-        return R
-
-    def get_r_matrix(self, phi, theta, psi):
-        """Calculates the Z-Y-X rotation matrix.
-           Based on Different Linearization Control Techniques for a Quadrotor System
-
-        Returns: R - 3 x 3 rotation matrix
-        """
-        cp = cos(phi)
-        sp = sin(phi)
-        ct = cos(theta)
-        st = sin(theta)
-        cg = cos(psi)
-        sg = sin(psi)
-        R_x = np.array([[1, 0, 0], [0, cp, -sp], [0, sp, cp]])
-        R_y = np.array([[ct, 0, st], [0, 1, 0], [-st, 0, ct]])
-        R_z = np.array([[cg, -sg, 0], [sg, cg, 0], [0, 0, 1]])
-
-        # R = np.dot(np.dot(R_x, R_y), R_z)
-        # ZXY matrix
-        R = np.array(
-            [
-                [cg * ct - sp * sg * st, -cp * sg, cg * st + ct * sp * sg],
-                [ct * sg + cg * sp * st, cp * cg, sg * st - cg * ct * sp],
-                [-cp * st, sp, cp * ct],
-            ]
-        )
-        # R = np.array(
-        #     [
-        #         [cg * ct - sp * sg * st, ct * sg + cg * sp * st, -cp * st],
-        #         [-cp * sg, cp * cg, sp],
-        #         [cg * st + ct * sp * sg, sg * st - cg * ct * sp, cp * ct],
-        #     ]
-        # )
-        # R = R.transpose()
-        # R = np.dot(np.dot(R_z, R_x), R_y)
-        # R = np.dot(R_z, np.dot(R_y, R_x))
         return R
 
     def f_dot(self, time, state, action):
@@ -969,98 +567,6 @@ class Quadrotor(Entity):
         action = np.array([u1, *M])
         return action
 
-    def calc_des_action(self, des_pos):
-        kx = ky = 1
-        # ky = 0.1
-        kz = 1
-        k_x_dot = k_y_dot = 2
-        # k_x_dot = k_y_dot = 1
-        # k_y_dot = 0.5
-        k_z_dot = 2
-        # k_phi = k_theta = 5
-        k_phi = 40
-        k_theta = 30
-        # k_theta = 0.5
-        k_psi = 19
-        # k_psi = 1
-        k_phi_dot = k_theta_dot = 5
-        # k_phi_dot = k_theta_dot = 2.1
-        # k_theta_dot = 1
-        k_psi_dot = 2
-        # k_psi_dot = 1
-
-        # kx = ky = 10.0
-        # kz = 15
-        # k_x_dot = k_y_dot = 1.5
-        # k_z_dot = 1.5
-        # k_phi = k_theta = k_psi = 35
-        # k_phi_dot = k_theta_dot = k_psi_dot = 10.0
-
-        pos_er = des_pos[0:12] - self._state
-        r_ddot_1 = des_pos[12]
-        r_ddot_2 = des_pos[13]
-        r_ddot_3 = des_pos[14]
-
-        # https://upcommons.upc.edu/bitstream/handle/2117/112404/Thesis-Jesus_Valle.pdf?sequence=1&isAllowed=y
-        r_ddot_des_x = kx * pos_er[0] + k_x_dot * pos_er[3] + r_ddot_1
-        r_ddot_des_y = ky * pos_er[1] + k_y_dot * pos_er[4] + r_ddot_2
-        r_ddot_des_z = kz * pos_er[2] + k_z_dot * pos_er[5] + r_ddot_3
-
-        des_psi = des_pos[8]
-
-        u1 = self.m * (self.g + r_ddot_des_z)
-
-        # desired angles
-        phi_des = (r_ddot_des_x * sin(des_psi) - r_ddot_des_y * cos(des_psi)) / self.g
-        theta_des = (r_ddot_des_x * cos(des_psi) + r_ddot_des_y * sin(des_psi)) / self.g
-
-        # desired torques
-        u2_phi = k_phi * (phi_des - self._state[6]) + k_phi_dot * (-self._state[9])
-        u2_theta = k_theta * (theta_des - self._state[7]) + k_theta_dot * (
-            -self._state[10]
-        )
-
-        # yaw
-        u2_psi = k_psi * pos_er[8] + k_psi_dot * pos_er[11]
-
-        M = np.dot(self.inertia, np.array([u2_phi, u2_theta, u2_psi]))
-        # M = np.dot(self.inertia, np.zeros(3))
-        action = np.array([u1, *M])
-        # action = np.array([u1, u2_phi, u2_theta, u2_psi])
-        return action
-
-    def calc_torque(self, des_pos=np.zeros(15)):
-        """
-        Inputs are the desired states: x, y, z, x_dot, y_dot,
-        Inputs are the desired position x, y, z, psi
-        Outputs are T, tau_x, tau_y, tau_z
-
-        Args:
-            des_pos (_type_, optional): _description_. Defaults to np.arary([0, 0, 0, 0]).
-        """
-        pos_er = des_pos[0:12] - self._state
-        # pos_er[6:7] = np.max(np.min(pos_er[6:7], 0.1), -0.1)
-        r_ddot_1 = des_pos[12]
-        r_ddot_2 = des_pos[13]
-        r_ddot_3 = des_pos[14]
-
-        # T = np.dot(self.k[2], pos_er[[2, 5]]).squeeze() + r_ddot_3
-        # u_theta = np.dot(self.k[0], pos_er[[0, 3, 7, 10]]).squeeze() + r_ddot_2
-        # u_phi = np.dot(self.k[1], pos_er[[1, 4, 6, 9]]).squeeze() + r_ddot_1
-        # u_psi = np.dot(self.k[3], pos_er[[8, 11]]).squeeze()
-
-        T = np.dot(self.k[2], pos_er[[2, 5]]).squeeze()
-        u_theta = np.dot(self.k[0], pos_er[[0, 3, 7, 10]]).squeeze()
-        u_phi = np.dot(self.k[1], pos_er[[1, 4, 6, 9]]).squeeze()
-        u_psi = np.dot(self.k[3], pos_er[[8, 11]]).squeeze()
-
-        u1 = self.m * (T + self.g)
-        M = np.dot(self.inertia, np.array([u_phi, u_theta, u_psi]))
-        action = np.array([u1, *M])
-        return action
-
-        return np.array([T + self.m * self.g, u_phi, u_theta, u_psi])
-
     def step(self, action=np.zeros(4)):
         """Action is propeller forces in body frame
 
@@ -1075,26 +581,10 @@ class Quadrotor(Entity):
 
         state = self._state.copy()
         self.ode.set_initial_value(state, 0).set_f_params(action)
-        # self.ode.set_initial_value(state).set_f_params(action)
         self._state = self.ode.integrate(self.ode.t + self.dt)
         # assert self.ode.successful()
 
-        # self._state[9:12] = self.wrap_angle(self._state[9:12])
+        self._state[9:12] = self.wrap_angle(self._state[9:12])
 
         self._state[6:9] = self.wrap_angle(self._state[6:9])
         self._state[2] = max(0, self._state[2])
-
-    def in_collision(self, entity):
-        dist = np.linalg.norm(self._state[0:3] - entity._state[0:3])
-
-        return dist <= (self.r + entity.r)
-
-    def get_landed(self, pad):
-        dist = np.linalg.norm(self._state[0:3] - pad._state[0:3])
-
-        return dist <= 0.01
-
-    def check_dest_reached(self):
-        dist = np.linalg.norm(self._state[0:3] - self.pad._state[0:3])
-
-        return dist <= 0.01, dist

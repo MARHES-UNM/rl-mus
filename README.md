@@ -207,3 +207,4 @@ another cbf resource: https://escholarship.org/uc/item/9dp7v842#page=119
 https://github.com/mahaitongdae/Safety_Index_Synthesis/blob/master/envs_and_models/collision_avoidance_env.py
 * implement custom ppo for multi agent system
 * refactor uav class to be modular
+* update uav reward to be more in line with: https://arc.aiaa.org/doi/epdf/10.2514/1.I010961

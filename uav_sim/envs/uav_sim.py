@@ -4,11 +4,11 @@ from gym import spaces
 import numpy as np
 
 from gym.utils import seeding
-from _archives.full_uav import ObsType
-from uav_sim.agents.uav import Obstacle, Quad2DInt, Quadrotor
+from uav_sim.agents.uav import Obstacle, UavBase, Uav, ObsType
 from uav_sim.agents.uav import Target
 from uav_sim.utils.gui import Gui
 from qpsolvers import solve_qp
+from scipy.integrate import odeint
 import logging
 import random
 
@@ -182,7 +182,7 @@ class UavSim:
 
         t0 = min(t, tf - 0.1)
         t_go = (tf - t0) ** N
-        p = uav.get_p_mat(tf, N, t0)
+        p = self.get_p_mat(tf, N, t0)
         B = np.zeros((2, 1))
         B[1, 0] = 1.0
 
@@ -195,6 +195,42 @@ class UavSim:
         )
 
         return action.squeeze()
+
+    def get_p_mat(self, tf, N=1, t0=0.0):
+        A = np.zeros((2, 2))
+        A[0, 1] = 1.0
+
+        B = np.zeros((2, 1))
+        B[1, 0] = 1.0
+
+        t_go = tf**N
+
+        f1 = 2.0
+        f2 = 2.0
+        Qf = np.eye(2)
+        Qf[0, 0] = f1
+        Qf[1, 1] = f2
+
+        Q = np.eye(2) * 0.0
+
+        t = np.arange(tf, t0, -0.1)
+        params = (tf, N, A, B, Q)
+
+        g0 = np.array([*Qf.reshape((4,))])
+
+        def dp_dt(time, state, tf, N, A, B, Q):
+            t_go = (tf - time) ** N
+            P = state[0:4].reshape((2, 2))
+            p_dot = -(Q + P @ A + A.T @ P - P @ B * (t_go) @ B.T @ P)
+            output = np.array(
+                [
+                    *p_dot.reshape((4,)),
+                ]
+            )
+            return output
+
+        result = odeint(dp_dt, g0, t, args=params, tfirst=True)
+        return result
 
     def get_safe_action(self, uav, des_action):
         G = []

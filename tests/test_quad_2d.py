@@ -12,7 +12,7 @@ from uav_sim.utils.trajectory_generator import (
 )
 
 
-class TestQuad2D(unittest.TestCase):
+class TestQuad2DInt(unittest.TestCase):
     def setUp(self):
         self.uav = Quad2DInt(0, 2, 2, 2)
 
