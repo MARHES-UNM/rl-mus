@@ -45,7 +45,7 @@
             },
             "args": [
                 "--plot_results",
-                // "--render"
+                "--render"
             ]
         },
         {

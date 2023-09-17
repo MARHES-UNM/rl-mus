@@ -286,6 +286,7 @@ class Uav(UavBase):
         m=0.18,
         l=0.086,
         k=None,
+        use_ode=False,
         pad=None,
     ):
         super().__init__(
@@ -299,6 +300,13 @@ class Uav(UavBase):
             l=l,
             pad=pad,
         )
+
+        self.use_ode = use_ode
+        if self.use_ode:
+            self.f_dot_ode = lambda time, state, action: self.f_dot(state, action)
+            self.ode = scipy.integrate.ode(self.f_dot_ode).set_integrator(
+                "vode", nsteps=500, method="bdf"
+            )
 
         self.inertia = np.array(
             [[0.00025, 0, 2.55e-6], [0, 0.000232, 0], [2.55e-6, 0, 0.0003738]],
@@ -567,8 +575,13 @@ class Uav(UavBase):
         if len(action) == 3:
             action = self.get_torque_from_acc(action)
 
-        dot_state = self.rk4(self._state, action)
-        self._state = self._state + dot_state * self.dt
+        if self.use_ode:
+            state = self._state.copy()
+            self.ode.set_initial_value(state, 0).set_f_params(action)
+            self._state = self.ode.integrate(self.ode.t + self.dt)
+        else:
+            dot_state = self.rk4(self._state, action)
+            self._state = self._state + dot_state * self.dt
 
         self._state[9:12] = self.wrap_angle(self._state[9:12])
 
