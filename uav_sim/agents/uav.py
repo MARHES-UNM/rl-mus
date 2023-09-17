@@ -286,7 +286,6 @@ class Uav(UavBase):
         m=0.18,
         l=0.086,
         k=None,
-        use_ode=True,
         pad=None,
     ):
         super().__init__(
@@ -301,11 +300,6 @@ class Uav(UavBase):
             pad=pad,
         )
 
-        self.use_ode = use_ode
-        if self.use_ode:
-            self.ode = scipy.integrate.ode(self.f_dot).set_integrator(
-                "vode", nsteps=500, method="bdf"
-            )
         self.inertia = np.array(
             [[0.00025, 0, 2.55e-6], [0, 0.000232, 0], [2.55e-6, 0, 0.0003738]],
             dtype=np.float64,
@@ -364,9 +358,9 @@ class Uav(UavBase):
         st = sin(theta)
         cg = cos(psi)
         sg = sin(psi)
-        R_x = np.array([[1, 0, 0], [0, cp, -sp], [0, sp, cp]])
-        R_y = np.array([[ct, 0, st], [0, 1, 0], [-st, 0, ct]])
-        R_z = np.array([[cg, -sg, 0], [sg, cg, 0], [0, 0, 1]])
+        # R_x = np.array([[1, 0, 0], [0, cp, -sp], [0, sp, cp]])
+        # R_y = np.array([[ct, 0, st], [0, 1, 0], [-st, 0, ct]])
+        # R_z = np.array([[cg, -sg, 0], [sg, cg, 0], [0, 0, 1]])
 
         # R = np.dot(np.dot(R_x, R_y), R_z)
         # ZXY matrix
@@ -445,7 +439,7 @@ class Uav(UavBase):
         R = np.dot(np.dot(R_z, R_x), R_y)
         return R
 
-    def f_dot(self, time, state, action):
+    def f_dot(self, state, action):
         ft, tau_x, tau_y, tau_z = action.reshape(-1).tolist()
 
         A = np.array(
@@ -573,14 +567,10 @@ class Uav(UavBase):
         if len(action) == 3:
             action = self.get_torque_from_acc(action)
 
-        state = self._state.copy()
-        self.ode.set_initial_value(state, 0).set_f_params(action)
-        self._state = self.ode.integrate(self.ode.t + self.dt)
-        # assert self.ode.successful()
+        dot_state = self.rk4(self._state, action)
+        self._state = self._state + dot_state * self.dt
 
         self._state[9:12] = self.wrap_angle(self._state[9:12])
 
         self._state[6:9] = self.wrap_angle(self._state[6:9])
         self._state[2] = max(0, self._state[2])
-
-    
