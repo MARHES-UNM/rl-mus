@@ -135,7 +135,6 @@ class SafetyLayer:
         }
 
         obs = self._env.reset()
-        state_error = {i: np.zeros(self.k_obstacle) for i in range(self._env.num_uavs)}
 
         for _ in range(num_steps):
             nom_actions = {}
@@ -148,7 +147,6 @@ class SafetyLayer:
                 actions[i] = self.get_action(obs[i], nom_actions[i])
 
             obs_next, _, done, info = self._env.step(actions)
-            obs_nom_next, _, _, _ = self._env.step(nom_actions)
 
             for k, v in info.items():
                 results["uav_collision"] += v["uav_collision"]
@@ -164,11 +162,6 @@ class SafetyLayer:
                 for k, v in obs_next[i].items():
                     new_key = f"{k}_next"
                     buffer_dictionary[new_key] = v
-
-                buffer_dictionary["state_error"] = (
-                    (obs_next[i]["state"] - obs_nom_next[i]["state"]) / self._env.dt
-                )[: self.k_obstacle]
-
                 self._replay_buffer.add(buffer_dictionary)
 
             obs = obs_next
@@ -245,14 +238,11 @@ class SafetyLayer:
         rel_pad_next = self._as_tensor(batch["rel_pad_next"])
         other_uav_obs_next = self._as_tensor(batch["other_uav_obs_next"])
         obstacles_next = self._as_tensor(batch["obstacles_next"])
-        state_error = self._as_tensor(batch["state_error"])
 
         safe_mask, unsafe_mask, mid_mask = self._get_mask(constraints)
 
         h = self._cbf_model(state, other_uav_obs, obstacles)
-        u = self._nn_action_model(
-            state, rel_pad, other_uav_obs, obstacles, u_nominal, state_error
-        )
+        u = self._nn_action_model(state, rel_pad, other_uav_obs, obstacles, u_nominal)
 
         # calculate the the nomimal state using https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=9681233
         state_next_nominal = state + self.f_dot_torch(state, u) * self._env.dt
@@ -376,18 +366,16 @@ class SafetyLayer:
 
         return loss, acc_stat
 
-    def get_action(self, obs, action, state_error):
+    def get_action(self, obs, action):
         state = torch.unsqueeze(self._as_tensor(obs["state"]), dim=0)
         rel_pad = torch.unsqueeze(self._as_tensor(obs["rel_pad"]), dim=0)
         other_uav_obs = torch.unsqueeze(self._as_tensor(obs["other_uav_obs"]), dim=0)
         obstacles = torch.unsqueeze(self._as_tensor(obs["obstacles"]), dim=0)
         constraint = torch.unsqueeze(self._as_tensor(obs["constraint"]), dim=0)
         u_nominal = torch.unsqueeze(self._as_tensor(action.squeeze()), dim=0)
-        state_error = torch.unsqueeze(self._as_tensor(state_error.squeeze()), dim=0)
-
         with torch.no_grad():
             u = self._nn_action_model(
-                state, rel_pad, other_uav_obs, obstacles, u_nominal, state_error
+                state, rel_pad, other_uav_obs, obstacles, u_nominal
             )
 
             return u.detach().cpu().numpy().squeeze()
