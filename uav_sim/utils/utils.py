@@ -73,8 +73,8 @@ def dlqr(A, B, Q, R):
 
     return K, P, eigVals
 
-    
-def plot_traj(self, uav_des_traj, uav_trajectory):
+
+def plot_traj(uav_des_traj, uav_trajectory, title=""):
     fig = plt.figure(figsize=(10, 6))
 
     ax = fig.add_subplot(411)
@@ -98,5 +98,6 @@ def plot_traj(self, uav_des_traj, uav_trajectory):
     ax3.plot(uav_trajectory[:, 8])
     ax3.set_ylabel("psi (rad)")
 
+    fig.suptitle(title, fontsize=16)
+    
     plt.show()
-    print()

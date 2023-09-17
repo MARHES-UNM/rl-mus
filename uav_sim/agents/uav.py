@@ -341,6 +341,17 @@ class Uav(UavBase):
         self.pad = pad
         self.done_time = None
 
+        # set up gain matrix
+        self.kx = self.ky = 1
+        self.kz = 1
+        self.k_x_dot = self.k_y_dot = 2
+        self.k_z_dot = 2
+        self.k_phi = 40
+        self.k_theta = 30
+        self.k_psi = 19
+        self.k_phi_dot = self.k_theta_dot = 5
+        self.k_psi_dot = 2
+
     def get_r_matrix(self, phi, theta, psi):
         """Calculates the Z-Y-X rotation matrix.
            Based on Different Linearization Control Techniques for a Quadrotor System
@@ -377,7 +388,6 @@ class Uav(UavBase):
         # R = np.dot(np.dot(R_z, R_x), R_y)
         # R = np.dot(R_z, np.dot(R_y, R_x))
         return R
-
 
     def get_r_dot_matrix(self, phi, theta, psi):
         """ """
@@ -508,60 +518,44 @@ class Uav(UavBase):
 
         return x_dot
 
-    def get_torc_from_acc(self, des_acc):
-        kx = ky = 1
-        # ky = 0.1
-        kz = 1
-        k_x_dot = k_y_dot = 2
-        # k_x_dot = k_y_dot = 1
-        # k_y_dot = 0.5
-        k_z_dot = 2
-        # k_phi = k_theta = 5
-        k_phi = 40
-        k_theta = 30
-        # k_theta = 0.5
-        k_psi = 19
-        # k_psi = 1
-        k_phi_dot = k_theta_dot = 5
-        # k_phi_dot = k_theta_dot = 2.1
-        # k_theta_dot = 1
-        k_psi_dot = 2
-        # k_psi_dot = 1
+    def calc_des_action(self, des_pos):
+        pos_er = des_pos[0:12] - self._state
+        r_ddot_1 = des_pos[12]
+        r_ddot_2 = des_pos[13]
+        r_ddot_3 = des_pos[14]
 
-        # kx = ky = 0.5
-        # # ky = 0.1
-        # kz = 1
-        # k_x_dot = k_y_dot = 1
-        # # k_y_dot = 0.5
-        # k_z_dot = 2
-        # k_phi = k_theta = 5
-        # # k_theta = 0.5
-        # k_psi = 1
-        # k_phi_dot = k_theta_dot = 2.1
-        # # k_theta_dot = 1
-        # k_psi_dot = 1
-
+        action = np.zeros(3, dtype=np.float32)
         # https://upcommons.upc.edu/bitstream/handle/2117/112404/Thesis-Jesus_Valle.pdf?sequence=1&isAllowed=y
-        r_ddot_des_x = des_acc[0]
-        r_ddot_des_y = des_acc[1]
-        r_ddot_des_z = des_acc[2]
+        action[0] = self.kx * pos_er[0] + self.k_x_dot * pos_er[3] + r_ddot_1
+        action[1] = self.ky * pos_er[1] + self.k_y_dot * pos_er[4] + r_ddot_2
+        action[2] = self.kz * pos_er[2] + self.k_z_dot * pos_er[5] + r_ddot_3
 
-        des_psi = 0.0
+        des_psi = des_pos[8]
+        des_psi_dot = des_pos[11]
 
-        u1 = self.m * (self.g + r_ddot_des_z)
+        des_action = self.get_torque_from_acc(action, des_psi, des_psi_dot)
+
+        return des_action
+
+    def get_torque_from_acc(self, action, des_psi=0, des_psi_dot=0):
+        u1 = self.m * (self.g + action[2])
 
         # desired angles
-        phi_des = (r_ddot_des_x * sin(des_psi) - r_ddot_des_y * cos(des_psi)) / self.g
-        theta_des = (r_ddot_des_x * cos(des_psi) + r_ddot_des_y * sin(des_psi)) / self.g
+        phi_des = (action[0] * sin(des_psi) - action[1] * cos(des_psi)) / self.g
+        theta_des = (action[0] * cos(des_psi) + action[1] * sin(des_psi)) / self.g
 
         # desired torques
-        u2_phi = k_phi * (phi_des - self._state[6]) + k_phi_dot * (-self._state[9])
-        u2_theta = k_theta * (theta_des - self._state[7]) + k_theta_dot * (
+        u2_phi = self.k_phi * (phi_des - self._state[6]) + self.k_phi_dot * (
+            -self._state[9]
+        )
+        u2_theta = self.k_theta * (theta_des - self._state[7]) + self.k_theta_dot * (
             -self._state[10]
         )
 
         # yaw
-        u2_psi = k_psi * (-self._state[8]) + k_psi_dot * (-self._state[11])
+        u2_psi = self.k_psi * (des_psi - self._state[8]) + self.k_psi_dot * (
+            des_psi_dot - self._state[11]
+        )
 
         M = np.dot(self.inertia, np.array([u2_phi, u2_theta, u2_psi]))
         action = np.array([u1, *M])
@@ -577,7 +571,7 @@ class Uav(UavBase):
         """
 
         if len(action) == 3:
-            action = self.get_torc_from_acc(action)
+            action = self.get_torque_from_acc(action)
 
         state = self._state.copy()
         self.ode.set_initial_value(state, 0).set_f_params(action)
@@ -588,3 +582,5 @@ class Uav(UavBase):
 
         self._state[6:9] = self.wrap_angle(self._state[6:9])
         self._state[2] = max(0, self._state[2])
+
+    

@@ -1,4 +1,5 @@
 from matplotlib import pyplot as plt
+from _archives.full_uav import Quadrotor
 
 from uav_sim.agents.uav import Obstacle, Pad, Uav
 from uav_sim.utils.utils import plot_traj
@@ -26,8 +27,8 @@ class TestUav(unittest.TestCase):
             uav = Uav(0, x, y, z)
 
             for _ in range(10):
-                # TODO: expected input is T, tau_x, tau_y, tau_z
-                action = np.array([uav.m * uav.g, 0, 0, 0])
+                # expected input is ax, ay, az
+                action = np.array([0.0, 0.0, 0.0])
                 uav.step(action)
                 expected_traj = np.array([x, y, z])
                 np.testing.assert_array_almost_equal(expected_traj, uav.state[0:3])
@@ -41,197 +42,150 @@ class TestUav(unittest.TestCase):
             uav.step(action)
         np.testing.assert_almost_equal(0.0, uav.state[2])
 
-    # def test_controller_open_loop(self):
-    #     """Test that we can independently control UAV x, y, z and psi"""
-    #     uav = Uav(0, 0, 0, 2)
+    def test_controller_independent_control(self):
+        """Test that we can independently control UAV x, y, z and psi"""
+        uav = Uav(0, 0, 0, 2)
 
-    #     des_pos = np.zeros(15)
-    #     uav_des_traj = []
-    #     uav_trajectory = []
-    #     for i in range(200):
-    #         # hover
-    #         m = self.uav.m
-    #         g = self.uav.g
-    #         if i == 50:
-    #             des_acc = np.array([0.0, 0.001, 0.0])
-    #         else:
-    #             des_acc = np.zeros(3)
-    #         # action = np.array([m * g, 0.00, 0.00, 0.001])
-    #         # des_acc = np.array([0.1, 0., 0.])
-    #         action = self.uav.get_torc_from_acc(des_acc)
-    #         uav.step(action)
-    #         uav_des_traj.append(des_pos.copy())
-    #         uav_trajectory.append(uav.state)
+        des_pos = np.zeros(15)
+        uav_des_traj = []
+        uav_trajectory = []
+        for i in range(200):
+            # hover
+            if i < 20:
+                des_pos[0:4] = np.array([0, 0, 1, 0])
+            # x direction
+            elif i > 30 and i < 50:
+                des_pos[0:4] = np.array([1, 0, 1, 0])
+            # y direction
+            elif i > 60 and i < 80:
+                des_pos[0:4] = np.array([1, 1, 1, 0])
+            elif i > 90:
+                des_pos[0:4] = np.array([1, 1, 1, 0])
+                des_pos[8] = 0.3
 
-    #     uav_des_traj = np.array(uav_des_traj)
-    #     uav_trajectory = np.array(uav_trajectory)
+            action = uav.calc_des_action(des_pos)
+            uav.step(action)
+            uav_des_traj.append(des_pos.copy())
+            uav_trajectory.append(uav.state)
 
-    #     self.plot_traj(uav_des_traj, uav_trajectory)
+        uav_des_traj = np.array(uav_des_traj)
+        uav_trajectory = np.array(uav_trajectory)
 
-    # def test_controller_independent_control(self):
-    #     """Test that we can independently control UAV x, y, z and psi"""
-    #     uav = Uav(0, 0, 0, 2)
+        plot_traj(uav_des_traj, uav_trajectory, title="Independent Control Test")
 
-    #     des_pos = np.zeros(15)
-    #     uav_des_traj = []
-    #     uav_trajectory = []
-    #     for i in range(200):
-    #         # hover
-    #         if i < 20:
-    #             des_pos[0:4] = np.array([0, 0, 1, 0])
-    #         # x direction
-    #         elif i > 30 and i < 50:
-    #             des_pos[0:4] = np.array([1, 0, 1, 0])
-    #         # y direction
-    #         elif i > 60 and i < 80:
-    #             des_pos[0:4] = np.array([1, 1, 1, 0])
-    #         elif i > 90:
-    #             des_pos[0:4] = np.array([1, 1, 1, 0])
-    #             des_pos[8] = 0.3
+    def test_traj_line(self):
+        """Test uav can follow a line trajectory"""
+        uav = Uav(0, 1, 0, 1)
+        uav = Uav(0, 0, 0, 0)
+        uav_des_traj = []
+        uav_trajectory = []
+        t = 0
+        t_max = 4
+        while t < 20:  # 20 s
+            des_pos = np.zeros(15)
+            t_func = max(0, min(t, t_max))
+            t_func = t_func / t_max
 
-    #         action = uav.calc_torque(des_pos)
-    #         uav.step(action)
-    #         uav_des_traj.append(des_pos.copy())
-    #         uav_trajectory.append(uav.state)
+            # posistion
+            des_pos[0:3] = 10 * t_func**3 - 15 * t_func**4 + 6 * t_func**5
+            des_pos[8] = des_pos[0]
 
-    #     uav_des_traj = np.array(uav_des_traj)
-    #     uav_trajectory = np.array(uav_trajectory)
+            # velocity
+            des_pos[3:6] = (
+                (30 / t_max) * t_func**2
+                - (60 / t_max) * t_func**3
+                + (30 / t_max) * t_func**4
+            )
+            des_pos[11] = des_pos[3]
 
-    #     self.plot_traj(uav_des_traj, uav_trajectory)
+            # acceleration
+            des_pos[12:] = (
+                (60 / t_max**2) * t_func
+                - (180 / t_max**2) * t_func**2
+                + (120 / t_max**2) * t_func**3
+            )
 
-    # def test_traj_line(self):
-    #     """Test uav can follow a line trajectory"""
-    #     uav = Uav(0, 1, 0, 1)
-    #     uav = Uav(0, 0, 0, 0)
-    #     uav_des_traj = []
-    #     uav_trajectory = []
-    #     t = 0
-    #     t_max = 4
-    #     while t < 20:  # 20 s
-    #         des_pos = np.zeros(15)
-    #         t_func = max(0, min(t, t_max))
-    #         t_func = t_func / t_max
+            action = uav.calc_des_action(des_pos)
 
-    #         # posistion
-    #         des_pos[0:3] = 10 * t_func**3 - 15 * t_func**4 + 6 * t_func**5
-    #         des_pos[8] = des_pos[0]
+            uav.step(action)
+            uav_des_traj.append(des_pos.copy())
+            uav_trajectory.append(uav.state)
 
-    #         # velocity
-    #         des_pos[3:6] = (
-    #             (30 / t_max) * t_func**2
-    #             - (60 / t_max) * t_func**3
-    #             + (30 / t_max) * t_func**4
-    #         )
-    #         des_pos[11] = des_pos[3]
+            t += uav.dt
+        uav_des_traj = np.array(uav_des_traj)
+        uav_trajectory = np.array(uav_trajectory)
 
-    #         # acceleration
-    #         des_pos[12:] = (
-    #             (60 / t_max**2) * t_func
-    #             - (180 / t_max**2) * t_func**2
-    #             + (120 / t_max**2) * t_func**3
-    #         )
+        plot_traj(uav_des_traj, uav_trajectory, title="Trajectory Line Controller")
 
-    #         action = uav.calc_des_action(des_pos)
+    def test_controller_des_controller(self):
+        """Test uav can reach a desired position."""
+        uav = Uav(0, 1, 0, 1)
+        des_pos = np.zeros(15)
+        uav_des_traj = []
+        uav_trajectory = []
+        for i in range(220):
+            if i < 20:
+                des_pos[0:3] = uav.state[0:3].copy()
+                des_pos[8] = uav.state[8].copy()
+            elif i > 30 and i < 60:
+                des_pos[0:3] = np.array([2, 2, 1])
+                # des_pos[8] = np.pi / 2
+            elif i > 90 and i < 140:
+                des_pos[0:3] = np.array([1, 0, 0])
+                # des_pos[8] = 0.2
+            elif i > 150 and i < 180:
+                des_pos[0:3] = np.array([3, 1, 0.5])
+                # des_pos[8] = 0.2
+            elif i > 190:
+                des_pos[0:3] = np.array([2, 2, 2])
+                # des_pos[8] = np.pi
+            action = uav.calc_des_action(des_pos)
 
-    #         uav.step(action)
-    #         uav_des_traj.append(des_pos.copy())
-    #         uav_trajectory.append(uav.state)
+            uav.step(action)
+            uav_des_traj.append(des_pos.copy())
+            uav_trajectory.append(uav.state)
 
-    #         t += uav.dt
-    #     uav_des_traj = np.array(uav_des_traj)
-    #     uav_trajectory = np.array(uav_trajectory)
+        uav_des_traj = np.array(uav_des_traj)
+        uav_trajectory = np.array(uav_trajectory)
 
-    #     self.plot_traj(uav_des_traj, uav_trajectory)
+        plot_traj(uav_des_traj, uav_trajectory, title="Test Desired Controller")
 
-    # def test_controller_des_controller(self):
-    #     """Test uav can reach a desired position."""
-    #     uav = Uav(0, 1, 0, 1)
-    #     des_pos = np.zeros(15)
-    #     uav_des_traj = []
-    #     uav_trajectory = []
-    #     for i in range(220):
-    #         if i < 20:
-    #             des_pos[0:3] = uav.state[0:3].copy()
-    #             des_pos[8] = uav.state[8].copy()
-    #         elif i > 30 and i < 60:
-    #             des_pos[0:3] = np.array([2, 2, 1])
-    #             # des_pos[8] = np.pi / 2
-    #         elif i > 90 and i < 140:
-    #             des_pos[0:3] = np.array([1, 0, 0])
-    #             # des_pos[8] = 0.2
-    #         elif i > 150 and i < 180:
-    #             des_pos[0:3] = np.array([3, 1, 0.5])
-    #             # des_pos[8] = 0.2
-    #         elif i > 190:
-    #             des_pos[0:3] = np.array([2, 2, 2])
-    #             # des_pos[8] = np.pi
-    #         action = uav.calc_des_action(des_pos)
+    def test_get_landed(self):
+        pad = Pad(0, 1, 1)
 
-    #         uav.step(action)
-    #         uav_des_traj.append(des_pos.copy())
-    #         uav_trajectory.append(uav.state)
+        # uav should not be on pad
+        self.assertFalse(self.uav.get_landed(pad))
 
-    #     uav_des_traj = np.array(uav_des_traj)
-    #     uav_trajectory = np.array(uav_trajectory)
+        des_pos = np.zeros(15)
 
-    #     self.plot_traj(uav_des_traj, uav_trajectory)
+        uav_des_traj = []
+        uav_trajectory = []
+        k = np.array([1, 1, 1]) * 0.05
+        for i in range(100):
+            des_pos[0:3] = pad.state[0:3]
+            action = self.uav.calc_des_action(des_pos)
 
-    # def test_controller_des_pos(self):
-    #     """Test uav can reach a desired position."""
-    #     uav = Uav(0, 1, 0, 1)
-    #     des_pos = np.zeros(15)
-    #     uav_des_traj = []
-    #     uav_trajectory = []
-    #     for i in range(220):
-    #         if i < 20:
-    #             des_pos[0:3] = uav.state[0:3].copy()
-    #             des_pos[8] = uav.state[8].copy()
-    #         elif i > 30 and i < 60:
-    #             des_pos[0:3] = np.array([2, 2, 1])
-    #             # des_pos[8] = np.pi / 2
-    #         elif i > 90 and i < 140:
-    #             des_pos[0:3] = np.array([1, 0, 0])
-    #             # des_pos[8] = 0.2
-    #         elif i > 150 and i < 180:
-    #             des_pos[0:3] = np.array([3, 1, 0.5])
-    #             # des_pos[8] = 0.2
-    #         elif i > 190:
-    #             des_pos[0:3] = np.array([2, 2, 2])
-    #             # des_pos[8] = np.pi
+            # action = k * (pad.state[0:3] - self.uav.state[0:3])
+            self.uav.step(action)
 
-    #         action = uav.calc_torque(des_pos)
+            uav_trajectory.append(self.uav.state)
+            uav_des_traj.append(des_pos.copy())
 
-    #         uav.step(action)
-    #         uav_des_traj.append(des_pos.copy())
-    #         uav_trajectory.append(uav.state)
+        uav_des_traj = np.array(uav_des_traj)
+        uav_trajectory = np.array(uav_trajectory)
 
-    #     uav_des_traj = np.array(uav_des_traj)
-    #     uav_trajectory = np.array(uav_trajectory)
+        plot_traj(uav_des_traj, uav_trajectory, title="Test Get Landed")
 
-    #     self.plot_traj(uav_des_traj, uav_trajectory)
+        self.assertTrue(self.uav.get_landed(pad))
 
-    # def test_get_landed(self):
-    #     pad = Pad(0, 1, 1)
+    def test_uav_collision(self):
+        obs = Obstacle(0, 1, 1, 1)
+        uav = Uav(0, 1, 0, 0.9)
 
-    #     self.assertFalse(self.uav.get_landed(pad))
+        self.assertFalse(uav.in_collision(obs))
 
-    #     des_pos = np.zeros(15)
-    #     for i in range(100):
-    #         des_pos[0:3] = pad.state[0:3]
-    #         action = self.uav.calc_torque(des_pos)
-
-    #         self.uav.step(action)
-
-    #     self.assertTrue(self.uav.get_landed(pad))
-
-    # def test_uav_collision(self):
-    #     obs = Obstacle(0, 1, 1, 1)
-    #     uav = Uav(0, 1, 0, 0.9)
-
-    #     self.assertFalse(uav.in_collision(obs))
-
-    #     uav.state[0:3] = np.array([1, 1, 0.9])
-    #     self.assertTrue(uav.in_collision(obs))
+        uav.state[0:3] = np.array([1, 1, 0.9])
+        self.assertTrue(uav.in_collision(obs))
 
 
 if __name__ == "__main__":
