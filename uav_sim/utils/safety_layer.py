@@ -145,7 +145,7 @@ class SafetyLayer:
                     self._env.uavs[i]
                 ).squeeze()
 
-                actions[i] = self.get_action(obs[i], nom_actions[i], state_error[i])
+                actions[i] = self.get_action(obs[i], nom_actions[i])
 
             obs_next, _, done, info = self._env.step(actions)
             obs_nom_next, _, _, _ = self._env.step(nom_actions)
