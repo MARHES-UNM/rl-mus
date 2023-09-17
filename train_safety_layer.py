@@ -87,18 +87,18 @@ def train(args):
     # args.config["safety_layer_cfg"]["n_hidden"] = tune.grid_search([32])
     args.config["safety_layer_cfg"]["num_training_steps"] = tune.grid_search([6000])
     args.config["safety_layer_cfg"]["num_epochs"] = 500
-    args.config["safety_layer_cfg"]["num_iter_per_epoch"] = tune.grid_search([100])
+    args.config["safety_layer_cfg"]["num_iter_per_epoch"] = tune.grid_search([50])
     args.config["safety_layer_cfg"]["lr"] = tune.grid_search([5e-4])
-    args.config["safety_layer_cfg"]["eps"] = tune.grid_search([0.1])
-    args.config["safety_layer_cfg"]["eps_deriv"] = tune.grid_search([0.03])
+    args.config["safety_layer_cfg"]["eps"] = tune.grid_search([0.05])
+    args.config["safety_layer_cfg"]["eps_deriv"] = tune.grid_search([0.015])
     # args.config["safety_layer_cfg"]["loss_action_weight"] = tune.loguniform(1e-9, 0.08)
     args.config["safety_layer_cfg"]["loss_action_weight"] = tune.grid_search(
-        [0.08]
+        [0.1]
         # [0.08, 7.313213261801146e-08, 0.03055703454235736]
     )
     args.config["safety_layer_cfg"]["batch_size"] = tune.grid_search(
         # [128, 256, 512, 1024]
-        [128]
+        [256]
     )
     # args.config["safety_layer_cfg"]["eps"] = tune.loguniform(1e-5, 1.0)
     # args.config["safety_layer_cfg"]["eps_deriv"] = tune.loguniform(1e-5, 1.0)
