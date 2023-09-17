@@ -202,3 +202,8 @@ https://github.com/MIT-REALM/sablas
 update to use ray air session: https://pytorch.org/tutorials/beginner/hyperparameter_tuning_tutorial.html
 reference this paper: https://ieeexplore.ieee.org/document/9849119/authors#authors
 another cbf resource: https://escholarship.org/uc/item/9dp7v842#page=119
+
+* implement rk4 from scratch
+https://github.com/mahaitongdae/Safety_Index_Synthesis/blob/master/envs_and_models/collision_avoidance_env.py
+* implement custom ppo for multi agent system
+* refactor uav class to be modular

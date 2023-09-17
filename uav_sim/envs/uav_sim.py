@@ -1,4 +1,5 @@
 from math import isclose
+import sys
 from gym import spaces
 import numpy as np
 
@@ -40,6 +41,9 @@ class UavSim:
         self.t_go_n = env_config.setdefault("t_go_n", 1.0)
 
         self._agent_ids = set(range(self.num_uavs))
+        self._uav_type = getattr(
+            sys.modules[__name__], env_config.get("uav_type", "Quad2DInt")
+        )
 
         self.env_max_w = env_config.setdefault("env_max_w", 4)
         self.env_max_l = env_config.setdefault("env_max_l", 4)
@@ -388,15 +392,16 @@ class UavSim:
             seed (_type_, optional): _description_. Defaults to None.
             options (_type_, optional): _description_. Defaults to None.
         """
-        if self.gui is not None:
-            self.close_gui()
-
-        self._time_elapsed = 0.0
-
+        # not currently compatible with new gym api to pass in seed
         # if seed is None:
         #     seed = self._seed
 
         # self.seed(seed)
+
+        if self.gui is not None:
+            self.close_gui()
+
+        self._time_elapsed = 0.0
 
         # TODO ensure we don't start in collision states
         # Reset Target
@@ -414,25 +419,7 @@ class UavSim:
             num_landing_pads=self.num_uavs,
         )
 
-        # Reset UAVs
-        self.uavs = []
-        for idx in range(self.num_uavs):
-            x = np.random.rand() * self.env_max_w
-            y = np.random.rand() * self.env_max_l
-            z = np.random.rand() * self.env_max_h
-
-            uav = Quad2DInt(
-                # uav = Quadrotor(
-                _id=idx,
-                x=x,
-                y=y,
-                z=z,
-                dt=self.dt,
-                pad=self.target.pads[idx],
-            )
-            self.uavs.append(uav)
-
-        # Reset obstacles
+        # Reset obstacles, obstacles should not be in collision with target. Obstacles can be in collision with each other.
         self.obstacles = []
         for idx in range(self.max_num_obstacles):
             x = np.random.rand() * self.env_max_w
@@ -444,6 +431,48 @@ class UavSim:
 
             obstacle = Obstacle(_id=idx, x=x, y=y, z=z, _type=_type)
             self.obstacles.append(obstacle)
+
+        # Reset UAVs
+        self.uavs = []
+
+        def get_random_agent(agent_id):
+            x = np.random.rand() * self.env_max_w
+            y = np.random.rand() * self.env_max_l
+            z = np.random.rand() * self.env_max_h
+
+            return self._uav_type(
+                _id=agent_id,
+                x=x,
+                y=y,
+                z=z,
+                dt=self.dt,
+                pad=self.target.pads[agent_id],
+            )
+
+        def is_in_collision(uav):
+            for pad in self.target.pads:
+                if uav.get_landed(pad):
+                    return True
+
+            for obstacle in self.obstacles:
+                if uav.in_collision(obstacle):
+                    return True
+
+            for other_uav in self.uavs:
+                if uav.in_collision(other_uav):
+                    return True
+
+            return False
+
+        for agent_id in self._agent_ids:
+            in_collision = True
+
+            # make sure the agent is not in collision with other agents or obstacles
+            while in_collision:
+                uav = get_random_agent(agent_id)
+                in_collision = is_in_collision(uav)
+
+            self.uavs.append(uav)
 
         obs = {uav.id: self._get_obs(uav) for uav in self.uavs}
 
