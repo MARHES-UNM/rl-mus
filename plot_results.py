@@ -43,15 +43,14 @@ def get_data(all_progress):
             data["safe_action"] = data["exp_config"]["safe_action_type"]
             data["num_obs"] = data["env_config"]["max_num_obstacles"]
             data["seed"] = data["env_config"]["seed"]
+            data["tf"] = data["env_config"]["time_final"]
             data["uav_done"] = np.average(data["uav_done"], axis=1).sum()
             uav_done_time = np.nan_to_num(
                 np.array(data["uav_done_time"], dtype=np.float64), nan=100
             )
             # print(uav_done_time)
             data["uav_done_time"] = np.nanmean(uav_done_time)
-            data["uav_done_time_error"] = np.nanmean(
-                np.abs(uav_done_time - data["env_config"]["time_final"])
-            )
+            data["tf_error"] = np.nanmean(np.abs(uav_done_time - data["tf"]))
             for k, v in data.items():
                 if k not in data_dict:
                     data_dict[k] = []

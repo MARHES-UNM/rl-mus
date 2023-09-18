@@ -8,6 +8,11 @@
             8,
             20,
             30
+        ],
+        "time_final": [
+            10,
+            20,
+            30
         ]
     },
     "exp_config": {
@@ -29,9 +34,9 @@
     "items_to_plot": {
         "uav_collision": "Total UAV Collisions",
         "obs_collision": "Total NCFO Collision",
-        "uav_done_time": "Time Landed",
-        "uav_done": "UAV Landed",
-        "uav_done_time_error": "Time Arrival Error"
+        "uav_done_time": "Time Landed (s)",
+        "uav_done": "Total UAV Landed",
+        "tf_error": "Time Arrival Error (s)"
     },
     "groups_to_plot": [
         {
@@ -79,6 +84,19 @@
             ],
             "group_title": "vary_tgt_num_obs_30",
             "x_label": "Target Vel (m/s)"
+        },
+        {
+            "group": [
+                "num_obs",
+                "target_v"
+            ],
+            "group_x": "tf",
+            "group_key": [
+                30,
+                0.0
+            ],
+            "group_title": "vary_tf_num_obs_30",
+            "x_label": "Expected Time of Arrival (s)"
         }
     ],
     "labels_to_plot": [

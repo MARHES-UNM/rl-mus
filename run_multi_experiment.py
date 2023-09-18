@@ -8,6 +8,7 @@ import concurrent.futures
 from functools import partial
 import logging
 import json
+import itertools
 from uav_sim.utils.utils import get_git_hash
 
 
@@ -113,6 +114,7 @@ if __name__ == "__main__":
     safe_action_type = exp_config["exp_config"]["safe_action_type"]
     max_num_obstacles = exp_config["env_config"]["max_num_obstacles"]
     seeds = exp_config["exp_config"]["seeds"]
+    time_final = exp_config["env_config"]["time_final"]
 
     if args.nn_cbf_dir is not None:
         checkpoint_dir = args.nn_cbf_dir
@@ -121,36 +123,48 @@ if __name__ == "__main__":
 
     exp_configs = []
     experiment_num = 0
-    for seed in seeds:
-        for target in target_v:
-            for action_type in safe_action_type:
-                for num_obstacle in max_num_obstacles:
-                    exp_config = {}
-                    exp_config["exp_config"] = {"safe_action_type": action_type}
-                    exp_config["safety_layer_cfg"] = {
-                        "checkpoint_dir": checkpoint_dir,
-                        "seed": seed,
-                    }
 
-                    exp_config["env_config"] = {
-                        "target_v": target,
-                        "max_num_obstacles": num_obstacle,
-                        "seed": seed,
-                    }
-                    file_prefix = {
-                        "tgt_v": target,
-                        "sa": action_type,
-                        "o": num_obstacle,
-                        "s": seed,
-                    }
-                    file_prefix = "_".join(
-                        [f"{k}_{str(v)}" for k, v in file_prefix.items()]
-                    )
-                    exp_config["exp_name"] = f"exp_{experiment_num}_{file_prefix}"
-                    exp_config["experiment_num"] = experiment_num
+    exp_items = list(
+        itertools.product(
+            seeds, target_v, safe_action_type, max_num_obstacles, time_final
+        )
+    )
 
-                    exp_configs.append(exp_config)
-                    experiment_num += 1
+    for exp_item in exp_items:
+        seed = exp_item[0]
+        target = exp_item[1]
+        action_type = exp_item[2]
+        num_obstacle = exp_item[3]
+        t_final = exp_item[4]
+
+        exp_config = {}
+        exp_config["exp_config"] = {"safe_action_type": action_type}
+        exp_config["safety_layer_cfg"] = {
+            "checkpoint_dir": checkpoint_dir,
+            "seed": seed,
+        }
+
+        exp_config["env_config"] = {
+            "target_v": target,
+            "max_num_obstacles": num_obstacle,
+            "seed": seed,
+            "time_final": t_final,
+        }
+
+        file_prefix = {
+            "tgt_v": target,
+            "sa": action_type,
+            "o": num_obstacle,
+            "s": seed,
+            "tf": t_final,
+        }
+
+        file_prefix = "_".join([f"{k}_{str(v)}" for k, v in file_prefix.items()])
+        exp_config["exp_name"] = f"exp_{experiment_num}_{file_prefix}"
+        exp_config["experiment_num"] = experiment_num
+
+        exp_configs.append(exp_config)
+        experiment_num += 1
 
     starter = partial(
         run_experiment, max_num_episodes=max_num_episodes, log_dir=args.log_dir

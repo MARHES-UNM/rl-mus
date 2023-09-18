@@ -5,6 +5,9 @@
         ],
         "max_num_obstacles": [
             30
+        ],
+        "time_final": [
+            20
         ]
     },
     "exp_config": {
@@ -24,8 +27,9 @@
     "items_to_plot": {
         "uav_collision": "Total UAV Collisions",
         "obs_collision": "Total NCFO Collision",
-        "uav_done_time": "Time Landed",
-        "uav_done": "UAV Landed"
+        "uav_done_time": "Time Landed (s)",
+        "uav_done": "Total UAV Landed",
+        "tf_error": "Time Arrival Error (s)"
     },
     "groups_to_plot": [
         {
