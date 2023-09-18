@@ -30,7 +30,8 @@
         "uav_collision": "Total UAV Collisions",
         "obs_collision": "Total NCFO Collision",
         "uav_done_time": "Time Landed",
-        "uav_done": "UAV Landed"
+        "uav_done": "UAV Landed",
+        "uav_done_time_error": "Time Arrival Error"
     },
     "groups_to_plot": [
         {

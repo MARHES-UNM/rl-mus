@@ -49,6 +49,9 @@ def get_data(all_progress):
             )
             # print(uav_done_time)
             data["uav_done_time"] = np.nanmean(uav_done_time)
+            data["uav_done_time_error"] = np.nanmean(
+                np.abs(uav_done_time - data["env_config"]["time_final"])
+            )
             for k, v in data.items():
                 if k not in data_dict:
                     data_dict[k] = []

@@ -351,13 +351,10 @@ class UavSim:
         return closest_obstacles
 
     def _get_obs(self, uav):
-        other_uav_states = []
 
-        for other_uav in self.uavs:
-            if uav.id != other_uav.id:
-                other_uav_states.append(other_uav.state)
-
-        other_uav_states = np.array(other_uav_states)
+        other_uav_states = np.array(
+            [other_uav.state for other_uav in self.uavs if uav.id != other_uav.id]
+        )
 
         closest_obstacles = self._get_closest_obstacles(uav)
         obstacles_to_add = np.array([obs.state for obs in closest_obstacles])
