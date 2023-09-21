@@ -202,9 +202,14 @@ https://github.com/MIT-REALM/sablas
 update to use ray air session: https://pytorch.org/tutorials/beginner/hyperparameter_tuning_tutorial.html
 reference this paper: https://ieeexplore.ieee.org/document/9849119/authors#authors
 another cbf resource: https://escholarship.org/uc/item/9dp7v842#page=119
+possibly use this as a source: https://ieeexplore-ieee-org.libproxy.unm.edu/stamp/stamp.jsp?tp=&arnumber=6393426
 
-* implement rk4 from scratch
+* Review difference between weight decay and regularization
+* implement rk4 from scratch [done]
 https://github.com/mahaitongdae/Safety_Index_Synthesis/blob/master/envs_and_models/collision_avoidance_env.py
 * implement custom ppo for multi agent system
-* refactor uav class to be modular
+https://iclr-blog-track.github.io/2022/03/25/ppo-implementation-details/
+https://github.com/vwxyzjn/ppo-implementation-details/blob/main/ppo_continuous_action.py
+https://github.com/marlbenchmark/on-policy/blob/main/onpolicy/algorithms/r_mappo/r_mappo.py
+* refactor uav class to be modular [done]
 * update uav reward to be more in line with: https://arc.aiaa.org/doi/epdf/10.2514/1.I010961

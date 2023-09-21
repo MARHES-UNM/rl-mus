@@ -42,7 +42,7 @@ class UavSim:
 
         self._agent_ids = set(range(self.num_uavs))
         self._uav_type = getattr(
-            sys.modules[__name__], env_config.get("uav_type", "Quad2DInt")
+            sys.modules[__name__], env_config.get("uav_type", "Uav")
         )
 
         self.env_max_w = env_config.setdefault("env_max_w", 4)
@@ -329,16 +329,15 @@ class UavSim:
             for obstacle in self.obstacles:
                 obstacle_collision += 1 if uav.in_collision(obstacle) else 0
 
-            pos_er = uav.pad.state[0:6] - uav.state[0:6]
-
             info[uav.id] = {
                 "time_step": self.time_elapsed,
                 "obstacle_collision": obstacle_collision,
-                "uav_rel_dist": np.linalg.norm(pos_er[:3]),
-                "uav_rel_vel": np.linalg.norm(pos_er[3:6]),
+                "uav_rel_dist": uav.get_rel_pad_dist(),
+                "uav_rel_vel": uav.get_rel_pad_vel(),
                 "uav_collision": uav_collision,
                 "uav_landed": 1.0 if uav.landed else 0.0,
                 "uav_done_time": uav.done_time if uav.landed else 0.0,
+                "uav_t_go_est": uav.get_t_go_est()
             }
 
         return info
@@ -351,7 +350,6 @@ class UavSim:
         return closest_obstacles
 
     def _get_obs(self, uav):
-
         other_uav_states = np.array(
             [other_uav.state for other_uav in self.uavs if uav.id != other_uav.id]
         )

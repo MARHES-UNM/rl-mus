@@ -1,7 +1,7 @@
 from matplotlib import pyplot as plt
 import torch
 
-from uav_sim.agents.uav import Obstacle, Pad, Quadrotor, Quad2DInt, Target
+from uav_sim.agents.uav import Obstacle, Pad, Target
 import unittest
 import numpy as np
 

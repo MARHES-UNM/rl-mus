@@ -267,8 +267,16 @@ class UavBase(Entity):
 
     def check_dest_reached(self):
         dist = np.linalg.norm(self._state[0:3] - self.pad._state[0:3])
-
         return dist <= 0.01, dist
+
+    def get_rel_pad_dist(self):
+        return np.linalg.norm(self._state[:3] - self.pad._state[:3])
+
+    def get_rel_pad_vel(self):
+        return np.linalg.norm(self._state[3:6] - self.pad._state[3:6])
+
+    def get_t_go_est(self):
+        return self.get_rel_pad_dist() / (1e-6 + self.get_rel_pad_vel())
 
 
 class Uav(UavBase):
