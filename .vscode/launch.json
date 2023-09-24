@@ -5,6 +5,17 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "env": {
+                "DISPLAY": "192.168.1.18:0.0"
+            }
+        },
+        {
             "name": "Run Multi Experiment",
             "type": "python",
             "request": "launch",
@@ -12,7 +23,9 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "cwd": "${workspaceFolder}",
-            "env": {},
+            "env": {
+                // "DISPLAY": "192.168.1.18:0.0"
+            },
             "args": []
         },
         {
@@ -33,6 +46,22 @@
             ]
         },
         {
+            "name": "unittest_gui",
+            "type": "python",
+            "request": "launch",
+            "module": "unittest",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "DISPLAY": "192.168.1.18:0.0"
+            },
+            "args": [
+                "-v",
+                "${cwd}/tests/test_gui.py"
+            ]
+        },
+        {
             "name": "run_experiment",
             "type": "python",
             "request": "launch",
@@ -45,7 +74,7 @@
             },
             "args": [
                 "--plot_results",
-                // "--render"
+                "--render"
             ]
         },
         {

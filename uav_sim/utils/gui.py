@@ -16,20 +16,79 @@ class Sprite:
     def update(self, t):
         raise NotImplemented
 
+    def get_sphere(self, center, radius):
+        u, v = np.mgrid[0 : 2 * np.pi : 20j, 0 : np.pi : 10j]
+        x = center[0] + radius * np.cos(u) * np.sin(v)
+        y = center[1] + radius * np.sin(u) * np.sin(v)
+        z = center[2] + radius * np.cos(v)
+        return self.ax["ax_3d"].plot_wireframe(x, y, z, color="r", alpha=0.1)
+
+    def get_cube(self, vertex, l=1, w=1, h=1, alpha=0.1, color="r"):
+        x1, y1, z1 = vertex[0], vertex[1], vertex[2]
+        x2, y2, z2 = x1 + l, y1 + w, z1 + h
+        ax = self.ax["ax_3d"]
+        xs, ys = np.meshgrid([x1, x2], [y1, y2])
+        zs = np.ones_like(xs)
+        # plot bottom and top surfaces
+        body = []
+        body.append(ax.plot_wireframe(xs, ys, zs * z1, alpha=alpha, color=color))
+
+        body.append(ax.plot_wireframe(xs, ys, zs * z2, alpha=alpha, color=color))
+
+        # plot left and right side
+        # xs, zs = np.meshgrid([x1, x2], z)
+        # ys = np.ones_like(xs)
+        # ax.plot_wireframe(xs, ys * y1, zs, alpha=alpha, color=color)
+        # ax.plot_wireframe(xs, ys * y2, zs, alpha=alpha, color=color)
+
+        ys, zs = np.meshgrid([y1, y2], [z1, z2])
+        xs = np.ones_like(ys)
+        body.append(ax.plot_wireframe(xs * x1, ys, zs, alpha=alpha, color=color))
+        body.append(ax.plot_wireframe(xs * x2, ys, zs, alpha=alpha, color=color))
+        return body
+
 
 class ObstacleSprite(Sprite):
     def __init__(self, ax, obstacle, t_lim=30):
         super().__init__(ax, t_lim)
         self.obstacle = obstacle
-        self.body = self.ax["ax_3d"].scatter(
-            [], [], [], marker="o", color="r", s=100 * 4 * 0.5**2
-        )
+        self.body = None
+        # self.body = self.ax["ax_3d"].scatter(
+        #     [], [], [], marker="o", color="r", s=100 * 4 * 0.5**2
+        # )
 
     def update(self, t):
-        xa = [self.obstacle._state[0]]
-        ya = [self.obstacle._state[1]]
-        z = [self.obstacle._state[2]]
-        self.body._offsets3d = (xa, ya, z)
+        # xa = [self.obstacle._state[0]]
+        # ya = [self.obstacle._state[1]]
+        # z = [self.obstacle._state[2]]
+        # self.body._offsets3d = (xa, ya, z)
+        if self.body:
+            if isinstance(self.body, list):
+                for body in self.body:
+                    body.remove()
+            else:
+                self.body.remove()
+
+        center = self.obstacle._state[0:3]
+        radius = self.obstacle.r
+
+        self.body = self.get_sphere(center, radius)
+
+
+class ObstacleSpriteCube(Sprite):
+    def __init__(self, ax, obstacle, t_lim=30):
+        super().__init__(ax, t_lim)
+        self.obstacle = obstacle
+        self.body = None
+
+    def update(self, t):
+        if self.body:
+            for body in self.body:
+                body.remove()
+
+        vertex = self.obstacle._state[0:3]
+
+        self.body = self.get_cube(vertex)
 
 
 class TargetSprite:

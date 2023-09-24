@@ -105,7 +105,7 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
             rel_pad_vel[k].append(v["uav_rel_vel"])
 
         for k, v in obs.items():
-            uav_state[k].append(v["state"])
+            uav_state[k].append(v["state"].tolist())
 
         if render:
             env.render()

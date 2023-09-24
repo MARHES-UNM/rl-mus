@@ -28,6 +28,7 @@ class UavSim:
         self.num_uavs = env_config.setdefault("num_uavs", 4)
         self.gamma = env_config.setdefault("gamma", 1)
         self.num_obstacles = env_config.setdefault("num_obstacles", 4)
+        self.obstacle_radius = env_config.setdefault("obstacle_radius", 1)
         self.max_num_obstacles = env_config.setdefault("max_num_obstacles", 30)
         assert self.max_num_obstacles >= self.num_obstacles, print(
             f"Max number of obstacles {self.max_num_obstacles} is less than number of obstacles {self.num_obstacles}"
@@ -293,6 +294,10 @@ class UavSim:
     def step(self, actions):
         # step uavs
         for i, action in actions.items():
+            # # Done uavs don't move
+            # if self.uavs[i].done:
+            #     continue
+
             if self._use_safe_action:
                 action = self.get_safe_action(self.uavs[i], action)
             self.uavs[i].step(action)
@@ -315,29 +320,23 @@ class UavSim:
         return obs, reward, done, info
 
     def _get_info(self):
+        """Must be called after _get_reward
+
+        Returns:
+            _type_: _description_
+        """
         info = {}
 
         for uav in self.uavs:
-            uav_collision = 0
-            obstacle_collision = 0
-
-            for other_uav in self.uavs:
-                if other_uav.id == uav.id:
-                    continue
-                uav_collision += 1 if uav.in_collision(other_uav) else 0
-
-            for obstacle in self.obstacles:
-                obstacle_collision += 1 if uav.in_collision(obstacle) else 0
-
             info[uav.id] = {
                 "time_step": self.time_elapsed,
-                "obstacle_collision": obstacle_collision,
+                "obstacle_collision": uav.obs_collision,
                 "uav_rel_dist": uav.get_rel_pad_dist(),
                 "uav_rel_vel": uav.get_rel_pad_vel(),
-                "uav_collision": uav_collision,
+                "uav_collision": uav.uav_collision,
                 "uav_landed": 1.0 if uav.landed else 0.0,
                 "uav_done_time": uav.done_time if uav.landed else 0.0,
-                "uav_t_go_est": uav.get_t_go_est()
+                "uav_t_go_est": uav.get_t_go_est(),
             }
 
         return info
@@ -368,7 +367,13 @@ class UavSim:
         return obs_dict
 
     def _get_reward(self, uav):
+        uav_collision = 0
+        obs_collision = 0
+
         if uav.done:
+            # UAV most have finished last time_step, report zero collisions
+            uav.uav_collision = uav_collision
+            uav.obs_collision = obs_collision
             return 0
 
         reward = 0
@@ -386,14 +391,23 @@ class UavSim:
 
         # neg reward if uav collides with other uavs
         for other_uav in self.uavs:
-            if uav.id == other_uav.id:
-                continue
-            reward -= (
-                self.obstacle_collision_weight if uav.in_collision(other_uav) else 0
-            )
+            if uav.id != other_uav.id and uav.in_collision(other_uav):
+                reward -= self.uav_collision_weight
+                # uav.done = True
+                # uav.landed = False
+                uav_collision += 1
+
         # neg reward if uav collides with obstacles
         for obstacle in self.obstacles:
-            reward -= self.uav_collision_weight if uav.in_collision(obstacle) else 0
+            if uav.in_collision(obstacle):
+                reward -= self.obstacle_collision_weight
+                # uav.done = True
+                # uav.landed = False
+                obs_collision += 1
+
+        uav.uav_collision = uav_collision
+        uav.obs_collision = obs_collision
+
         return reward
 
     def _get_done(self):
@@ -460,7 +474,9 @@ class UavSim:
             # _type = random.choice(list(ObsType))
             _type = ObsType.S
 
-            obstacle = Obstacle(_id=idx, x=x, y=y, z=z, _type=_type)
+            obstacle = Obstacle(
+                _id=idx, x=x, y=y, z=z, _type=_type, r=self.obstacle_radius
+            )
             self.obstacles.append(obstacle)
 
         # Reset UAVs
