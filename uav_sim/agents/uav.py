@@ -160,7 +160,7 @@ class Target(Entity):
         self.v = action[0]
         self.w = action[1]
 
-        self.psi = self._state[2]
+        self.psi = self._state[6]
         self.vx = self.v * cos(self.psi)
         self.vy = self.v * sin(self.psi)
         self.x += self.vx * self.dt

@@ -150,7 +150,7 @@ class TargetSprite:
 
             self.pad_sprites[idx] = Circle(
                 (pad.x, pad.y),
-                0.25,
+                pad.r,
                 fill=False,
                 color="red",
             )
@@ -163,7 +163,7 @@ class TargetSprite:
         self.trajectory["z"].append(self.target._state[2])
         self.trajectory["psi"].append(self.target._state[6])
 
-        self.update_axis()
+        # self.update_axis()
 
         self.ax["ax_error_x"].set_xlim(
             left=max(0, t - self.t_lim), right=t + self.t_lim
