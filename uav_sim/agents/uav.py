@@ -204,7 +204,7 @@ class Target(Entity):
         # u[1] = 1.2 * (des_xy[2] - agent_state[2])
         return u
 
-    def step(self, action):
+    def step(self, action=np.zeros(2)):
         self.v = action[0]
         self.w = action[1]
 

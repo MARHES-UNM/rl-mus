@@ -90,10 +90,10 @@ class UavSim:
                             dtype=np.float32,
                         ),
                         "target": spaces.Box(
-                            low=-np.inf, 
+                            low=-np.inf,
                             high=np.inf,
                             shape=self.target.state.shape,
-                            dtype=np.float32
+                            dtype=np.float32,
                         ),
                         "rel_pad": spaces.Box(
                             low=-np.inf,
@@ -309,8 +309,11 @@ class UavSim:
             self.uavs[i].step(action)
 
         # step target
-        u = self.target.get_target_action(self.time_elapsed, 75.0)
-        self.target.step(u)
+        if self.target_v == 0.0:
+            self.target.step()
+        else:
+            u = self.target.get_target_action(self.time_elapsed, 75.0)
+            self.target.step(u)
 
         # step obstacles
         for obstacle in self.obstacles:
