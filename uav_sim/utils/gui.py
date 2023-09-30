@@ -355,7 +355,7 @@ class Gui:
         # # plt.show(False)
         # plt.draw()
 
-        # self.background = self.fig.canvas.copy_from_bbox(self.ax.bbox)
+        self.background = self.fig.canvas.copy_from_bbox(self.fig.bbox)
 
     def init_entities(self):
         self.sprites = []
@@ -374,14 +374,14 @@ class Gui:
     # https://matplotlib.org/stable/api/animation_api.html
     # https://stackoverflow.com/questions/11874767/how-do-i-plot-in-real-time-in-a-while-loop-using-matplotlib
     def update(self, time_elapsed):
-        # self.fig.canvas.restore_region(self.background)
+        self.fig.canvas.restore_region(self.background)
         self.time_display.set_text(f"Sim time = {time_elapsed:.2f} s")
 
         for sprite in self.sprites:
             sprite.update(time_elapsed)
 
         #     self.ax.draw_artist(uav_sprite.cm)
-        # self.fig.canvas.blit(self.ax.bbox)
+        self.fig.canvas.blit(self.fig.bbox)
         # only plot legends if uav or target
         for key, ax in self.ax.items():
             if key == "ax_3d":
