@@ -6,6 +6,31 @@ from matplotlib import pyplot as plt
 from math import sqrt, atan2
 
 
+def cir_traj(t, e=0.5, r=1, x_c=0, y_c=0):
+    # https://web2.qatar.cmu.edu/~gdicaro/16311-Fall17/slides/control-theory-for-robotics.pdf
+    """Generate circular trajectory
+       https://ieeexplore-ieee-org.libproxy.unm.edu/stamp/stamp.jsp?tp=&arnumber=911382
+
+    Args:
+        t (_type_): _description_
+        e (float, optional): _description_. Defaults to 0.5.
+        r (int, optional): _description_. Defaults to 1.
+        x_c (int, optional): _description_. Defaults to 0.
+        y_c (int, optional): _description_. Defaults to 0.
+
+    Returns:
+        _type_: _description_
+    """
+    x_r = x_c + r * np.cos(e * t)
+    y_r = y_c + r * np.sin(e * t)
+    # x_r = np.sin(t / 10)
+    # y_r = np.sin(e*t)
+    theta_r = e * t
+    v_r = e * r
+    w_r = e
+    return np.array([x_r, y_r, theta_r, v_r, w_r])
+
+
 def get_git_hash() -> str:
     return (
         subprocess.check_output(["git", "rev-parse", "--short", "HEAD"])
@@ -99,5 +124,5 @@ def plot_traj(uav_des_traj, uav_trajectory, title=""):
     ax3.set_ylabel("psi (rad)")
 
     fig.suptitle(title, fontsize=16)
-    
+
     plt.show()

@@ -89,6 +89,12 @@ class UavSim:
                             shape=self.uavs[0].state.shape,
                             dtype=np.float32,
                         ),
+                        "target": spaces.Box(
+                            low=-np.inf, 
+                            high=np.inf,
+                            shape=self.target.state.shape,
+                            dtype=np.float32
+                        ),
                         "rel_pad": spaces.Box(
                             low=-np.inf,
                             high=np.inf,
@@ -302,24 +308,9 @@ class UavSim:
                 action = self.get_safe_action(self.uavs[i], action)
             self.uavs[i].step(action)
 
-        # # step target
-        # px, py = 1 * np.cos(2 * np.pi * self.time_elapsed / self.max_time), 1 * np.sin(
-        #     2 * np.pi * self.time_elapsed / self.max_time
-        # )
-        # r_dist = np.linalg.norm([self.target.x - px, self.target.y - py])
-        # # r_bearing = np.arctan2(self.target.y - py, self.target.x - px)
-        # r_bearing = np.arctan2(py - self.target.y, px - self.target.x)
-        # alpha = -self.target.psi + r_bearing
-        # beta = -self.target.psi - alpha
-        # k_rho = 0.5
-        # k_alpha = 2
-        # k_beta = -0.01
-        # vw = np.array([k_rho * r_dist, k_alpha * alpha + k_beta * beta])
-        # # vw = np.array([k_rho * r_dist, k_alpha * (r_bearing - self.target.psi)])
-        # w = 2 * np.pi / 50
-        # vw = np.array([1 * w, w])
-        # self.target.step(vw)
-        self.target.step(np.array([self.target_v, self.target_w]))
+        # step target
+        u = self.target.get_target_action(self.time_elapsed, 75.0)
+        self.target.step(u)
 
         # step obstacles
         for obstacle in self.obstacles:
@@ -374,6 +365,7 @@ class UavSim:
 
         obs_dict = {
             "state": uav.state.astype(np.float32),
+            "target": self.target.state.astype(np.float32),
             "rel_pad": (uav.state[0:6] - uav.pad.state[0:6]).astype(np.float32),
             "other_uav_obs": other_uav_states.astype(np.float32),
             "obstacles": obstacles_to_add.astype(np.float32),

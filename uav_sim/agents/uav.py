@@ -1,7 +1,7 @@
 from math import cos, sin
 import numpy as np
 import torch
-from uav_sim.utils.utils import distance, angle, lqr
+from uav_sim.utils.utils import cir_traj, distance, angle, lqr
 import scipy.integrate
 import scipy
 from scipy.integrate import odeint
@@ -155,6 +155,54 @@ class Target(Entity):
                     0,
                 ]
             )
+
+    # TODO: fix target generating controller
+    def get_target_action(self, t, tf):
+        """Generate control to get target to follow a trajectory
+            https://web2.qatar.cmu.edu/~gdicaro/16311-Fall17/slides/control-theory-for-robotics.pdf
+        Args:
+            t (_type_): _description_
+            tf (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
+        e = 2.0 * np.pi / tf
+        des_cir_traj = cir_traj(t, e=e, r=1, x_c=2, y_c=2)
+
+        u = np.zeros((2))
+        agent_state = np.zeros(3)
+        agent_state[:2] = self._state[:2]
+        agent_state[2] = self._state[6]
+        des_xy = des_cir_traj[:3]
+        vd = des_cir_traj[3]
+        wd = des_cir_traj[4]
+        # zeta = 0.7
+        # b = ((4 / (zeta * .8)) ** 2 - wd**2) / (vd**2)
+        # k1 = k3 = 2.0 * zeta * np.sqrt(wd**2 + b * vd**2)
+        # k2 = b * np.abs(vd)
+
+        # u[0] = vd * np.cos(des_xy[2] - agent_state[2]) + k1 * (
+        #     np.cos(agent_state[2]) * (des_xy[0] - agent_state[0])
+        #     + np.sin(agent_state[2]) * (des_xy[1] - agent_state[1])
+        # )
+        # u[1] = (
+        #     wd
+        #     + k2
+        #     * np.sign(vd)
+        #     * (
+        #         np.cos(agent_state[2]) * (des_xy[0] - agent_state[0])
+        #         - np.sin(agent_state[2]) * (des_xy[1] - agent_state[1])
+        #     )
+        #     + k3 * (des_xy[2] - agent_state[2])
+        # )
+        u[0] = vd
+        u[1] = wd
+        # print(f"vd: {vd}, wd: {wd}, b: {b}")
+
+        # u[0] = 0.198 * np.linalg.norm(agent_state[:2] - des_xy[:2])
+        # u[1] = 1.2 * (des_xy[2] - agent_state[2])
+        return u
 
     def step(self, action):
         self.v = action[0]
