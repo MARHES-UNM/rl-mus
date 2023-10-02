@@ -476,37 +476,11 @@ class UavSim:
             num_landing_pads=self.num_uavs,
         )
 
-        # Reset obstacles, obstacles should not be in collision with target. Obstacles can be in collision with each other.
-        self.obstacles = []
-        for idx in range(self.max_num_obstacles):
+        def get_random_pos(low_h=0.1):
             x = np.random.rand() * self.env_max_w
             y = np.random.rand() * self.env_max_l
-            # no obstacles close to target
-            z = np.random.uniform(low=1.0, high=self.env_max_h)
-            # _type = random.choice(list(ObsType))
-            _type = ObsType.S
-
-            obstacle = Obstacle(
-                _id=idx, x=x, y=y, z=z, _type=_type, r=self.obstacle_radius
-            )
-            self.obstacles.append(obstacle)
-
-        # Reset UAVs
-        self.uavs = []
-
-        def get_random_agent(agent_id):
-            x = np.random.rand() * self.env_max_w
-            y = np.random.rand() * self.env_max_l
-            z = np.random.rand() * self.env_max_h
-
-            return self._uav_type(
-                _id=agent_id,
-                x=x,
-                y=y,
-                z=z,
-                dt=self.dt,
-                pad=self.target.pads[agent_id],
-            )
+            z = np.random.uniform(low=low_h, high=self.env_max_h)
+            return (x, y, z)
 
         def is_in_collision(uav):
             for pad in self.target.pads:
@@ -523,12 +497,45 @@ class UavSim:
 
             return False
 
+        # Reset obstacles, obstacles should not be in collision with target. Obstacles can be in collision with each other.
+        self.obstacles = []
+        for idx in range(self.max_num_obstacles):
+            in_collision = True
+
+            while in_collision:
+                x, y, z = get_random_pos(low_h=1.5)
+                _type = ObsType.S
+                obstacle = Obstacle(
+                    _id=idx, x=x, y=y, z=z, _type=_type, r=self.obstacle_radius
+                )
+
+                in_collision = any(
+                    [
+                        obstacle.in_collision(other_obstacle)
+                        for other_obstacle in self.obstacles
+                        if obstacle.id != other_obstacle.id
+                    ]
+                )
+
+            self.obstacles.append(obstacle)
+
+        # Reset UAVs
+        self.uavs = []
         for agent_id in self._agent_ids:
             in_collision = True
 
             # make sure the agent is not in collision with other agents or obstacles
+            # the lowest height needs to be the uav radius x2
             while in_collision:
-                uav = get_random_agent(agent_id)
+                x, y, z = get_random_pos(low_h=0.2)
+                uav = self._uav_type(
+                    _id=agent_id,
+                    x=x,
+                    y=y,
+                    z=z,
+                    dt=self.dt,
+                    pad=self.target.pads[agent_id],
+                )
                 in_collision = is_in_collision(uav)
 
             self.uavs.append(uav)

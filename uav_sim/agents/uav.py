@@ -44,6 +44,10 @@ class Entity:
     def vel(self):
         return self._state[3:6]
 
+    def in_collision(self, entity):
+        dist = np.linalg.norm(self._state[0:3] - entity._state[0:3])
+        return dist <= (self.r + entity.r)
+
     def wrap_angle(self, val):
         return (val + np.pi) % (2 * np.pi) - np.pi
 
@@ -304,10 +308,6 @@ class UavBase(Entity):
         self._state = self._state + dot_state * self.dt
 
         self._state[2] = max(0, self._state[2])
-
-    def in_collision(self, entity):
-        dist = np.linalg.norm(self._state[0:3] - entity._state[0:3])
-        return dist <= (self.r + entity.r)
 
     def get_landed(self, pad):
         dist = np.linalg.norm(self._state[0:3] - pad._state[0:3])
