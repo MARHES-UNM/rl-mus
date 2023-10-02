@@ -157,7 +157,6 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
             rel_pad_dist = [[] for idx in range(env.num_uavs)]
             rel_pad_vel = [[] for idx in range(env.num_uavs)]
             uav_state = [[] for idx in range(env.num_uavs)]
-            uav_state = []
 
     env.close()
 

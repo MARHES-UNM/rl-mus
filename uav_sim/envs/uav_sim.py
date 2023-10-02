@@ -309,11 +309,12 @@ class UavSim:
             self.uavs[i].step(action)
 
         # step target
-        if self.target_v == 0.0:
-            self.target.step()
-        else:
-            u = self.target.get_target_action(self.time_elapsed, 75.0)
-            self.target.step(u)
+        self.target.step(np.array([self.target_v, self.target_w]))
+        # if self.target_v == 0.0:
+        #     self.target.step()
+        # else:
+        #     u = self.target.get_target_action(self.time_elapsed, 75.0)
+        #     self.target.step(u)
 
         # step obstacles
         for obstacle in self.obstacles:
