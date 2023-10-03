@@ -506,7 +506,13 @@ class UavSim:
                 x, y, z = get_random_pos(low_h=1.5)
                 _type = ObsType.S
                 obstacle = Obstacle(
-                    _id=idx, x=x, y=y, z=z, _type=_type, r=self.obstacle_radius
+                    _id=idx,
+                    x=x,
+                    y=y,
+                    z=z,
+                    r=self.obstacle_radius,
+                    dt=self.dt,
+                    _type=_type,
                 )
 
                 in_collision = any(

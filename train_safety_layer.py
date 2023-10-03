@@ -86,7 +86,7 @@ def train(args):
     # )
     # args.config["safety_layer_cfg"]["n_hidden"] = tune.grid_search([32])
     args.config["safety_layer_cfg"]["num_training_steps"] = tune.grid_search([6000])
-    args.config["safety_layer_cfg"]["num_epochs"] = 500
+    args.config["safety_layer_cfg"]["num_epochs"] = 50
     args.config["safety_layer_cfg"]["num_iter_per_epoch"] = tune.grid_search([50])
     args.config["safety_layer_cfg"]["lr"] = tune.grid_search([5e-4])
     args.config["safety_layer_cfg"]["eps"] = tune.loguniform(0.003, 0.2)
@@ -125,8 +125,8 @@ def train(args):
             "training_iteration": args.config["safety_layer_cfg"]["num_epochs"],
             "time_total_s": args.duration,
         },
-        num_samples=18,
-        resources_per_trial={"cpu": 1, "gpu": 0.3},
+        num_samples=32,
+        resources_per_trial={"cpu": 1, "gpu": 0.25},
         config=args.config,
         # checkpoint_freq=5,
         # checkpoint_at_end=True,
