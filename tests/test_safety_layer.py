@@ -6,12 +6,15 @@ from uav_sim.utils.safety_layer import SafetyLayer
 
 class TestSafetyLayer(unittest.TestCase):
     def setUp(self):
-        self.env = UavSim({"num_uavs": 2, "num_obstacles": 2, "time_final": 10.0})
+        self.env = UavSim({"num_uavs": 2, "num_obstacles": 1, "time_final": 10.0})
         config = {
             "replay_buffer_size": 64 * 10,
             "batch_size": 4,
-            "num_epochs": 10,
-            "device": "cuda",
+            "num_epochs": 1,
+            "device": "cpu",
+            "num_iter_per_epoch": 10,
+            "num_training_steps": 60,
+            "num_eval_steps": 15,
         }
         # config = {
         #     "num_eval_steps": 3000,

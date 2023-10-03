@@ -86,7 +86,8 @@ class SafetyLayer:
         self._num_training_steps = self._config.get("num_training_steps", 6000)
         self._num_epochs = self._config.get("num_epochs", 25)
         self._num_iter_per_epoch = self._config.get(
-            "num_iter_per_epoch", self._num_training_steps // self._batch_size
+            "num_iter_per_epoch",
+            self._num_training_steps * self._env.num_uavs // self._batch_size,
         )
         self._report_tune = self._config.get("report_tune", False)
         self._seed = self._config.get("seed", 123)
@@ -347,7 +348,7 @@ class SafetyLayer:
     def evaluate(self):
         """Validation Step"""
         # sample steps
-        self._sample_steps(self._num_eval_steps)
+        sample_stats = self._sample_steps(self._num_eval_steps)
 
         self._cbf_model.eval()
         self._nn_action_model.eval()
@@ -364,7 +365,8 @@ class SafetyLayer:
         self._cbf_model.train()
         self._nn_action_model.train()
 
-        return loss, acc_stat
+        sample_stats = {f"val_{k}": v for k, v in sample_stats.items()}
+        return loss, acc_stat, sample_stats
 
     def get_action(self, obs, action):
         state = torch.unsqueeze(self._as_tensor(obs["state"]), dim=0)
@@ -380,20 +382,17 @@ class SafetyLayer:
 
             return u.detach().cpu().numpy().squeeze()
 
-    # TODO: use this function for training and return training stats
     def fit(self):
         sample_stats = self._sample_steps(self._num_training_steps)
 
         # iterate through the buffer and get batches at a time
-        train_results = [
-            self._train_batch()
-            for _ in range(self._num_training_steps // self._batch_size)
-        ]
+        train_results = [self._train_batch() for _ in range(self._num_iter_per_epoch)]
 
         loss, train_acc_stats = self.parse_results(train_results)
         self._replay_buffer.clear()
         self._train_global_step += 1
 
+        sample_stats = {f"train_{k}": v for k, v in sample_stats.items()}
         return loss, train_acc_stats, sample_stats
 
     def train(self):
@@ -406,24 +405,12 @@ class SafetyLayer:
         print("==========================================================")
 
         for epoch in range(self._num_epochs):
-            # TODO: refactor to use fit function instead
-            # sample episodes for training iteration
-            sample_stats = self._sample_steps(self._num_training_steps)
-
-            # iterate through the buffer and get batches at a time
-            train_results = [
-                self._train_batch() for _ in range(self._num_iter_per_epoch)
-            ]
-
-            loss, train_acc_stats = self.parse_results(train_results)
-            self._replay_buffer.clear()
-            self._train_global_step += 1
-
+            train_loss, train_acc_stats, train_sample_stats = self.fit()
             print(
-                f"Finished training epoch {epoch} with loss: {loss}. Running validation ..."
+                f"Finished training epoch {epoch} with loss: {train_loss}. Running validation ..."
             )
 
-            val_loss, val_acc_stats = self.evaluate()
+            val_loss, val_acc_stats, val_sample_stats = self.evaluate()
             print(f"Validation completed, average loss {val_loss}.")
 
             if self._report_tune:
@@ -439,7 +426,7 @@ class SafetyLayer:
                         )
 
                 train_val_stats = {}
-                train_val_stats["train_loss"] = loss
+                train_val_stats["train_loss"] = train_loss
                 train_val_stats["train_acc_h_safe"] = train_acc_stats[0]
                 train_val_stats["train_acc_h_dang"] = train_acc_stats[1]
                 train_val_stats["train_acc_h_deriv_safe"] = train_acc_stats[2]
@@ -454,7 +441,8 @@ class SafetyLayer:
                 train_val_stats["val_acc_h_deriv_mid"] = val_acc_stats[4]
                 train_val_stats["val_err_action"] = val_acc_stats[5]
 
-                train_val_stats.update(sample_stats)
+                train_val_stats.update(train_sample_stats)
+                train_val_stats.update(val_sample_stats)
                 tune.report(**train_val_stats)
 
                 # TODO: This should work with session report but api is not stable yet.

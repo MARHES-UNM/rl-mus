@@ -160,7 +160,8 @@
             },
             "args": [
                 "-v",
-                "tests.test_uav_sim.TestUavSim.test_time_coordinated_control_mat",
+                "tests.test_uav_sim.TestUavSim.test_constraints",
+                // "tests.test_uav_sim.TestUavSim.test_time_coordinated_control_mat",
                 // "tests.test_uav_sim.TestUavSim.test_lqr_landing_cbf",
                 // "tests.test_uav_sim.TestUavSim.test_time_coordinated_control_mat",
                 // "tests.test_uav_sim.TestUavSim.test_landing_minimum_traj",
@@ -215,8 +216,8 @@
             },
             "args": [
                 "-v",
-                "tests.test_safety_layer.TestSafetyLayer.test_get_mask",
-                // "tests.test_safety_layer",
+                // "tests.test_safety_layer.TestSafetyLayer.test_get_mask",
+                "tests.test_safety_layer",
                 "--failfast"
             ]
         },

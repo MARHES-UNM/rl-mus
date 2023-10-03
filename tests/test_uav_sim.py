@@ -774,6 +774,58 @@ class TestUavSim(unittest.TestCase):
                 uav_pos[idx, 0:3], self.env.uavs[idx].state[0:3]
             )
 
+    def test_constraints(self):
+        config = {"max_num_obstacles": 2, "num_obstacles": 1, "num_uavs": 2}
+        env = UavSim(env_config=config)
+
+        env.uavs[0]._state[:3] = np.array([1, 1, 4])
+        env.uavs[1]._state[:3] = np.array([4, 4, 4])
+
+        env.obstacles[0]._state[:3] = np.array([2, 2, 4])
+
+        actions = {i: np.zeros(3) for i in range(env.num_uavs)}
+
+        obs, _, done, info = env.step(actions)
+
+        all_constraints = np.array([ob["constraint"] for ob in obs.values()])
+        self.assertTrue((all_constraints > 0).all())
+        uav_collisions = np.array(
+            [col_info["uav_collision"] for col_info in info.values()]
+        )
+        obstacle_collisions = np.array(
+            [col_info["obstacle_collision"] for col_info in info.values()]
+        )
+
+        self.assertTrue((uav_collisions == 0).all())
+        self.assertTrue((obstacle_collisions == 0).all())
+        env.uavs[0]._state[:3] = np.array([1.5, 1.5, 4])
+        obs, _, done, info = env.step(actions)
+        all_constraints = np.array([ob["constraint"] for ob in obs.values()])
+        self.assertFalse((all_constraints > 0).all())
+        uav_collisions = np.array(
+            [col_info["uav_collision"] for col_info in info.values()]
+        )
+        obstacle_collisions = np.array(
+            [col_info["obstacle_collision"] for col_info in info.values()]
+        )
+
+        self.assertTrue((uav_collisions == 0).all())
+        self.assertTrue((obstacle_collisions[0] > 0))
+
+        env.uavs[0]._state[:3] = np.array([3.9, 3.9, 4])
+        obs, _, done, info = env.step(actions)
+        all_constraints = np.array([ob["constraint"] for ob in obs.values()])
+        self.assertFalse((all_constraints > 0).all())
+        uav_collisions = np.array(
+            [col_info["uav_collision"] for col_info in info.values()]
+        )
+        obstacle_collisions = np.array(
+            [col_info["obstacle_collision"] for col_info in info.values()]
+        )
+
+        self.assertTrue((uav_collisions == 1).all())
+        self.assertTrue((obstacle_collisions == 0).all())
+
 
 if __name__ == "__main__":
     unittest.main()
