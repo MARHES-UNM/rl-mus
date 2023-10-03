@@ -82,17 +82,15 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
     while num_episodes < max_num_episodes:
         actions = {}
         for idx in range(env.num_uavs):
-            action = env.get_time_coord_action(env.uavs[idx])
+            actions[idx] = env.get_time_coord_action(env.uavs[idx])
 
             if exp_config["exp_config"]["safe_action_type"] != "none":
                 if exp_config["exp_config"]["safe_action_type"] == "cbf":
-                    action = env.get_safe_action(env.uavs[idx], action)
+                    actions[idx] = env.get_safe_action(env.uavs[idx], actions[idx])
                 elif exp_config["exp_config"]["safe_action_type"] == "nn_cbf":
-                    action = sl.get_action(obs[idx], action)
+                    actions[idx] = sl.get_action(obs[idx], actions[idx])
                 else:
                     print("unknow safe action type")
-
-            actions[idx] = action
 
         obs, rew, done, info = env.step(actions)
         for k, v in info.items():

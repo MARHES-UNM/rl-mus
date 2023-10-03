@@ -215,8 +215,8 @@
             },
             "args": [
                 "-v",
-                // "tests.test_safety_layer.TestSafetyLayer.test_get_mask",
-                "tests.test_safety_layer",
+                "tests.test_safety_layer.TestSafetyLayer.test_get_mask",
+                // "tests.test_safety_layer",
                 "--failfast"
             ]
         },

@@ -9,7 +9,7 @@ class TestSafetyLayer(unittest.TestCase):
         self.env = UavSim({"num_uavs": 2, "num_obstacles": 2, "time_final": 10.0})
         config = {
             "replay_buffer_size": 64 * 10,
-            "batch_size": 32,
+            "batch_size": 4,
             "num_epochs": 10,
             "device": "cuda",
         }

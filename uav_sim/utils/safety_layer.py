@@ -281,13 +281,13 @@ class SafetyLayer:
             1e-5 + num_mid
         )
 
-        acc_deriv_safe = torch.sum((h_deriv > 0).float() * safe_mask) / (
+        acc_deriv_safe = torch.sum((h_deriv >= 0).float() * safe_mask) / (
             1e-5 + num_safe
         )
-        acc_deriv_dang = torch.sum((h_deriv > 0).float() * unsafe_mask) / (
+        acc_deriv_dang = torch.sum((h_deriv >= 0).float() * unsafe_mask) / (
             1e-5 + num_unsafe
         )
-        acc_deriv_mid = torch.sum((h_deriv > 0).float() * mid_mask) / (1e-5 + num_mid)
+        acc_deriv_mid = torch.sum((h_deriv >= 0).float() * mid_mask) / (1e-5 + num_mid)
 
         err_action = torch.mean(torch.abs(u - u_nominal))
 
