@@ -244,6 +244,22 @@ def main():
         with open(args.load_config, "rt") as f:
             args.config = json.load(f)
 
+    # args.config["env_config"].update(
+    #     {
+    #         "max_num_obstacles": 4,
+    #         "obstacle_radius": 1,
+    #         "env_max_w": 4,
+    #         "env_max_l": 4,
+    #         "env_max_h": 4,
+    #     }
+    # )
+
+    # args.config["exp_config"].update({"safe_action_type": "nn_cbf"})
+    # args.config["safety_layer_cfg"].update(
+    #     {
+    #         "checkpoint_dir": "/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-10-03-16-15_50dfe4b/test_refactor/train_safety_layer_a85ae_00000_0_target_v=0.0000,batch_size=256,eps=0.1000,eps_deriv=0.0300,loss_action_weight=0.1000,lr=0.0005,nu_2023-10-03_16-15-55/checkpoint_000199/checkpoint"
+    #     }
+    # )
     logger.debug(f"config: {args.config}")
 
     if not args.log_dir:
