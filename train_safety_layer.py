@@ -80,10 +80,10 @@ def train_safety_layer(config, checkpoint_dir=None):
 def train(args):
     args.config["safety_layer_cfg"]["device"] = "cuda"
     # args.config["env_config"]["num_obstacles"] = tune.grid_search([4, 8])
-    args.config["env_config"]["target_v"] = tune.grid_search([0.0, 1.0])
-    args.config["env_config"]["num_obstacles"] = 4
-    args.config["env_config"]["max_num_obstacles"] = 4
-    args.config["env_config"]["obstacle_radius"] = 0.1
+    args.config["env_config"]["target_v"] = tune.grid_search([0.0])
+    args.config["env_config"]["num_obstacles"] = tune.grid_search([4])
+    args.config["env_config"]["max_num_obstacles"] = tune.grid_search([4, 8])
+    args.config["env_config"]["obstacle_radius"] = tune.grid_search([0.1, 0.25, 0.5])
     args.config["safety_layer_cfg"]["num_training_steps"] = tune.grid_search([6000])
     args.config["safety_layer_cfg"]["num_epochs"] = 200
     # args.config["safety_layer_cfg"]["num_iter_per_epoch"] = tune.grid_search([50])
