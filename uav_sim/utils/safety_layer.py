@@ -297,7 +297,7 @@ class SafetyLayer:
         # loss = (1 / (1 + self.loss_action_weight)) * (
         loss = (
             loss_h_safe
-            + loss_h_dang
+            + 1e3 * loss_h_dang
             + 5 * loss_deriv_safe
             + 5 * loss_deriv_dang
             + 5 * loss_deriv_mid
