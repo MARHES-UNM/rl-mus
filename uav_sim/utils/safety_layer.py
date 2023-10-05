@@ -295,11 +295,11 @@ class SafetyLayer:
         loss_action = torch.mean(F.relu(torch.abs(u - u_nominal) - self.eps_action))
 
         loss = (1 / (1 + self.loss_action_weight)) * (
-            50 * loss_h_safe
-            + 50 * loss_h_dang
-            + 5 * loss_deriv_safe
-            + 5 * loss_deriv_dang
-            + 5 * loss_deriv_mid
+            100 * loss_h_safe
+            + 100 * loss_h_dang
+            + 20 * loss_deriv_safe
+            + 20 * loss_deriv_dang
+            + 20 * loss_deriv_mid
         ) + loss_action * self.loss_action_weight / (1 + self.loss_action_weight)
 
         # TODO: use a dictionary to store acc_h_items instead.
