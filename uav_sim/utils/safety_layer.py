@@ -253,8 +253,8 @@ class SafetyLayer:
         )
 
         h_next = self._cbf_model(
-            # state_next_grad,
-            state_next_nominal,
+            state_next_grad,
+            # state_next_nominal,
             other_uav_obs_next,
             obstacles_next,
         )
