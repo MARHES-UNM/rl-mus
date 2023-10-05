@@ -253,8 +253,8 @@ class SafetyLayer:
         )
 
         h_next = self._cbf_model(
-            state_next_grad,
-            # state_next_nominal,
+            # state_next_grad,
+            state_next_nominal,
             other_uav_obs_next,
             obstacles_next,
         )
@@ -294,13 +294,15 @@ class SafetyLayer:
 
         loss_action = torch.mean(F.relu(torch.abs(u - u_nominal) - self.eps_action))
 
-        loss = (1 / (1 + self.loss_action_weight)) * (
-            100 * loss_h_safe
-            + 100 * loss_h_dang
-            + 20 * loss_deriv_safe
-            + 20 * loss_deriv_dang
-            + 20 * loss_deriv_mid
-        ) + loss_action * self.loss_action_weight / (1 + self.loss_action_weight)
+        # loss = (1 / (1 + self.loss_action_weight)) * (
+        loss = (
+            loss_h_safe
+            + loss_h_dang
+            + 5 * loss_deriv_safe
+            + 5 * loss_deriv_dang
+            + 5 * loss_deriv_mid
+        ) + loss_action * self.loss_action_weight
+        # ) + loss_action * self.loss_action_weight / (1 + self.loss_action_weight)
 
         # TODO: use a dictionary to store acc_h_items instead.
         return loss, (
