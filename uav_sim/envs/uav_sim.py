@@ -54,6 +54,11 @@ class UavSim:
         self.max_time = env_config.setdefault("max_time", 40)
 
         self.env_config = env_config
+        self.norm_action_high = np.ones(3)
+        self.norm_action_low = np.ones(3) * -1
+
+        self.action_high = np.ones(3) * 5
+        self.action_low = np.ones(3) * -5
 
         self.gui = None
         self._time_elapsed = 0
@@ -306,6 +311,8 @@ class UavSim:
 
             if self._use_safe_action:
                 action = self.get_safe_action(self.uavs[i], action)
+            # TODO: this may not be needed
+            action = np.clip(action, self.action_low, self.action_high)
             self.uavs[i].step(action)
 
         # step target
@@ -544,6 +551,42 @@ class UavSim:
         obs = {uav.id: self._get_obs(uav) for uav in self.uavs}
 
         return obs
+
+    def unscale_action(self, action):
+        """[summary]
+
+        Args:
+            action ([type]): [description]
+
+        Returns:
+            [type]: [description]
+        """
+        assert np.all(np.greater_equal(action, self.norm_action_low)), (
+            action,
+            self.norm_action_low,
+        )
+        assert np.all(np.less_equal(action, self.norm_action_high)), (
+            action,
+            self.norm_action_high,
+        )
+        action = self.action_low + (self.action_high - self.action_low) * (
+            (action - self.norm_action_low)
+            / (self.norm_action_high - self.norm_action_low)
+        )
+        # # TODO: this is not needed
+        # action = np.clip(action, self.action_low, self.action_high)
+
+        return action
+
+    def scale_action(self, action):
+        """Scale agent action between default norm action values"""
+        # assert np.all(np.greater_equal(action, self.action_low)), (action, self.action_low)
+        # assert np.all(np.less_equal(action, self.action_high)), (action, self.action_high)
+        action = (self.norm_action_high - self.norm_action_low) * (
+            (action - self.action_low) / (self.action_high - self.action_low)
+        ) + self.norm_action_low
+
+        return action
 
     def render(self, mode="human"):
         if self.render_mode == "human":

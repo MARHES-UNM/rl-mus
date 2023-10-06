@@ -111,9 +111,7 @@ class SafetyLayer:
         num_o = (
             obs_space[0]["obstacles"].shape[0] + obs_space[0]["other_uav_obs"].shape[0]
         )
-        self._cbf_model = CBF(
-            n_state=self.k_obstacle, n_hidden=self._n_hidden
-        )
+        self._cbf_model = CBF(n_state=self.k_obstacle, n_hidden=self._n_hidden)
 
         self._nn_action_model = NN_Action(
             n_state=self.k_obstacle,
@@ -307,12 +305,13 @@ class SafetyLayer:
 
         # loss = (1 / (1 + self.loss_action_weight)) * (
         loss = (
-            1e3 * loss_h_safe
-            + 1e3 * loss_h_dang
-            + 1e2 * loss_deriv_safe
-            + 1e2 * loss_deriv_dang
-            + 1e2 * loss_deriv_mid
-        ) + loss_action * self.loss_action_weight
+            loss_h_safe
+            + loss_h_dang
+            + loss_deriv_safe
+            + loss_deriv_dang
+            + loss_deriv_mid
+            + loss_action * self.loss_action_weight
+        )
         # ) + loss_action * self.loss_action_weight / (1 + self.loss_action_weight)
 
         # TODO: use a dictionary to store acc_h_items instead.
