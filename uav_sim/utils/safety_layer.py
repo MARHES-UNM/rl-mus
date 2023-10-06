@@ -131,6 +131,7 @@ class SafetyLayer:
         results = {
             "uav_collision": 0.0,
             "obs_collision": 0.0,
+            "uav_rel_dist": 0.0,
             "uav_done": 0.0,
             "uav_done_time": 0.0,
         }
@@ -173,6 +174,7 @@ class SafetyLayer:
             if done["__all__"] or (episode_length == self._episode_length):
                 num_episodes += 1
                 for k, v in info.items():
+                    results["uav_rel_dist"] += v["uav_rel_dist"]
                     results["uav_done"] += v["uav_landed"]
                     results["uav_done_time"] += v["uav_done_time"]
 
@@ -180,6 +182,9 @@ class SafetyLayer:
                 episode_length = 0
 
         num_episodes += 1
+        results["uav_rel_dist"] = (
+            results["uav_rel_dist"] / num_episodes / self._env.num_uavs
+        )
         results["obs_collision"] = (
             results["obs_collision"] / num_episodes / self._env.num_uavs
         )
@@ -298,9 +303,9 @@ class SafetyLayer:
         loss = (
             1e3 * loss_h_safe
             + 1e3 * loss_h_dang
-            + 5 * loss_deriv_safe
-            + 5 * loss_deriv_dang
-            + 5 * loss_deriv_mid
+            + 1e2 * loss_deriv_safe
+            + 1e2 * loss_deriv_dang
+            + 1e2 * loss_deriv_mid
         ) + loss_action * self.loss_action_weight
         # ) + loss_action * self.loss_action_weight / (1 + self.loss_action_weight)
 
