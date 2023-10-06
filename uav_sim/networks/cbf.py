@@ -7,7 +7,8 @@ class CBF(nn.Module):
     def __init__(self, n_state, n_hidden=32):
         super(CBF, self).__init__()
         self.n_state = n_state
-        self.conv0 = nn.Conv1d(n_state, 64, 1)
+        # self.conv0 = nn.Conv1d(n_state, 64, 1)
+        self.conv0 = nn.Conv1d(n_state, 128, 1)
         self.conv1 = nn.Conv1d(64, 128, 1)
         self.conv2 = nn.Conv1d(128, 128, 1)
         self.conv3 = nn.Conv1d(128, 128, 1)
@@ -30,9 +31,9 @@ class CBF(nn.Module):
 
         x = torch.cat((other_uav_state_diff, obstacle_state_diff), dim=2)
         x = self.activation(self.conv0(x))
-        x = self.activation(self.conv1(x))
-        x = self.activation(self.conv2(x))  # (bs, 128, n_state)
-        x = self.activation(self.conv3(x))
+        # x = self.activation(self.conv1(x))
+        # x = self.activation(self.conv2(x))  # (bs, 128, n_state)
+        # x = self.activation(self.conv3(x))
         x = self.conv4(x)
         h = torch.squeeze(x, dim=1)  # (bs, n_state)
         return h
@@ -44,13 +45,15 @@ class NN_Action(nn.Module):
         super().__init__()
         self.n_state = n_state
 
-        self.conv0 = nn.Conv1d(n_state, 64, 1)
+        self.conv0 = nn.Conv1d(n_state, 128, 1)
+        # self.conv0 = nn.Conv1d(n_state, 64, 1)
         self.conv1 = nn.Conv1d(64, 128, 1)
         self.conv2 = nn.Conv1d(128, 128, 1)
         self.fc0_ = nn.Linear(num_o, 1)
         self.fc0 = nn.Linear(128 + m_control + n_state, 128)
         self.fc1 = nn.Linear(128, 64)
-        self.fc2 = nn.Linear(64, m_control)
+        # self.fc2 = nn.Linear(64, m_control)
+        self.fc2 = nn.Linear(128, m_control)
         self.activation = nn.ReLU()
         self.output_activation = nn.Tanh()
 
@@ -81,13 +84,13 @@ class NN_Action(nn.Module):
         # num_obstacles = obstacle_state_diff.shape[-1]
         x = torch.cat((other_uav_state_diff, obstacle_state_diff), dim=2)
         x = self.activation(self.conv0(x))
-        x = self.activation(self.conv1(x))
-        x = self.activation(self.conv2(x))  # (bs, 128, k_obstacle)
+        # x = self.activation(self.conv1(x))
+        # x = self.activation(self.conv2(x))  # (bs, 128, k_obstacle)
         # x = torch.squeeze(self.activation(self.fc0_(x)), dim=-1)
         x, _ = torch.max(x, dim=2)  # (bs, 128)
         x = torch.cat([x, u_nominal, rel_pad], dim=1)  # (bs, 128 + m_control)
         x = self.activation(self.fc0(x))
-        x = self.activation(self.fc1(x))
+        # x = self.activation(self.fc1(x))
         x = self.output_activation(self.fc2(x)) * 5.0
         # x = self.output_activation(self.fc2(x))
         u = x + u_nominal

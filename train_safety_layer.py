@@ -100,7 +100,7 @@ def train(args):
 
     args.config["safety_layer_cfg"]["eps"] = 0.1
     args.config["safety_layer_cfg"]["eps_deriv"] = 0.03
-    args.config["safety_layer_cfg"]["batch_size"] = 256
+    args.config["safety_layer_cfg"]["batch_size"] = 128
     # tune.grid_search(
     #     # [128, 256, 512, 1024]
     #     [256]
@@ -133,7 +133,7 @@ def train(args):
             "time_total_s": args.duration,
         },
         # num_samples=32,
-        resources_per_trial={"cpu": 1, "gpu": 0.25},
+        resources_per_trial={"cpu": 1, "gpu": 0.3},
         config=args.config,
         # checkpoint_freq=5,
         # checkpoint_at_end=True,
