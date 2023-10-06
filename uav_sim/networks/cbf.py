@@ -40,13 +40,14 @@ class CBF(nn.Module):
 
 class NN_Action(nn.Module):
     # def __init__(self, n_state, k_obstacle, m_control, preprocess_func=None, output_scale=1.0):
-    def __init__(self, n_state, m_control, n_hidden=32):
+    def __init__(self, n_state, m_control, num_o, n_hidden=32):
         super().__init__()
         self.n_state = n_state
 
         self.conv0 = nn.Conv1d(n_state, 64, 1)
         self.conv1 = nn.Conv1d(64, 128, 1)
         self.conv2 = nn.Conv1d(128, 128, 1)
+        self.fc0_ = nn.Linear(num_o, 1)
         self.fc0 = nn.Linear(128 + m_control + n_state, 128)
         self.fc1 = nn.Linear(128, 64)
         self.fc2 = nn.Linear(64, m_control)
@@ -76,11 +77,14 @@ class NN_Action(nn.Module):
             state[:, : self.n_state, :] - obstacles[:, : self.n_state, :]
         )
 
+        # num_other_uavs = other_uav_state_diff.shape[-1]
+        # num_obstacles = obstacle_state_diff.shape[-1]
         x = torch.cat((other_uav_state_diff, obstacle_state_diff), dim=2)
         x = self.activation(self.conv0(x))
         x = self.activation(self.conv1(x))
         x = self.activation(self.conv2(x))  # (bs, 128, k_obstacle)
-        x, _ = torch.max(x, dim=2)  # (bs, 128)
+        x = torch.squeeze(self.activation(self.fc0_(x)), dim=-1)
+        # x, _ = torch.max(x, dim=2)  # (bs, 128)
         x = torch.cat([x, u_nominal, rel_pad], dim=1)  # (bs, 128 + m_control)
         x = self.activation(self.fc0(x))
         x = self.activation(self.fc1(x))

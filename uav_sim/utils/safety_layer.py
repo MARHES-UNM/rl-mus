@@ -108,12 +108,18 @@ class SafetyLayer:
         self.k_obstacle = obs_space[0]["obstacles"].shape[1]  # (num_obstacle, state)
         m_control = self._env.action_space[0].shape[0]
 
-        self._cbf_model = CBF(n_state=self.k_obstacle, n_hidden=self._n_hidden)
+        num_o = (
+            obs_space[0]["obstacles"].shape[0] + obs_space[0]["other_uav_obs"].shape[0]
+        )
+        self._cbf_model = CBF(
+            n_state=self.k_obstacle, n_hidden=self._n_hidden
+        )
 
         self._nn_action_model = NN_Action(
             n_state=self.k_obstacle,
             m_control=m_control,
-            n_hidden=self._n_hidden
+            n_hidden=self._n_hidden,
+            num_o=num_o,
             # n_state, n_rel_pad_state, k_obstacle, m_control, self._n_hidden
         )
 
