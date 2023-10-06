@@ -379,13 +379,11 @@ class UavSim:
         return obs_dict
 
     def _get_reward(self, uav):
-        uav_collision = 0
-        obs_collision = 0
+        uav.uav_collision = 0
+        uav.obs_collision = 0
 
         if uav.done:
             # UAV most have finished last time_step, report zero collisions
-            uav.uav_collision = uav_collision
-            uav.obs_collision = obs_collision
             return 0
 
         reward = 0
@@ -407,7 +405,7 @@ class UavSim:
                 reward -= self.uav_collision_weight
                 # uav.done = True
                 # uav.landed = False
-                uav_collision += 1
+                uav.uav_collision += 1
 
         # neg reward if uav collides with obstacles
         for obstacle in self.obstacles:
@@ -415,10 +413,7 @@ class UavSim:
                 reward -= self.obstacle_collision_weight
                 # uav.done = True
                 # uav.landed = False
-                obs_collision += 1
-
-        uav.uav_collision = uav_collision
-        uav.obs_collision = obs_collision
+                uav.obs_collision += 1
 
         return reward
 
