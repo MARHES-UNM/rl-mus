@@ -10,7 +10,7 @@ class TestSafetyLayer(unittest.TestCase):
         config = {
             "replay_buffer_size": 64 * 10,
             "batch_size": 4,
-            "num_epochs": 1,
+            "num_epochs": 5,
             "device": "cpu",
             "num_iter_per_epoch": 10,
             "num_training_steps": 60,

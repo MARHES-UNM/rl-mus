@@ -418,11 +418,13 @@ class SafetyLayer:
         for epoch in range(self._num_epochs):
             train_loss, train_acc_stats, train_sample_stats = self.fit()
             print(
-                f"Finished training epoch {epoch} with loss: {train_loss}. Running validation ..."
+                f"Finished training epoch {epoch} with loss: {train_loss}. stats: {train_sample_stats}. \nRunning validation:"
             )
 
             val_loss, val_acc_stats, val_sample_stats = self.evaluate()
-            print(f"Validation completed, average loss {val_loss}.")
+            print(
+                f"Validation completed, average loss {val_loss}. val stats: {val_sample_stats}"
+            )
 
             if self._report_tune:
                 if (epoch + 1) % 5 == 0:
