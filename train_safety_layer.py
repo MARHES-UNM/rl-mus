@@ -100,7 +100,7 @@ def train(args):
 
     args.config["safety_layer_cfg"]["eps"] = 0.1
     args.config["safety_layer_cfg"]["eps_deriv"] = 0.03
-    args.config["safety_layer_cfg"]["batch_size"] = 128
+    args.config["safety_layer_cfg"]["batch_size"] = tune.grid_search([256, 512])
     # tune.grid_search(
     #     # [128, 256, 512, 1024]
     #     [256]
