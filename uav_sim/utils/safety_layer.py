@@ -100,6 +100,8 @@ class SafetyLayer:
         self.eps_deriv = self._config.get("eps_deriv", 0.03)
         self.loss_action_weight = self._config.get("loss_action_weight", 0.08)
         self._device = self._config.get("device", "cpu")
+        self._safe_margin = self._config.get("safe_margin", 0.1)
+        self._unsafe_margin = self._config.get("unsafe_margin", 0.01)
 
     def _init_model(self):
         obs_space = self._env.observation_space
@@ -202,10 +204,8 @@ class SafetyLayer:
         return results
 
     def _get_mask(self, constraints):
-        safe_dist = 0.1
-        unsafe_dist = 0.01
-        safe_mask = (constraints >= safe_dist).float()
-        unsafe_mask = (constraints <= unsafe_dist).float()
+        safe_mask = (constraints >= self._safe_margin).float()
+        unsafe_mask = (constraints <= self._unsafe_margin).float()
 
         mid_mask = (1 - safe_mask) * (1 - unsafe_mask)
 

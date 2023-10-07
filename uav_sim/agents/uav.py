@@ -309,14 +309,17 @@ class UavBase(Entity):
 
         self._state[2] = max(0, self._state[2])
 
+    # TODO: Combine the functions below into one
     def get_landed(self, pad):
         dist = np.linalg.norm(self._state[0:3] - pad._state[0:3])
         return dist <= 0.01
 
+    # TODO: combine into one.
     def check_dest_reached(self):
         dist = np.linalg.norm(self._state[0:3] - self.pad._state[0:3])
         return dist <= 0.01, dist
 
+    # TODO: combine with equations above
     def get_rel_pad_dist(self):
         return np.linalg.norm(self._state[:3] - self.pad._state[:3])
 

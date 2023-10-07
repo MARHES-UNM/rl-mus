@@ -79,12 +79,11 @@ def train_safety_layer(config, checkpoint_dir=None):
 
 def train(args):
     args.config["safety_layer_cfg"]["device"] = "cuda"
-    # args.config["env_config"]["num_obstacles"] = tune.grid_search([4, 8])
-    args.config["env_config"]["target_v"] = 0.0
+    args.config["env_config"]["target_v"] = tune.grid_search([0.0, 1.0])
     args.config["env_config"]["num_obstacles"] = 4
     args.config["env_config"]["max_num_obstacles"] = 4
     args.config["safety_layer_cfg"]["loss_action_weight"] = tune.grid_search(
-        [0.1, 0.5, 1.0]
+        [0.1]
         # [1.0, 0.8, 0.5]
         # [1.0, 0.8, 0.5]
     )
@@ -100,9 +99,12 @@ def train(args):
 
     args.config["safety_layer_cfg"]["eps"] = 0.1
     args.config["safety_layer_cfg"]["eps_deriv"] = 0.03
-    args.config["safety_layer_cfg"]["eps_action"] = 0.2
+    args.config["safety_layer_cfg"]["eps_action"] = tune.grid_search(
+        [0.00019, 0.2, 0.05]
+    )
     args.config["safety_layer_cfg"]["num_iter_per_epoch"] = 100
     args.config["safety_layer_cfg"]["batch_size"] = tune.grid_search([1024])
+
     # tune.grid_search(
     #     # [128, 256, 512, 1024]
     #     [256]
@@ -135,7 +137,7 @@ def train(args):
             "time_total_s": args.duration,
         },
         # num_samples=32,
-        resources_per_trial={"cpu": 1, "gpu": 0.3},
+        resources_per_trial={"cpu": 1, "gpu": 0.25},
         config=args.config,
         # checkpoint_freq=5,
         # checkpoint_at_end=True,

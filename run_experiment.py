@@ -248,7 +248,7 @@ def main():
         {
             #         "max_num_obstacles": 30,
             #         "num_obstacles": 8,
-            "obstacle_radius": 0.1,
+            "obstacle_radius": 1.0,
             #         "env_max_w": 4,
             #         "env_max_l": 4,
             #         "env_max_h": 4,
