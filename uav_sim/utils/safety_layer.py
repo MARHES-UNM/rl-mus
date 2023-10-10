@@ -337,9 +337,11 @@ class SafetyLayer:
         # zero parameter gradients
         self._nn_action_optimizer.zero_grad()
         self._cbf_optimizer.zero_grad()
+
         loss.backward()
-        self._cbf_optimizer.step()
+
         self._nn_action_optimizer.step()
+        self._cbf_optimizer.step()
 
         return loss, acc_stats
 
