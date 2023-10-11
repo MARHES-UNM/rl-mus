@@ -87,7 +87,7 @@ def train(args):
         # [1.0, 0.8, 0.5]
         # [1.0, 0.8, 0.5]
     )
-    args.config["env_config"]["obstacle_radius"] = tune.grid_search([1.0])
+    args.config["env_config"]["obstacle_radius"] = tune.grid_search([0.1, 1.0])
     args.config["safety_layer_cfg"]["num_training_steps"] = 6000
     args.config["safety_layer_cfg"]["num_epochs"] = 200
     # args.config["safety_layer_cfg"]["num_iter_per_epoch"] = tune.grid_search([50])
@@ -99,7 +99,7 @@ def train(args):
 
     args.config["safety_layer_cfg"]["eps"] = tune.grid_search([0.1])
     args.config["safety_layer_cfg"]["eps_deriv"] = tune.grid_search([0.05])
-    args.config["safety_layer_cfg"]["eps_action"] = tune.grid_search([1e-3])
+    args.config["safety_layer_cfg"]["eps_action"] = tune.grid_search([0.1])
     args.config["safety_layer_cfg"]["num_iter_per_epoch"] = 100
     args.config["safety_layer_cfg"]["batch_size"] = tune.grid_search([1024])
 
