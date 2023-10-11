@@ -305,10 +305,10 @@ class SafetyLayer:
 
         err_action = torch.mean(torch.abs(u - u_nominal))
 
-        # loss_action = torch.mean(F.relu(torch.abs(u - u_nominal) - self.eps_action))
-        loss_action = torch.sum(
-            F.relu(torch.linalg.vector_norm(u - u_nominal, dim=-1) - self.eps_action) * torch.min(safe_mask, dim=-1)[0]
-        ) / (1e-5 + num_safe)
+        loss_action = torch.mean(F.relu(torch.abs(u - u_nominal) - self.eps_action))
+        # loss_action = torch.sum(
+        #     F.relu(torch.linalg.vector_norm(u - u_nominal, dim=-1) - self.eps_action) * torch.min(safe_mask, dim=-1)[0]
+        # ) / (1e-5 + num_safe)
 
         # loss = (1 / (1 + self.loss_action_weight)) * (
         loss = (
