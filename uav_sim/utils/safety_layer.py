@@ -95,9 +95,12 @@ class SafetyLayer:
         self._checkpoint = self._config.get("checkpoint", None)
         self._load_buffer = self._config.get("buffer", None)
         self._n_hidden = self._config.get("n_hidden", 32)
-        self.eps = self._config.get("eps", 0.1)
-        self.eps_action = self._config.get("eps_action", 0.2)
-        self.eps_deriv = self._config.get("eps_deriv", 0.03)
+        self.eps_safe = self._config.get("eps_safe", 0.001)
+        self.eps_dang = self._config.get("eps_dang", 0.05)
+        self.eps_action = self._config.get("eps_action", 0.0)
+        self.eps_deriv_safe = self._config.get("eps_deriv_safe", 0.0)
+        self.eps_deriv_dang = self._config.get("eps_deriv_dang", 8e-2)
+        self.eps_deriv_mid = self._config.get("eps_deriv_mid", 3e-2)
         self.loss_action_weight = self._config.get("loss_action_weight", 0.08)
         self._device = self._config.get("device", "cpu")
         self._safe_margin = self._config.get("safe_margin", 0.1)
@@ -272,21 +275,23 @@ class SafetyLayer:
         num_unsafe = torch.sum(unsafe_mask)
         num_mid = torch.sum(mid_mask)
 
-        loss_h_safe = torch.sum(F.relu(self.eps - h) * safe_mask) / (1e-5 + num_safe)
-        loss_h_dang = torch.sum(F.relu(h + self.eps) * unsafe_mask) / (
+        loss_h_safe = torch.sum(F.relu(self.eps_safe - h) * safe_mask) / (
+            1e-5 + num_safe
+        )
+        loss_h_dang = torch.sum(F.relu(h + self.eps_dang) * unsafe_mask) / (
             1e-5 + num_unsafe
         )
 
         acc_h_safe = torch.sum((h >= 0).float() * safe_mask) / (1e-5 + num_safe)
         acc_h_dang = torch.sum((h < 0).float() * unsafe_mask) / (1e-5 + num_unsafe)
 
-        loss_deriv_safe = torch.sum(F.relu(self.eps_deriv - h_deriv) * safe_mask) / (
-            1e-5 + num_safe
-        )
-        loss_deriv_dang = torch.sum(F.relu(self.eps_deriv - h_deriv) * unsafe_mask) / (
-            1e-5 + num_unsafe
-        )
-        loss_deriv_mid = torch.sum(F.relu(self.eps_deriv - h_deriv) * mid_mask) / (
+        loss_deriv_safe = torch.sum(
+            F.relu(self.eps_deriv_safe - h_deriv) * safe_mask
+        ) / (1e-5 + num_safe)
+        loss_deriv_dang = torch.sum(
+            F.relu(self.eps_deriv_dang - h_deriv) * unsafe_mask
+        ) / (1e-5 + num_unsafe)
+        loss_deriv_mid = torch.sum(F.relu(self.eps_deriv_mid - h_deriv) * mid_mask) / (
             1e-5 + num_mid
         )
 
@@ -300,16 +305,19 @@ class SafetyLayer:
 
         err_action = torch.mean(torch.abs(u - u_nominal))
 
-        loss_action = torch.mean(F.relu(torch.abs(u - u_nominal) - self.eps_action))
+        # loss_action = torch.mean(F.relu(torch.abs(u - u_nominal) - self.eps_action))
+        loss_action = torch.sum(
+            F.relu(torch.linalg.norm(u - u_nominal) - self.eps_action) * safe_mask
+        ) / (1e-5 + num_safe)
 
         # loss = (1 / (1 + self.loss_action_weight)) * (
         loss = (
             loss_h_safe
-            + loss_h_dang
+            + 2.0 * loss_h_dang
             + loss_deriv_safe
-            + loss_deriv_dang
-            + loss_deriv_mid
-            + loss_action * self.loss_action_weight
+            + 3.0 * loss_deriv_dang
+            + 2.0 * loss_deriv_mid
+            + self.loss_action_weight * loss_action
         )
         # ) + loss_action * self.loss_action_weight / (1 + self.loss_action_weight)
 
