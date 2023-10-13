@@ -14,6 +14,7 @@ from torch.optim import Adam
 import ray.tune as tune
 from ray.air import Checkpoint, session
 
+# This is need to ensure reproducibility. See: https://docs.nvidia.com/cuda/cublas/index.html#cublasApi_reproducibility
 os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
 
 PATH = os.path.dirname(os.path.abspath(__file__))

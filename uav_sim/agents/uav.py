@@ -413,6 +413,16 @@ class Uav(UavBase):
         self.k_phi_dot = self.k_theta_dot = 5
         self.k_psi_dot = 2
 
+        # set up gain matrix
+        self.kx = self.ky = 3.5
+        self.kz = 7
+        self.k_x_dot = self.k_y_dot = 3
+        self.k_z_dot = 4.5
+        self.k_phi = self.k_theta = 100
+        self.k_psi = 50
+        self.k_phi_dot = self.k_theta_dot = 15
+        self.k_psi_dot = 10
+
     def get_r_matrix(self, phi, theta, psi):
         """Calculates the Z-Y-X rotation matrix.
            Based on Different Linearization Control Techniques for a Quadrotor System
