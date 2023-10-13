@@ -2,6 +2,7 @@ from math import isclose
 import sys
 from gym import spaces
 import numpy as np
+import gym
 
 from gym.utils import seeding
 from uav_sim.agents.uav import Obstacle, UavBase, Uav, ObsType
@@ -15,13 +16,14 @@ import random
 logger = logging.getLogger(__name__)
 
 
-class UavSim:
+class UavSim(gym.Env):
     metadata = {
         "render_modes": ["human", "rgb_array"],
         "render_fps": 30,
     }
 
     def __init__(self, env_config={}):
+        super().__init__()
         self.dt = env_config.setdefault("dt", 0.1)
         self._seed = env_config.setdefault("seed", None)
         self.render_mode = env_config.setdefault("render_mode", "human")
