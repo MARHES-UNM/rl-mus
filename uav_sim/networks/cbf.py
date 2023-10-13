@@ -77,8 +77,6 @@ class NN_Action(nn.Module):
             state[:, : self.n_state, :] - obstacles[:, : self.n_state, :]
         )
 
-        # num_other_uavs = other_uav_state_diff.shape[-1]
-        # num_obstacles = obstacle_state_diff.shape[-1]
         x = torch.cat((other_uav_state_diff, obstacle_state_diff), dim=2)
         x = self.activation(self.conv0(x))
         x = self.activation(self.conv1(x))
@@ -89,6 +87,5 @@ class NN_Action(nn.Module):
         x = self.activation(self.fc0(x))
         x = self.activation(self.fc1(x))
         x = self.output_activation(self.fc2(x)) * 5.0
-        # x = self.output_activation(self.fc2(x))
         u = x + u_nominal
         return u
