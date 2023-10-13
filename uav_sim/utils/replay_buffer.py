@@ -2,12 +2,13 @@ import numpy as np
 
 
 class ReplayBuffer:
-    """A FIFO buffer implemented with fixed size numpy array. 
+    """A FIFO buffer implemented with fixed size numpy array.
     Original implementation: https://github.com/AgrawalAmey/safe-explorer/blob/master/safe_explorer/core/replay_buffer.py
     """
 
     # TODO: add buffer for each item, observation, action, next observation
     def __init__(self, buffer_size):
+        self._rng = np.random.default_rng(0)
         self._buffer_size = buffer_size
         self._buffers = {}
         self._current_index = 0
@@ -37,7 +38,7 @@ class ReplayBuffer:
             print(
                 f"warning: batch size: {batch_size} > current buffer size: {self._buffer_size}"
             )
-        random_indices = np.random.randint(0, self._filled_till, batch_size)
+        random_indices = self._rng.integers(low=0, high=self._filled_till, size=batch_size)
         return {k: v[random_indices] for k, v in self._buffers.items()}
 
     def get_sequential(self, batch_size):
