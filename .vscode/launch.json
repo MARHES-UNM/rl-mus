@@ -100,7 +100,7 @@
             "justMyCode": true,
             "cwd": "${workspaceFolder}",
             "env": {
-                "DISPLAY": "192.168.1.11:0.0"
+                "DISPLAY": "192.168.1.18:0.0"
             },
             "args": [
                 "-v",

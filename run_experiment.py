@@ -246,7 +246,7 @@ def main():
 
     args.config["env_config"].update(
         {
-            # "max_num_obstacles": 30,
+            # "max_num_obstacles": 6,
             # "num_obstacles": 4,
             # "obstacle_radius": 0.1,
             #         "env_max_w": 4,

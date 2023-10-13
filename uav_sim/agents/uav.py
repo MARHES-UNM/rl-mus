@@ -181,27 +181,27 @@ class Target(Entity):
         des_xy = des_cir_traj[:3]
         vd = des_cir_traj[3]
         wd = des_cir_traj[4]
-        # zeta = 0.7
-        # b = ((4 / (zeta * .8)) ** 2 - wd**2) / (vd**2)
-        # k1 = k3 = 2.0 * zeta * np.sqrt(wd**2 + b * vd**2)
-        # k2 = b * np.abs(vd)
+        zeta = 0.7
+        b = ((4 / (zeta * .8)) ** 2 - wd**2) / (vd**2)
+        k1 = k3 = 2.0 * zeta * np.sqrt(wd**2 + b * vd**2)
+        k2 = b * np.abs(vd)
 
-        # u[0] = vd * np.cos(des_xy[2] - agent_state[2]) + k1 * (
-        #     np.cos(agent_state[2]) * (des_xy[0] - agent_state[0])
-        #     + np.sin(agent_state[2]) * (des_xy[1] - agent_state[1])
-        # )
-        # u[1] = (
-        #     wd
-        #     + k2
-        #     * np.sign(vd)
-        #     * (
-        #         np.cos(agent_state[2]) * (des_xy[0] - agent_state[0])
-        #         - np.sin(agent_state[2]) * (des_xy[1] - agent_state[1])
-        #     )
-        #     + k3 * (des_xy[2] - agent_state[2])
-        # )
-        u[0] = vd
-        u[1] = wd
+        u[0] = vd * np.cos(des_xy[2] - agent_state[2]) + k1 * (
+            np.cos(agent_state[2]) * (des_xy[0] - agent_state[0])
+            + np.sin(agent_state[2]) * (des_xy[1] - agent_state[1])
+        )
+        u[1] = (
+            wd
+            + k2
+            * np.sign(vd)
+            * (
+                np.cos(agent_state[2]) * (des_xy[0] - agent_state[0])
+                - np.sin(agent_state[2]) * (des_xy[1] - agent_state[1])
+            )
+            + k3 * (des_xy[2] - agent_state[2])
+        )
+        # u[0] = vd
+        # u[1] = wd
         # print(f"vd: {vd}, wd: {wd}, b: {b}")
 
         # u[0] = 0.198 * np.linalg.norm(agent_state[:2] - des_xy[:2])

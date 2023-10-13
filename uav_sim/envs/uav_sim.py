@@ -322,8 +322,8 @@ class UavSim(gym.Env):
         # if self.target_v == 0.0:
         #     self.target.step()
         # else:
-        #     u = self.target.get_target_action(self.time_elapsed, 75.0)
-        #     self.target.step(u)
+        # u = self.target.get_target_action(self.time_elapsed, 75.0)
+        # self.target.step(u)
 
         # step obstacles
         for obstacle in self.obstacles:
