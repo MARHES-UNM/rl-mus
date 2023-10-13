@@ -454,8 +454,7 @@ class UavSim:
         # not currently compatible with new gym api to pass in seed
         # if seed is None:
         #     seed = self._seed
-
-        # self.seed(seed)
+        # super().reset(seed=seed)
 
         if self.gui is not None:
             self.close_gui()

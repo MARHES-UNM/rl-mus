@@ -15,18 +15,17 @@ import ray.tune as tune
 from ray.air import Checkpoint, session
 
 PATH = os.path.dirname(os.path.abspath(__file__))
+torch.use_deterministic_algorithms(True)
 
 
 class SafetyLayer:
     def __init__(self, env, config={}):
-        self._env = env
 
+        self._env = env
         self._config = config
 
         self._parse_config()
-        random.seed(self._seed)
-        np.random.seed(self._seed)
-        torch.manual_seed(self._seed)
+        self._set_seed()
 
         self._init_model()
 
@@ -72,6 +71,11 @@ class SafetyLayer:
             self._device = "cuda"
         self._cbf_model.to(self._device)
         self._nn_action_model.to(self._device)
+
+    def _set_seed(self):
+        random.seed(self._seed)
+        np.random.seed(self._seed)
+        torch.manual_seed(self._seed)
 
     def _parse_config(self):
         # TODO: update config inputs
