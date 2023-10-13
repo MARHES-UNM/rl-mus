@@ -14,13 +14,14 @@ from torch.optim import Adam
 import ray.tune as tune
 from ray.air import Checkpoint, session
 
+os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
+
 PATH = os.path.dirname(os.path.abspath(__file__))
 torch.use_deterministic_algorithms(True)
 
 
 class SafetyLayer:
     def __init__(self, env, config={}):
-
         self._env = env
         self._config = config
 
