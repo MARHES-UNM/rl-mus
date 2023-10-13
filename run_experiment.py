@@ -258,7 +258,7 @@ def main():
     # args.config["exp_config"].update({"safe_action_type": "nn_cbf"})
     # args.config["safety_layer_cfg"].update(
     #     {
-    #         "checkpoint_dir": "/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-10-03-16-15_50dfe4b/test_refactor/train_safety_layer_a85ae_00000_0_target_v=0.0000,batch_size=256,eps=0.1000,eps_deriv=0.0300,loss_action_weight=0.1000,lr=0.0005,nu_2023-10-03_16-15-55/checkpoint_000199/checkpoint"
+    #         "checkpoint_dir": "/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-10-12-04-59_60a92ef/acc_w_2/train_safety_layer_a39dc_00000_0_obstacle_radius=1.0000,target_v=0.0000,batch_size=1024,eps_action=0.0000,eps_dang=0.0500,eps_deri_2023-10-12_04-59-23/checkpoint_000499/checkpoint"
     #     }
     # )
     logger.debug(f"config: {args.config}")
