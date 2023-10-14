@@ -12,6 +12,8 @@ import argparse
 import ray
 from ray.tune.registry import get_trainable_cls
 from ray.rllib.utils import check_env
+from ray.rllib.algorithms.callbacks import make_multi_callbacks
+from uav_sim.utils.callbacks import TrainCallback
 
 
 max_num_cpus = os.cpu_count() - 1
@@ -47,12 +49,12 @@ def parse_arguments():
     )
 
     parser.add_argument(
-        "--stop-iters", type=int, default=1000, help="Number of iterations to train."
+        "--stop-iters", type=int, default=10, help="Number of iterations to train."
     )
     parser.add_argument(
         "--stop-timesteps",
         type=int,
-        default=100000,
+        default=6000,
         help="Number of timesteps to train.",
     )
 
@@ -80,11 +82,14 @@ def train(args):
     # observer_space = temp_env.observation_space[0]
     # action_space = temp_env
 
+    callback_list = [TrainCallback]
+    multi_callbacks = make_multi_callbacks(callback_list)
     train_config = (
         get_trainable_cls(args.run)
         .get_default_config()
         .environment(env=args.env_name, env_config=args.config["env_config"])
         .framework(args.framework)
+        .callbacks(multi_callbacks)
         .rollouts(
             num_rollout_workers=1,  # set 0 to main worker run sim
             batch_mode="complete_episodes",
@@ -123,6 +128,7 @@ def train(args):
             ),
             # policies_to_train=[""]
         )
+        .reporting(keep_per_episode_custom_metrics=True)
         # .evaluation(
         #     evaluation_interval=10, evaluation_duration=10  # default number of episodes
         # )
