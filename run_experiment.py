@@ -194,6 +194,7 @@ def plot_uav_states(num_uavs, results, num_episode=0):
     uav_state = np.array(results["episode_data"]["uav_state"])[num_episode]
     target_state = np.array(results["episode_data"]["target_state"])[num_episode]
 
+    axs = []
     fig = plt.figure(figsize=(10, 6))
     ax = fig.add_subplot(211)
     ax1 = fig.add_subplot(212)
@@ -207,14 +208,22 @@ def plot_uav_states(num_uavs, results, num_episode=0):
     ax4 = fig.add_subplot(212)
     fig = plt.figure(figsize=(10, 6))
     ax5 = fig.add_subplot(111, projection="3d")
+    axs.extend([ax, ax21, ax3, ax4])
     for idx in range(num_uavs):
         ax.plot(uav_collision_list[idx], label=f"uav_id:{idx}")
+        ax.title.set_text("uav collision")
         ax1.plot(obstacle_collision_list[idx], label=f"uav_id:{idx}")
+        ax1.title.set_text("obstacle collision")
         ax21.plot(uav_done_list[idx], label=f"uav_id:{idx}")
+        ax21.title.set_text("uav done")
         ax22.plot(uav_done_dt_list[idx], label=f"uav_id:{idx}")
+        ax22.title.set_text("uav delta time")
         ax23.plot(uav_dt_go_list[idx], label=f"uav_id:{idx}")
+        ax23.title.set_text("uav relative vs time_elapsed")
         ax3.plot(rel_pad_dist[idx], label=f"uav_id:{idx}")
+        ax3.title.set_text("uav relative dist to target")
         ax4.plot(rel_pad_vel[idx], label=f"uav_id:{idx}")
+        # ax4.title.set_text("uav relative velocity to target")
         ax5.plot(
             uav_state[idx, :, 0],
             uav_state[idx, :, 1],
@@ -222,6 +231,8 @@ def plot_uav_states(num_uavs, results, num_episode=0):
             label=f"uav_id:{idx}",
         )
     ax5.plot(target_state[:, 0], target_state[:, 1], target_state[:, 2], label="target")
+    for ax_ in axs:
+        ax_.legend()
     plt.legend()
     plt.show()
 
