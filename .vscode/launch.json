@@ -16,6 +16,22 @@
             }
         },
         {
+            "name": "train_multi_uav",
+            "type": "python",
+            "request": "launch",
+            "program": "${cwd}/multi_agent_shared_parameter.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}",
+            "env": {
+                // "DISPLAY": "192.168.1.18:0.0"
+            },
+            "args": [
+                "--gpu",
+                "1"
+            ]
+        },
+        {
             "name": "Run Multi Experiment",
             "type": "python",
             "request": "launch",

@@ -1,9 +1,6 @@
-from math import isclose
 import sys
 from gym import spaces
 import numpy as np
-import gym
-
 from gym.utils import seeding
 from uav_sim.agents.uav import Obstacle, UavBase, Uav, ObsType
 from uav_sim.agents.uav import Target
@@ -12,11 +9,13 @@ from qpsolvers import solve_qp
 from scipy.integrate import odeint
 import logging
 import random
+from ray.rllib.env.multi_agent_env import MultiAgentEnv
+
 
 logger = logging.getLogger(__name__)
 
 
-class UavSim(gym.Env):
+class UavSim(MultiAgentEnv):
     metadata = {
         "render_modes": ["human", "rgb_array"],
         "render_fps": 30,
@@ -337,7 +336,8 @@ class UavSim(gym.Env):
 
         # newer API to return truncated
         # return obs, reward, done, self.time_elapsed >= self.max_time, info
-        return obs, reward, done, info
+        # return obs, reward, terminated, truncated, info
+        return obs, reward, done, done, info
 
     def _get_info(self):
         """Must be called after _get_reward
@@ -446,7 +446,7 @@ class UavSim(gym.Env):
         seed = seeding.np_random(seed)
         return [seed]
 
-    def reset(self, seed=None, options=None):
+    def reset(self, *, seed=None, options=None):
         """_summary_
 
         Args:
@@ -550,8 +550,9 @@ class UavSim(gym.Env):
             self.uavs.append(uav)
 
         obs = {uav.id: self._get_obs(uav) for uav in self.uavs}
-
-        return obs
+        reward = {uav.id: self._get_reward(uav) for uav in self.uavs}
+        info = self._get_info()
+        return obs, info
 
     def unscale_action(self, action):
         """[summary]

@@ -213,3 +213,42 @@ https://github.com/vwxyzjn/ppo-implementation-details/blob/main/ppo_continuous_a
 https://github.com/marlbenchmark/on-policy/blob/main/onpolicy/algorithms/r_mappo/r_mappo.py
 * refactor uav class to be modular [done]
 * update uav reward to be more in line with: https://arc.aiaa.org/doi/epdf/10.2514/1.I010961
+
+
+In order to fix this problem, do the following:
+
+1) Run `pip install gymnasium` on your command line.
+2) Change all your import statements in your code from
+   `import gym` -> `import gymnasium as gym` OR
+   `from gym.space import Discrete` -> `from gymnasium.spaces import Discrete`
+
+For your custom (single agent) gym.Env classes:
+3.1) Either wrap your old Env class via the provided `from gymnasium.wrappers import
+     EnvCompatibility` wrapper class.
+3.2) Alternatively to 3.1:
+ - Change your `reset()` method to have the call signature 'def reset(self, *,
+   seed=None, options=None)'
+ - Return an additional info dict (empty dict should be fine) from your `reset()`
+   method.
+ - Return an additional `truncated` flag from your `step()` method (between `done` and
+   `info`). This flag should indicate, whether the episode was terminated prematurely
+   due to some time constraint or other kind of horizon setting.
+
+For your custom RLlib `MultiAgentEnv` classes:
+4.1) Either wrap your old MultiAgentEnv via the provided
+     `from ray.rllib.env.wrappers.multi_agent_env_compatibility import
+     MultiAgentEnvCompatibility` wrapper class.
+4.2) Alternatively to 4.1:
+ - Change your `reset()` method to have the call signature
+   'def reset(self, *, seed=None, options=None)'
+ - Return an additional per-agent info dict (empty dict should be fine) from your
+   `reset()` method.
+ - Rename `dones` into `terminateds` and only set this to True, if the episode is really
+   done (as opposed to has been terminated prematurely due to some horizon/time-limit
+   setting).
+ - Return an additional `truncateds` per-agent dictionary flag from your `step()`
+   method, including the `__all__` key (100% analogous to your `dones/terminateds`
+   per-agent dict).
+   Return this new `truncateds` dict between `dones/terminateds` and `infos`. This
+   flag should indicate, whether the episode (for some agent or all agents) was
+   terminated prematurely due to some time constraint or other kind of horizon setting.
