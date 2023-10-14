@@ -182,7 +182,7 @@ class Target(Entity):
         vd = des_cir_traj[3]
         wd = des_cir_traj[4]
         zeta = 0.7
-        b = ((4 / (zeta * .8)) ** 2 - wd**2) / (vd**2)
+        b = ((4 / (zeta * 0.8)) ** 2 - wd**2) / (vd**2)
         k1 = k3 = 2.0 * zeta * np.sqrt(wd**2 + b * vd**2)
         k2 = b * np.abs(vd)
 
@@ -309,15 +309,19 @@ class UavBase(Entity):
 
         self._state[2] = max(0, self._state[2])
 
-    # TODO: Combine the functions below into one
-    def get_landed(self, pad):
-        dist = np.linalg.norm(self._state[0:3] - pad._state[0:3])
-        return dist <= 0.01
+    # # TODO: Combine the functions below into one
+    # def get_landed(self, pad):
+    #     dist = np.linalg.norm(self._state[0:3] - pad._state[0:3])
+    #     return dist <= 0.01
 
     # TODO: combine into one.
-    def check_dest_reached(self):
-        dist = np.linalg.norm(self._state[0:3] - self.pad._state[0:3])
-        return dist <= 0.01, dist
+    def check_dest_reached(self, pad=None):
+        if pad is None:
+            pad = self.pad
+
+        rel_dist = np.linalg.norm(self._state[0:3] - pad._state[0:3])
+        rel_vel = np.linalg.norm(self._state[0:3] - pad._state[0:3])
+        return rel_dist <= (self.r + pad.r), rel_dist, rel_vel
 
     # TODO: combine with equations above
     def get_rel_pad_dist(self):

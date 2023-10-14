@@ -46,6 +46,8 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
     uav_collision_list = [[] for idx in range(env.num_uavs)]
     obstacle_collision_list = [[] for idx in range(env.num_uavs)]
     uav_done_list = [[] for idx in range(env.num_uavs)]
+    uav_done_dt_list = [[] for idx in range(env.num_uavs)]
+    uav_dt_go_list = [[] for idx in range(env.num_uavs)]
     rel_pad_dist = [[] for idx in range(env.num_uavs)]
     rel_pad_vel = [[] for idx in range(env.num_uavs)]
     uav_state = [[] for idx in range(env.num_uavs)]
@@ -60,10 +62,11 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
         "episode_time": [],
         "episode_data": {
             "time_step_list": [],
-            "time_step_list": [],
             "uav_collision_list": [],
             "obstacle_collision_list": [],
             "uav_done_list": [],
+            "uav_done_dt_list": [],
+            "uav_dt_go_list": [],
             "rel_pad_dist": [],
             "rel_pad_vel": [],
             "uav_state": [],
@@ -92,7 +95,7 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
                 else:
                     print("unknow safe action type")
 
-        obs, rew, done, info = env.step(actions)
+        obs, rew, done, truncated, info = env.step(actions)
         for k, v in info.items():
             results["uav_collision"] += v["uav_collision"]
             results["obs_collision"] += v["obstacle_collision"]
@@ -101,6 +104,8 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
             uav_collision_list[k].append(v["uav_collision"])
             obstacle_collision_list[k].append(v["obstacle_collision"])
             uav_done_list[k].append(v["uav_landed"])
+            uav_done_dt_list[k].append(v["uav_done_dt"])
+            uav_dt_go_list[k].append(v["uav_dt_go"])
             rel_pad_dist[k].append(v["uav_rel_dist"])
             rel_pad_vel[k].append(v["uav_rel_vel"])
 
@@ -115,7 +120,7 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
             num_episodes += 1
             for k, v in info.items():
                 results["uav_done"][k].append(v["uav_landed"])
-                results["uav_done_time"][k].append(v["uav_done_time"])
+                results["uav_done_time"][k].append(v["uav_done_dt"])
             results["num_episodes"] = num_episodes
             results["episode_time"].append(env.time_elapsed)
             results["episode_data"]["time_step_list"].append(time_step_list)
@@ -124,22 +129,15 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
                 obstacle_collision_list
             )
             results["episode_data"]["uav_done_list"].append(uav_done_list)
+            results["episode_data"]["uav_done_dt_list"].append(uav_done_dt_list)
+            results["episode_data"]["uav_dt_go_list"].append(uav_dt_go_list)
             results["episode_data"]["rel_pad_dist"].append(rel_pad_dist)
             results["episode_data"]["rel_pad_vel"].append(rel_pad_vel)
             results["episode_data"]["uav_state"].append(uav_state)
             results["episode_data"]["target_state"].append(target_state)
 
             if plot_results:
-                plot_uav_states(
-                    env.num_uavs,
-                    uav_collision_list,
-                    obstacle_collision_list,
-                    uav_done_list,
-                    rel_pad_dist,
-                    rel_pad_vel,
-                    uav_state,
-                    target_state,
-                )
+                plot_uav_states(env.num_uavs, results, num_episodes - 1)
 
             if num_episodes == max_num_episodes:
                 end_time = time() - start_time
@@ -152,6 +150,8 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
             uav_collision_list = [[] for idx in range(env.num_uavs)]
             obstacle_collision_list = [[] for idx in range(env.num_uavs)]
             uav_done_list = [[] for idx in range(env.num_uavs)]
+            uav_done_dt_list = [[] for idx in range(env.num_uavs)]
+            uav_dt_go_list = [[] for idx in range(env.num_uavs)]
             rel_pad_dist = [[] for idx in range(env.num_uavs)]
             rel_pad_vel = [[] for idx in range(env.num_uavs)]
             uav_state = [[] for idx in range(env.num_uavs)]
@@ -180,22 +180,28 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
     logger.debug("done")
 
 
-def plot_uav_states(
-    num_uavs,
-    uav_collision_list,
-    obstacle_collision_list,
-    uav_done_list,
-    rel_pad_dist,
-    rel_pad_vel,
-    uav_state,
-    target_state,
-):
-    uav_state = np.array(uav_state)
-    target_state = np.array(target_state)
+def plot_uav_states(num_uavs, results, num_episode=0):
+    uav_collision_list = results["episode_data"]["uav_collision_list"][num_episode]
+    obstacle_collision_list = results["episode_data"]["obstacle_collision_list"][
+        num_episode
+    ]
+    uav_done_list = results["episode_data"]["uav_done_list"][num_episode]
+    uav_done_dt_list = results["episode_data"]["uav_done_dt_list"][num_episode]
+    uav_dt_go_list = results["episode_data"]["uav_dt_go_list"][num_episode]
+    rel_pad_dist = results["episode_data"]["rel_pad_dist"][num_episode]
+    rel_pad_vel = results["episode_data"]["rel_pad_vel"][num_episode]
+
+    uav_state = np.array(results["episode_data"]["uav_state"])[num_episode]
+    target_state = np.array(results["episode_data"]["target_state"])[num_episode]
+
     fig = plt.figure(figsize=(10, 6))
-    ax = fig.add_subplot(311)
-    ax1 = fig.add_subplot(312)
-    ax2 = fig.add_subplot(313)
+    ax = fig.add_subplot(211)
+    ax1 = fig.add_subplot(212)
+
+    fig = plt.figure(figsize=(10, 6))
+    ax21 = fig.add_subplot(311)
+    ax22 = fig.add_subplot(312)
+    ax23 = fig.add_subplot(313)
     fig = plt.figure(figsize=(10, 6))
     ax3 = fig.add_subplot(211)
     ax4 = fig.add_subplot(212)
@@ -204,7 +210,9 @@ def plot_uav_states(
     for idx in range(num_uavs):
         ax.plot(uav_collision_list[idx], label=f"uav_id:{idx}")
         ax1.plot(obstacle_collision_list[idx], label=f"uav_id:{idx}")
-        ax2.plot(uav_done_list[idx], label=f"uav_id:{idx}")
+        ax21.plot(uav_done_list[idx], label=f"uav_id:{idx}")
+        ax22.plot(uav_done_dt_list[idx], label=f"uav_id:{idx}")
+        ax23.plot(uav_dt_go_list[idx], label=f"uav_id:{idx}")
         ax3.plot(rel_pad_dist[idx], label=f"uav_id:{idx}")
         ax4.plot(rel_pad_vel[idx], label=f"uav_id:{idx}")
         ax5.plot(
