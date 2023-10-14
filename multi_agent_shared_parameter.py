@@ -14,6 +14,7 @@ from ray.tune.registry import get_trainable_cls
 from ray.rllib.utils import check_env
 from ray.rllib.algorithms.callbacks import make_multi_callbacks
 from uav_sim.utils.callbacks import TrainCallback
+from ray.rllib.examples.env.multi_agent import FlexAgentsMultiAgent
 
 
 max_num_cpus = os.cpu_count() - 1
@@ -76,9 +77,11 @@ def parse_arguments():
 
 
 def train(args):
+    args.local_mode = True
     ray.init(local_mode=args.local_mode)
     # ray.init()
     temp_env = UavSim(args.config)
+    # temp_env = FlexAgentsMultiAgent()
     # observer_space = temp_env.observation_space[0]
     # action_space = temp_env
 
@@ -103,17 +106,25 @@ def train(args):
         )
         .training(
             lr=8e-5,
-            use_gae=True,
-            use_critic=True,
-            lambda_=0.95,
-            train_batch_size=65536,
-            gamma=0.99,
-            num_sgd_iter=32,
-            sgd_minibatch_size=4096,
-            vf_clip_param=10.0,
-            vf_loss_coeff=0.5,
+            # use_gae=True,
+            # use_critic=True,
+            # lambda_=0.95,
+            # train_batch_size=65536,
+            # gamma=0.99,
+            # num_sgd_iter=32,
+            # sgd_minibatch_size=4096,
+            # vf_clip_param=10.0,
+            # vf_loss_coeff=0.5,
         )
         .multi_agent(
+            # policies={
+            #     "shared_policy": (
+            #         None,
+            #         temp_env.observation_space,
+            #         temp_env.action_space,
+            #         {},
+            #     )
+            # },
             policies={
                 "shared_policy": (
                     None,
@@ -128,7 +139,7 @@ def train(args):
             ),
             # policies_to_train=[""]
         )
-        .reporting(keep_per_episode_custom_metrics=True)
+        # .reporting(keep_per_episode_custom_metrics=True)
         # .evaluation(
         #     evaluation_interval=10, evaluation_duration=10  # default number of episodes
         # )
@@ -173,6 +184,7 @@ if __name__ == "__main__":
     env_config = args.config["env_config"]
 
     register_env(args.env_name, lambda env_config: UavSim(env_config))
+    # register_env(args.env_name, lambda _: FlexAgentsMultiAgent() )
 
     # check_env(UavSim(env_config))
     train(args)

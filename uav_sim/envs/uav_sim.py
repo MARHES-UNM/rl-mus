@@ -35,9 +35,9 @@ class UavSim(MultiAgentEnv):
             f"Max number of obstacles {self.max_num_obstacles} is less than number of obstacles {self.num_obstacles}"
         )
         self.obstacle_collision_weight = env_config.setdefault(
-            "obstacle_collision_weight", .1
+            "obstacle_collision_weight", 0.1
         )
-        self.uav_collision_weight = env_config.setdefault("uav_collision_weight", .1)
+        self.uav_collision_weight = env_config.setdefault("uav_collision_weight", 0.1)
         self._use_safe_action = env_config.setdefault("use_safe_action", False)
         self.time_final = env_config.setdefault("time_final", 20.0)
         self.t_go_max = env_config.setdefault("t_go_max", 3.0)
@@ -145,7 +145,7 @@ class UavSim(MultiAgentEnv):
         """Return single uav constraint"""
         constraints = []
 
-        for other_uav in self.uavs:
+        for other_uav in self.uavs.values():
             if other_uav.id != uav.id:
                 delta_p = uav.pos - other_uav.pos
 
@@ -255,7 +255,7 @@ class UavSim(MultiAgentEnv):
         q = -np.dot(P.T, u_in)
 
         # other agents
-        for other_uav in self.uavs:
+        for other_uav in self.uavs.values():
             if other_uav.id != uav.id:
                 G.append(-(uav.pos - other_uav.pos).T)
                 b = self.get_b(uav, other_uav)
@@ -329,16 +329,20 @@ class UavSim(MultiAgentEnv):
         for obstacle in self.obstacles:
             obstacle.step(np.array([self.target.vx, self.target.vy]))
 
-        obs = {uav.id: self._get_obs(uav) for uav in self.uavs}
-        reward = {uav.id: self._get_reward(uav) for uav in self.uavs}
-        done = self._get_done()
+        # for id in self.terminateds:
+        #     # del self.uavs[id]
+        #     self._agent_ids.remove(id)
+
+        obs = {uav.id: self._get_obs(uav) for uav in self.uavs.values()}
+        reward = {uav.id: self._get_reward(uav) for uav in self.uavs.values()}
         info = self._get_info()
+        terminated, truncated = self._get_done()
         self._time_elapsed += self.dt
 
         # newer API to return truncated
         # return obs, reward, done, self.time_elapsed >= self.max_time, info
         # return obs, reward, terminated, truncated, info
-        return obs, reward, done, done, info
+        return obs, reward, terminated, truncated, info
 
     def _get_info(self):
         """Must be called after _get_reward
@@ -348,7 +352,7 @@ class UavSim(MultiAgentEnv):
         """
         info = {}
 
-        for uav in self.uavs:
+        for uav in self.uavs.values():
             info[uav.id] = {
                 "time_step": self.time_elapsed,
                 "obstacle_collision": uav.obs_collision,
@@ -371,7 +375,11 @@ class UavSim(MultiAgentEnv):
 
     def _get_obs(self, uav):
         other_uav_states = np.array(
-            [other_uav.state for other_uav in self.uavs if uav.id != other_uav.id]
+            [
+                other_uav.state
+                for other_uav in self.uavs.values()
+                if uav.id != other_uav.id
+            ]
         )
 
         closest_obstacles = self._get_closest_obstacles(uav)
@@ -429,7 +437,7 @@ class UavSim(MultiAgentEnv):
             reward += 1.0
 
         # neg reward if uav collides with other uavs
-        for other_uav in self.uavs:
+        for other_uav in self.uavs.values():
             if uav.id != other_uav.id and uav.in_collision(other_uav):
                 reward -= self.uav_collision_weight
                 # uav.done = True
@@ -450,13 +458,32 @@ class UavSim(MultiAgentEnv):
         """Outputs if sim is done based on entity's states.
         Must calculate _get_reward first.
         """
-        done = {uav.id: uav.done for uav in self.uavs}
+        terminated = truncated = {}
+        uavs_dict = self.uavs.copy()
+        for uav in uavs_dict.values():
+            # if uav.id in self.terminateds:
+            #     terminated[uav.id] = False
+            #     truncated[uav.id] = False
+            # else:
+            terminated[uav.id] = uav.done
+            truncated[uav.id] = uav.done
+            if uav.done and len(self.uavs) > 1:
+                self.truncateds.add(uav.id)
+                self.terminateds.add(uav.id)
+                # del self.uavs[uav.id]
+                self._agent_ids.remove(uav.id)
+        # terminated = truncated = {uav.id: uav.done for uav in self.uavs.values()}
+
+        # self.uavs = {uav.id: uav for uav in self.uavs.values() if not uav.done}
 
         # Done when Target is reached for all uavs
-        done["__all__"] = (
-            all(val for val in done.values()) or self.time_elapsed >= self.max_time
-        )
-        return done
+        all_done = all(val for val in terminated.values())
+        time_done = self.time_elapsed >= self.max_time
+        terminated["__all__"] = all_done
+
+        truncated["__all__"] = all_done or time_done
+
+        return terminated, truncated
 
     def seed(self, seed=None):
         """Random value to seed"""
@@ -482,6 +509,7 @@ class UavSim(MultiAgentEnv):
             self.close_gui()
 
         self._time_elapsed = 0.0
+        self._agent_ids = set(range(self.num_uavs))
 
         # TODO ensure we don't start in collision states
         # Reset Target
@@ -515,7 +543,7 @@ class UavSim(MultiAgentEnv):
                 if uav.in_collision(obstacle):
                     return True
 
-            for other_uav in self.uavs:
+            for other_uav in self.uavs.values():
                 if uav.in_collision(other_uav):
                     return True
 
@@ -550,7 +578,7 @@ class UavSim(MultiAgentEnv):
             self.obstacles.append(obstacle)
 
         # Reset UAVs
-        self.uavs = []
+        self.uavs = {}
         for agent_id in self._agent_ids:
             in_collision = True
 
@@ -568,11 +596,14 @@ class UavSim(MultiAgentEnv):
                 )
                 in_collision = is_in_collision(uav)
 
-            self.uavs.append(uav)
+            # self.uavs.append(uav)
+            self.uavs[agent_id] = uav
 
-        obs = {uav.id: self._get_obs(uav) for uav in self.uavs}
-        reward = {uav.id: self._get_reward(uav) for uav in self.uavs}
+        obs = {uav.id: self._get_obs(uav) for uav in self.uavs.values()}
+        reward = {uav.id: self._get_reward(uav) for uav in self.uavs.values()}
         info = self._get_info()
+        self.terminateds = set()
+        self.truncateds = set()
         return obs, info
 
     def unscale_action(self, action):
