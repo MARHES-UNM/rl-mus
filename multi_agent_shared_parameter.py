@@ -49,12 +49,12 @@ def parse_arguments():
     )
 
     parser.add_argument(
-        "--stop-iters", type=int, default=10, help="Number of iterations to train."
+        "--stop-iters", type=int, default=1000, help="Number of iterations to train."
     )
     parser.add_argument(
         "--stop-timesteps",
         type=int,
-        default=6000,
+        default=3000000,
         help="Number of timesteps to train.",
     )
 
@@ -89,7 +89,7 @@ def train(args):
         .get_default_config()
         .environment(env=args.env_name, env_config=args.config["env_config"])
         .framework(args.framework)
-        .callbacks(multi_callbacks)
+        # .callbacks(multi_callbacks)
         .rollouts(
             num_rollout_workers=1,  # set 0 to main worker run sim
             batch_mode="complete_episodes",

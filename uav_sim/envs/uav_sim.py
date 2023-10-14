@@ -35,9 +35,9 @@ class UavSim(MultiAgentEnv):
             f"Max number of obstacles {self.max_num_obstacles} is less than number of obstacles {self.num_obstacles}"
         )
         self.obstacle_collision_weight = env_config.setdefault(
-            "obstacle_collision_weight", 1
+            "obstacle_collision_weight", .1
         )
-        self.uav_collision_weight = env_config.setdefault("uav_collision_weight", 1)
+        self.uav_collision_weight = env_config.setdefault("uav_collision_weight", .1)
         self._use_safe_action = env_config.setdefault("use_safe_action", False)
         self.time_final = env_config.setdefault("time_final", 20.0)
         self.t_go_max = env_config.setdefault("t_go_max", 3.0)
@@ -410,11 +410,11 @@ class UavSim(MultiAgentEnv):
             uav.done_dt = self.time_final - self.time_elapsed
 
             # get reward for reaching destination
-            reward += 1.0
+            reward += 100.0
 
             # get reward for reaching destination in time
             if uav.done_dt <= self.t_go_max:
-                reward += 1.0
+                reward += 100.0
 
             # No need to check for other reward, UAV is done.
             return reward
