@@ -7,11 +7,14 @@ import numpy as np
 from uav_sim.envs.uav_sim import UavSim
 from pathlib import Path
 import mpl_toolkits.mplot3d.art3d as art3d
+from ray.rllib.algorithms.algorithm import Algorithm
+from ray.rllib.algorithms.ppo import PPOConfig
 
 import os
 import logging
 import json
 from uav_sim.utils.safety_layer import SafetyLayer
+from ray import tune
 
 from uav_sim.utils.utils import get_git_hash
 
@@ -38,6 +41,40 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
     plot_results = exp_config["plot_results"]
 
     env = UavSim(env_config)
+
+    # checkpoint = exp_config.get("checkpoint", None)
+    checkpoint = exp_config.get(
+        "checkpoint",
+        "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-10-15-09-28_48a3502/param_search/PPO_multi-uav-sim-v0_c4a2a_00002_2_beta=0.0900,obstacle_collision_weight=0.5500,uav_collision_weight=0.1000_2023-10-15_09-28-46/checkpoint_000210",
+    )
+    algo_to_run = exp_config.get("run", "PPO")
+    if checkpoint:
+        algo = Algorithm.from_checkpoint(checkpoint)
+    elif algo_to_run == "PPO":
+        algo = (
+            PPOConfig()
+            .environment(env=exp_config["env_name"])
+            .resources(num_gpus=0)
+            .rollouts(num_rollout_workers=1)
+            .multi_agent(
+                policies={
+                    "shared_policy": (
+                        None,
+                        env.observation_space[0],
+                        env.action_space[0],
+                        {},
+                    )
+                },
+                # Always use "shared" policy.
+                policy_mapping_fn=(
+                    lambda agent_id, episode, worker, **kwargs: "shared_policy"
+                ),
+            )
+            .framework("torch")
+            .build()
+        )
+
+    policy_to_run = algo.get_policy("shared_policy")
 
     if exp_config["exp_config"]["safe_action_type"] == "nn_cbf":
         sl = SafetyLayer(env, exp_config["safety_layer_cfg"])
@@ -75,7 +112,8 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
     }
 
     num_episodes = 0
-    obs, done = env.reset(), {i.id: False for i in env.uavs}
+    env_out, done = env.reset(), {i.id: False for i in env.uavs.values()}
+    obs, info = env_out
     done["__all__"] = False
 
     logger.debug("running experiment")
@@ -85,7 +123,10 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
     while num_episodes < max_num_episodes:
         actions = {}
         for idx in range(env.num_uavs):
-            actions[idx] = env.get_time_coord_action(env.uavs[idx])
+            # actions[idx] = env.get_time_coord_action(env.uavs[idx])
+            actions[idx] = algo.compute_single_action(
+                obs[idx], policy_id="shared_policy"
+            )
 
             if exp_config["exp_config"]["safe_action_type"] != "none":
                 if exp_config["exp_config"]["safe_action_type"] == "cbf":
@@ -142,7 +183,10 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
             if num_episodes == max_num_episodes:
                 end_time = time() - start_time
                 break
-            obs, done = env.reset(), {agent.id: False for agent in env.uavs}
+            env_out, done = env.reset(), {
+                agent.id: False for agent in env.uavs.values()
+            }
+            obs, info = env_out
             done["__all__"] = False
 
             # reinitialize data arrays
@@ -247,6 +291,7 @@ def parse_arguments():
     parser.add_argument("-v", help="version number of experiment")
     parser.add_argument("--max_num_episodes", type=int, default=1)
     parser.add_argument("--experiment_num", type=int, default=0)
+    parser.add_argument("--env_name", type=str, default="multi-uav-sim-v0")
     parser.add_argument("--render", action="store_true", default=False)
     parser.add_argument("--write_exp", action="store_true")
     parser.add_argument("--plot_results", action="store_true", default=False)
@@ -262,6 +307,13 @@ def main():
     if args.load_config:
         with open(args.load_config, "rt") as f:
             args.config = json.load(f)
+
+    if args.env_name == "multi-uav-sim-v0":
+        args.config["env_name"] = args.env_name
+        tune.register_env(
+            args.config["env_name"],
+            lambda env_config: UavSim(env_config=env_config),
+        )
 
     args.config["env_config"].update(
         {
