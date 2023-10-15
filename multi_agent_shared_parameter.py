@@ -12,7 +12,8 @@ import argparse
 import ray
 from ray.tune.registry import get_trainable_cls
 from ray.rllib.utils import check_env
-from ray.rllib.algorithms.callbacks import make_multi_callbacks
+
+# from ray.rllib.algorithms.callbacks import make_multi_callbacks
 from uav_sim.utils.callbacks import TrainCallback
 from ray.rllib.examples.env.multi_agent import FlexAgentsMultiAgent
 
@@ -86,7 +87,7 @@ def train(args):
     # action_space = temp_env
 
     callback_list = [TrainCallback]
-    multi_callbacks = make_multi_callbacks(callback_list)
+    # multi_callbacks = make_multi_callbacks(callback_list)
     train_config = (
         get_trainable_cls(args.run)
         .get_default_config()
@@ -180,6 +181,11 @@ if __name__ == "__main__":
         args.log_dir = (
             f"./results/{args.run}/{args.env_name}_{dir_timestamp}_{branch_hash}"
         )
+
+        logdir = Path(args.log_dir)
+        
+        if not logdir.exists():
+            logdir.mkdir(parents=True, exist_ok=True)
 
     env_config = args.config["env_config"]
 
