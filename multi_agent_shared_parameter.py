@@ -56,7 +56,7 @@ def parse_arguments():
     parser.add_argument(
         "--stop-timesteps",
         type=int,
-        default=3000000,
+        default=int(30e6),
         help="Number of timesteps to train.",
     )
 
@@ -69,10 +69,10 @@ def parse_arguments():
     parser.add_argument("--env_name", type=str, default="multi-uav-sim-v0")
 
     parser.add_argument("--checkpoint", type=str)
-    parser.add_argument("--cpu", type=int, default=12)
+    parser.add_argument("--cpu", type=int, default=8)
     parser.add_argument("--gpu", type=int, default=1)
     parser.add_argument("--num_envs_per_worker", type=int, default=12)
-    parser.add_argument("--num_rollout_workers", type=int, default=12)
+    parser.add_argument("--num_rollout_workers", type=int, default=8)
 
     args = parser.parse_args()
 
@@ -105,7 +105,7 @@ def train(args):
         .debugging(log_level="ERROR", seed=123)  # DEBUG, INFO
         .resources(
             num_gpus=num_gpus,
-            num_learner_workers=0,
+            num_learner_workers=args.gpu,
             # num_gpus=args.gpu,
             # num_cpus_per_worker=args.cpu,
             # num_gpus_per_worker=args.gpu,

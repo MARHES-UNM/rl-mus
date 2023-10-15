@@ -439,7 +439,8 @@ class UavSim(MultiAgentEnv):
             )
 
         # get reward if uav maintains time difference
-        if uav.dt_go <= self.t_go_max:
+        t_remaining = self.time_final - self.time_elapsed
+        if t_remaining > 0 and abs(t_remaining - uav.dt_go) <= self.t_go_max:
             reward += 1.0
 
         # neg reward if uav collides with other uavs
