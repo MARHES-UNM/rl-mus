@@ -42,6 +42,7 @@ class UavSim(MultiAgentEnv):
         self.time_final = env_config.setdefault("time_final", 20.0)
         self.t_go_max = env_config.setdefault("t_go_max", 3.0)
         self.t_go_n = env_config.setdefault("t_go_n", 1.0)
+        self._beta = env_config.setdefault("beta", 1.0)
 
         self._agent_ids = set(range(self.num_uavs))
         self._uav_type = getattr(
@@ -434,8 +435,9 @@ class UavSim(MultiAgentEnv):
             # return reward
 
         else:
-            reward -= rel_dist / np.linalg.norm(
-                [self.env_max_l, self.env_max_w, self.env_max_h]
+            reward -= self._beta * (
+                rel_dist
+                / np.linalg.norm([self.env_max_l, self.env_max_w, self.env_max_h])
             )
 
         # get reward if uav maintains time difference

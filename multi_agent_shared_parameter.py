@@ -70,9 +70,9 @@ def parse_arguments():
 
     parser.add_argument("--checkpoint", type=str)
     parser.add_argument("--cpu", type=int, default=12)
-    parser.add_argument("--gpu", type=int, default=1)
+    parser.add_argument("--gpu", type=int, default=0.25)
     parser.add_argument("--num_envs_per_worker", type=int, default=12)
-    parser.add_argument("--num_rollout_workers", type=int, default=12)
+    parser.add_argument("--num_rollout_workers", type=int, default=4)
 
     args = parser.parse_args()
 
@@ -86,6 +86,12 @@ def train(args):
 
     temp_env = UavSim(args.config)
     num_gpus = int(os.environ.get("RLLIB_NUM_GPUS", args.gpu))
+
+    args.config["env_config"]["beta"] = tune.grid_search([0.09, 0.5])
+    args.config["env_config"]["uav_collision_weight"] = tune.grid_search([0.1, 0.5])
+    args.config["env_config"]["obstacle_collision_weight"] = tune.grid_search(
+        [0.15, 0.55]
+    )
 
     callback_list = [TrainCallback]
     multi_callbacks = make_multi_callbacks(callback_list)
@@ -105,7 +111,7 @@ def train(args):
         .debugging(log_level="ERROR", seed=123)  # DEBUG, INFO
         .resources(
             num_gpus=num_gpus,
-            num_learner_workers=args.gpu,
+            num_learner_workers=1,
             # num_gpus=args.gpu,
             # num_cpus_per_worker=args.cpu,
             # num_gpus_per_worker=args.gpu,
@@ -123,6 +129,11 @@ def train(args):
             sgd_minibatch_size=4096,
             vf_clip_param=10.0,
             vf_loss_coeff=0.5,
+            # clip_param=0.2,
+            # entropy_coeff=0.0,
+            # grad_clip=0.5,
+            # kl_coeff=1,
+            # kl_target=0.0068,
         )
         .multi_agent(
             policies={
@@ -165,6 +176,7 @@ def train(args):
         run_config=air.RunConfig(
             stop=stop,
             local_dir=args.log_dir,
+            name=args.name,
             checkpoint_config=air.CheckpointConfig(
                 checkpoint_at_end=True, checkpoint_frequency=5
             ),
