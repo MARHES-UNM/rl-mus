@@ -69,10 +69,10 @@ def parse_arguments():
     parser.add_argument("--env_name", type=str, default="multi-uav-sim-v0")
 
     parser.add_argument("--checkpoint", type=str)
-    parser.add_argument("--cpu", type=int, default=8)
+    parser.add_argument("--cpu", type=int, default=12)
     parser.add_argument("--gpu", type=int, default=1)
     parser.add_argument("--num_envs_per_worker", type=int, default=12)
-    parser.add_argument("--num_rollout_workers", type=int, default=8)
+    parser.add_argument("--num_rollout_workers", type=int, default=12)
 
     args = parser.parse_args()
 
@@ -113,17 +113,16 @@ def train(args):
         )
         # See for specific ppo config: https://docs.ray.io/en/latest/rllib/rllib-algorithms.html#ppo
         .training(
-            # lr=5e-5,
             lr=8e-5,
-            # use_gae=True,
-            # use_critic=True,
-            # lambda_=0.95,
-            # train_batch_size=65536,
-            # gamma=0.99,
-            # num_sgd_iter=32,
-            # sgd_minibatch_size=4096,
-            # vf_clip_param=10.0,
-            # vf_loss_coeff=0.5,
+            use_gae=True,
+            use_critic=True,
+            lambda_=0.95,
+            train_batch_size=65536,
+            gamma=0.99,
+            num_sgd_iter=32,
+            sgd_minibatch_size=4096,
+            vf_clip_param=10.0,
+            vf_loss_coeff=0.5,
         )
         .multi_agent(
             policies={
