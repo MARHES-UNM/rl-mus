@@ -69,8 +69,10 @@ def parse_arguments():
     parser.add_argument("--env_name", type=str, default="multi-uav-sim-v0")
 
     parser.add_argument("--checkpoint", type=str)
-    parser.add_argument("--cpu", type=int, default=8)
-    parser.add_argument("--gpu", type=int, default=0)
+    parser.add_argument("--cpu", type=int, default=12)
+    parser.add_argument("--gpu", type=int, default=1)
+    parser.add_argument("--num_envs_per_worker", type=int, default=12)
+    parser.add_argument("--num_rollout_workers", type=int, default=12)
 
     args = parser.parse_args()
 
@@ -78,16 +80,16 @@ def parse_arguments():
 
 
 def train(args):
-    args.local_mode = True
-    ray.init(local_mode=args.local_mode)
-    # ray.init()
+    # args.local_mode = True
+    # ray.init(local_mode=args.local_mode, num_gpus=1)
+    ray.init(num_gpus=1)
+
     temp_env = UavSim(args.config)
-    # temp_env = FlexAgentsMultiAgent()
-    # observer_space = temp_env.observation_space[0]
-    # action_space = temp_env
+    num_gpus = int(os.environ.get("RLLIB_NUM_GPUS", args.gpu))
 
     callback_list = [TrainCallback]
     multi_callbacks = make_multi_callbacks(callback_list)
+    # info on common configs: https://docs.ray.io/en/latest/rllib/rllib-training.html#specifying-rollout-workers
     train_config = (
         get_trainable_cls(args.run)
         .get_default_config()
@@ -95,16 +97,23 @@ def train(args):
         .framework(args.framework)
         .callbacks(multi_callbacks)
         .rollouts(
-            num_rollout_workers=1,  # set 0 to main worker run sim
+            num_rollout_workers=args.num_rollout_workers,  # set 0 to main worker run sim
+            num_envs_per_worker=args.num_envs_per_worker,
             batch_mode="complete_episodes",
         )
         # Use GPUs iff `RLLIB_NUM_GPUS` env var set to > 0.
         .debugging(log_level="ERROR", seed=123)  # DEBUG, INFO
         .resources(
-            num_gpus=int(os.environ.get("RLLIB_NUM_GPUS", args.gpu)),
-            num_cpus_per_worker=args.cpu,
+            num_gpus=num_gpus,
+            num_learner_workers=0,
+            # num_gpus=args.gpu,
+            # num_cpus_per_worker=args.cpu,
+            # num_gpus_per_worker=args.gpu,
+            num_gpus_per_learner_worker=args.gpu,
         )
+        # See for specific ppo config: https://docs.ray.io/en/latest/rllib/rllib-algorithms.html#ppo
         .training(
+            # lr=5e-5,
             lr=8e-5,
             # use_gae=True,
             # use_critic=True,
@@ -117,14 +126,6 @@ def train(args):
             # vf_loss_coeff=0.5,
         )
         .multi_agent(
-            # policies={
-            #     "shared_policy": (
-            #         None,
-            #         temp_env.observation_space,
-            #         temp_env.action_space,
-            #         {},
-            #     )
-            # },
             policies={
                 "shared_policy": (
                     None,
@@ -150,19 +151,37 @@ def train(args):
         "timesteps_total": args.stop_timesteps,
     }
 
+    # algo = train_config.build()
+
+    # while True:
+    #     algo.train()
+
+    # # # trainable_with_resources = tune.with_resources(args.run, {"cpu": 18, "gpu": 1.0})
+    # # # If you have 4 CPUs and 1 GPU on your machine, this will run 1 trial at a time.
+    # # trainable_with_cpu_gpu = tune.with_resources(algo, {"cpu": 2, "gpu": 1})
     tuner = tune.Tuner(
         args.run,
+        # trainable_with_cpu_gpu,
         param_space=train_config.to_dict(),
         run_config=air.RunConfig(
             stop=stop,
             local_dir=args.log_dir,
             checkpoint_config=air.CheckpointConfig(
-                checkpoint_at_end=True, checkpoint_frequency=30
+                checkpoint_at_end=True, checkpoint_frequency=5
             ),
         ),
     )
 
     results = tuner.fit()
+
+    # results = tune.run(
+    #     args.run,
+    #     stop=stop,
+    #     config=train_config.to_dict(),
+    #     local_dir=args.log_dir,
+    #     name=args.name,
+    #     # resources_per_trial={"gpu": 1},
+    # )
 
     ray.shutdown()
 
