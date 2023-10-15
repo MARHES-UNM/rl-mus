@@ -13,7 +13,7 @@ import ray
 from ray.tune.registry import get_trainable_cls
 from ray.rllib.utils import check_env
 
-# from ray.rllib.algorithms.callbacks import make_multi_callbacks
+from ray.rllib.algorithms.callbacks import make_multi_callbacks
 from uav_sim.utils.callbacks import TrainCallback
 from ray.rllib.examples.env.multi_agent import FlexAgentsMultiAgent
 
@@ -87,20 +87,19 @@ def train(args):
     # action_space = temp_env
 
     callback_list = [TrainCallback]
-    # multi_callbacks = make_multi_callbacks(callback_list)
+    multi_callbacks = make_multi_callbacks(callback_list)
     train_config = (
         get_trainable_cls(args.run)
         .get_default_config()
         .environment(env=args.env_name, env_config=args.config["env_config"])
         .framework(args.framework)
-        # .callbacks(multi_callbacks)
+        .callbacks(multi_callbacks)
         .rollouts(
             num_rollout_workers=1,  # set 0 to main worker run sim
             batch_mode="complete_episodes",
-            # horizon=1250 / 0.4,  # TODO: NEED TO SET DYNAMICALLY
         )
-        .debugging(log_level="ERROR", seed=123)  # DEBUG, INFO
         # Use GPUs iff `RLLIB_NUM_GPUS` env var set to > 0.
+        .debugging(log_level="ERROR", seed=123)  # DEBUG, INFO
         .resources(
             num_gpus=int(os.environ.get("RLLIB_NUM_GPUS", args.gpu)),
             num_cpus_per_worker=args.cpu,
@@ -183,7 +182,7 @@ if __name__ == "__main__":
         )
 
         logdir = Path(args.log_dir)
-        
+
         if not logdir.exists():
             logdir.mkdir(parents=True, exist_ok=True)
 
@@ -192,5 +191,5 @@ if __name__ == "__main__":
     register_env(args.env_name, lambda env_config: UavSim(env_config))
     # register_env(args.env_name, lambda _: FlexAgentsMultiAgent() )
 
-    # check_env(UavSim(env_config))
+    check_env(UavSim(env_config))
     train(args)

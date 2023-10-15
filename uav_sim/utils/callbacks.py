@@ -20,7 +20,7 @@ class TrainCallback(DefaultCallbacks):
     ):
         # Make sure this episode has just been started (only initial obs
         # logged so far).
-        assert episode.length == 0, (
+        assert episode.length <= 0, (
             "ERROR: `on_episode_start()` callback should be called right "
             "after env reset!"
         )
@@ -54,8 +54,9 @@ class TrainCallback(DefaultCallbacks):
         cum_obstacle_collisions = 0
 
         for agent_id in agent_ids:
-            last_info = episode.last_info_for(agent_id)
-            cum_uav_collisions += last_info["uav_collisions"]
+            # last_info = episode.last_info_for(agent_id)
+            last_info = episode._last_infos[agent_id]
+            cum_uav_collisions += last_info["uav_collision"]
             cum_obstacle_collisions += last_info["obstacle_collision"]
 
         episode.user_data["uav_collisions"].append(cum_uav_collisions)
@@ -73,7 +74,7 @@ class TrainCallback(DefaultCallbacks):
     ):
         # Check if there are multiple episodes in a batch, i.e.
         # "batch_mode": "truncate_episodes".
-        if worker.policy_config["batch_mode"] == "truncate_episodes":
+        if worker.config.batch_mode == "truncate_episodes":
             # Make sure this episode is really done.
             assert episode.batch_builder.policy_collectors["default_policy"].batches[
                 -1
@@ -81,7 +82,6 @@ class TrainCallback(DefaultCallbacks):
                 "ERROR: `on_episode_end()` should only be called "
                 "after episode is done!"
             )
-
         agent_ids = episode.get_agents()
         num_agents = len(agent_ids)
         cum_uav_landed = 0.0
@@ -89,7 +89,8 @@ class TrainCallback(DefaultCallbacks):
         cum_uav_rel_dist = 0.0
 
         for agent_id in agent_ids:
-            last_info = episode.last_info_for(agent_id)
+            # last_info = episode.last_info_for(agent_id)
+            last_info = episode._last_infos[agent_id]
             cum_uav_rel_dist += last_info["uav_rel_dist"]
             cum_uav_landed += last_info["uav_landed"]
             cum_uav_done_dt += last_info["uav_done_dt"]
