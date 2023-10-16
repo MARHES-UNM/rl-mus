@@ -617,7 +617,7 @@ class UavSim(MultiAgentEnv):
 
         return action
 
-    def render(self, mode="human"):
+    def render(self, mode="human", done=False):
         if self.render_mode == "human":
             if self.gui is None:
                 self.gui = Gui(
@@ -629,7 +629,8 @@ class UavSim(MultiAgentEnv):
                     max_z=self.env_max_h,
                 )
             else:
-                self.gui.update(self.time_elapsed)
+                fig = self.gui.update(self.time_elapsed, done)
+                return fig
 
     def close_gui(self):
         if self.gui is not None:

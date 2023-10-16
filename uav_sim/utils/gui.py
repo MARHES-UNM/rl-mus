@@ -13,7 +13,7 @@ class Sprite:
         self.t_lim = t_lim
         self.ax = ax
 
-    def update(self, t):
+    def update(self, t, done=False):
         raise NotImplemented
 
     def get_sphere(self, center, radius):
@@ -57,7 +57,7 @@ class ObstacleSprite(Sprite):
         #     [], [], [], marker="o", color="r", s=100 * 4 * 0.5**2
         # )
 
-    def update(self, t):
+    def update(self, t, done=False):
         # xa = [self.obstacle._state[0]]
         # ya = [self.obstacle._state[1]]
         # z = [self.obstacle._state[2]]
@@ -81,7 +81,7 @@ class ObstacleSpriteCube(Sprite):
         self.obstacle = obstacle
         self.body = None
 
-    def update(self, t):
+    def update(self, t, done=False):
         if self.body:
             for body in self.body:
                 body.remove()
@@ -100,12 +100,13 @@ class TargetSprite:
     https://stackoverflow.com/questions/73892040/moving-circle-animation-3d-plot
     """
 
-    def __init__(self, ax, target=None, num_targets=1, t_lim=30):
+    def __init__(self, ax, target=None, num_targets=1, t_lim=30, color="g"):
         self.ax = ax
         self.target = target
         self.t_lim = t_lim
         self.body = None
         self.pad_sprites = [None] * 4
+        self.color = color
 
         self.trajectory = {
             "t": [],
@@ -116,22 +117,22 @@ class TargetSprite:
         }
 
         (self.x_bar,) = self.ax["ax_error_x"].plot(
-            [], [], label=f"{self.target.type}: {self.target.id}"
+            [], [], c=color, label=f"{self.target.type}: {self.target.id}"
         )
         (self.y_bar,) = self.ax["ax_error_y"].plot(
-            [], [], label=f"{self.target.type}: {self.target.id}"
+            [], [], c=color, label=f"{self.target.type}: {self.target.id}"
         )
         (self.z_bar,) = self.ax["ax_error_z"].plot(
-            [], [], label=f"{self.target.type}: {self.target.id}"
+            [], [], c=color, label=f"{self.target.type}: {self.target.id}"
         )
         (self.psi_bar,) = self.ax["ax_error_psi"].plot(
-            [], [], label=f"{self.target.type}: {self.target.id}"
+            [], [], c=color, label=f"{self.target.type}: {self.target.id}"
         )
 
         self.x_lim = list(self.ax["ax_3d"].get_xlim3d())
         self.y_lim = list(self.ax["ax_3d"].get_ylim3d())
 
-    def update(self, t):
+    def update(self, t, done=False):
         if self.body:
             self.body.remove()
 
@@ -139,23 +140,10 @@ class TargetSprite:
             (self.target.state[0], self.target.state[1]),
             self.target.r,
             fill=False,
-            color="green",
+            color=self.color,
         )
         self.ax["ax_3d"].add_patch(self.body)
         art3d.pathpatch_2d_to_3d(self.body, z=0, zdir="z")
-
-        for idx, pad in enumerate(self.target.pads):
-            if self.pad_sprites[idx]:
-                self.pad_sprites[idx].remove()
-
-            self.pad_sprites[idx] = Circle(
-                (pad.x, pad.y),
-                pad.r,
-                fill=False,
-                color="red",
-            )
-            self.ax["ax_3d"].add_patch(self.pad_sprites[idx])
-            art3d.pathpatch_2d_to_3d(self.pad_sprites[idx], z=0, zdir="z")
 
         self.trajectory["t"].append(t)
         self.trajectory["x"].append(self.target._state[0])
@@ -195,18 +183,21 @@ class TargetSprite:
 
 
 class UavSprite:
-    def __init__(self, ax, uav=None):
+    def __init__(self, ax, uav=None, color=None):
         self.ax = ax
         self.uav = uav
+        self.pad_sprite = None
+        self.color = color
 
         (self.l1,) = self.ax["ax_3d"].plot(
-            [], [], [], color="blue", linewidth=1, antialiased=False
+            [], [], [], color=color, linewidth=1, antialiased=False
         )
         (self.l2,) = self.ax["ax_3d"].plot(
-            [], [], [], color="blue", linewidth=1, antialiased=False
+            [], [], [], color=color, linewidth=1, antialiased=False
         )
 
-        (self.cm,) = self.ax["ax_3d"].plot([], [], [], "k.")
+        (self.cm,) = self.ax["ax_3d"].plot([], [], [], color=color, marker=".")
+        (self.traj,) = self.ax["ax_3d"].plot([], [], [], color=color, marker=".")
 
         self.trajectory = {
             "t": [],
@@ -216,9 +207,15 @@ class UavSprite:
             "psi": [],
         }
 
-        (self.x_bar,) = self.ax["ax_error_x"].plot([], [], label=f"id: {self.uav.id}")
-        (self.y_bar,) = self.ax["ax_error_y"].plot([], [], label=f"id: {self.uav.id}")
-        (self.z_bar,) = self.ax["ax_error_z"].plot([], [], label=f"id: {self.uav.id}")
+        (self.x_bar,) = self.ax["ax_error_x"].plot(
+            [], [], color=color, label=f"id: {self.uav.id}"
+        )
+        (self.y_bar,) = self.ax["ax_error_y"].plot(
+            [], [], color=color, label=f"id: {self.uav.id}"
+        )
+        (self.z_bar,) = self.ax["ax_error_z"].plot(
+            [], [], color=color, label=f"id: {self.uav.id}"
+        )
         (self.psi_bar,) = self.ax["ax_error_psi"].plot(
             [], [], label=f"id: {self.uav.id}"
         )
@@ -240,7 +237,7 @@ class UavSprite:
 
         self.t_lim = 30
 
-    def update(self, t):
+    def update(self, t, done=False):
         R = self.uav.rotation_matrix()
 
         body = np.dot(R, self.points)
@@ -254,6 +251,18 @@ class UavSprite:
         self.l2.set_3d_properties(body[2, 2:4])
         self.cm.set_data(body[0, 4:5], body[1, 4:5])
         self.cm.set_3d_properties(body[2, 4:5])
+
+        if self.pad_sprite:
+            self.pad_sprite.remove()
+
+        self.pad_sprite = Circle(
+            (self.uav.pad.x, self.uav.pad.y),
+            self.uav.pad.r,
+            fill=False,
+            color=self.color,
+        )
+        self.ax["ax_3d"].add_patch(self.pad_sprite)
+        art3d.pathpatch_2d_to_3d(self.pad_sprite, z=0, zdir="z")
 
         self.trajectory["t"].append(t)
         self.trajectory["x"].append(self.uav._state[0])
@@ -278,6 +287,10 @@ class UavSprite:
         )
         self.psi_bar.set_data(self.trajectory["t"], self.trajectory["psi"])
 
+        if done:
+            self.traj.set_data(self.trajectory["x"], self.trajectory["y"])
+            self.traj.set_3d_properties(self.trajectory["z"])
+
 
 class Gui:
     def __init__(
@@ -290,6 +303,7 @@ class Gui:
         self.max_x = max_x
         self.max_y = max_y
         self.max_z = max_z
+        self.cmap = plt.get_cmap("tab10")
 
         if self.fig is None:
             self.fig = plt.figure(figsize=(12, 6))
@@ -358,12 +372,14 @@ class Gui:
         self.background = self.fig.canvas.copy_from_bbox(self.fig.bbox)
 
     def init_entities(self):
+        c_idx = 0
         self.sprites = []
-        target_sprite = TargetSprite(self.ax, self.target)
+        target_sprite = TargetSprite(self.ax, self.target, color=self.cmap(c_idx))
         self.sprites.append(target_sprite)
 
         for uav in self.uavs.values():
-            uav_sprite = UavSprite(self.ax, uav)
+            c_idx += 1
+            uav_sprite = UavSprite(self.ax, uav, color=self.cmap(c_idx))
             self.sprites.append(uav_sprite)
 
         for obstacle in self.obstacles:
@@ -373,12 +389,12 @@ class Gui:
     # TODO: update this to use blit
     # https://matplotlib.org/stable/api/animation_api.html
     # https://stackoverflow.com/questions/11874767/how-do-i-plot-in-real-time-in-a-while-loop-using-matplotlib
-    def update(self, time_elapsed):
+    def update(self, time_elapsed, done=False):
         self.fig.canvas.restore_region(self.background)
         self.time_display.set_text(f"Sim time = {time_elapsed:.2f} s")
 
         for sprite in self.sprites:
-            sprite.update(time_elapsed)
+            sprite.update(time_elapsed, done)
 
         #     self.ax.draw_artist(uav_sprite.cm)
         self.fig.canvas.blit(self.fig.bbox)
@@ -392,6 +408,8 @@ class Gui:
                 ax.legend()
 
         plt.pause(0.0000000000001)
+        # TODO: pass figure as rgba image instead
+        return self.fig
 
     def keypress_routine(self, event):
         sys.stdout.flush()

@@ -181,6 +181,8 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
             results["episode_data"]["uav_state"].append(uav_state)
             results["episode_data"]["target_state"].append(target_state)
 
+            if render:
+                fig = env.render(done=True)
             if plot_results:
                 plot_uav_states(env.num_uavs, results, num_episodes - 1)
 
