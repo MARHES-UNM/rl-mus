@@ -362,7 +362,7 @@ class Gui:
         target_sprite = TargetSprite(self.ax, self.target)
         self.sprites.append(target_sprite)
 
-        for uav in self.uavs:
+        for uav in self.uavs.values():
             uav_sprite = UavSprite(self.ax, uav)
             self.sprites.append(uav_sprite)
 

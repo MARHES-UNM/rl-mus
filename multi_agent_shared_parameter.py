@@ -69,10 +69,10 @@ def parse_arguments():
     parser.add_argument("--env_name", type=str, default="multi-uav-sim-v0")
 
     parser.add_argument("--checkpoint", type=str)
-    parser.add_argument("--cpu", type=int, default=12)
+    parser.add_argument("--cpu", type=int, default=8)
     parser.add_argument("--gpu", type=int, default=0.25)
     parser.add_argument("--num_envs_per_worker", type=int, default=12)
-    parser.add_argument("--num_rollout_workers", type=int, default=4)
+    parser.add_argument("--num_rollout_workers", type=int, default=8)
 
     args = parser.parse_args()
 
@@ -87,11 +87,10 @@ def train(args):
     temp_env = UavSim(args.config)
     num_gpus = int(os.environ.get("RLLIB_NUM_GPUS", args.gpu))
 
-    args.config["env_config"]["beta"] = tune.grid_search([0.09, 0.5])
-    args.config["env_config"]["uav_collision_weight"] = tune.grid_search([0.1, 0.5])
-    args.config["env_config"]["obstacle_collision_weight"] = tune.grid_search(
-        [0.15, 0.55]
-    )
+    args.config["env_config"]["use_safe_action"] = tune.grid_search([True, False])
+    args.config["env_config"]["beta"] = tune.grid_search([0.01])
+    args.config["env_config"]["uav_collision_weight"] = tune.grid_search([100.0])
+    args.config["env_config"]["obstacle_collision_weight"] = tune.grid_search([10.0])
 
     callback_list = [TrainCallback]
     multi_callbacks = make_multi_callbacks(callback_list)

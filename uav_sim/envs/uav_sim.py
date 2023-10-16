@@ -309,10 +309,9 @@ class UavSim(MultiAgentEnv):
         # step uavs
         self.alive_agents = set()
         for i, action in actions.items():
-            # # Done uavs don't move
-            # if self.uavs[i].done:
-            #     continue
-
+            # Done uavs don't move
+            if self.uavs[i].done:
+                continue
             self.alive_agents.add(i)
 
             if self._use_safe_action:
@@ -336,20 +335,18 @@ class UavSim(MultiAgentEnv):
         obs = {uav.id: self._get_obs(uav) for uav in self.uavs.values()}
         reward = {uav.id: self._get_reward(uav) for uav in self.uavs.values()}
         info = {uav.id: self._get_info(uav) for uav in self.uavs.values()}
-        done = {uav.id: uav.done for uav in self.uavs.values()}
+
+        # calculate done for each agent
         done = {self.uavs[id]: self.uavs[id].done for id in self.alive_agents}
         done["__all__"] = (
             all(v for v in done.values()) or self.time_elapsed >= self.max_time
         )
-        # terminated, truncated = self._get_done()
-        # done = self._get_done()
         self._time_elapsed += self.dt
 
-        # newer API to return truncated
-        # return obs, reward, done, self.time_elapsed >= self.max_time, info
-        # return obs, reward, terminated, truncated, info
-        # return obs, reward, terminated, truncated, info
+        # newwer api gymnasium > 0.28
         # return obs, reward, terminated, terminated, info
+
+        # old api gym < 0.26.1
         # return obs, reward, done, info
         return obs, reward, done, done, info
 
@@ -404,9 +401,10 @@ class UavSim(MultiAgentEnv):
         return obs_dict
 
     def _get_reward(self, uav):
+        t_remaining = self.time_final - self.time_elapsed
         uav.uav_collision = 0.0
         uav.obs_collision = 0.0
-        uav.dt_go = abs(self.time_elapsed - uav.get_t_go_est())
+        uav.dt_go = uav.get_t_go_est() - t_remaining
 
         if uav.done:
             # UAV most have finished last time_step, report zero collisions
@@ -432,7 +430,7 @@ class UavSim(MultiAgentEnv):
                 reward += 100.0
 
             # No need to check for other reward, UAV is done.
-            # return reward
+            return reward
 
         else:
             reward -= self._beta * (
@@ -441,9 +439,8 @@ class UavSim(MultiAgentEnv):
             )
 
         # get reward if uav maintains time difference
-        t_remaining = self.time_final - self.time_elapsed
-        if t_remaining > 0 and abs(t_remaining - uav.dt_go) <= self.t_go_max:
-            reward += 1.0
+        if t_remaining >= 0 and (uav.dt_go <= self.t_go_max):
+            reward -= 10
 
         # neg reward if uav collides with other uavs
         for other_uav in self.uavs.values():
@@ -462,43 +459,6 @@ class UavSim(MultiAgentEnv):
                 uav.obs_collision += 1
 
         return reward
-
-    def _get_done(self):
-        """Outputs if sim is done based on entity's states.
-        Must calculate _get_reward first.
-        """
-        # terminated = truncated = {}
-        # uavs_dict = self.uavs.copy()
-        # for uav in uavs_dict.values():
-        #     # if uav.id in self.terminateds:
-        #     #     terminated[uav.id] = False
-        #     #     truncated[uav.id] = False
-        #     # else:
-        #     terminated[uav.id] = uav.done
-        #     truncated[uav.id] = uav.done
-        #     if uav.done and len(self.uavs) > 1:
-        #         self.truncateds.add(uav.id)
-        #         self.terminateds.add(uav.id)
-        #         # del self.uavs[uav.id]
-        #         # self._agent_ids.remove(uav.id)
-        # # terminated = truncated = {uav.id: uav.done for uav in self.uavs.values()}
-
-        # # self.uavs = {uav.id: uav for uav in self.uavs.values() if not uav.done}
-
-        # # Done when Target is reached for all uavs
-        # all_done = all(val for val in terminated.values())
-        # time_done = self.time_elapsed >= self.max_time
-        # terminated["__all__"] = all_done or time_done
-
-        # truncated["__all__"] = all_done or time_done
-
-        # return terminated, truncated
-        time_done = self.time_elapsed >= self.max_time
-        done = {uav.id: uav.done or time_done for uav in self.uavs.values()}
-        done["__all__"] = all(
-            val for val in done.values()
-        )  # or self.time_elapsed >= self.max_time
-        return done
 
     def seed(self, seed=None):
         """Random value to seed"""

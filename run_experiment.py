@@ -47,34 +47,35 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
         "checkpoint",
         "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-10-15-09-28_48a3502/param_search/PPO_multi-uav-sim-v0_c4a2a_00002_2_beta=0.0900,obstacle_collision_weight=0.5500,uav_collision_weight=0.1000_2023-10-15_09-28-46/checkpoint_000210",
     )
-    algo_to_run = exp_config.get("run", "PPO")
-    if checkpoint:
-        algo = Algorithm.from_checkpoint(checkpoint)
-    elif algo_to_run == "PPO":
-        algo = (
-            PPOConfig()
-            .environment(env=exp_config["env_name"])
-            .resources(num_gpus=0)
-            .rollouts(num_rollout_workers=1)
-            .multi_agent(
-                policies={
-                    "shared_policy": (
-                        None,
-                        env.observation_space[0],
-                        env.action_space[0],
-                        {},
-                    )
-                },
-                # Always use "shared" policy.
-                policy_mapping_fn=(
-                    lambda agent_id, episode, worker, **kwargs: "shared_policy"
-                ),
+    algo_to_run = exp_config["exp_config"].get("run", "PPO")
+    if algo_to_run == "PPO":
+        if checkpoint:
+            algo = Algorithm.from_checkpoint(checkpoint)
+        else:
+            algo = (
+                PPOConfig()
+                .environment(env=exp_config["env_name"])
+                .resources(num_gpus=0)
+                .rollouts(num_rollout_workers=1)
+                .multi_agent(
+                    policies={
+                        "shared_policy": (
+                            None,
+                            env.observation_space[0],
+                            env.action_space[0],
+                            {},
+                        )
+                    },
+                    # Always use "shared" policy.
+                    policy_mapping_fn=(
+                        lambda agent_id, episode, worker, **kwargs: "shared_policy"
+                    ),
+                )
+                .framework("torch")
+                .build()
             )
-            .framework("torch")
-            .build()
-        )
 
-    policy_to_run = algo.get_policy("shared_policy")
+    # policy_to_run = algo.get_policy("shared_policy")
 
     if exp_config["exp_config"]["safe_action_type"] == "nn_cbf":
         sl = SafetyLayer(env, exp_config["safety_layer_cfg"])
@@ -123,10 +124,13 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
     while num_episodes < max_num_episodes:
         actions = {}
         for idx in range(env.num_uavs):
-            # actions[idx] = env.get_time_coord_action(env.uavs[idx])
-            actions[idx] = algo.compute_single_action(
-                obs[idx], policy_id="shared_policy"
-            )
+            # classic control
+            if algo_to_run == "cc":
+                actions[idx] = env.get_time_coord_action(env.uavs[idx])
+            elif algo_to_run == "PPO":
+                actions[idx] = algo.compute_single_action(
+                    obs[idx], policy_id="shared_policy"
+                )
 
             if exp_config["exp_config"]["safe_action_type"] != "none":
                 if exp_config["exp_config"]["safe_action_type"] == "cbf":
@@ -308,12 +312,13 @@ def main():
         with open(args.load_config, "rt") as f:
             args.config = json.load(f)
 
-    if args.env_name == "multi-uav-sim-v0":
-        args.config["env_name"] = args.env_name
-        tune.register_env(
-            args.config["env_name"],
-            lambda env_config: UavSim(env_config=env_config),
-        )
+    if not args.config["exp_config"]["run"] == "cc":
+        if args.env_name == "multi-uav-sim-v0":
+            args.config["env_name"] = args.env_name
+            tune.register_env(
+                args.config["env_name"],
+                lambda env_config: UavSim(env_config=env_config),
+            )
 
     args.config["env_config"].update(
         {

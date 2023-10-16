@@ -321,8 +321,9 @@ class UavBase(Entity):
 
         rel_dist = np.linalg.norm(self._state[0:3] - pad._state[0:3])
         rel_vel = np.linalg.norm(self._state[3:6] - self.pad._state[3:6])
-        return rel_dist <= (self.r + pad.r), rel_dist, rel_vel
-        # return rel_dist <= (0.01), rel_dist, rel_vel
+        # return rel_dist <= (self.r + pad.r), rel_dist, rel_vel
+        # TODO: set this to be a small number to make it more challenging
+        return rel_dist <= (0.01), rel_dist, rel_vel
 
     # TODO: combine with equations above
     def get_rel_pad_dist(self):
