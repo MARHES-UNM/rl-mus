@@ -43,6 +43,7 @@ class UavSim(MultiAgentEnv):
         self.t_go_max = env_config.setdefault("t_go_max", 3.0)
         self.t_go_n = env_config.setdefault("t_go_n", 1.0)
         self._beta = env_config.setdefault("beta", 1.0)
+        self._d_thresh = env_config.setdefault("d_thresh", 0.01)  # uav.rad + pad.rad
 
         self._agent_ids = set(range(self.num_uavs))
         self._uav_type = getattr(
@@ -568,6 +569,7 @@ class UavSim(MultiAgentEnv):
                     z=z,
                     dt=self.dt,
                     pad=self.target.pads[agent_id],
+                    d_thresh=self._d_thresh,
                 )
                 in_collision = is_in_collision(uav)
 

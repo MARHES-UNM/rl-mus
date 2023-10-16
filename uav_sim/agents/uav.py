@@ -229,7 +229,19 @@ class Target(Entity):
 
 
 class UavBase(Entity):
-    def __init__(self, _id, x=0, y=0, z=0, r=0.1, dt=1 / 10, m=0.18, l=0.086, pad=None):
+    def __init__(
+        self,
+        _id,
+        x=0,
+        y=0,
+        z=0,
+        r=0.1,
+        dt=1 / 10,
+        m=0.18,
+        l=0.086,
+        pad=None,
+        d_thresh=0.01,
+    ):
         super().__init__(_id, x, y, z, r, _type=AgentType.U)
 
         # timestep
@@ -251,6 +263,7 @@ class UavBase(Entity):
         self.landed = False
         self.pad = pad
         self.done_time = None
+        self.d_thresh = d_thresh
 
     def rk4(self, state, action):
         """Based on: https://github.com/mahaitongdae/Safety_Index_Synthesis/blob/master/envs_and_models/collision_avoidance_env.py#L194
@@ -323,7 +336,7 @@ class UavBase(Entity):
         rel_vel = np.linalg.norm(self._state[3:6] - self.pad._state[3:6])
         # return rel_dist <= (self.r + pad.r), rel_dist, rel_vel
         # TODO: set this to be a small number to make it more challenging
-        return rel_dist <= (0.01), rel_dist, rel_vel
+        return rel_dist <= (self.d_thresh), rel_dist, rel_vel
 
     # TODO: combine with equations above
     def get_rel_pad_dist(self):
@@ -353,17 +366,10 @@ class Uav(UavBase):
         k=None,
         use_ode=False,
         pad=None,
+        d_thresh=0.01,
     ):
         super().__init__(
-            _id=_id,
-            x=x,
-            y=y,
-            z=z,
-            r=r,
-            dt=dt,
-            m=m,
-            l=l,
-            pad=pad,
+            _id=_id, x=x, y=y, z=z, r=r, dt=dt, m=m, l=l, pad=pad, d_thresh=d_thresh
         )
 
         self.use_ode = use_ode
