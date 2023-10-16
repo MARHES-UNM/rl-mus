@@ -26,8 +26,10 @@ class TrainCallback(DefaultCallbacks):
         )
         # print("episode {} (env-idx={}) started.".format(episode.episode_id, env_index))
 
+        # TODO: add callback for dt_go: https://github.com/ray-project/ray/blob/ray-2.6.3/rllib/examples/custom_metrics_and_callbacks.py
         episode.user_data["obstacle_collisions"] = []
         episode.user_data["uav_collisions"] = []
+        episode.user_data["uav_dt_go"] = []
         # episode.user_data["num_uav_landed"] = []
         # episode.user_data["uav_done_dt"] = []
         # episode.user_data["uav_rel_dist"] = []
@@ -52,15 +54,18 @@ class TrainCallback(DefaultCallbacks):
         agent_ids = episode.get_agents()
         cum_uav_collisions = 0
         cum_obstacle_collisions = 0
+        cum_uav_dt_go = 0
 
         for agent_id in agent_ids:
             # last_info = episode.last_info_for(agent_id)
             last_info = episode._last_infos[agent_id]
             cum_uav_collisions += last_info["uav_collision"]
             cum_obstacle_collisions += last_info["obstacle_collision"]
+            cum_uav_dt_go += last_info["uav_dt_go"]
 
         episode.user_data["uav_collisions"].append(cum_uav_collisions)
         episode.user_data["obstacle_collisions"].append(cum_obstacle_collisions)
+        episode.user_data["uav_dt_go"].append(cum_uav_dt_go)
 
     def on_episode_end(
         self,
@@ -95,10 +100,14 @@ class TrainCallback(DefaultCallbacks):
             cum_uav_landed += last_info["uav_landed"]
             cum_uav_done_dt += last_info["uav_done_dt"]
 
-        obstacle_collisions = np.mean(episode.user_data["obstacle_collisions"])
+        obstacle_collisions = (
+            np.sum(episode.user_data["obstacle_collisions"]) / num_agents
+        )
         episode.custom_metrics["obstacle_collisions"] = obstacle_collisions
-        uav_collisions = np.mean(episode.user_data["uav_collisions"])
+        uav_collisions = np.sum(episode.user_data["uav_collisions"]) / num_agents
         episode.custom_metrics["uav_collisions"] = uav_collisions
+        uav_dt_go = np.sum(episode.user_data["uav_dt_go"]) / num_agents
+        episode.custom_metrics["uav_dt_go"] = uav_dt_go
         uav_landed = cum_uav_landed / num_agents
         episode.custom_metrics["num_uav_landed"] = uav_landed
         uav_done_dt = cum_uav_done_dt / num_agents

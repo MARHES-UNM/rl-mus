@@ -44,6 +44,9 @@ class UavSim(MultiAgentEnv):
         self.t_go_n = env_config.setdefault("t_go_n", 1.0)
         self._beta = env_config.setdefault("beta", 1.0)
         self._d_thresh = env_config.setdefault("d_thresh", 0.01)  # uav.rad + pad.rad
+        self._dt_go_penalty = env_config.setdefault(
+            "dt_go_penalty", 1.0
+        )  
 
         self._agent_ids = set(range(self.num_uavs))
         self._uav_type = getattr(
@@ -441,7 +444,7 @@ class UavSim(MultiAgentEnv):
 
         # get reward if uav maintains time difference
         if t_remaining >= 0 and (uav.dt_go <= self.t_go_max):
-            reward -= 10
+            reward -= self._dt_go_penalty
 
         # neg reward if uav collides with other uavs
         for other_uav in self.uavs.values():
