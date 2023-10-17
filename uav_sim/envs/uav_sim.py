@@ -46,6 +46,7 @@ class UavSim(MultiAgentEnv):
         self._d_thresh = env_config.setdefault("d_thresh", 0.01)  # uav.rad + pad.rad
         self._dt_go_penalty = env_config.setdefault("dt_go_penalty", 1.0)
         self._stp_penalty = env_config.setdefault("stp_penalty", 200)
+        self._dt_reward = env_config.setdefault("dt_reward", 200)
 
         self._agent_ids = set(range(self.num_uavs))
         self._uav_type = getattr(
@@ -433,7 +434,7 @@ class UavSim(MultiAgentEnv):
 
             # get reward for reaching destination in time
             if uav.done_dt <= self.t_go_max:
-                reward += 100.0
+                reward += self._dt_reward
 
             # No need to check for other reward, UAV is done.
             return reward

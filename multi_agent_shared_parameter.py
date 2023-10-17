@@ -88,12 +88,13 @@ def train(args):
     num_gpus = int(os.environ.get("RLLIB_NUM_GPUS", args.gpu))
 
     args.config["env_config"]["use_safe_action"] = tune.grid_search([False])
-    args.config["env_config"]["beta"] = tune.grid_search([0.01, 0.1, 1])
-    args.config["env_config"]["dt_go_penalty"] = tune.grid_search([1.0, 5.0, 10.0])
+    args.config["env_config"]["beta"] = tune.grid_search([0.01])
+    args.config["env_config"]["dt_go_penalty"] = tune.grid_search([1.0, 5.0])
     args.config["env_config"]["d_thresh"] = tune.grid_search([0.2])
     args.config["env_config"]["uav_collision_weight"] = tune.grid_search([0.1])
     args.config["env_config"]["obstacle_collision_weight"] = tune.grid_search([0.15])
     args.config["env_config"]["stp_penalty"] = tune.grid_search([200])
+    args.config["env_config"]["dt_reward"] = tune.grid_search([500, 1000, 200])
 
     callback_list = [TrainCallback]
     multi_callbacks = make_multi_callbacks(callback_list)
