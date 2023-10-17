@@ -439,13 +439,16 @@ class UavSim(MultiAgentEnv):
             return reward
 
         else:
-            reward -= self._beta * (
-                rel_dist
-                / np.linalg.norm([self.env_max_l, self.env_max_w, self.env_max_h])
-            )
+            reward -= self._beta
+        # else:
+        #     reward -= self._beta * (
+        #         rel_dist
+        #         / np.linalg.norm([self.env_max_l, self.env_max_w, self.env_max_h])
+        #     )
 
         # get reward if uav maintains time difference
-        if t_remaining >= 0 and (uav.dt_go < self.t_go_max):
+        # if t_remaining >= 0 and (uav.dt_go < self.t_go_max):
+        if uav.dt_go < self.t_go_max:
             reward -= self._dt_go_penalty
 
         # neg reward if uav collides with other uavs
