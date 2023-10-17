@@ -44,9 +44,7 @@ class UavSim(MultiAgentEnv):
         self.t_go_n = env_config.setdefault("t_go_n", 1.0)
         self._beta = env_config.setdefault("beta", 1.0)
         self._d_thresh = env_config.setdefault("d_thresh", 0.01)  # uav.rad + pad.rad
-        self._dt_go_penalty = env_config.setdefault(
-            "dt_go_penalty", 1.0
-        )  
+        self._dt_go_penalty = env_config.setdefault("dt_go_penalty", 1.0)
 
         self._agent_ids = set(range(self.num_uavs))
         self._uav_type = getattr(
@@ -405,6 +403,7 @@ class UavSim(MultiAgentEnv):
         return obs_dict
 
     def _get_reward(self, uav):
+        reward = 0
         t_remaining = self.time_final - self.time_elapsed
         uav.uav_collision = 0.0
         uav.obs_collision = 0.0
@@ -412,11 +411,10 @@ class UavSim(MultiAgentEnv):
 
         if uav.done:
             # UAV most have finished last time_step, report zero collisions
-            return 0
+            return reward
         else:
             uav.done_dt = self.time_final
 
-        reward = 0
         # pos reward if uav lands on any landing pad
         is_reached, rel_dist, rel_vel = uav.check_dest_reached()
 
@@ -443,7 +441,7 @@ class UavSim(MultiAgentEnv):
             )
 
         # get reward if uav maintains time difference
-        if t_remaining >= 0 and (uav.dt_go <= self.t_go_max):
+        if t_remaining >= 0 and (abs(uav.dt_go) > self.t_go_max):
             reward -= self._dt_go_penalty
 
         # neg reward if uav collides with other uavs
