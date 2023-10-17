@@ -89,10 +89,12 @@ def train(args):
 
     args.config["env_config"]["use_safe_action"] = tune.grid_search([False])
     args.config["env_config"]["beta"] = tune.grid_search([0.1])
-    args.config["env_config"]["dt_go_penalty"] = tune.grid_search([5])
-    args.config["env_config"]["d_thresh"] = tune.grid_search([0.01, 0.2])
-    args.config["env_config"]["uav_collision_weight"] = tune.grid_search([0.1])
-    args.config["env_config"]["obstacle_collision_weight"] = tune.grid_search([0.15])
+    args.config["env_config"]["dt_go_penalty"] = tune.grid_search([5.0])
+    args.config["env_config"]["d_thresh"] = tune.grid_search([2.0, 0.01])
+    args.config["env_config"]["uav_collision_weight"] = tune.grid_search([0.1, 100])
+    args.config["env_config"]["obstacle_collision_weight"] = tune.grid_search(
+        [0.15, 10]
+    )
 
     callback_list = [TrainCallback]
     multi_callbacks = make_multi_callbacks(callback_list)
