@@ -45,6 +45,7 @@ class UavSim(MultiAgentEnv):
         self._beta = env_config.setdefault("beta", 1.0)
         self._d_thresh = env_config.setdefault("d_thresh", 0.01)  # uav.rad + pad.rad
         self._dt_go_penalty = env_config.setdefault("dt_go_penalty", 1.0)
+        self._stp_penalty = env_config.setdefault("stp_penalty", 200)
 
         self._agent_ids = set(range(self.num_uavs))
         self._uav_type = getattr(
@@ -408,12 +409,16 @@ class UavSim(MultiAgentEnv):
         uav.uav_collision = 0.0
         uav.obs_collision = 0.0
         uav.dt_go = uav.get_t_go_est() - t_remaining
+        uav.done_dt = self.time_final - self.time_elapsed
 
         if uav.done:
             # UAV most have finished last time_step, report zero collisions
             return reward
-        else:
-            uav.done_dt = self.time_final
+
+        # give penalty for reaching the time limit
+        elif self.time_elapsed >= self.max_time:
+            reward -= self._stp_penalty
+            return reward
 
         # pos reward if uav lands on any landing pad
         is_reached, rel_dist, rel_vel = uav.check_dest_reached()
@@ -422,7 +427,6 @@ class UavSim(MultiAgentEnv):
             uav.done = True
             uav.landed = True
             uav.done_time = self.time_elapsed
-            uav.done_dt = self.time_final - self.time_elapsed
 
             # get reward for reaching destination
             reward += 100.0

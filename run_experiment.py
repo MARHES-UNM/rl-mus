@@ -45,7 +45,7 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
     # checkpoint = exp_config.get("checkpoint", None)
     checkpoint = exp_config.get(
         "checkpoint",
-        "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-10-16-19-39_59425c2/dt_go_test_1/PPO_multi-uav-sim-v0_3b79e_00001_1_beta=0.1000,d_thresh=0.2000,dt_go_penalty=5,obstacle_collision_weight=0.1500,uav_collision_weig_2023-10-16_19-39-21/checkpoint_000170",
+        "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-10-16-19-39_59425c2/dt_go_test_1/PPO_multi-uav-sim-v0_3b79e_00000_0_beta=0.1000,d_thresh=0.2000,dt_go_penalty=1.0000,obstacle_collision_weight=0.1500,uav_collision_2023-10-16_19-39-21/checkpoint_000190",
         # "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-10-15-09-28_48a3502/param_search/PPO_multi-uav-sim-v0_c4a2a_00002_2_beta=0.0900,obstacle_collision_weight=0.5500,uav_collision_weight=0.1000_2023-10-15_09-28-46/checkpoint_000210",
     )
     algo_to_run = exp_config["exp_config"].get("run", "PPO")
