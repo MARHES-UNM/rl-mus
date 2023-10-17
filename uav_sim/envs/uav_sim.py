@@ -68,7 +68,7 @@ class UavSim(MultiAgentEnv):
         self.action_low = np.ones(3) * -5
 
         self.gui = None
-        self._time_elapsed = 0
+        self._time_elapsed = 0.0
         self.seed(self._seed)
         self.reset()
         self.action_space = self._get_action_space()

@@ -89,13 +89,14 @@ def train(args):
 
     args.config["env_config"]["use_safe_action"] = tune.grid_search([False])
     args.config["env_config"]["beta"] = tune.grid_search([0.01])
-    args.config["env_config"]["dt_go_penalty"] = tune.grid_search([1.0, 5.0])
+    args.config["env_config"]["dt_go_penalty"] = tune.grid_search([1.0])
     args.config["env_config"]["d_thresh"] = tune.grid_search([0.2])
     args.config["env_config"]["uav_collision_weight"] = tune.grid_search([0.1])
     args.config["env_config"]["obstacle_collision_weight"] = tune.grid_search([0.15])
     args.config["env_config"]["stp_penalty"] = tune.grid_search([200])
-    args.config["env_config"]["dt_reward"] = tune.grid_search([500, 1000, 200])
+    args.config["env_config"]["dt_reward"] = tune.grid_search([500, 1000])
 
+    entropy_coef = tune.grid_search([0.01])
     callback_list = [TrainCallback]
     multi_callbacks = make_multi_callbacks(callback_list)
     # info on common configs: https://docs.ray.io/en/latest/rllib/rllib-training.html#specifying-rollout-workers
@@ -133,7 +134,7 @@ def train(args):
             vf_clip_param=10.0,
             vf_loss_coeff=0.5,
             # clip_param=0.2,
-            # entropy_coeff=0.0,
+            entropy_coeff=entropy_coef,
             # grad_clip=0.5,
             # kl_coeff=1,
             # kl_target=0.0068,
