@@ -47,6 +47,7 @@ class UavSim(MultiAgentEnv):
         self._dt_go_penalty = env_config.setdefault("dt_go_penalty", 1.0)
         self._stp_penalty = env_config.setdefault("stp_penalty", 200)
         self._dt_reward = env_config.setdefault("dt_reward", 200)
+        self._tgt_reward = env_config.setdefault("tgt_reward", 100)
 
         self._agent_ids = set(range(self.num_uavs))
         self._uav_type = getattr(
@@ -100,6 +101,9 @@ class UavSim(MultiAgentEnv):
                             high=np.inf,
                             shape=self.uavs[0].state.shape,
                             dtype=np.float32,
+                        ),
+                        "dt_go": spaces.Box(
+                            low=-np.inf, high=np.inf, shape=(1,), dtype=np.float32
                         ),
                         "target": spaces.Box(
                             low=-np.inf,
@@ -396,6 +400,7 @@ class UavSim(MultiAgentEnv):
         obs_dict = {
             "state": uav.state.astype(np.float32),
             "target": self.target.state.astype(np.float32),
+            "dt_go": uav.get_t_go_est() - (self.time_final - self._time_elapsed),
             "rel_pad": (uav.state[0:6] - uav.pad.state[0:6]).astype(np.float32),
             "other_uav_obs": other_uav_states.astype(np.float32),
             "obstacles": obstacles_to_add.astype(np.float32),
@@ -425,16 +430,16 @@ class UavSim(MultiAgentEnv):
         is_reached, rel_dist, rel_vel = uav.check_dest_reached()
 
         if is_reached:
-            uav.done = True
-            uav.landed = True
-            uav.done_time = self.time_elapsed
-
             # get reward for reaching destination
-            reward += 100.0
+            reward += self._tgt_reward
 
             # get reward for reaching destination in time
             if uav.done_dt <= self.t_go_max:
                 reward += self._dt_reward
+
+            uav.done = True
+            uav.landed = True
+            uav.done_time = self.time_elapsed
 
             # No need to check for other reward, UAV is done.
             return reward
