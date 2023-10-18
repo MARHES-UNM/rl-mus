@@ -400,7 +400,10 @@ class UavSim(MultiAgentEnv):
         obs_dict = {
             "state": uav.state.astype(np.float32),
             "target": self.target.state.astype(np.float32),
-            "dt_go": np.array([uav.get_t_go_est() - (self.time_final - self._time_elapsed)], dtype=np.float32),
+            "dt_go": np.array(
+                [uav.get_t_go_est() - (self.time_final - self._time_elapsed)],
+                dtype=np.float32,
+            ),
             "rel_pad": (uav.state[0:6] - uav.pad.state[0:6]).astype(np.float32),
             "other_uav_obs": other_uav_states.astype(np.float32),
             "obstacles": obstacles_to_add.astype(np.float32),
@@ -454,6 +457,8 @@ class UavSim(MultiAgentEnv):
 
         # get reward if uav maintains time difference
         # if t_remaining >= 0 and (uav.dt_go < self.t_go_max):
+        # TODO: consider adding a consensus reward here that is the sum of the error time difference between UAVs
+        # this of this as a undirected communication graph
         if uav.dt_go < self.t_go_max:
             reward -= self._dt_go_penalty
 

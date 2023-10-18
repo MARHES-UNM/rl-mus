@@ -95,9 +95,9 @@ def train(args):
     args.config["env_config"]["obstacle_collision_weight"] = tune.grid_search([0.15])
     args.config["env_config"]["stp_penalty"] = tune.grid_search([200])
     args.config["env_config"]["dt_reward"] = tune.grid_search([500])
-    args.config["env_config"]["tgt_reward"] = tune.grid_search([50, 100])
+    args.config["env_config"]["tgt_reward"] = tune.grid_search([100, 50])
 
-    entropy_coef = tune.grid_search([0.01])
+    entropy_coef = tune.grid_search([0.00])
 
     callback_list = [TrainCallback]
     multi_callbacks = make_multi_callbacks(callback_list)
@@ -135,7 +135,7 @@ def train(args):
             sgd_minibatch_size=4096,
             vf_clip_param=10.0,
             vf_loss_coeff=0.5,
-            # clip_param=0.2,
+            clip_param=0.2,
             entropy_coeff=entropy_coef,
             # grad_clip=0.5,
             # kl_coeff=1,
