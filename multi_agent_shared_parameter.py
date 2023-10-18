@@ -95,7 +95,7 @@ def train(args):
     args.config["env_config"]["obstacle_collision_weight"] = tune.grid_search([0.15])
     args.config["env_config"]["stp_penalty"] = tune.grid_search([200])
     args.config["env_config"]["dt_reward"] = tune.grid_search([500])
-    args.config["env_config"]["tgt_reward"] = tune.grid_search([0.0, 100])
+    args.config["env_config"]["tgt_reward"] = tune.grid_search([50, 100])
 
     entropy_coef = tune.grid_search([0.01])
 

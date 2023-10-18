@@ -47,7 +47,7 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
         "checkpoint",
         # "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-10-17-06-06_49cb1b5/paper/PPO_multi-uav-sim-v0_e77fe_00001_1_beta=0.1000,d_thresh=0.2000,dt_go_penalty=1.0000,obstacle_collision_weight=0.1500,stp_penalty=2_2023-10-17_06-06-56/checkpoint_000228",
         # "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-10-17-17-27_3310265/dt_reward/PPO_multi-uav-sim-v0_eecbd_00001_1_beta=0.0100,d_thresh=0.2000,dt_go_penalty=5.0000,dt_reward=500,obstacle_collision_weight=0.1500_2023-10-17_17-27-11/checkpoint_000135"
-        "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-10-17-19-43_a80a00b/entropy/PPO_multi-uav-sim-v0_f0461_00001_1_entropy_coeff=0.0100,beta=0.0100,d_thresh=0.2000,dt_go_penalty=1.0000,dt_reward=1000,obstacle_c_2023-10-17_19-43-14/checkpoint_000150",
+        "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-10-17-21-35_aee7813/no_tgt_reward/PPO_multi-uav-sim-v0_93e2c_00001_1_entropy_coeff=0.0100,beta=0.0100,d_thresh=0.2000,dt_go_penalty=2.5000,dt_reward=500,obstacle_co_2023-10-17_21-35-11/checkpoint_000200",
     )
     algo_to_run = exp_config["exp_config"].get("run", "PPO")
     if algo_to_run == "PPO":
