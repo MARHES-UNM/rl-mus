@@ -56,7 +56,7 @@ def parse_arguments():
     parser.add_argument(
         "--stop-timesteps",
         type=int,
-        default=int(15e6),
+        default=int(30e6),
         help="Number of timesteps to train.",
     )
 
@@ -88,14 +88,14 @@ def train(args):
     num_gpus = int(os.environ.get("RLLIB_NUM_GPUS", args.gpu))
 
     args.config["env_config"]["use_safe_action"] = tune.grid_search([False])
-    args.config["env_config"]["beta"] = tune.grid_search([0.01])
-    args.config["env_config"]["dt_go_penalty"] = tune.grid_search([1.0, 2.5])
+    args.config["env_config"]["beta"] = tune.grid_search([0.01, 0.1])
+    args.config["env_config"]["dt_go_penalty"] = tune.grid_search([0.1, 0.01])
     args.config["env_config"]["d_thresh"] = tune.grid_search([0.2])
     args.config["env_config"]["uav_collision_weight"] = tune.grid_search([0.1])
     args.config["env_config"]["obstacle_collision_weight"] = tune.grid_search([0.15])
     args.config["env_config"]["stp_penalty"] = tune.grid_search([200])
     args.config["env_config"]["dt_reward"] = tune.grid_search([500])
-    args.config["env_config"]["tgt_reward"] = tune.grid_search([100, 50])
+    args.config["env_config"]["tgt_reward"] = tune.grid_search([100])
 
     entropy_coef = tune.grid_search([0.00])
 
@@ -135,8 +135,8 @@ def train(args):
             sgd_minibatch_size=4096,
             vf_clip_param=10.0,
             vf_loss_coeff=0.5,
-            clip_param=0.2,
-            entropy_coeff=entropy_coef,
+            # clip_param=0.2,
+            # entropy_coeff=entropy_coef,
             # grad_clip=0.5,
             # kl_coeff=1,
             # kl_target=0.0068,

@@ -437,7 +437,7 @@ class UavSim(MultiAgentEnv):
             reward += self._tgt_reward
 
             # get reward for reaching destination in time
-            if uav.done_dt <= self.t_go_max:
+            if abs(uav.done_dt) <= self.t_go_max:
                 reward += self._dt_reward
 
             uav.done = True
@@ -459,7 +459,7 @@ class UavSim(MultiAgentEnv):
         # if t_remaining >= 0 and (uav.dt_go < self.t_go_max):
         # TODO: consider adding a consensus reward here that is the sum of the error time difference between UAVs
         # this of this as a undirected communication graph
-        if uav.dt_go < self.t_go_max:
+        if abs(uav.dt_go) < self.t_go_max:
             reward -= self._dt_go_penalty
 
         # neg reward if uav collides with other uavs
