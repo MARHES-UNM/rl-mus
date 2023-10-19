@@ -44,10 +44,10 @@ class UavSim(MultiAgentEnv):
         self.t_go_n = env_config.setdefault("t_go_n", 1.0)
         self._beta = env_config.setdefault("beta", 1.0)
         self._d_thresh = env_config.setdefault("d_thresh", 0.01)  # uav.rad + pad.rad
-        self._dt_go_penalty = env_config.setdefault("dt_go_penalty", 1.0)
+        self._dt_go_penalty = env_config.setdefault("dt_go_penalty", 10)
         self._stp_penalty = env_config.setdefault("stp_penalty", 200)
         self._dt_reward = env_config.setdefault("dt_reward", 200)
-        self._tgt_reward = env_config.setdefault("tgt_reward", 100)
+        self._tgt_reward = env_config.setdefault("tgt_reward", 100.0)
         self._dt_weight = env_config.setdefault("dt_weight", 0.1)
 
         self._agent_ids = set(range(self.num_uavs))
@@ -461,7 +461,7 @@ class UavSim(MultiAgentEnv):
         # if t_remaining >= 0 and (uav.dt_go < self.t_go_max):
         # TODO: consider adding a consensus reward here that is the sum of the error time difference between UAVs
         # this of this as a undirected communication graph
-        if abs(uav.dt_go) < self.t_go_max:
+        if abs(uav.dt_go) > self.t_go_max:
             reward -= self._dt_go_penalty
 
         cum_dt_penalty = 0
