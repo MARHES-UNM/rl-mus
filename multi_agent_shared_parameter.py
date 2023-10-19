@@ -89,13 +89,14 @@ def train(args):
 
     args.config["env_config"]["use_safe_action"] = tune.grid_search([False])
     args.config["env_config"]["beta"] = tune.grid_search([0.01, 0.1])
-    args.config["env_config"]["dt_go_penalty"] = tune.grid_search([0.1, 0.01])
+    args.config["env_config"]["dt_go_penalty"] = tune.grid_search([10])
     args.config["env_config"]["d_thresh"] = tune.grid_search([0.2])
     args.config["env_config"]["uav_collision_weight"] = tune.grid_search([0.1])
     args.config["env_config"]["obstacle_collision_weight"] = tune.grid_search([0.15])
     args.config["env_config"]["stp_penalty"] = tune.grid_search([200])
     args.config["env_config"]["dt_reward"] = tune.grid_search([500])
     args.config["env_config"]["tgt_reward"] = tune.grid_search([100])
+    args.config["env_config"]["dt_weight"] = tune.grid_search([0.1])
 
     entropy_coef = tune.grid_search([0.00])
 

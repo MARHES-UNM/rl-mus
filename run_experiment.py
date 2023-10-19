@@ -47,8 +47,9 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
         "checkpoint",
         # "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-10-17-06-06_49cb1b5/paper/PPO_multi-uav-sim-v0_e77fe_00001_1_beta=0.1000,d_thresh=0.2000,dt_go_penalty=1.0000,obstacle_collision_weight=0.1500,stp_penalty=2_2023-10-17_06-06-56/checkpoint_000228",
         # "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-10-17-17-27_3310265/dt_reward/PPO_multi-uav-sim-v0_eecbd_00001_1_beta=0.0100,d_thresh=0.2000,dt_go_penalty=5.0000,dt_reward=500,obstacle_collision_weight=0.1500_2023-10-17_17-27-11/checkpoint_000135"
-        "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-10-17-21-35_aee7813/no_tgt_reward/PPO_multi-uav-sim-v0_93e2c_00001_1_entropy_coeff=0.0100,beta=0.0100,d_thresh=0.2000,dt_go_penalty=2.5000,dt_reward=500,obstacle_co_2023-10-17_21-35-11/checkpoint_000200",
+        "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-10-18-19-16_b00ac82/done/PPO_multi-uav-sim-v0_587c6_00000_0_beta=0.0100,d_thresh=0.2000,dt_go_penalty=10,dt_reward=500,obstacle_collision_weight=0.1500,stp_2023-10-18_19-16-19/checkpoint_000200",
     )
+
     algo_to_run = exp_config["exp_config"].get("run", "PPO")
     if algo_to_run == "PPO":
         if checkpoint:
@@ -91,6 +92,7 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
     rel_pad_dist = [[] for idx in range(env.num_uavs)]
     rel_pad_vel = [[] for idx in range(env.num_uavs)]
     uav_state = [[] for idx in range(env.num_uavs)]
+    uav_reward = [[] for idx in range(env.num_uavs)]
     target_state = []
 
     results = {
@@ -110,6 +112,7 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
             "rel_pad_dist": [],
             "rel_pad_vel": [],
             "uav_state": [],
+            "uav_reward": [],
             "target_state": [],
         },
     }
@@ -155,6 +158,7 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
             uav_dt_go_list[k].append(v["uav_dt_go"])
             rel_pad_dist[k].append(v["uav_rel_dist"])
             rel_pad_vel[k].append(v["uav_rel_vel"])
+            uav_reward[k].append(rew[k])
 
         for k, v in obs.items():
             uav_state[k].append(v["state"].tolist())
@@ -182,6 +186,7 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
             results["episode_data"]["rel_pad_vel"].append(rel_pad_vel)
             results["episode_data"]["uav_state"].append(uav_state)
             results["episode_data"]["target_state"].append(target_state)
+            results["episode_data"]["uav_reward"].append(uav_reward)
 
             if render:
                 fig = env.render(done=True)
@@ -207,6 +212,7 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
             rel_pad_dist = [[] for idx in range(env.num_uavs)]
             rel_pad_vel = [[] for idx in range(env.num_uavs)]
             uav_state = [[] for idx in range(env.num_uavs)]
+            uav_reward = [[] for idx in range(env.num_uavs)]
 
     env.close()
 
@@ -242,6 +248,7 @@ def plot_uav_states(num_uavs, results, num_episode=0):
     uav_dt_go_list = results["episode_data"]["uav_dt_go_list"][num_episode]
     rel_pad_dist = results["episode_data"]["rel_pad_dist"][num_episode]
     rel_pad_vel = results["episode_data"]["rel_pad_vel"][num_episode]
+    uav_reward = results["episode_data"]["uav_reward"][num_episode]
 
     uav_state = np.array(results["episode_data"]["uav_state"])[num_episode]
     target_state = np.array(results["episode_data"]["target_state"])[num_episode]
@@ -252,9 +259,10 @@ def plot_uav_states(num_uavs, results, num_episode=0):
     ax1 = fig.add_subplot(212)
 
     fig = plt.figure(figsize=(10, 6))
-    ax21 = fig.add_subplot(311)
-    ax22 = fig.add_subplot(312)
-    ax23 = fig.add_subplot(313)
+    ax21 = fig.add_subplot(411)
+    ax22 = fig.add_subplot(412)
+    ax23 = fig.add_subplot(413)
+    ax24 = fig.add_subplot(414)
     fig = plt.figure(figsize=(10, 6))
     ax3 = fig.add_subplot(211)
     ax4 = fig.add_subplot(212)
@@ -272,6 +280,8 @@ def plot_uav_states(num_uavs, results, num_episode=0):
         ax22.title.set_text("uav delta time")
         ax23.plot(uav_dt_go_list[idx], label=f"uav_id:{idx}")
         ax23.title.set_text("uav relative vs time_elapsed")
+        ax24.plot(uav_reward[idx], label=f"uav_id:{idx}")
+        ax24.title.set_text("uav rewrad")
         ax3.plot(rel_pad_dist[idx], label=f"uav_id:{idx}")
         ax3.title.set_text("uav relative dist to target")
         ax4.plot(rel_pad_vel[idx], label=f"uav_id:{idx}")
