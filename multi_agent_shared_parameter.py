@@ -56,7 +56,7 @@ def parse_arguments():
     parser.add_argument(
         "--stop-timesteps",
         type=int,
-        default=int(30e6),
+        default=int(15e6),
         help="Number of timesteps to train.",
     )
 
@@ -96,7 +96,7 @@ def train(args):
     args.config["env_config"]["stp_penalty"] = tune.grid_search([200])
     args.config["env_config"]["dt_reward"] = tune.grid_search([500])
     args.config["env_config"]["tgt_reward"] = tune.grid_search([100])
-    args.config["env_config"]["dt_weight"] = tune.grid_search([0.1])
+    args.config["env_config"]["dt_weight"] = tune.grid_search([10.0, 0.1])
 
     entropy_coef = tune.grid_search([0.00])
 

@@ -47,7 +47,7 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
         "checkpoint",
         # "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-10-17-06-06_49cb1b5/paper/PPO_multi-uav-sim-v0_e77fe_00001_1_beta=0.1000,d_thresh=0.2000,dt_go_penalty=1.0000,obstacle_collision_weight=0.1500,stp_penalty=2_2023-10-17_06-06-56/checkpoint_000228",
         # "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-10-17-17-27_3310265/dt_reward/PPO_multi-uav-sim-v0_eecbd_00001_1_beta=0.0100,d_thresh=0.2000,dt_go_penalty=5.0000,dt_reward=500,obstacle_collision_weight=0.1500_2023-10-17_17-27-11/checkpoint_000135"
-        "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-10-18-19-16_b00ac82/done/PPO_multi-uav-sim-v0_587c6_00000_0_beta=0.0100,d_thresh=0.2000,dt_go_penalty=10,dt_reward=500,obstacle_collision_weight=0.1500,stp_2023-10-18_19-16-19/checkpoint_000200",
+        "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-10-18-21-55_0d9f5d6/abs_dt_go/PPO_multi-uav-sim-v0_8c267_00001_1_beta=0.1000,d_thresh=0.2000,dt_go_penalty=10,dt_reward=500,dt_weight=0.1000,obstacle_collision__2023-10-18_21-55-15/checkpoint_000125",
     )
 
     algo_to_run = exp_config["exp_config"].get("run", "PPO")
@@ -132,6 +132,7 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
             # classic control
             if algo_to_run == "cc":
                 actions[idx] = env.get_time_coord_action(env.uavs[idx])
+                # actions[idx] = env.get_tc_controller(env.uavs[idx])
             elif algo_to_run == "PPO":
                 actions[idx] = algo.compute_single_action(
                     obs[idx], policy_id="shared_policy"
@@ -277,9 +278,9 @@ def plot_uav_states(num_uavs, results, num_episode=0):
         ax21.plot(uav_done_list[idx], label=f"uav_id:{idx}")
         ax21.title.set_text("uav done")
         ax22.plot(uav_done_dt_list[idx], label=f"uav_id:{idx}")
-        ax22.title.set_text("uav delta time")
+        ax22.title.set_text("uav done delta time")
         ax23.plot(uav_dt_go_list[idx], label=f"uav_id:{idx}")
-        ax23.title.set_text("uav relative vs time_elapsed")
+        ax23.title.set_text("relative vs time_elapsed")
         ax24.plot(uav_reward[idx], label=f"uav_id:{idx}")
         ax24.title.set_text("uav rewrad")
         ax3.plot(rel_pad_dist[idx], label=f"uav_id:{idx}")
