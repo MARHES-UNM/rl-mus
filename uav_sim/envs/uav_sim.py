@@ -42,13 +42,13 @@ class UavSim(MultiAgentEnv):
         self.time_final = env_config.setdefault("time_final", 20.0)
         self.t_go_max = env_config.setdefault("t_go_max", 3.0)
         self.t_go_n = env_config.setdefault("t_go_n", 1.0)
-        self._beta = env_config.setdefault("beta", 1.0)
+        self._beta = env_config.setdefault("beta", 0.01)
         self._d_thresh = env_config.setdefault("d_thresh", 0.01)  # uav.rad + pad.rad
+        self._tgt_reward = env_config.setdefault("tgt_reward", 100.0)
         self._dt_go_penalty = env_config.setdefault("dt_go_penalty", 10)
         self._stp_penalty = env_config.setdefault("stp_penalty", 200)
-        self._dt_reward = env_config.setdefault("dt_reward", 200)
-        self._tgt_reward = env_config.setdefault("tgt_reward", 100.0)
-        self._dt_weight = env_config.setdefault("dt_weight", 10)
+        self._dt_reward = env_config.setdefault("dt_reward", 0.0)
+        self._dt_weight = env_config.setdefault("dt_weight", 0.0)
 
         self._agent_ids = set(range(self.num_uavs))
         self._uav_type = getattr(
@@ -263,11 +263,9 @@ class UavSim(MultiAgentEnv):
         #     * cum_tg_error
         #     * np.array([pos_er[0], pos_er[1], pos_er[2]])
         # )
-        cum_tg_error = (self.time_final - self.time_elapsed)
+        cum_tg_error = self.time_final - self.time_elapsed
         action += (
-            3
-            * np.array([pos_er[0], pos_er[1], pos_er[2]])
-            * (-.3 *cum_tg_error)
+            3 * np.array([pos_er[0], pos_er[1], pos_er[2]]) * (-0.3 * cum_tg_error)
         )
 
         # action += 2 * cum_tg_error * np.array([pos_er[3], pos_er[4], pos_er[5]])
@@ -506,7 +504,7 @@ class UavSim(MultiAgentEnv):
             uav.done_time = self.time_elapsed
 
             # get reward for reaching destination
-            reward += self._tgt_reward
+            reward += self._tgt_reward * min(self.time_elapsed / self.time_final, 1.0)
 
             # get reward for reaching destination in time
             if abs(uav.done_dt) <= self.t_go_max:
@@ -515,15 +513,15 @@ class UavSim(MultiAgentEnv):
             # No need to check for other reward, UAV is done.
             return reward
 
-        # else:
-        # reward -= self._beta
         else:
-            reward -= self._beta * (
-                rel_dist
-                / np.linalg.norm([self.env_max_l, self.env_max_w, self.env_max_h])
-            )
+            reward -= self._beta
+        # else:
+        #     reward -= self._beta * (
+        #         rel_dist
+        #         / np.linalg.norm([self.env_max_l, self.env_max_w, self.env_max_h])
+        #     )
 
-            # uav.done_dt = self.time_final
+        # uav.done_dt = self.time_final
         # get reward if uav maintains time difference
         # if t_remaining >= 0 and (uav.dt_go < self.t_go_max):
         # TODO: consider adding a consensus reward here that is the sum of the error time difference between UAVs
@@ -537,7 +535,7 @@ class UavSim(MultiAgentEnv):
             if uav.id != other_uav.id:
                 cum_dt_penalty += other_uav.get_t_go_est() - uav.get_t_go_est()
 
-                if uav.in_collision(other_uav) and not other_uav.done:
+                if uav.in_collision(other_uav):
                     reward -= self.uav_collision_weight
                     # uav.done = True
                     # uav.landed = False
