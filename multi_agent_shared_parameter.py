@@ -89,7 +89,7 @@ def train(args):
 
     args.config["env_config"]["use_safe_action"] = tune.grid_search([False])
     args.config["env_config"]["tgt_reward"] = tune.grid_search([100])
-    args.config["env_config"]["beta"] = tune.grid_search([0.01, 0.1])
+    args.config["env_config"]["beta"] = tune.grid_search([0.001, 0.01])
     args.config["env_config"]["d_thresh"] = tune.grid_search([0.2, 0.01])
     args.config["env_config"]["uav_collision_weight"] = tune.grid_search([0.1])
     args.config["env_config"]["obstacle_collision_weight"] = tune.grid_search([0.15])
@@ -99,6 +99,7 @@ def train(args):
     # args.config["env_config"]["dt_weight"] = tune.grid_search([0.1, 0.5])
 
     # entropy_coef = tune.grid_search([0.00])
+    gae_lambda = tune.grid_search([0.99])
 
     callback_list = [TrainCallback]
     multi_callbacks = make_multi_callbacks(callback_list)
@@ -125,11 +126,13 @@ def train(args):
             num_gpus_per_learner_worker=args.gpu,
         )
         # See for specific ppo config: https://docs.ray.io/en/latest/rllib/rllib-algorithms.html#ppo
+        # See for more on PPO hyperparameters: https://medium.com/aureliantactics/ppo-hyperparameters-and-ranges-6fc2d29bccbe
         .training(
             lr=8e-5,
             use_gae=True,
             use_critic=True,
-            lambda_=0.95,
+            # lambda_=0.95,
+            lambda_=gae_lambda,
             train_batch_size=65536,
             gamma=0.99,
             num_sgd_iter=32,
