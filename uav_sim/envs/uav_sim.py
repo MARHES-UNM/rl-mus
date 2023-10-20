@@ -45,8 +45,8 @@ class UavSim(MultiAgentEnv):
         self._beta = env_config.setdefault("beta", 0.01)
         self._d_thresh = env_config.setdefault("d_thresh", 0.01)  # uav.rad + pad.rad
         self._tgt_reward = env_config.setdefault("tgt_reward", 100.0)
-        self._dt_go_penalty = env_config.setdefault("dt_go_penalty", 10)
-        self._stp_penalty = env_config.setdefault("stp_penalty", 200)
+        self._dt_go_penalty = env_config.setdefault("dt_go_penalty", 10.0)
+        self._stp_penalty = env_config.setdefault("stp_penalty", 100.0)
         self._dt_reward = env_config.setdefault("dt_reward", 0.0)
         self._dt_weight = env_config.setdefault("dt_weight", 0.0)
 
@@ -513,13 +513,13 @@ class UavSim(MultiAgentEnv):
             # No need to check for other reward, UAV is done.
             return reward
 
-        else:
-            reward -= self._beta
         # else:
-        #     reward -= self._beta * (
-        #         rel_dist
-        #         / np.linalg.norm([self.env_max_l, self.env_max_w, self.env_max_h])
-        #     )
+        #     reward -= self._beta
+        else:
+            reward -= self._beta * (
+                rel_dist
+                / np.linalg.norm([self.env_max_l, self.env_max_w, self.env_max_h])
+            )
 
         # uav.done_dt = self.time_final
         # get reward if uav maintains time difference

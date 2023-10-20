@@ -56,7 +56,7 @@ def parse_arguments():
     parser.add_argument(
         "--stop-timesteps",
         type=int,
-        default=int(15e6),
+        default=int(20e6),
         help="Number of timesteps to train.",
     )
 
@@ -87,9 +87,9 @@ def train(args):
     temp_env = UavSim(args.config)
     num_gpus = int(os.environ.get("RLLIB_NUM_GPUS", args.gpu))
 
-    args.config["env_config"]["use_safe_action"] = tune.grid_search([False, True])
+    args.config["env_config"]["use_safe_action"] = tune.grid_search([False])
     args.config["env_config"]["tgt_reward"] = tune.grid_search([100])
-    args.config["env_config"]["beta"] = tune.grid_search([0.01])
+    args.config["env_config"]["beta"] = tune.grid_search([0.01, 0.1])
     args.config["env_config"]["d_thresh"] = tune.grid_search([0.2, 0.01])
     args.config["env_config"]["uav_collision_weight"] = tune.grid_search([0.1])
     args.config["env_config"]["obstacle_collision_weight"] = tune.grid_search([0.15])
