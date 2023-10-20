@@ -232,18 +232,19 @@ class UavSim(MultiAgentEnv):
         cum_tg_error = (self.num_uavs / (self.num_uavs - 1)) * (
             # mean_tg_error - (uav.get_t_go_est() - (self.time_final - self.time_elapsed))
             mean_tg_error
-            - (uav.get_t_go_est())  # - (self.time_final - self.time_elapsed))
+            - (uav.get_t_go_est())  # - (self.time_final - self.time_elapsed)
         )
-        # cum_tg_error = 0
+        cum_tg_error = 0
 
-        # for other_uav in self.uavs.values():
-        #     if other_uav.id != uav.id:
-        #         cum_tg_error += other_uav.get_t_go_est() - uav.get_t_go_est()
+        for other_uav in self.uavs.values():
+            if other_uav.id != uav.id:
+                cum_tg_error += other_uav.get_t_go_est() - uav.get_t_go_est()
 
         des_pos = np.zeros(12)
         des_pos[0:6] = uav.pad.state[0:6]
         pos_er = des_pos - uav.state
 
+        action = np.zeros(3)
         # if uav.id == 0:
 
         #     action = -1 * cum_tg_error * np.array([pos_er[0], pos_er[1], pos_er[2]])
@@ -254,17 +255,23 @@ class UavSim(MultiAgentEnv):
         #         * cum_tg_error
         #         * np.array([pos_er[0], pos_er[1], pos_er[2]])
         #     )
-        action = (
-            # -0.5 * cum_tg_error * np.array([pos_er[0], pos_er[1], pos_er[2]])
-            # -0.05
-            # -5 / (uav.init_r * uav.init_tg)
-            -0.4
-            * cum_tg_error
+        # action = (
+        #     # -0.5 * cum_tg_error * np.array([pos_er[0], pos_er[1], pos_er[2]])
+        #     # -0.05
+        #     # -5 / (uav.init_r * uav.init_tg)
+        #     -0.5
+        #     * cum_tg_error
+        #     * np.array([pos_er[0], pos_er[1], pos_er[2]])
+        # )
+        cum_tg_error = (self.time_final - self.time_elapsed)
+        action += (
+            3
             * np.array([pos_er[0], pos_er[1], pos_er[2]])
+            * (-.3 *cum_tg_error)
         )
-        # action += 1 * np.array([pos_er[0], pos_er[1], pos_er[2]])
 
-        action += 2 * np.array([pos_er[3], pos_er[4], pos_er[5]])
+        # action += 2 * cum_tg_error * np.array([pos_er[3], pos_er[4], pos_er[5]])
+        action += 3 * np.array([pos_er[3], pos_er[4], pos_er[5]])
 
         return action
 
@@ -423,9 +430,13 @@ class UavSim(MultiAgentEnv):
             "uav_landed": 1.0 if uav.landed else 0.0,
             "uav_done_dt": uav.done_dt,
             "uav_dt_go": uav.dt_go,
+            # "uav_cum_dt_go": uav.cum_dt_penalty,
         }
 
         return info
+
+    def _get_cum_dt_go_est(self, uav):
+        pass
 
     def _get_closest_obstacles(self, uav):
         obstacle_states = np.array([obs.state for obs in self.obstacles])
