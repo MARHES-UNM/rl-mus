@@ -43,6 +43,7 @@ def parse_arguments():
     parser.add_argument(
         "--run", type=str, default="PPO", help="The RLlib-registered algorithm to use."
     )
+    parser.add_argument("--smoke_test", action="store_true", help="run quicktest")
     parser.add_argument(
         "--framework",
         choices=["tf", "tf2", "torch"],
@@ -111,19 +112,19 @@ def train(args):
         .framework(args.framework)
         .callbacks(multi_callbacks)
         .rollouts(
-            num_rollout_workers=args.num_rollout_workers,  # set 0 to main worker run sim
+            num_rollout_workers=1 if args.smoke_test else args.num_rollout_workers,  # set 0 to main worker run sim
             num_envs_per_worker=args.num_envs_per_worker,
             batch_mode="complete_episodes",
         )
         # Use GPUs iff `RLLIB_NUM_GPUS` env var set to > 0.
         .debugging(log_level="ERROR", seed=123)  # DEBUG, INFO
         .resources(
-            num_gpus=num_gpus,
+            num_gpus=0 if args.smoke_test else num_gpus,
             num_learner_workers=1,
             # num_gpus=args.gpu,
             # num_cpus_per_worker=args.cpu,
             # num_gpus_per_worker=args.gpu,
-            num_gpus_per_learner_worker=args.gpu,
+            num_gpus_per_learner_worker=0 if args.smoke_test else args.gpu,
         )
         # See for changing model options https://docs.ray.io/en/latest/rllib/rllib-models.html
         # .model()
@@ -169,7 +170,7 @@ def train(args):
     )
 
     stop = {
-        "training_iteration": args.stop_iters,
+        "training_iteration": 1 if args.smoke_test else args.stop_iters,
         "timesteps_total": args.stop_timesteps,
     }
 
