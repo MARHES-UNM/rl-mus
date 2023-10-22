@@ -92,15 +92,16 @@ def train(args):
     args.config["env_config"]["tgt_reward"] = tune.grid_search([100])
     args.config["env_config"]["beta"] = tune.grid_search([0.01])
     args.config["env_config"]["d_thresh"] = tune.grid_search([0.01])
-    args.config["env_config"]["uav_collision_weight"] = tune.grid_search([0.1])
-    args.config["env_config"]["obstacle_collision_weight"] = tune.grid_search([0.15])
+    args.config["env_config"]["uav_collision_weight"] = tune.grid_search([0.0])
+    args.config["env_config"]["obstacle_collision_weight"] = tune.grid_search([0.0])
     # args.config["env_config"]["dt_go_penalty"] = tune.grid_search([10])
     # args.config["env_config"]["stp_penalty"] = tune.grid_search([200])
     # args.config["env_config"]["dt_reward"] = tune.grid_search([500])
     # args.config["env_config"]["dt_weight"] = tune.grid_search([0.1, 0.5])
 
     # entropy_coef = tune.grid_search([0.00])
-    gae_lambda = tune.grid_search([0.90, 0.95])
+    # gae_lambda .90 seems to get better peformance of uavs landing
+    gae_lambda = tune.grid_search([0.95])
 
     callback_list = [TrainCallback]
     multi_callbacks = make_multi_callbacks(callback_list)
@@ -112,7 +113,9 @@ def train(args):
         .framework(args.framework)
         .callbacks(multi_callbacks)
         .rollouts(
-            num_rollout_workers=1 if args.smoke_test else args.num_rollout_workers,  # set 0 to main worker run sim
+            num_rollout_workers=1
+            if args.smoke_test
+            else args.num_rollout_workers,  # set 0 to main worker run sim
             num_envs_per_worker=args.num_envs_per_worker,
             batch_mode="complete_episodes",
         )
@@ -191,7 +194,10 @@ def train(args):
             local_dir=args.log_dir,
             name=args.name,
             checkpoint_config=air.CheckpointConfig(
-                checkpoint_at_end=True, checkpoint_frequency=5
+                # num_to_keep=150,
+                # checkpoint_score_attribute="",
+                checkpoint_at_end=True,
+                checkpoint_frequency=5,
             ),
         ),
     )
