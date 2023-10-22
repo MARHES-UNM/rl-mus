@@ -196,8 +196,6 @@ def main():
         for v in target_v:
             groups_to_plot.append((seeds[0], max_num_obstacles[0], action, v))
 
-    groups_to_plot
-
     # TODO: convert to dataframe, pad the data to make them all the same lengths. plot the mean and std
     for group_to_plot in groups_to_plot:
         # There's only one group so only one key
