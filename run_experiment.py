@@ -48,8 +48,8 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
     uav_done_list = [[] for idx in range(env.num_uavs)]
     rel_pad_dist = [[] for idx in range(env.num_uavs)]
     rel_pad_vel = [[] for idx in range(env.num_uavs)]
-    uav_state = [[] for idx in range(env.num_uavs)]
-    target_state = []
+    # uav_state = [[] for idx in range(env.num_uavs)]
+    # target_state = []
 
     results = {
         "num_episodes": 0.0,
@@ -66,8 +66,8 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
             "uav_done_list": [],
             "rel_pad_dist": [],
             "rel_pad_vel": [],
-            "uav_state": [],
-            "target_state": [],
+            # "uav_state": [],
+            # "target_state": [],
         },
     }
 
@@ -104,9 +104,9 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
             rel_pad_dist[k].append(v["uav_rel_dist"])
             rel_pad_vel[k].append(v["uav_rel_vel"])
 
-        for k, v in obs.items():
-            uav_state[k].append(v["state"].tolist())
-            target_state.append(v["target"].tolist())
+        # for k, v in obs.items():
+        #     uav_state[k].append(v["state"].tolist())
+        #     target_state.append(v["target"].tolist())
 
         if render:
             env.render()
@@ -126,8 +126,8 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
             results["episode_data"]["uav_done_list"].append(uav_done_list)
             results["episode_data"]["rel_pad_dist"].append(rel_pad_dist)
             results["episode_data"]["rel_pad_vel"].append(rel_pad_vel)
-            results["episode_data"]["uav_state"].append(uav_state)
-            results["episode_data"]["target_state"].append(target_state)
+            # results["episode_data"]["uav_state"].append(uav_state)
+            # results["episode_data"]["target_state"].append(target_state)
 
             if plot_results:
                 plot_uav_states(
@@ -137,8 +137,8 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
                     uav_done_list,
                     rel_pad_dist,
                     rel_pad_vel,
-                    uav_state,
-                    target_state,
+                    # uav_state,
+                    # target_state,
                 )
 
             if num_episodes == max_num_episodes:
@@ -154,7 +154,7 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
             uav_done_list = [[] for idx in range(env.num_uavs)]
             rel_pad_dist = [[] for idx in range(env.num_uavs)]
             rel_pad_vel = [[] for idx in range(env.num_uavs)]
-            uav_state = [[] for idx in range(env.num_uavs)]
+            # uav_state = [[] for idx in range(env.num_uavs)]
 
     env.close()
 
@@ -187,8 +187,8 @@ def plot_uav_states(
     uav_done_list,
     rel_pad_dist,
     rel_pad_vel,
-    uav_state,
-    target_state,
+    # uav_state,
+    # target_state,
 ):
     uav_state = np.array(uav_state)
     target_state = np.array(target_state)
@@ -199,21 +199,21 @@ def plot_uav_states(
     fig = plt.figure(figsize=(10, 6))
     ax3 = fig.add_subplot(211)
     ax4 = fig.add_subplot(212)
-    fig = plt.figure(figsize=(10, 6))
-    ax5 = fig.add_subplot(111, projection="3d")
+    # fig = plt.figure(figsize=(10, 6))
+    # ax5 = fig.add_subplot(111, projection="3d")
     for idx in range(num_uavs):
         ax.plot(uav_collision_list[idx], label=f"uav_id:{idx}")
         ax1.plot(obstacle_collision_list[idx], label=f"uav_id:{idx}")
         ax2.plot(uav_done_list[idx], label=f"uav_id:{idx}")
         ax3.plot(rel_pad_dist[idx], label=f"uav_id:{idx}")
         ax4.plot(rel_pad_vel[idx], label=f"uav_id:{idx}")
-        ax5.plot(
-            uav_state[idx, :, 0],
-            uav_state[idx, :, 1],
-            uav_state[idx, :, 2],
-            label=f"uav_id:{idx}",
-        )
-    ax5.plot(target_state[:, 0], target_state[:, 1], target_state[:, 2], label="target")
+    #     ax5.plot(
+    #         uav_state[idx, :, 0],
+    #         uav_state[idx, :, 1],
+    #         uav_state[idx, :, 2],
+    #         label=f"uav_id:{idx}",
+    #     )
+    # ax5.plot(target_state[:, 0], target_state[:, 1], target_state[:, 2], label="target")
     plt.legend()
     plt.show()
 
