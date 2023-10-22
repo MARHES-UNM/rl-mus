@@ -2,6 +2,7 @@ from math import isclose
 import sys
 from gym import spaces
 import numpy as np
+import gym
 
 from gym.utils import seeding
 from uav_sim.agents.uav import Obstacle, UavBase, Uav, ObsType
@@ -15,13 +16,14 @@ import random
 logger = logging.getLogger(__name__)
 
 
-class UavSim:
+class UavSim(gym.Env):
     metadata = {
         "render_modes": ["human", "rgb_array"],
         "render_fps": 30,
     }
 
     def __init__(self, env_config={}):
+        super().__init__()
         self.dt = env_config.setdefault("dt", 0.1)
         self._seed = env_config.setdefault("seed", None)
         self.render_mode = env_config.setdefault("render_mode", "human")
@@ -54,6 +56,11 @@ class UavSim:
         self.max_time = env_config.setdefault("max_time", 40)
 
         self.env_config = env_config
+        self.norm_action_high = np.ones(3)
+        self.norm_action_low = np.ones(3) * -1
+
+        self.action_high = np.ones(3) * 5
+        self.action_low = np.ones(3) * -5
 
         self.gui = None
         self._time_elapsed = 0
@@ -306,6 +313,8 @@ class UavSim:
 
             if self._use_safe_action:
                 action = self.get_safe_action(self.uavs[i], action)
+            # TODO: this may not be needed
+            action = np.clip(action, self.action_low, self.action_high)
             self.uavs[i].step(action)
 
         # step target
@@ -313,8 +322,8 @@ class UavSim:
         # if self.target_v == 0.0:
         #     self.target.step()
         # else:
-        #     u = self.target.get_target_action(self.time_elapsed, 75.0)
-        #     self.target.step(u)
+        # u = self.target.get_target_action(self.time_elapsed, 75.0)
+        # self.target.step(u)
 
         # step obstacles
         for obstacle in self.obstacles:
@@ -447,8 +456,7 @@ class UavSim:
         # not currently compatible with new gym api to pass in seed
         # if seed is None:
         #     seed = self._seed
-
-        # self.seed(seed)
+        # super().reset(seed=seed)
 
         if self.gui is not None:
             self.close_gui()
@@ -544,6 +552,42 @@ class UavSim:
         obs = {uav.id: self._get_obs(uav) for uav in self.uavs}
 
         return obs
+
+    def unscale_action(self, action):
+        """[summary]
+
+        Args:
+            action ([type]): [description]
+
+        Returns:
+            [type]: [description]
+        """
+        assert np.all(np.greater_equal(action, self.norm_action_low)), (
+            action,
+            self.norm_action_low,
+        )
+        assert np.all(np.less_equal(action, self.norm_action_high)), (
+            action,
+            self.norm_action_high,
+        )
+        action = self.action_low + (self.action_high - self.action_low) * (
+            (action - self.norm_action_low)
+            / (self.norm_action_high - self.norm_action_low)
+        )
+        # # TODO: this is not needed
+        # action = np.clip(action, self.action_low, self.action_high)
+
+        return action
+
+    def scale_action(self, action):
+        """Scale agent action between default norm action values"""
+        # assert np.all(np.greater_equal(action, self.action_low)), (action, self.action_low)
+        # assert np.all(np.less_equal(action, self.action_high)), (action, self.action_high)
+        action = (self.norm_action_high - self.norm_action_low) * (
+            (action - self.action_low) / (self.action_high - self.action_low)
+        ) + self.norm_action_low
+
+        return action
 
     def render(self, mode="human"):
         if self.render_mode == "human":

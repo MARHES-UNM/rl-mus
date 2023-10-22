@@ -160,12 +160,10 @@ class TestUav(unittest.TestCase):
 
         uav_des_traj = []
         uav_trajectory = []
-        k = np.array([1, 1, 1]) * 0.05
         for i in range(100):
             des_pos[0:3] = pad.state[0:3]
             action = self.uav.calc_des_action(des_pos)
 
-            # action = k * (pad.state[0:3] - self.uav.state[0:3])
             self.uav.step(action)
 
             uav_trajectory.append(self.uav.state)

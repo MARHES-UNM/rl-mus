@@ -14,19 +14,20 @@ from torch.optim import Adam
 import ray.tune as tune
 from ray.air import Checkpoint, session
 
+# This is need to ensure reproducibility. See: https://docs.nvidia.com/cuda/cublas/index.html#cublasApi_reproducibility
+os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
+
 PATH = os.path.dirname(os.path.abspath(__file__))
+torch.use_deterministic_algorithms(True)
 
 
 class SafetyLayer:
     def __init__(self, env, config={}):
         self._env = env
-
         self._config = config
 
         self._parse_config()
-        random.seed(self._seed)
-        np.random.seed(self._seed)
-        torch.manual_seed(self._seed)
+        self._set_seed()
 
         self._init_model()
 
@@ -73,6 +74,11 @@ class SafetyLayer:
         self._cbf_model.to(self._device)
         self._nn_action_model.to(self._device)
 
+    def _set_seed(self):
+        random.seed(self._seed)
+        np.random.seed(self._seed)
+        torch.manual_seed(self._seed)
+
     def _parse_config(self):
         # TODO: update config inputs
         # default 1000000
@@ -95,11 +101,16 @@ class SafetyLayer:
         self._checkpoint = self._config.get("checkpoint", None)
         self._load_buffer = self._config.get("buffer", None)
         self._n_hidden = self._config.get("n_hidden", 32)
-        self.eps = self._config.get("eps", 0.1)
-        self.eps_action = self._config.get("eps_action", 0.2)
-        self.eps_deriv = self._config.get("eps_deriv", 0.03)
+        self.eps_safe = self._config.get("eps_safe", 0.001)
+        self.eps_dang = self._config.get("eps_dang", 0.05)
+        self.eps_action = self._config.get("eps_action", 0.0)
+        self.eps_deriv_safe = self._config.get("eps_deriv_safe", 0.0)
+        self.eps_deriv_dang = self._config.get("eps_deriv_dang", 8e-2)
+        self.eps_deriv_mid = self._config.get("eps_deriv_mid", 3e-2)
         self.loss_action_weight = self._config.get("loss_action_weight", 0.08)
         self._device = self._config.get("device", "cpu")
+        self._safe_margin = self._config.get("safe_margin", 0.1)
+        self._unsafe_margin = self._config.get("unsafe_margin", 0.01)
 
     def _init_model(self):
         obs_space = self._env.observation_space
@@ -109,11 +120,14 @@ class SafetyLayer:
         m_control = self._env.action_space[0].shape[0]
 
         self._cbf_model = CBF(n_state=self.k_obstacle, n_hidden=self._n_hidden)
-
+        num_o = (
+            obs_space[0]["obstacles"].shape[0] + obs_space[0]["other_uav_obs"].shape[0]
+        )
         self._nn_action_model = NN_Action(
             n_state=self.k_obstacle,
             m_control=m_control,
-            n_hidden=self._n_hidden
+            n_hidden=self._n_hidden,
+            num_o=num_o,
             # n_state, n_rel_pad_state, k_obstacle, m_control, self._n_hidden
         )
 
@@ -199,10 +213,8 @@ class SafetyLayer:
         return results
 
     def _get_mask(self, constraints):
-        safe_dist = 0.05
-        unsafe_dist = 0.01
-        safe_mask = (constraints >= safe_dist).float()
-        unsafe_mask = (constraints <= unsafe_dist).float()
+        safe_mask = (constraints >= self._safe_margin).float()
+        unsafe_mask = (constraints <= self._unsafe_margin).float()
 
         mid_mask = (1 - safe_mask) * (1 - unsafe_mask)
 
@@ -269,21 +281,23 @@ class SafetyLayer:
         num_unsafe = torch.sum(unsafe_mask)
         num_mid = torch.sum(mid_mask)
 
-        loss_h_safe = torch.sum(F.relu(self.eps - h) * safe_mask) / (1e-5 + num_safe)
-        loss_h_dang = torch.sum(F.relu(h + self.eps) * unsafe_mask) / (
+        loss_h_safe = torch.sum(F.relu(self.eps_safe - h) * safe_mask) / (
+            1e-5 + num_safe
+        )
+        loss_h_dang = torch.sum(F.relu(h + self.eps_dang) * unsafe_mask) / (
             1e-5 + num_unsafe
         )
 
         acc_h_safe = torch.sum((h >= 0).float() * safe_mask) / (1e-5 + num_safe)
         acc_h_dang = torch.sum((h < 0).float() * unsafe_mask) / (1e-5 + num_unsafe)
 
-        loss_deriv_safe = torch.sum(F.relu(self.eps_deriv - h_deriv) * safe_mask) / (
-            1e-5 + num_safe
-        )
-        loss_deriv_dang = torch.sum(F.relu(self.eps_deriv - h_deriv) * unsafe_mask) / (
-            1e-5 + num_unsafe
-        )
-        loss_deriv_mid = torch.sum(F.relu(self.eps_deriv - h_deriv) * mid_mask) / (
+        loss_deriv_safe = torch.sum(
+            F.relu(self.eps_deriv_safe - h_deriv) * safe_mask
+        ) / (1e-5 + num_safe)
+        loss_deriv_dang = torch.sum(
+            F.relu(self.eps_deriv_dang - h_deriv) * unsafe_mask
+        ) / (1e-5 + num_unsafe)
+        loss_deriv_mid = torch.sum(F.relu(self.eps_deriv_mid - h_deriv) * mid_mask) / (
             1e-5 + num_mid
         )
 
@@ -298,15 +312,19 @@ class SafetyLayer:
         err_action = torch.mean(torch.abs(u - u_nominal))
 
         loss_action = torch.mean(F.relu(torch.abs(u - u_nominal) - self.eps_action))
+        # loss_action = torch.sum(
+        #     F.relu(torch.linalg.vector_norm(u - u_nominal, dim=-1) - self.eps_action) * torch.min(safe_mask, dim=-1)[0]
+        # ) / (1e-5 + num_safe)
 
         # loss = (1 / (1 + self.loss_action_weight)) * (
         loss = (
-            1e3 * loss_h_safe
-            + 1e3 * loss_h_dang
-            + 1e2 * loss_deriv_safe
-            + 1e2 * loss_deriv_dang
-            + 1e2 * loss_deriv_mid
-        ) + loss_action * self.loss_action_weight
+            loss_h_safe
+            + 3.0 * loss_h_dang
+            + loss_deriv_safe
+            + 3.0 * loss_deriv_dang
+            + 2.0 * loss_deriv_mid
+            + self.loss_action_weight * loss_action
+        )
         # ) + loss_action * self.loss_action_weight / (1 + self.loss_action_weight)
 
         # TODO: use a dictionary to store acc_h_items instead.
@@ -333,9 +351,11 @@ class SafetyLayer:
         # zero parameter gradients
         self._nn_action_optimizer.zero_grad()
         self._cbf_optimizer.zero_grad()
+
         loss.backward()
-        self._cbf_optimizer.step()
+
         self._nn_action_optimizer.step()
+        self._cbf_optimizer.step()
 
         return loss, acc_stats
 
@@ -413,11 +433,13 @@ class SafetyLayer:
         for epoch in range(self._num_epochs):
             train_loss, train_acc_stats, train_sample_stats = self.fit()
             print(
-                f"Finished training epoch {epoch} with loss: {train_loss}. Running validation ..."
+                f"Finished training epoch {epoch} with loss: {train_loss}. stats: {train_sample_stats}. \nRunning validation:"
             )
 
             val_loss, val_acc_stats, val_sample_stats = self.evaluate()
-            print(f"Validation completed, average loss {val_loss}.")
+            print(
+                f"Validation completed, average loss {val_loss}. val stats: {val_sample_stats}"
+            )
 
             if self._report_tune:
                 if (epoch + 1) % 5 == 0:

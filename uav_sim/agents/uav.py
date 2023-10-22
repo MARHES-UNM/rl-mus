@@ -181,27 +181,27 @@ class Target(Entity):
         des_xy = des_cir_traj[:3]
         vd = des_cir_traj[3]
         wd = des_cir_traj[4]
-        # zeta = 0.7
-        # b = ((4 / (zeta * .8)) ** 2 - wd**2) / (vd**2)
-        # k1 = k3 = 2.0 * zeta * np.sqrt(wd**2 + b * vd**2)
-        # k2 = b * np.abs(vd)
+        zeta = 0.7
+        b = ((4 / (zeta * .8)) ** 2 - wd**2) / (vd**2)
+        k1 = k3 = 2.0 * zeta * np.sqrt(wd**2 + b * vd**2)
+        k2 = b * np.abs(vd)
 
-        # u[0] = vd * np.cos(des_xy[2] - agent_state[2]) + k1 * (
-        #     np.cos(agent_state[2]) * (des_xy[0] - agent_state[0])
-        #     + np.sin(agent_state[2]) * (des_xy[1] - agent_state[1])
-        # )
-        # u[1] = (
-        #     wd
-        #     + k2
-        #     * np.sign(vd)
-        #     * (
-        #         np.cos(agent_state[2]) * (des_xy[0] - agent_state[0])
-        #         - np.sin(agent_state[2]) * (des_xy[1] - agent_state[1])
-        #     )
-        #     + k3 * (des_xy[2] - agent_state[2])
-        # )
-        u[0] = vd
-        u[1] = wd
+        u[0] = vd * np.cos(des_xy[2] - agent_state[2]) + k1 * (
+            np.cos(agent_state[2]) * (des_xy[0] - agent_state[0])
+            + np.sin(agent_state[2]) * (des_xy[1] - agent_state[1])
+        )
+        u[1] = (
+            wd
+            + k2
+            * np.sign(vd)
+            * (
+                np.cos(agent_state[2]) * (des_xy[0] - agent_state[0])
+                - np.sin(agent_state[2]) * (des_xy[1] - agent_state[1])
+            )
+            + k3 * (des_xy[2] - agent_state[2])
+        )
+        # u[0] = vd
+        # u[1] = wd
         # print(f"vd: {vd}, wd: {wd}, b: {b}")
 
         # u[0] = 0.198 * np.linalg.norm(agent_state[:2] - des_xy[:2])
@@ -309,14 +309,17 @@ class UavBase(Entity):
 
         self._state[2] = max(0, self._state[2])
 
+    # TODO: Combine the functions below into one
     def get_landed(self, pad):
         dist = np.linalg.norm(self._state[0:3] - pad._state[0:3])
         return dist <= 0.01
 
+    # TODO: combine into one.
     def check_dest_reached(self):
         dist = np.linalg.norm(self._state[0:3] - self.pad._state[0:3])
         return dist <= 0.01, dist
 
+    # TODO: combine with equations above
     def get_rel_pad_dist(self):
         return np.linalg.norm(self._state[:3] - self.pad._state[:3])
 
@@ -409,6 +412,16 @@ class Uav(UavBase):
         self.k_psi = 19
         self.k_phi_dot = self.k_theta_dot = 5
         self.k_psi_dot = 2
+
+        # set up gain matrix
+        self.kx = self.ky = 3.5
+        self.kz = 7
+        self.k_x_dot = self.k_y_dot = 3
+        self.k_z_dot = 4.5
+        self.k_phi = self.k_theta = 100
+        self.k_psi = 50
+        self.k_phi_dot = self.k_theta_dot = 15
+        self.k_psi_dot = 10
 
     def get_r_matrix(self, phi, theta, psi):
         """Calculates the Z-Y-X rotation matrix.
