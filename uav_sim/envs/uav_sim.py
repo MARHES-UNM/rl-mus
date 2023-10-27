@@ -309,6 +309,36 @@ class UavSim(MultiAgentEnv):
         result = odeint(dp_dt, g0, t, args=params, tfirst=True)
         return result
 
+    def get_col_avoidance(self, uav, des_action):
+        min_col_distance = uav.r * 2
+        sum_distance = np.zeros(3)
+
+        attractive_f = uav.pad.pos - uav.pos
+        attractive_f = (
+            self.action_high * attractive_f / (1e-3 + np.linalg.norm(attractive_f) ** 2)
+        )
+
+        # other agents
+        for other_uav in self.uavs.values():
+            if other_uav.id != uav.id:
+                if uav.rel_distance(other_uav) <= (min_col_distance + other_uav.r):
+                    dist = other_uav.pos - uav.pos
+                    sum_distance += dist
+
+        closest_obstacles = self._get_closest_obstacles(uav)
+
+        for obstacle in closest_obstacles:
+            if uav.rel_distance(obstacle) <= (min_col_distance + obstacle.r):
+                dist = obstacle.pos - uav.pos
+                sum_distance += dist
+
+        dist_vect = np.linalg.norm(sum_distance)
+        if dist_vect <= 1e-9:
+            u_out = des_action.copy()
+        else:
+            u_out = -self.action_high * sum_distance / dist_vect
+        return u_out
+
     def get_safe_action(self, uav, des_action):
         G = []
         h = []

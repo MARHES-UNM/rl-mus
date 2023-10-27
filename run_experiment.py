@@ -143,6 +143,8 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
                     actions[idx] = env.get_safe_action(env.uavs[idx], actions[idx])
                 elif exp_config["exp_config"]["safe_action_type"] == "nn_cbf":
                     actions[idx] = sl.get_action(obs[idx], actions[idx])
+                elif exp_config["exp_config"]["safe_action_type"] == "sca":
+                    actions[idx] = env.get_col_avoidance(env.uavs[idx], actions[idx])
                 else:
                     print("unknow safe action type")
 
