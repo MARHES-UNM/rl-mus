@@ -135,6 +135,9 @@ def parse_arguments():
         action="store_true",
         default=False,
     )
+    parser.add_argument(
+        "--plot_type", help="plot either box or bar plot", type=str, default="bar"
+    )
 
     args = parser.parse_args()
 
@@ -181,6 +184,7 @@ def main():
         items_to_plot,
         image_folder,
         labels_to_plot,
+        plot_type=args.plot_type,
         skip_legend=args.skip_legend,
     )
 
@@ -261,7 +265,11 @@ def main():
 
         for ax_ in all_axes:
             ax_.set_xlabel("t (s)")
-            ax_.legend()
+            if args.skip_legend:
+                # don't plot legends here. see below
+                ax_.legend().remove()
+            else:
+                ax_.legend()
 
         plt_prefix = {
             "seed": group_to_plot[0],
