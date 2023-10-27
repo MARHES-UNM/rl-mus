@@ -45,15 +45,14 @@ class Entity:
         return self._state[3:6]
 
     def in_collision(self, entity):
-        dist = np.linalg.norm(self._state[0:3] - entity._state[0:3])
+        dist = np.linalg.norm(self._state[0:3] - entity.state[0:3])
         return dist <= (self.r + entity.r)
 
     def wrap_angle(self, val):
         return (val + np.pi) % (2 * np.pi) - np.pi
 
     def rel_distance(self, entity):
-        dist = distance((self.x, self.y), (entity.x, entity.y))
-
+        dist = np.linalg.norm(self._state[0:3] - entity.state[0:3])
         return dist
 
     def rel_bearing_error(self, entity):
@@ -182,7 +181,7 @@ class Target(Entity):
         vd = des_cir_traj[3]
         wd = des_cir_traj[4]
         zeta = 0.7
-        b = ((4 / (zeta * .8)) ** 2 - wd**2) / (vd**2)
+        b = ((4 / (zeta * 0.8)) ** 2 - wd**2) / (vd**2)
         k1 = k3 = 2.0 * zeta * np.sqrt(wd**2 + b * vd**2)
         k2 = b * np.abs(vd)
 

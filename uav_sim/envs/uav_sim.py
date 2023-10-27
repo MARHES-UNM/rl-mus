@@ -1,4 +1,3 @@
-from math import isclose
 import sys
 from gym import spaces
 import numpy as np
@@ -63,7 +62,7 @@ class UavSim(gym.Env):
         self.action_low = np.ones(3) * -5
 
         self.gui = None
-        self._time_elapsed = 0
+        self._time_elapsed = 0.0
         self.seed(self._seed)
         self.reset()
         self.action_space = self._get_action_space()
@@ -246,6 +245,36 @@ class UavSim(gym.Env):
         result = odeint(dp_dt, g0, t, args=params, tfirst=True)
         return result
 
+    def get_col_avoidance(self, uav, des_action):
+        min_col_distance = uav.r * 2
+        sum_distance = np.zeros(3)
+
+        attractive_f = uav.pad.pos - uav.pos
+        attractive_f = (
+            self.action_high * attractive_f / (1e-3 + np.linalg.norm(attractive_f) ** 2)
+        )
+
+        # other agents
+        for other_uav in self.uavs:
+            if other_uav.id != uav.id:
+                if uav.rel_distance(other_uav) <= (min_col_distance + other_uav.r):
+                    dist = other_uav.pos - uav.pos
+                    sum_distance += dist
+
+        closest_obstacles = self._get_closest_obstacles(uav)
+
+        for obstacle in closest_obstacles:
+            if uav.rel_distance(obstacle) <= (min_col_distance + obstacle.r):
+                dist = obstacle.pos - uav.pos
+                sum_distance += dist
+
+        dist_vect = np.linalg.norm(sum_distance)
+        if dist_vect <= 1e-9:
+            u_out = des_action.copy()
+        else:
+            u_out = -self.action_high * sum_distance / dist_vect
+        return u_out
+
     def get_safe_action(self, uav, des_action):
         G = []
         h = []
@@ -307,9 +336,9 @@ class UavSim(gym.Env):
     def step(self, actions):
         # step uavs
         for i, action in actions.items():
-            # # Done uavs don't move
-            # if self.uavs[i].done:
-            #     continue
+            # Done uavs don't move
+            if self.uavs[i].done:
+                continue
 
             if self._use_safe_action:
                 action = self.get_safe_action(self.uavs[i], action)

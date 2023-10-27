@@ -89,6 +89,8 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
                     actions[idx] = env.get_safe_action(env.uavs[idx], actions[idx])
                 elif exp_config["exp_config"]["safe_action_type"] == "nn_cbf":
                     actions[idx] = sl.get_action(obs[idx], actions[idx])
+                elif exp_config["exp_config"]["safe_action_type"] == "sca":
+                    actions[idx] = env.get_col_avoidance(env.uavs[idx], actions[idx])
                 else:
                     print("unknow safe action type")
 
@@ -190,8 +192,9 @@ def plot_uav_states(
     # uav_state,
     # target_state,
 ):
-    uav_state = np.array(uav_state)
-    target_state = np.array(target_state)
+    # uav_state = np.array(uav_state)
+    # target_state = np.array(target_state)
+    axs = []
     fig = plt.figure(figsize=(10, 6))
     ax = fig.add_subplot(311)
     ax1 = fig.add_subplot(312)
@@ -201,6 +204,7 @@ def plot_uav_states(
     ax4 = fig.add_subplot(212)
     # fig = plt.figure(figsize=(10, 6))
     # ax5 = fig.add_subplot(111, projection="3d")
+    axs.extend([ax, ax2, ax3, ax4])
     for idx in range(num_uavs):
         ax.plot(uav_collision_list[idx], label=f"uav_id:{idx}")
         ax1.plot(obstacle_collision_list[idx], label=f"uav_id:{idx}")
@@ -214,6 +218,8 @@ def plot_uav_states(
     #         label=f"uav_id:{idx}",
     #     )
     # ax5.plot(target_state[:, 0], target_state[:, 1], target_state[:, 2], label="target")
+    for ax_ in axs:
+        ax_.legend()
     plt.legend()
     plt.show()
 
