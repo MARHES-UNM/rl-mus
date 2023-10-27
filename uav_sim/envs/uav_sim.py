@@ -546,14 +546,18 @@ class UavSim(MultiAgentEnv):
 
             # No need to check for other reward, UAV is done.
             return reward
+        elif rel_dist >= np.linalg.norm(
+            [self.env_max_l, self.env_max_w, self.env_max_h]
+        ):
+            reward += -200
 
         # else:
         #     reward -= self._beta
-        else:
-            reward -= self._beta * (
-                rel_dist
-                / np.linalg.norm([self.env_max_l, self.env_max_w, self.env_max_h])
-            )
+        # else:
+        #     reward -= self._beta * (
+        #         rel_dist
+        #         / np.linalg.norm([self.env_max_l, self.env_max_w, self.env_max_h])
+        #     )
 
         # uav.done_dt = self.time_final
         # get reward if uav maintains time difference
