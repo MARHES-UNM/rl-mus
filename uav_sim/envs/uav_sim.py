@@ -47,7 +47,7 @@ class UavSim(MultiAgentEnv):
         self._tgt_reward = env_config.setdefault("tgt_reward", 100.0)
         self._dt_go_penalty = env_config.setdefault("dt_go_penalty", 10.0)
         self._stp_penalty = env_config.setdefault("stp_penalty", 100.0)
-        self._dt_reward = env_config.setdefault("dt_reward", 0.0)
+        self._dt_reward = env_config.setdefault("dt_reward", 200)
         self._dt_weight = env_config.setdefault("dt_weight", 0.0)
 
         self._agent_ids = set(range(self.num_uavs))
@@ -514,7 +514,7 @@ class UavSim(MultiAgentEnv):
         uav.uav_collision = 0.0
         uav.obs_collision = 0.0
         uav.dt_go = uav.get_t_go_est() - t_remaining
-        uav.done_dt = self.time_final - self.time_elapsed
+        uav.done_dt = t_remaining
 
         if uav.done:
             # UAV most have finished last time_step, report zero collisions
@@ -533,12 +533,14 @@ class UavSim(MultiAgentEnv):
             uav.landed = True
             uav.done_time = self.time_elapsed
 
+            reward += self._tgt_reward
+
             # get reward for reaching destination
             # TOD: put boundary so that no reward is given if beyond
-            if self.time_elapsed <= self.time_final + self.t_go_max:
-                reward += self._tgt_reward * min(
-                    self.time_elapsed / self.time_final, 1.0
-                )
+            # if self.time_elapsed <= self.time_final + self.t_go_max:
+            #     reward += self._tgt_reward * min(
+            #         self.time_elapsed / self.time_final, 1.0
+            #     )
 
             # get reward for reaching destination in time
             if abs(uav.done_dt) <= self.t_go_max:
@@ -564,8 +566,8 @@ class UavSim(MultiAgentEnv):
         # if t_remaining >= 0 and (uav.dt_go < self.t_go_max):
         # TODO: consider adding a consensus reward here that is the sum of the error time difference between UAVs
         # this of this as a undirected communication graph
-        # if abs(uav.dt_go) > self.t_go_max:
-        #     reward -= self._dt_go_penalty
+        if abs(uav.dt_go) > self.t_go_max:
+            reward += -self._dt_go_penalty
 
         cum_dt_penalty = 0
         # neg reward if uav collides with other uavs

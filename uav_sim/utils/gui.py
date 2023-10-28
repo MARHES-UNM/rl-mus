@@ -358,16 +358,14 @@ class Gui:
             0.0, 0.95, "", color="red", transform=self.ax["ax_3d"].transAxes
         )
         self.init_entities()
+
         # for stopping simulation with the esc key
         self.fig.canvas.mpl_connect("key_press_event", self.keypress_routine)
 
         # view is elevation and azimuth angle
-        self.ax["ax_3d"].view_init(45, 25)
+        self.ax["ax_3d"].view_init(25, 45)
         # Overhead Z
         # self.ax["ax_3d"].view_init(90, 270)
-
-        # # plt.show(False)
-        # plt.draw()
 
         self.background = self.fig.canvas.copy_from_bbox(self.fig.bbox)
 
