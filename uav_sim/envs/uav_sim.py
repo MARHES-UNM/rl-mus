@@ -566,8 +566,8 @@ class UavSim(MultiAgentEnv):
         # if t_remaining >= 0 and (uav.dt_go < self.t_go_max):
         # TODO: consider adding a consensus reward here that is the sum of the error time difference between UAVs
         # this of this as a undirected communication graph
-        if abs(uav.dt_go) > self.t_go_max:
-            reward += -self._dt_go_penalty
+        # if abs(uav.dt_go) > self.t_go_max:
+        #     reward += -self._dt_go_penalty
 
         cum_dt_penalty = 0
         # neg reward if uav collides with other uavs
@@ -581,7 +581,7 @@ class UavSim(MultiAgentEnv):
                     # uav.landed = False
                     uav.uav_collision += 1
 
-        reward -= self._dt_weight * abs(cum_dt_penalty)
+        # reward -= self._dt_weight * abs(cum_dt_penalty)
 
         # neg reward if uav collides with obstacles
         for obstacle in self.obstacles:
