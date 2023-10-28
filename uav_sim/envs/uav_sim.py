@@ -525,8 +525,6 @@ class UavSim(MultiAgentEnv):
         t_remaining = self.time_final - self.time_elapsed
         uav.uav_collision = 0.0
         uav.obs_collision = 0.0
-        uav.dt_go = uav.get_t_go_est() - t_remaining
-        uav.done_dt = t_remaining
 
         if uav.done:
             # UAV most have finished last time_step, report zero collisions
@@ -537,6 +535,8 @@ class UavSim(MultiAgentEnv):
             reward -= self._stp_penalty
             return reward
 
+        uav.dt_go = uav.get_t_go_est() - t_remaining
+        uav.done_dt = t_remaining
         # pos reward if uav lands on any landing pad
         is_reached, rel_dist, rel_vel = uav.check_dest_reached()
 
