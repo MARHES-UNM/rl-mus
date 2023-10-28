@@ -521,7 +521,7 @@ class UavSim(MultiAgentEnv):
             "r_tgt_reward": 0,
             "dt_go_penalty": 0,
         }
-        reward = 0
+        reward = 0.0
         t_remaining = self.time_final - self.time_elapsed
         uav.uav_collision = 0.0
         uav.obs_collision = 0.0
@@ -549,24 +549,31 @@ class UavSim(MultiAgentEnv):
 
             # get reward for reaching destination
             # TOD: put boundary so that no reward is given if beyond
-            if self.time_elapsed <= self.time_final + self.t_go_max:
-                reward += self._tgt_reward * min(
-                    self.time_elapsed / self.time_final, 1.0
-                )
+            # if self.time_elapsed <= self.time_final + self.t_go_max:
+            #     reward += self._tgt_reward * min(
+            #         self.time_elapsed / self.time_final, 1.0
+            #     )
 
-            # get reward for reaching destination in time
-            if abs(uav.done_dt) <= self.t_go_max:
-                reward += self._dt_reward
+            if abs(uav.done_dt) < self.t_go_max:
+                reward += self._tgt_reward
+
+            else:
+                reward += -(1 - (self.time_elapsed / self.max_time)) * self._tgt_reward
+
+            # # get reward for reaching destination in time
+            # if abs(uav.done_dt) <= self.t_go_max:
+            #     reward += self._dt_reward
 
             # No need to check for other reward, UAV is done.
             return reward
-        # elif rel_dist >= np.linalg.norm(
-        #     [self.env_max_l, self.env_max_w, self.env_max_h]
-        # ):
-        #     reward += -200
+
+        elif rel_dist >= np.linalg.norm(
+            [self.env_max_l, self.env_max_w, self.env_max_h]
+        ):
+            reward += -10
 
         # give small penalty for having large relative velocity
-        reward += -0.01 * rel_vel
+        reward += -self._beta * rel_vel
 
         # else:
         #     reward -= self._beta
