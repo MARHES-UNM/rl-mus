@@ -47,7 +47,7 @@ class UavSim(MultiAgentEnv):
         self._tgt_reward = env_config.setdefault("tgt_reward", 100.0)
         self._dt_go_penalty = env_config.setdefault("dt_go_penalty", 10.0)
         self._stp_penalty = env_config.setdefault("stp_penalty", 100.0)
-        self._dt_reward = env_config.setdefault("dt_reward", 200)
+        self._dt_reward = env_config.setdefault("dt_reward", 200.0)
         self._dt_weight = env_config.setdefault("dt_weight", 0.0)
 
         self._agent_ids = set(range(self.num_uavs))
