@@ -82,7 +82,7 @@ class UavSim(MultiAgentEnv):
         The uav action consist of acceleration in x, y, and z component."""
         return spaces.Dict(
             {
-                i: spaces.Box(low=-np.inf, high=np.inf, shape=(3,), dtype=np.float32)
+                i: spaces.Box(low=self.action_low, high=self.action_high, shape=(3,), dtype=np.float32)
                 for i in range(self.num_uavs)
             }
         )
