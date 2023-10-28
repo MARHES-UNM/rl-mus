@@ -60,7 +60,8 @@ class UavSim(MultiAgentEnv):
         self.env_max_h = env_config.setdefault("env_max_h", 4)
         self.target_v = env_config.setdefault("target_v", 0)
         self.target_w = env_config.setdefault("target_w", 0)
-        self.max_time = env_config.setdefault("max_time", 40)
+        # self.max_time = env_config.setdefault("max_time", 40)
+        self.max_time = self.time_final + self.t_go_max
 
         self.env_config = env_config
         self.norm_action_high = np.ones(3)
@@ -82,7 +83,12 @@ class UavSim(MultiAgentEnv):
         The uav action consist of acceleration in x, y, and z component."""
         return spaces.Dict(
             {
-                i: spaces.Box(low=self.action_low, high=self.action_high, shape=(3,), dtype=np.float32)
+                i: spaces.Box(
+                    low=self.action_low,
+                    high=self.action_high,
+                    shape=(3,),
+                    dtype=np.float32,
+                )
                 for i in range(self.num_uavs)
             }
         )
@@ -102,6 +108,9 @@ class UavSim(MultiAgentEnv):
                             high=np.inf,
                             shape=self.uavs[0].state.shape,
                             dtype=np.float32,
+                        ),
+                        "done_dt": spaces.Box(
+                            low=-np.inf, high=np.inf, shape=(1,), dtype=np.float32
                         ),
                         "dt_go": spaces.Box(
                             low=-np.inf, high=np.inf, shape=(1,), dtype=np.float32
@@ -488,6 +497,9 @@ class UavSim(MultiAgentEnv):
         obs_dict = {
             "state": uav.state.astype(np.float32),
             "target": self.target.state.astype(np.float32),
+            "done_dt": np.array(
+                [self.time_final - self._time_elapsed], dtype=np.float32
+            ),
             "dt_go": np.array(
                 [uav.get_t_go_est() - (self.time_final - self._time_elapsed)],
                 dtype=np.float32,
@@ -552,6 +564,9 @@ class UavSim(MultiAgentEnv):
             [self.env_max_l, self.env_max_w, self.env_max_h]
         ):
             reward += -200
+
+        # give small penalty for having large relative velocity
+        reward += -0.01 * rel_vel
 
         # else:
         #     reward -= self._beta
