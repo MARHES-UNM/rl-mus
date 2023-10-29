@@ -90,10 +90,12 @@ def train(args):
 
     args.config["env_config"]["use_safe_action"] = tune.grid_search([False])
     args.config["env_config"]["tgt_reward"] = tune.grid_search([100.0])
-    args.config["env_config"]["beta"] = tune.grid_search([0.01, 0.001])
-    args.config["env_config"]["d_thresh"] = tune.grid_search([0.2, 0.01])
-    args.config["env_config"]["uav_collision_weight"] = tune.grid_search([0.0])
-    args.config["env_config"]["obstacle_collision_weight"] = tune.grid_search([0.0])
+    args.config["env_config"]["beta"] = tune.grid_search([0.01])
+    args.config["env_config"]["d_thresh"] = tune.grid_search([0.01])
+    args.config["env_config"]["uav_collision_weight"] = tune.grid_search([0.0, 1.0])
+    args.config["env_config"]["obstacle_collision_weight"] = args.config["env_config"][
+        "uav_collision_weight"
+    ]
     # args.config["env_config"]["dt_go_penalty"] = tune.grid_search([10])
     # args.config["env_config"]["stp_penalty"] = tune.grid_search([200])
     # args.config["env_config"]["dt_reward"] = tune.grid_search([500])

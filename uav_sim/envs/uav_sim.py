@@ -40,7 +40,7 @@ class UavSim(MultiAgentEnv):
         self.uav_collision_weight = env_config.setdefault("uav_collision_weight", 0.1)
         self._use_safe_action = env_config.setdefault("use_safe_action", False)
         self.time_final = env_config.setdefault("time_final", 20.0)
-        self.t_go_max = env_config.setdefault("t_go_max", 3.0)
+        self.t_go_max = env_config.setdefault("t_go_max", 1.0)
         self.t_go_n = env_config.setdefault("t_go_n", 1.0)
         self._beta = env_config.setdefault("beta", 0.01)
         self._d_thresh = env_config.setdefault("d_thresh", 0.01)  # uav.rad + pad.rad
@@ -558,7 +558,9 @@ class UavSim(MultiAgentEnv):
                 reward += self._tgt_reward
 
             else:
-                reward += -(1 - (self.time_elapsed / self.max_time)) * self._tgt_reward
+                reward += (
+                    -(1 - (self.time_elapsed / self.time_final)) * self._tgt_reward
+                )
 
             # # get reward for reaching destination in time
             # if abs(uav.done_dt) <= self.t_go_max:
