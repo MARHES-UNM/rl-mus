@@ -573,6 +573,11 @@ class UavSim(MultiAgentEnv):
             [self.env_max_l, self.env_max_w, self.env_max_h]
         ):
             reward += -10
+        else:
+            reward -= self._beta * (
+                rel_dist
+                / np.linalg.norm([self.env_max_l, self.env_max_w, self.env_max_h])
+            )
 
         # give small penalty for having large relative velocity
         reward += -self._beta * rel_vel
