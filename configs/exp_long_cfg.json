@@ -19,7 +19,8 @@
         "safe_action_type": [
             "none",
             "cbf",
-            "nn_cbf"
+            "nn_cbf",
+            "sca"
         ],
         "seeds": [
             0,
@@ -79,6 +80,7 @@
     "labels_to_plot": [
         "None",
         "CBF",
-        "NN_CBF"
+        "NN_CBF",
+        "SCA"
     ]
 }

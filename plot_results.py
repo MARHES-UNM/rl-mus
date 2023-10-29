@@ -112,7 +112,7 @@ def plot_groups(
     ax_leg = fig_leg.add_subplot(111)
     # add the legend from the previous axes
     handles, labels = ax.get_legend_handles_labels()
-    ax_leg.legend(handles, labels, loc="center", ncol=3)
+    ax_leg.legend(handles, labels, loc="center", ncol=len(labels))
     # ax_leg.legend(handles, labels_to_plot, loc="center", ncol=3)
     # ax_leg.legend(["Safe_True", "safe_false"], loc="center", ncol=3)
     # hide the axes frame and the x/y labels
