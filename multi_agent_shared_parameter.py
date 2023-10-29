@@ -91,7 +91,7 @@ def train(args):
     args.config["env_config"]["use_safe_action"] = tune.grid_search([False, True])
     args.config["env_config"]["tgt_reward"] = 100.0
     args.config["env_config"]["beta"] = tune.grid_search([0.01])
-    args.config["env_config"]["d_thresh"] = tune.grid_search([0.01])
+    args.config["env_config"]["d_thresh"] = tune.grid_search([0.01, 0.2])
     args.config["env_config"]["uav_collision_weight"] = tune.grid_search([1.0])
     args.config["env_config"]["obstacle_collision_weight"] = tune.grid_search([1.0])
     # args.config["env_config"]["dt_go_penalty"] = tune.grid_search([10])
@@ -144,11 +144,13 @@ def train(args):
             sgd_minibatch_size=4096,
             vf_clip_param=10.0,
             vf_loss_coeff=0.5,
-            # clip_param=0.2,
-            # entropy_coeff=entropy_coef,
-            # grad_clip=0.5,
-            # kl_coeff=1,
-            # kl_target=0.0068,
+            clip_param=0.2,
+            entropy_coeff=0.0,
+            # seeing if this solves the error:
+            # Expected parameter loc (Tensor of shape (4096, 3)) of distribution Normal(loc: torch.Size([4096, 3]), scale: torch.Size([4096, 3])) to satisfy the constraint Real(),
+            grad_clip=0.5,
+            kl_coeff=1.0,
+            kl_target=0.0068,
         )
         .multi_agent(
             policies={
