@@ -513,14 +513,14 @@ class UavSim(MultiAgentEnv):
         return obs_dict
 
     def _get_reward(self, uav):
-        reward_info = {
-            "stp_penalty": 0,
-            "tgt_reward": 0,
-            "dt_reward": 0,
-            "r_tgt_reward": 0,
-            "r_tgt_reward": 0,
-            "dt_go_penalty": 0,
-        }
+        # reward_info = {
+        #     "stp_penalty": 0,
+        #     "tgt_reward": 0,
+        #     "dt_reward": 0,
+        #     "r_tgt_reward": 0,
+        #     "r_tgt_reward": 0,
+        #     "dt_go_penalty": 0,
+        # }
         reward = 0.0
         t_remaining = self.time_final - self.time_elapsed
         uav.uav_collision = 0.0
