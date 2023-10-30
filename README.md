@@ -257,3 +257,17 @@ For your custom RLlib `MultiAgentEnv` classes:
 TODO: 
 watch this video for hints on clipping the gradient
 https://www.youtube.com/watch?v=OAKAZhFmYoI
+
+
+## TODO: 
+* use curriculum learning to get better results
+use this example from [Rllib](https://github.com/ray-project/ray/blob/ray-2.6.3/rllib/examples/curriculum_learning.py) to train the agents to define a curriculum function
+*  create a wrapper around the multiagent environment to and make it harder and harder each task. 
+https://github.com/ray-project/ray/blob/ray-2.6.3/rllib/examples/env/curriculum_capable_env.py
+* an example of tasks could be: 
+1. define a large radius around the target area
+2. reduce the radius around the target area till we get to 0.01
+3. now add penalty for getting to the target area too soon
+
+Take a look at this paper on MASAC, https://www.frontiersin.org/articles/10.3389/fnbot.2022.932671/full
+maybe there's something here to learn and compare against MAPPO.
