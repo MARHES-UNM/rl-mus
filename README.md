@@ -271,3 +271,5 @@ https://github.com/ray-project/ray/blob/ray-2.6.3/rllib/examples/env/curriculum_
 
 Take a look at this paper on MASAC, https://www.frontiersin.org/articles/10.3389/fnbot.2022.932671/full
 maybe there's something here to learn and compare against MAPPO.
+
+https://discuss.ray.io/t/how-to-implement-curriculum-learning-as-in-narvekar-and-stone-2018/3124

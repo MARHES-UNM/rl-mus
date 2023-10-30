@@ -89,11 +89,11 @@ def train(args):
     num_gpus = int(os.environ.get("RLLIB_NUM_GPUS", args.gpu))
 
     args.config["env_config"]["use_safe_action"] = tune.grid_search([False, True])
-    args.config["env_config"]["tgt_reward"] = 100.0
-    args.config["env_config"]["beta"] = tune.grid_search([0.5])
+    args.config["env_config"]["tgt_reward"] = tune.grid_search([200.0, 300.0])
+    args.config["env_config"]["beta"] = tune.grid_search([0.3])
     args.config["env_config"]["d_thresh"] = tune.grid_search([0.01, 0.2])
-    args.config["env_config"]["uav_collision_weight"] = tune.grid_search([10.0])
-    args.config["env_config"]["obstacle_collision_weight"] = tune.grid_search([10.0])
+    args.config["env_config"]["uav_collision_weight"] = tune.grid_search([5.0])
+    args.config["env_config"]["obstacle_collision_weight"] = tune.grid_search([5.0])
     # args.config["env_config"]["dt_go_penalty"] = tune.grid_search([10])
     # args.config["env_config"]["stp_penalty"] = tune.grid_search([200])
     # args.config["env_config"]["dt_reward"] = tune.grid_search([500])
