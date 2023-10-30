@@ -81,9 +81,21 @@ def plot_groups(
             group_to_plot.safe_action = group_to_plot.safe_action.cat.set_categories(
                 labels_to_plot
             )
-            ax = plot_func(
-                group_to_plot, hue="safe_action", x=group["group_x"], y=key, ax=ax
-            )
+            if group["group_x"] == "safe_action":
+                ax = plot_func(
+                    group_to_plot,
+                    x=group["group_x"],
+                    y=key,
+                    ax=ax,
+                )
+            else:
+                ax = plot_func(
+                    group_to_plot,
+                    hue="safe_action",
+                    x=group["group_x"],
+                    y=key,
+                    ax=ax,
+                )
             ax.set_ylabel(value)
             ax.set_xlabel(group["x_label"])
             # if item == "episode_reward":
@@ -92,7 +104,7 @@ def plot_groups(
 
             if skip_legend:
                 # don't plot legends here. see below
-                ax.legend_.remove()
+                ax.legend().remove()
             else:
                 ax.legend()
 
