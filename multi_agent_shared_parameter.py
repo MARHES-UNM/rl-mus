@@ -92,14 +92,9 @@ def train(args):
     num_gpus = int(os.environ.get("RLLIB_NUM_GPUS", args.gpu))
 
     args.config["env_config"]["use_safe_action"] = tune.grid_search([False, True])
-    args.config["env_config"]["tgt_reward"] = tune.grid_search([200.0])
-    args.config["env_config"]["beta"] = tune.grid_search(
-        [
-            0.1,
-            0.5,
-        ]
-    )
-    args.config["env_config"]["d_thresh"] = tune.grid_search([0.01])
+    args.config["env_config"]["tgt_reward"] = tune.grid_search([10, 50])
+    args.config["env_config"]["beta"] = tune.grid_search([0.3])
+    args.config["env_config"]["d_thresh"] = tune.grid_search([0.01, 0.2])
     args.config["env_config"]["uav_collision_weight"] = tune.grid_search([0.0])
     args.config["env_config"]["obstacle_collision_weight"] = tune.grid_search([0.0])
     # args.config["env_config"]["dt_go_penalty"] = tune.grid_search([10])
@@ -181,8 +176,8 @@ def train(args):
         #     evaluation_interval=10, evaluation_duration=10  # default number of episodes
         # )
     )
-    
-    # use preload checpoint, 
+
+    # use preload checpoint,
     # https://github.com/ray-project/ray/blob/master/rllib/examples/restore_1_of_n_agents_from_checkpoint.py
     policy_checkpoint = r"/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-10-30-05-59_6341c86/beta_0_3_pen_5/PPO_multi-uav-sim-v0_161e9_00003_3_beta=0.3000,d_thresh=0.2000,obstacle_collision_weight=5.0000,tgt_reward=300.0000,uav_collision__2023-10-30_05-59-59/checkpoint_000454/policies/shared_policy"
     restored_policy = Policy.from_checkpoint(policy_checkpoint)
