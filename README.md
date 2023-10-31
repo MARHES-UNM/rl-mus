@@ -273,3 +273,15 @@ Take a look at this paper on MASAC, https://www.frontiersin.org/articles/10.3389
 maybe there's something here to learn and compare against MAPPO.
 
 https://discuss.ray.io/t/how-to-implement-curriculum-learning-as-in-narvekar-and-stone-2018/3124
+
+
+access model state like so: 
+https://docs.ray.io/en/latest/rllib/rllib-training.html
+
+policy_checkpoint = r"/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-10-30-05-59_6341c86/beta_0_3_pen_5/PPO_multi-uav-sim-v0_161e9_00003_3_beta=0.3000,d_thresh=0.2000,obstacle_collision_weight=5.0000,tgt_reward=300.0000,uav_collision__2023-10-30_05-59-59/checkpoint_000454/policies/shared_policy"
+
+algo = Policy.from_checkpoint(policy_checkpoint)
+https://github.com/ray-project/ray/blob/ray-2.6.3/rllib/examples/restore_1_of_n_agents_from_checkpoint.py
+
+https://discuss.ray.io/t/how-to-use-my-pretrained-model-as-policy-and-value-netwok/11040
+https://discuss.ray.io/t/updating-policy-mapping-fn-while-using-tune-run-and-restoring-from-a-checkpoint/11018/4

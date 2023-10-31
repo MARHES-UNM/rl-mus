@@ -46,6 +46,10 @@ def parse_arguments():
     parser.add_argument(
         "--run", type=str, default="PPO", help="The RLlib-registered algorithm to use."
     )
+    parser.add_argument(
+        "--preload", type=str, help="preload policy with training weights"
+    )
+
     parser.add_argument("--smoke_test", action="store_true", help="run quicktest")
     parser.add_argument(
         "--framework",
@@ -91,12 +95,15 @@ def train(args):
     temp_env = UavSim(args.config)
     num_gpus = int(os.environ.get("RLLIB_NUM_GPUS", args.gpu))
 
-    args.config["env_config"]["use_safe_action"] = tune.grid_search([False, True])
-    args.config["env_config"]["tgt_reward"] = tune.grid_search([10, 50])
-    args.config["env_config"]["beta"] = tune.grid_search([0.3])
+    args.config["env_config"]["use_safe_action"] = tune.grid_search([False])
+    args.config["env_config"]["tgt_reward"] = tune.grid_search([50.0, 100.0])
+    args.config["env_config"]["beta"] = tune.grid_search([0.3, 0.01, 0.1])
+    # args.config["env_config"]["beta"] = tune.grid_search([0.3])
     args.config["env_config"]["d_thresh"] = tune.grid_search([0.01, 0.2])
     args.config["env_config"]["uav_collision_weight"] = tune.grid_search([0.0])
     args.config["env_config"]["obstacle_collision_weight"] = tune.grid_search([0.0])
+    # args.config["env_config"]["uav_collision_weight"] = tune.grid_search([0.1])
+    # args.config["env_config"]["obstacle_collision_weight"] = tune.grid_search([0.15])
     # args.config["env_config"]["dt_go_penalty"] = tune.grid_search([10])
     # args.config["env_config"]["stp_penalty"] = tune.grid_search([200])
     # args.config["env_config"]["dt_reward"] = tune.grid_search([500])
@@ -106,7 +113,7 @@ def train(args):
     # gae_lambda .90 seems to get better peformance of uavs landing
     # gae_lambda = tune.grid_search([0.95])
 
-    # callback_list = [TrainCallback]
+    callback_list = [TrainCallback]
     # multi_callbacks = make_multi_callbacks(callback_list)
     # info on common configs: https://docs.ray.io/en/latest/rllib/rllib-training.html#specifying-rollout-workers
     train_config = (
@@ -177,27 +184,30 @@ def train(args):
         # )
     )
 
-    # use preload checpoint,
-    # https://github.com/ray-project/ray/blob/master/rllib/examples/restore_1_of_n_agents_from_checkpoint.py
-    policy_checkpoint = r"/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-10-30-05-59_6341c86/beta_0_3_pen_5/PPO_multi-uav-sim-v0_161e9_00003_3_beta=0.3000,d_thresh=0.2000,obstacle_collision_weight=5.0000,tgt_reward=300.0000,uav_collision__2023-10-30_05-59-59/checkpoint_000454/policies/shared_policy"
-    restored_policy = Policy.from_checkpoint(policy_checkpoint)
-    restored_policy_weights = restored_policy.get_weights()
+    if args.preload is not None:
+        # use preload checpoint,
+        # https://github.com/ray-project/ray/blob/master/rllib/examples/restore_1_of_n_agents_from_checkpoint.py
+        policy_checkpoint = r"/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-10-30-05-59_6341c86/beta_0_3_pen_5/PPO_multi-uav-sim-v0_161e9_00003_3_beta=0.3000,d_thresh=0.2000,obstacle_collision_weight=5.0000,tgt_reward=300.0000,uav_collision__2023-10-30_05-59-59/checkpoint_000454/policies/shared_policy"
+        policy_checkpoint = args.preload
+        restored_policy = Policy.from_checkpoint(policy_checkpoint)
+        restored_policy_weights = restored_policy.get_weights()
+
+        class RestoreWeightsCallback(DefaultCallbacks):
+            def on_algorithm_init(self, *, algorithm: "Algorithm", **kwargs) -> None:
+                algorithm.set_weights({"shared_policy": restored_policy_weights})
+
+        callback_list.append(RestoreWeightsCallback)
+        # Make sure, the non-1st policies are not updated anymore.
+        # config.policies_to_train = [pid for pid in policy_ids if pid != "policy_0"]
+
+    multi_callbacks = make_multi_callbacks(callback_list)
+    train_config.callbacks(multi_callbacks)
 
     stop = {
         "training_iteration": 1 if args.smoke_test else args.stop_iters,
         "timesteps_total": args.stop_timesteps,
     }
 
-    class RestoreWeightsCallback(DefaultCallbacks):
-        def on_algorithm_init(self, *, algorithm: "Algorithm", **kwargs) -> None:
-            algorithm.set_weights({"shared_policy": restored_policy_weights})
-
-    callback_list = [TrainCallback]
-    callback_list.append(RestoreWeightsCallback)
-    multi_callbacks = make_multi_callbacks(callback_list)
-    # Make sure, the non-1st policies are not updated anymore.
-    # config.policies_to_train = [pid for pid in policy_ids if pid != "policy_0"]
-    train_config.callbacks(multi_callbacks)
     # algo = train_config.build()
 
     # while True:
