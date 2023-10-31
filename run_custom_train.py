@@ -91,12 +91,12 @@ def parse_arguments():
 def my_train_fn(config, reporter):
     iterations = config.pop("train-iterations", 30)
 
-    config["env_config"]["use_safe_action"] = tune.grid_search([False])
-    config["env_config"]["tgt_reward"] = tune.grid_search([0.0])
-    config["env_config"]["beta"] = tune.grid_search([0.3])
-    config["env_config"]["d_thresh"] = tune.grid_search([0.01])
-    config["env_config"]["uav_collision_weight"] = tune.grid_search([0.0])
-    config["env_config"]["obstacle_collision_weight"] = tune.grid_search([0.0])
+    config["env_config"]["use_safe_action"] = False
+    config["env_config"]["tgt_reward"] = 0.0
+    config["env_config"]["beta"] = 0.3
+    config["env_config"]["d_thresh"] = 0.01
+    config["env_config"]["uav_collision_weight"] = 0.0
+    config["env_config"]["obstacle_collision_weight"] = 0.0
 
     config = PPOConfig().update_from_dict(config)
 
@@ -114,12 +114,12 @@ def my_train_fn(config, reporter):
     agent1.stop()
 
 
-    config["env_config"]["use_safe_action"] = tune.grid_search([False])
-    config["env_config"]["tgt_reward"] = tune.grid_search([10])
-    config["env_config"]["beta"] = tune.grid_search([0.01])
-    config["env_config"]["d_thresh"] = tune.grid_search([0.01])
-    config["env_config"]["uav_collision_weight"] = tune.grid_search([0.0])
-    config["env_config"]["obstacle_collision_weight"] = tune.grid_search([0.0])
+    config["env_config"]["use_safe_action"] = False
+    config["env_config"]["tgt_reward"] = 10
+    config["env_config"]["beta"] = 0.01
+    config["env_config"]["d_thresh"] = 0.01
+    config["env_config"]["uav_collision_weight"] = 0.0
+    config["env_config"]["obstacle_collision_weight"] = 0.0
 
     config = PPOConfig().update_from_dict(config)
     # Train for n iterations with low LR
