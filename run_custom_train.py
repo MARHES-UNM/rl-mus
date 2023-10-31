@@ -1,3 +1,6 @@
+import os
+
+os.environ["PL_TORCH_DISTRIBUTED_BACKEND"] = "gloo"
 from datetime import datetime
 import json
 from ray import air, tune
@@ -7,7 +10,6 @@ import logging
 from uav_sim.utils.utils import get_git_hash
 from uav_sim.envs.uav_sim import UavSim
 from pathlib import Path
-import os
 import argparse
 import ray
 from ray.tune.registry import get_trainable_cls
@@ -77,7 +79,7 @@ def parse_arguments():
 
     parser.add_argument("--checkpoint", type=str)
     parser.add_argument("--cpu", type=int, default=8)
-    parser.add_argument("--gpu", type=int, default=0.25)
+    parser.add_argument("--gpu", type=int, default=0.0)
     parser.add_argument("--num_envs_per_worker", type=int, default=12)
     parser.add_argument("--num_rollout_workers", type=int, default=8)
 
@@ -87,23 +89,41 @@ def parse_arguments():
 
 
 def my_train_fn(config, reporter):
-    iterations = config.pop("train-iterations", 10)
+    iterations = config.pop("train-iterations", 30)
+
+    config["env_config"]["use_safe_action"] = tune.grid_search([False])
+    config["env_config"]["tgt_reward"] = tune.grid_search([0.0])
+    config["env_config"]["beta"] = tune.grid_search([0.3])
+    config["env_config"]["d_thresh"] = tune.grid_search([0.01])
+    config["env_config"]["uav_collision_weight"] = tune.grid_search([0.0])
+    config["env_config"]["obstacle_collision_weight"] = tune.grid_search([0.0])
 
     config = PPOConfig().update_from_dict(config)
 
     # Train for n iterations with high LR.
-    config.lr = 0.01
+    # config.lr = 0.01
     agent1 = config.build()
     for _ in range(iterations):
         result = agent1.train()
         result["phase"] = 1
         reporter(**result)
         phase1_time = result["timesteps_total"]
+        if iterations % 5 == 0: 
+            agent1.save()
     state = agent1.save()
     agent1.stop()
 
+
+    config["env_config"]["use_safe_action"] = tune.grid_search([False])
+    config["env_config"]["tgt_reward"] = tune.grid_search([10])
+    config["env_config"]["beta"] = tune.grid_search([0.01])
+    config["env_config"]["d_thresh"] = tune.grid_search([0.01])
+    config["env_config"]["uav_collision_weight"] = tune.grid_search([0.0])
+    config["env_config"]["obstacle_collision_weight"] = tune.grid_search([0.0])
+
+    config = PPOConfig().update_from_dict(config)
     # Train for n iterations with low LR
-    config.lr = 0.0001
+    # config.lr = 0.0001
     agent2 = config.build()
     agent2.restore(state)
     for _ in range(iterations):
@@ -111,6 +131,8 @@ def my_train_fn(config, reporter):
         result["phase"] = 2
         result["timesteps_total"] += phase1_time  # keep time moving forward
         reporter(**result)
+        if iterations % 5 == 0: 
+            agent2.save()
     agent2.stop()
 
 
@@ -141,7 +163,7 @@ if __name__ == "__main__":
 
     # args.local_mode = True
     # ray.init(local_mode=args.local_mode, num_gpus=1)
-    ray.init(num_gpus=0)
+    ray.init(num_gpus=1)
 
     temp_env = UavSim(args.config)
     num_gpus = int(os.environ.get("RLLIB_NUM_GPUS", args.gpu))
@@ -241,7 +263,7 @@ if __name__ == "__main__":
         "training_iteration": 1 if args.smoke_test else args.stop_iters,
         "timesteps_total": args.stop_timesteps,
     }
-    
+
     # args.config["env_config"]["use_safe_action"] = tune.grid_search([False])
     # args.config["env_config"]["tgt_reward"] = tune.grid_search([48.0, 25.0, 100.0, 0.0])
     # args.config["env_config"]["beta"] = tune.grid_search([-2.3, 0.1, 0.01])
@@ -254,8 +276,8 @@ if __name__ == "__main__":
         "train-iterations": 2,
         # Use GPUs iff `RLLIB_NUM_GPUS` env var set to > 0.
         "num_gpus": int(os.environ.get("RLLIB_NUM_GPUS", "0")),
-        "num_workers": 0,
-        "framework": args.framework,
+        # "num_workers": 0,
+        # "framework": args.framework,
     }
 
     train_config = train_config.to_dict()
@@ -263,8 +285,21 @@ if __name__ == "__main__":
 
     resources = PPO.default_resource_request(train_config)
     tuner = tune.Tuner(
-        tune.with_resources(my_train_fn, resources=resources), param_space=train_config
+        tune.with_resources(my_train_fn, resources=resources),
+        param_space=train_config,
+        run_config=air.RunConfig(
+            stop=stop,
+            local_dir=args.log_dir,
+            name=args.name,
+            # checkpoint_config=air.CheckpointConfig(
+            #     # num_to_keep=150,
+            #     # checkpoint_score_attribute="",
+            #     # checkpoint_at_end=True,
+            #     checkpoint_frequency=5,
+            # ),
+        ),
     )
+
     tuner.fit()
 
     ray.shutdown()
