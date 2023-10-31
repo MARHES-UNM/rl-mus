@@ -89,7 +89,7 @@ def parse_arguments():
 
 
 def my_train_fn(config, reporter):
-    iterations = config.pop("train-iterations", 30)
+    iterations = config.pop("train-iterations", 1)
 
     config["env_config"]["use_safe_action"] = False
     config["env_config"]["tgt_reward"] = 0.0
@@ -287,17 +287,17 @@ if __name__ == "__main__":
     tuner = tune.Tuner(
         tune.with_resources(my_train_fn, resources=resources),
         param_space=train_config,
-        run_config=air.RunConfig(
-            stop=stop,
-            local_dir=args.log_dir,
-            name=args.name,
-            # checkpoint_config=air.CheckpointConfig(
-            #     # num_to_keep=150,
-            #     # checkpoint_score_attribute="",
-            #     # checkpoint_at_end=True,
-            #     checkpoint_frequency=5,
-            # ),
-        ),
+        # run_config=air.RunConfig(
+        #     stop=stop,
+        #     local_dir=args.log_dir,
+        #     name=args.name,
+        #     # checkpoint_config=air.CheckpointConfig(
+        #     #     # num_to_keep=150,
+        #     #     # checkpoint_score_attribute="",
+        #     #     # checkpoint_at_end=True,
+        #     #     checkpoint_frequency=5,
+        #     # ),
+        # ),
     )
 
     tuner.fit()
