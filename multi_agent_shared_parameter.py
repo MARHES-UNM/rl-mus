@@ -20,8 +20,7 @@ from ray.rllib.policy.policy import Policy
 from ray.rllib.algorithms.algorithm import Algorithm
 from ray.rllib.algorithms.callbacks import DefaultCallbacks
 
-
-max_num_cpus = os.cpu_count() - 1
+# os.environ["PL_TORCH_DISTRIBUTED_BACKEND"] = "gloo"
 
 PATH = Path(__file__).parent.absolute().resolve()
 
