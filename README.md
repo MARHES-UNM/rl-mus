@@ -269,6 +269,11 @@ https://github.com/ray-project/ray/blob/ray-2.6.3/rllib/examples/env/curriculum_
 2. reduce the radius around the target area till we get to 0.01
 3. now add penalty for getting to the target area too soon
 
+4. use equation to convert from x,yz to spherical coordinate: 
+https://en.wikipedia.org/wiki/Spherical_coordinate_system
+https://qiita.com/7of9/items/ceea99b35b58a47e5911
+
+
 Take a look at this paper on MASAC, https://www.frontiersin.org/articles/10.3389/fnbot.2022.932671/full
 maybe there's something here to learn and compare against MAPPO.
 

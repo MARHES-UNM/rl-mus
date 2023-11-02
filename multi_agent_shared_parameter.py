@@ -96,14 +96,16 @@ def train(args):
     num_gpus = int(os.environ.get("RLLIB_NUM_GPUS", args.gpu))
 
     args.config["env_config"]["use_safe_action"] = tune.grid_search([False, True])
-    args.config["env_config"]["tgt_reward"] = tune.grid_search([100])
-    args.config["env_config"]["stp_penalty"] = tune.grid_search([0.0, 5, 20])
+    args.config["env_config"]["tgt_reward"] = tune.grid_search([200])
+    # args.config["env_config"]["stp_penalty"] = tune.grid_search([0.0, 5, 20])
+    args.config["env_config"]["stp_penalty"] = tune.grid_search([5, 20])
     args.config["env_config"]["beta"] = tune.grid_search([0.3])
     # args.config["env_config"]["beta"] = tune.grid_search([0.3])
     args.config["env_config"]["d_thresh"] = tune.grid_search([0.01])
     # args.config["env_config"]["uav_collision_weight"] = tune.grid_search([0.0])
     args.config["env_config"]["obstacle_collision_weight"] = tune.grid_search(
-        [0.1, 0.5, 1, 5]
+        # [0.1, 0.5, 1, 5]
+        [0.1]
     )
     # args.config["env_config"]["uav_collision_weight"] = tune.grid_search([0.1])
     # args.config["env_config"]["obstacle_collision_weight"] = tune.grid_search([0.15])
@@ -195,13 +197,22 @@ def train(args):
         restored_policy = Policy.from_checkpoint(policy_checkpoint)
         restored_policy_weights = restored_policy.get_weights()
 
+        # alg_policy = Algorithm.from_checkpoint(
+        #     args.preload,
+        #     policy_ids=["shared_policy"],
+        #     policy_mapping_fn=lambda agent_id, episode, worker, **kwargs: "shared_policy",
+        #     policies_to_train=["shared_policy"],
+        # )
+        # # restored_policy_weights = alg_policy.get_policy("shared_policy").get_weights()
+        # restored_policy_weights = alg_policy.get_weights("shared_policy")
+
         class RestoreWeightsCallback(DefaultCallbacks):
             def on_algorithm_init(self, *, algorithm: "Algorithm", **kwargs) -> None:
                 algorithm.set_weights({"shared_policy": restored_policy_weights})
 
         callback_list.append(RestoreWeightsCallback)
         # Make sure, the non-1st policies are not updated anymore.
-        # config.policies_to_train = [pid for pid in policy_ids if pid != "policy_0"]
+        train_config.policies_to_train = ["shared_policy"]
 
     multi_callbacks = make_multi_callbacks(callback_list)
     train_config.callbacks(multi_callbacks)
@@ -244,7 +255,7 @@ def train(args):
     #     config=train_config.to_dict(),
     #     local_dir=args.log_dir,
     #     name=args.name,
-    #     # resources_per_trial={"gpu": 1},
+    #     resources_per_trial={"gpu": 1},
     # )
 
     ray.shutdown()
