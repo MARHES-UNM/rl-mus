@@ -137,7 +137,10 @@ def train(args):
             "time_total_s": args.duration,
         },
         # num_samples=32,
-        resources_per_trial={"cpu": 1, "gpu": 0.25},
+        resources_per_trial=tune.PlacementGroupFactory(
+            [{"CPU": 1.0, "GPU": 0.25}] + [{"CPU": 1.0}]
+        ),
+        # resources_per_trial={"cpu": 1, "gpu": 0.25},
         config=args.config,
         # checkpoint_freq=5,
         # checkpoint_at_end=True,
