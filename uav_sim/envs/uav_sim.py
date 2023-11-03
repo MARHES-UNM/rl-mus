@@ -43,7 +43,7 @@ class UavSim(MultiAgentEnv):
         )
         self._use_safe_action = env_config.setdefault("use_safe_action", False)
         self.time_final = env_config.setdefault("time_final", 20.0)
-        self.t_go_max = env_config.setdefault("t_go_max", 1.0)
+        self.t_go_max = env_config.setdefault("t_go_max", 2.0)
         self.t_go_n = env_config.setdefault("t_go_n", 1.0)
         self._beta = env_config.setdefault("beta", 0.01)
         self._d_thresh = env_config.setdefault("d_thresh", 0.01)  # uav.rad + pad.rad
