@@ -6,30 +6,38 @@ from uav_sim.utils.safety_layer import SafetyLayer
 
 class TestSafetyLayer(unittest.TestCase):
     def setUp(self):
-        self.env = UavSim({"num_uavs": 2, "num_obstacles": 1, "time_final": 10.0})
-        config = {
+        self.env = UavSim({"num_uavs": 4, "num_obstacles": 4, "time_final": 10.0})
+        self.config = {
             "replay_buffer_size": 64 * 10,
             "batch_size": 4,
-            "num_epochs": 5,
+            "num_epochs": 1,
             "device": "cpu",
-            "num_iter_per_epoch": 10,
+            "num_iter_per_epoch": 2,
             "num_training_steps": 60,
             "num_eval_steps": 15,
+            "use_rl": False,
         }
-        # config = {
-        #     "num_eval_steps": 3000,
-        #     "num_training_steps": 12800,
-        #     "replay_buffer_size": 100000,
-        #     "batch_size": 512,
-        #     "num_epochs": 10,
-        # }
-        self.sl = SafetyLayer(self.env, config=config)
+        self.sl = SafetyLayer(self.env, config=self.config)
 
     def test_init(self):
         self.sl._sample_steps(200)
         self.sl._train_batch()
 
     def test_train(self):
+        self.sl.train()
+
+    def test_rl_train(self):
+        self.config = {
+            "replay_buffer_size": 64 * 10,
+            "batch_size": 4,
+            "num_epochs": 1,
+            "device": "cpu",
+            "num_iter_per_epoch": 2,
+            "num_training_steps": 60,
+            "num_eval_steps": 15,
+            "use_rl": True,
+        }
+        self.sl = SafetyLayer(self.env, config=self.config)
         self.sl.train()
 
     def test_get_mask(self):

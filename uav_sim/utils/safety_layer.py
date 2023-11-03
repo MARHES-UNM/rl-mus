@@ -13,9 +13,17 @@ from uav_sim.utils.replay_buffer import ReplayBuffer
 from torch.optim import Adam
 import ray.tune as tune
 from ray.air import Checkpoint, session
+from ray.rllib.algorithms.algorithm import Algorithm
+from uav_sim.envs import UavSim
+
+# import warnings
+
+# warnings.filterwarnings("ignore", category=DeprecationWarning)
+
 
 # This is need to ensure reproducibility. See: https://docs.nvidia.com/cuda/cublas/index.html#cublasApi_reproducibility
 os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
+os.environ["PYTHONWARNINGS"] = "ignore::DeprecationWarning"
 
 PATH = os.path.dirname(os.path.abspath(__file__))
 torch.use_deterministic_algorithms(True)
@@ -111,6 +119,7 @@ class SafetyLayer:
         self._device = self._config.get("device", "cpu")
         self._safe_margin = self._config.get("safe_margin", 0.1)
         self._unsafe_margin = self._config.get("unsafe_margin", 0.01)
+        self._use_rl = self._config.get("use_rl", False)
 
     def _init_model(self):
         obs_space = self._env.observation_space
@@ -131,6 +140,16 @@ class SafetyLayer:
             # n_state, n_rel_pad_state, k_obstacle, m_control, self._n_hidden
         )
 
+        if self._use_rl:
+            tune.register_env(
+                "multi-uav-sim-v0",
+                # lambda env_config: UavSim(env_config=env_config),
+                lambda env_config: self._env,
+            )
+            self._algo = Algorithm.from_checkpoint(
+                "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-11-01-05-43_9ddf71b/collision/PPO_multi-uav-sim-v0_2457b_00008_8_beta=0.3000,d_thresh=0.0100,obstacle_collision_weight=0.1000,stp_penalty=20,tgt_reward=100,use__2023-11-01_05-43-42/checkpoint_000301"
+            )
+
     def _as_tensor(self, ndarray, requires_grad=False):
         tensor = torch.Tensor(ndarray)
         tensor.requires_grad = requires_grad
@@ -147,22 +166,27 @@ class SafetyLayer:
             "obs_collision": 0.0,
             "uav_rel_dist": 0.0,
             "uav_done": 0.0,
-            "uav_done_time": 0.0,
+            "uav_done_dt": 0.0,
         }
 
-        obs = self._env.reset()
+        obs, info = self._env.reset()
 
         for _ in range(num_steps):
             nom_actions = {}
             actions = {}
             for i in range(self._env.num_uavs):
-                nom_actions[i] = self._env.get_time_coord_action(
-                    self._env.uavs[i]
-                ).squeeze()
+                if self._use_rl:
+                    nom_actions[i] = self._algo.compute_single_action(
+                        obs[i], policy_id="shared_policy"
+                    ).squeeze()
+                else:
+                    nom_actions[i] = self._env.get_time_coord_action(
+                        self._env.uavs[i]
+                    ).squeeze()
 
                 actions[i] = self.get_action(obs[i], nom_actions[i])
 
-            obs_next, _, done, info = self._env.step(actions)
+            obs_next, _, done, truncated, info = self._env.step(actions)
 
             for k, v in info.items():
                 results["uav_collision"] += v["uav_collision"]
@@ -190,9 +214,9 @@ class SafetyLayer:
                 for k, v in info.items():
                     results["uav_rel_dist"] += v["uav_rel_dist"]
                     results["uav_done"] += v["uav_landed"]
-                    results["uav_done_time"] += v["uav_done_time"]
+                    results["uav_done_dt"] += v["uav_done_dt"]
 
-                obs = self._env.reset()
+                obs, info = self._env.reset()
                 episode_length = 0
 
         num_episodes += 1
@@ -206,8 +230,8 @@ class SafetyLayer:
             results["uav_collision"] / num_episodes / self._env.num_uavs
         )
         results["uav_done"] = results["uav_done"] / num_episodes / self._env.num_uavs
-        results["uav_done_time"] = (
-            results["uav_done_time"] / num_episodes / self._env.num_uavs
+        results["uav_done_dt"] = (
+            results["uav_done_dt"] / num_episodes / self._env.num_uavs
         )
         results["num_ts_per_episode"] = num_steps / num_episodes
         return results
