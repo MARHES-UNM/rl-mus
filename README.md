@@ -290,3 +290,7 @@ https://github.com/ray-project/ray/blob/ray-2.6.3/rllib/examples/restore_1_of_n_
 
 https://discuss.ray.io/t/how-to-use-my-pretrained-model-as-policy-and-value-netwok/11040
 https://discuss.ray.io/t/updating-policy-mapping-fn-while-using-tune-run-and-restoring-from-a-checkpoint/11018/4
+
+
+Joint Synthis of Safety index: 
+https://proceedings.mlr.press/v168/ma22a/ma22a.pdf
