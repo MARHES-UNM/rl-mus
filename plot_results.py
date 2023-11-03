@@ -81,9 +81,21 @@ def plot_groups(
             group_to_plot.safe_action = group_to_plot.safe_action.cat.set_categories(
                 labels_to_plot
             )
-            ax = plot_func(
-                group_to_plot, hue="safe_action", x=group["group_x"], y=key, ax=ax
-            )
+            if group["group_x"] == "safe_action":
+                ax = plot_func(
+                    group_to_plot,
+                    x=group["group_x"],
+                    y=key,
+                    ax=ax,
+                )
+            else:
+                ax = plot_func(
+                    group_to_plot,
+                    hue="safe_action",
+                    x=group["group_x"],
+                    y=key,
+                    ax=ax,
+                )
             ax.set_ylabel(value)
             ax.set_xlabel(group["x_label"])
             # if item == "episode_reward":
@@ -92,7 +104,7 @@ def plot_groups(
 
             if skip_legend:
                 # don't plot legends here. see below
-                ax.legend_.remove()
+                ax.legend().remove()
             else:
                 ax.legend()
 
@@ -112,7 +124,7 @@ def plot_groups(
     ax_leg = fig_leg.add_subplot(111)
     # add the legend from the previous axes
     handles, labels = ax.get_legend_handles_labels()
-    ax_leg.legend(handles, labels, loc="center", ncol=3)
+    ax_leg.legend(handles, labels, loc="center", ncol=len(labels))
     # ax_leg.legend(handles, labels_to_plot, loc="center", ncol=3)
     # ax_leg.legend(["Safe_True", "safe_false"], loc="center", ncol=3)
     # hide the axes frame and the x/y labels
@@ -134,6 +146,9 @@ def parse_arguments():
         help="Don't plot legends on indvidual plots. ",
         action="store_true",
         default=False,
+    )
+    parser.add_argument(
+        "--plot_type", help="plot either box or bar plot", type=str, default="bar"
     )
 
     args = parser.parse_args()
@@ -181,6 +196,7 @@ def main():
         items_to_plot,
         image_folder,
         labels_to_plot,
+        plot_type=args.plot_type,
         skip_legend=args.skip_legend,
     )
 
@@ -261,7 +277,11 @@ def main():
 
         for ax_ in all_axes:
             ax_.set_xlabel("t (s)")
-            ax_.legend()
+            if args.skip_legend:
+                # don't plot legends here. see below
+                ax_.legend().remove()
+            else:
+                ax_.legend()
 
         plt_prefix = {
             "seed": group_to_plot[0],
