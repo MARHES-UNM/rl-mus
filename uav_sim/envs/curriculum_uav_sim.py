@@ -12,6 +12,13 @@ from uav_sim.envs.uav_sim import UavSim
 
 
 class CurriculumEnv(MultiAgentEnv, TaskSettableEnv):
+    """
+        https://github.com/ray-project/ray/blob/ray-2.6.3/rllib/examples/curriculum_learning.py
+        https://www.oreilly.com/library/view/learning-ray/9781098117214/ch04.html
+    Args:
+        MultiAgentEnv (_type_): _description_
+        TaskSettableEnv (_type_): _description_
+    """
     def __init__(self, config: EnvContext):
         MultiAgentEnv.__init__(self)
         self.config = config

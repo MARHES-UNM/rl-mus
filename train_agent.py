@@ -117,7 +117,7 @@ def curriculum_fn(
     # Level 2: Expect rewards between 1.0 and 10.0, etc..
     # We will thus raise the level/task each time we hit a new power of 10.0
     time_steps = train_results.get("timesteps_total")
-    new_task = time_steps // 8000000
+    new_task = time_steps // 6000000
     # Clamp between valid values, just in case:
     new_task = max(min(new_task, 3), 0)
     print(
@@ -141,7 +141,7 @@ def train(args):
     temp_env = UavSim(args.config)
     num_gpus = int(os.environ.get("RLLIB_NUM_GPUS", args.gpu))
 
-    args.config["env_config"]["use_safe_action"] = tune.grid_search([False, True])
+    args.config["env_config"]["use_safe_action"] = tune.grid_search([False])
     args.config["env_config"]["tgt_reward"] = 100
     args.config["env_config"]["stp_penalty"] = 20
     args.config["env_config"]["beta"] = 0.3
