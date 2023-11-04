@@ -117,15 +117,13 @@ def curriculum_fn(
     # Level 2: Expect rewards between 1.0 and 10.0, etc..
     # We will thus raise the level/task each time we hit a new power of 10.0
     time_steps = train_results.get("timesteps_total")
-    train_iter = train_results.get("training_iteration")
-    new_task = train_iter // 1
+    new_task = time_steps // 8000000
     # Clamp between valid values, just in case:
-    new_task = max(min(new_task, 2), 0)
+    new_task = max(min(new_task, 3), 0)
     print(
         f"Worker #{env_ctx.worker_index} vec-idx={env_ctx.vector_index}"
         f"\nR={train_results['episode_reward_mean']}"
         f"\ntimesteps={train_results['timesteps_total']}"
-        f"\ttrain_iter={train_results['training_iteration']}"
         f"\nSetting env to task={new_task}"
     )
     return new_task
@@ -137,15 +135,13 @@ def train(args):
         "PYTHONWARNINGS": "ignore::DeprecationWarning",
     }
     my_runtime_env = {"env_vars": ENV_VARIABLES}
-    ray.init(runtime_env=my_runtime_env, num_gpus=1)
     # args.local_mode = True
-    # ray.init(local_mode=args.local_mode, num_gpus=1)
-    # ray.init(num_gpus=1)
+    ray.init(local_mode=args.local_mode, runtime_env=my_runtime_env, num_gpus=1)
 
     temp_env = UavSim(args.config)
     num_gpus = int(os.environ.get("RLLIB_NUM_GPUS", args.gpu))
 
-    args.config["env_config"]["use_safe_action"] = False
+    args.config["env_config"]["use_safe_action"] = tune.grid_search([False, True])
     args.config["env_config"]["tgt_reward"] = 100
     args.config["env_config"]["stp_penalty"] = 20
     args.config["env_config"]["beta"] = 0.3
