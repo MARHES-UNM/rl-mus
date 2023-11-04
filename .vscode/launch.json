@@ -108,6 +108,22 @@
             ]
         },
         {
+            "name": "unittest_curriculum_env",
+            "type": "python",
+            "request": "launch",
+            "module": "unittest",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}",
+            "env": {
+                // "DISPLAY": "192.168.1.18:0.0"
+            },
+            "args": [
+                "-v",
+                "${cwd}/tests/test_curriculum_env.py"
+            ]
+        },
+        {
             "name": "unittest_target",
             "type": "python",
             "request": "launch",
