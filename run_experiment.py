@@ -96,9 +96,9 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
     uav_dt_go_list = [[] for idx in range(env.num_uavs)]
     rel_pad_dist = [[] for idx in range(env.num_uavs)]
     rel_pad_vel = [[] for idx in range(env.num_uavs)]
-    # uav_state = [[] for idx in range(env.num_uavs)]
-    # uav_reward = [[] for idx in range(env.num_uavs)]
-    # target_state = []
+    uav_state = [[] for idx in range(env.num_uavs)]
+    uav_reward = [[] for idx in range(env.num_uavs)]
+    target_state = []
 
     results = {
         "num_episodes": 0.0,
@@ -116,9 +116,9 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
             "uav_dt_go_list": [],
             "rel_pad_dist": [],
             "rel_pad_vel": [],
-            # "uav_state": [],
-            # "uav_reward": [],
-            # "target_state": [],
+            "uav_state": [],
+            "uav_reward": [],
+            "target_state": [],
         },
     }
 
@@ -168,9 +168,9 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
             rel_pad_vel[k].append(v["uav_rel_vel"])
             uav_reward[k].append(rew[k])
 
-        # for k, v in obs.items():
-        #     uav_state[k].append(v["state"].tolist())
-        #     target_state.append(v["target"].tolist())
+        for k, v in obs.items():
+            uav_state[k].append(v["state"].tolist())
+            target_state.append(v["target"].tolist())
 
         if render:
             env.render()
@@ -192,23 +192,14 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
             results["episode_data"]["uav_dt_go_list"].append(uav_dt_go_list)
             results["episode_data"]["rel_pad_dist"].append(rel_pad_dist)
             results["episode_data"]["rel_pad_vel"].append(rel_pad_vel)
-            # results["episode_data"]["uav_state"].append(uav_state)
-            # results["episode_data"]["target_state"].append(target_state)
-            # results["episode_data"]["uav_reward"].append(uav_reward)
+            results["episode_data"]["uav_state"].append(uav_state)
+            results["episode_data"]["target_state"].append(target_state)
+            results["episode_data"]["uav_reward"].append(uav_reward)
 
             if render:
                 fig = env.render(done=True)
             if plot_results:
-                plot_uav_states(
-                    env.num_uavs,
-                    uav_collision_list,
-                    obstacle_collision_list,
-                    uav_done_list,
-                    rel_pad_dist,
-                    rel_pad_vel,
-                    # uav_state,
-                    # target_state,
-                )
+                plot_uav_states(env.num_uavs, results, num_episodes - 1)
 
             if num_episodes == max_num_episodes:
                 end_time = time() - start_time
@@ -228,8 +219,8 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
             uav_dt_go_list = [[] for idx in range(env.num_uavs)]
             rel_pad_dist = [[] for idx in range(env.num_uavs)]
             rel_pad_vel = [[] for idx in range(env.num_uavs)]
-            # uav_state = [[] for idx in range(env.num_uavs)]
-            # uav_reward = [[] for idx in range(env.num_uavs)]
+            uav_state = [[] for idx in range(env.num_uavs)]
+            uav_reward = [[] for idx in range(env.num_uavs)]
 
     env.close()
 
