@@ -1,9 +1,11 @@
 # Based on code from github.com/parametersharingmadrl/parametersharingmadrl
 from datetime import datetime
 import json
+from tkinter import W
 from ray import air, tune
 from ray.tune.registry import register_env
 import logging
+from uav_sim.envs.curriculum_uav_sim import CurriculumEnv
 
 from uav_sim.utils.utils import get_git_hash
 from uav_sim.envs.uav_sim import UavSim
@@ -20,6 +22,8 @@ from ray.rllib.examples.env.multi_agent import FlexAgentsMultiAgent
 from ray.rllib.policy.policy import Policy
 from ray.rllib.algorithms.algorithm import Algorithm
 from ray.rllib.algorithms.callbacks import DefaultCallbacks
+from ray.rllib.env.apis.task_settable_env import TaskSettableEnv, TaskType
+from ray.rllib.env.env_context import EnvContext
 import warnings
 
 warnings.filterwarnings("ignore")
@@ -89,6 +93,44 @@ def parse_arguments():
     return args
 
 
+def curriculum_fn(
+    train_results: dict, task_settable_env: TaskSettableEnv, env_ctx: EnvContext
+) -> TaskType:
+    """Function returning a possibly new task to set `task_settable_env` to.
+
+    Args:
+        train_results: The train results returned by Algorithm.train().
+        task_settable_env: A single TaskSettableEnv object
+            used inside any worker and at any vector position. Use `env_ctx`
+            to get the worker_index, vector_index, and num_workers.
+        env_ctx: The env context object (i.e. env's config dict
+            plus properties worker_index, vector_index and num_workers) used
+            to setup the `task_settable_env`.
+
+    Returns:
+        TaskType: The task to set the env to. This may be the same as the
+            current one.
+    """
+    # Our env supports tasks 1 (default) to 5.
+    # With each task, rewards get scaled up by a factor of 10, such that:
+    # Level 1: Expect rewards between 0.0 and 1.0.
+    # Level 2: Expect rewards between 1.0 and 10.0, etc..
+    # We will thus raise the level/task each time we hit a new power of 10.0
+    time_steps = train_results.get("timesteps_total")
+    train_iter = train_results.get("training_iteration")
+    new_task = train_iter // 1
+    # Clamp between valid values, just in case:
+    new_task = max(min(new_task, 2), 0)
+    print(
+        f"Worker #{env_ctx.worker_index} vec-idx={env_ctx.vector_index}"
+        f"\nR={train_results['episode_reward_mean']}"
+        f"\ntimesteps={train_results['timesteps_total']}"
+        f"\ttrain_iter={train_results['training_iteration']}"
+        f"\nSetting env to task={new_task}"
+    )
+    return new_task
+
+
 def train(args):
     ENV_VARIABLES = {
         "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
@@ -117,7 +159,11 @@ def train(args):
     train_config = (
         get_trainable_cls(args.run)
         .get_default_config()
-        .environment(env=args.env_name, env_config=args.config["env_config"])
+        .environment(
+            env=args.env_name,
+            env_config=args.config["env_config"],
+            env_task_fn=curriculum_fn,
+        )
         .framework(args.framework)
         # .callbacks(multi_callbacks)
         .rollouts(
@@ -265,7 +311,7 @@ if __name__ == "__main__":
 
     env_config = args.config["env_config"]
 
-    register_env(args.env_name, lambda env_config: UavSim(env_config))
+    register_env(args.env_name, lambda env_config: CurriculumEnv(env_config))
 
-    check_env(UavSim(env_config))
+    # check_env(CurriculumEnv(env_config))
     train(args)

@@ -6,46 +6,31 @@ from ray.rllib.env.env_context import EnvContext
 from ray.rllib.utils.annotations import override
 from ray.rllib.env.apis.task_settable_env import TaskSettableEnv
 
+from ray.rllib.env.multi_agent_env import MultiAgentEnv
+
 from uav_sim.envs.uav_sim import UavSim
 
 
-class CurriculumEnv(TaskSettableEnv):
+class CurriculumEnv(MultiAgentEnv, TaskSettableEnv):
     def __init__(self, config: EnvContext):
+        MultiAgentEnv.__init__(self)
         self.config = config
-        self.cur_level = self.config.get("start_level", 1)
+        self.cur_level = self.config.get("start_level", 0)
         self.env = None
 
         self.env_difficulty_config = self.config["difficulty_config"]
-        # self.env_difficulty_config = {
-        #     1: {
-        #         "beta": 1.0,
-        #         "stp_penalty": 0,
-        #         "tgt_reward": 100.0,
-        #         "obstacle_collision": 0,
-        #     },
-        #     2: {
-        #         "beta": 0.1,
-        #         "stp_penalty": 5,
-        #         "tgt_reward": 100.0,
-        #         "obstacle_collision": 0,
-        #     },
-        #     3: {
-        #         "beta": 0.001,
-        #         "stp_penalty": 5,
-        #         "tgt_reward": 200.0,
-        #         "obstacle_collision": 0.1,
-        #     },
-        # }
         self.num_tasks = len(self.env_difficulty_config)
         self._make_uav_sim()
         self.observation_space = self.env.observation_space
         self.action_space = self.env.action_space
+        self._agent_ids = self.env._agent_ids
         self.switch_env = False
 
     def reset(self, *, seed=None, options=None):
         if self.switch_env:
             self._make_uav_sim()
             self.switch_env = False
+        self._agent_ids = self.env._agent_ids
         return self.env.reset(seed=seed, options=options)
 
     def step(self, action):
