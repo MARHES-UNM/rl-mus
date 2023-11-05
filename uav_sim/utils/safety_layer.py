@@ -31,10 +31,10 @@ my_runtime_env = {"env_vars": ENV_VARIABLES}
 
 # This is need to ensure reproducibility. See: https://docs.nvidia.com/cuda/cublas/index.html#cublasApi_reproducibility
 os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
-
+os.environ["PYTHONWARNINGS"] = "ignore::DeprecationWarning"
 
 PATH = os.path.dirname(os.path.abspath(__file__))
-# torch.use_deterministic_algorithms(True)
+torch.use_deterministic_algorithms(True)
 
 
 class SafetyLayer:
@@ -269,8 +269,7 @@ class SafetyLayer:
         A_T = self._as_tensor(A.T)
         B_T = self._as_tensor(B.T)
 
-        # dxdt = torch.matmul(state, A_T) + torch.matmul(action, B_T)
-        dxdt = torch.mm(state, A_T) + torch.mm(action, B_T)
+        dxdt = torch.matmul(state, A_T) + torch.matmul(action, B_T)
 
         return dxdt
 
@@ -452,7 +451,7 @@ class SafetyLayer:
         train_results = [self._train_batch() for _ in range(self._num_iter_per_epoch)]
 
         loss, train_acc_stats = self.parse_results(train_results)
-        # self._replay_buffer.clear()
+        self._replay_buffer.clear()
         self._train_global_step += 1
 
         sample_stats = {f"train_{k}": v for k, v in sample_stats.items()}
