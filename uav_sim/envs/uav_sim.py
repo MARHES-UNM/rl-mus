@@ -603,26 +603,39 @@ class UavSim(MultiAgentEnv):
         #     reward += -self._dt_go_penalty
 
         cum_dt_penalty = 0
+        min_col_avoidance = uav.r * 3
         # neg reward if uav collides with other uavs
         for other_uav in self.uavs.values():
             if uav.id != other_uav.id:
-                cum_dt_penalty += other_uav.get_t_go_est() - uav.get_t_go_est()
+                # cum_dt_penalty += other_uav.get_t_go_est() - uav.get_t_go_est()
 
+                dist_col = uav.rel_distance(other_uav)
                 if uav.in_collision(other_uav):
                     reward -= self.uav_collision_weight
                     # uav.done = True
                     # uav.landed = False
                     uav.uav_collision += 1
 
+                elif dist_col < (min_col_avoidance + other_uav.r):
+                    reward -= self.uav_collision_weight * (
+                        1 - (dist_col / (min_col_avoidance + other_uav.r))
+                    )
+
         # reward -= self._dt_weight * abs(cum_dt_penalty)
 
         # neg reward if uav collides with obstacles
         for obstacle in self.obstacles:
+            dist_col = uav.rel_distance(obstacle)
+
             if uav.in_collision(obstacle):
                 reward -= self.obstacle_collision_weight
                 # uav.done = True
                 # uav.landed = False
                 uav.obs_collision += 1
+            elif dist_col < (min_col_avoidance + obstacle.r):
+                reward -= self.obstacle_collision_weight * (
+                    1 - (dist_col / (min_col_avoidance + obstacle.r))
+                )
 
         return reward
 

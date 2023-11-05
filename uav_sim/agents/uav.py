@@ -55,6 +55,10 @@ class Entity:
         dist = np.linalg.norm(self._state[0:3] - entity.state[0:3])
         return dist
 
+    def rel_vel(self, entity):
+        vel = np.linalg.norm(self._state[3:6] - entity.state[3:6])
+        return vel
+
     def rel_bearing_error(self, entity):
         """[summary]
 
