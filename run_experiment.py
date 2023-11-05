@@ -52,7 +52,8 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
         # "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-11-01-05-43_9ddf71b/collision/PPO_multi-uav-sim-v0_2457b_00000_0_beta=0.3000,d_thresh=0.0100,obstacle_collision_weight=0.1000,stp_penalty=0.0000,tgt_reward=100,_2023-11-01_05-43-42/checkpoint_000301",
         # "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-11-01-05-43_9ddf71b/collision/PPO_multi-uav-sim-v0_2457b_00008_8_beta=0.3000,d_thresh=0.0100,obstacle_collision_weight=0.1000,stp_penalty=20,tgt_reward=100,use__2023-11-01_05-43-42/checkpoint_000301",
         # "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-11-02-06-00_8fd74b4/t_go_max_2_3/PPO_multi-uav-sim-v0_b67d3_00002_2_beta=0.3000,d_thresh=0.0100,obstacle_collision_weight=0.1000,stp_penalty=20,t_go_max=2.0000,tgt_2023-11-02_06-00-55/checkpoint_000301"
-        "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-11-03-01-08_6686e46/tgt_rew_100/PPO_multi-uav-sim-v0_19006_00000_0_beta=0.3000,d_thresh=0.0100,obstacle_collision_weight=0.1000,stp_penalty=20,t_go_max=2.0000,tgt_2023-11-03_01-08-59/checkpoint_000301",
+        # "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-11-03-01-08_6686e46/tgt_rew_100/PPO_multi-uav-sim-v0_19006_00000_0_beta=0.3000,d_thresh=0.0100,obstacle_collision_weight=0.1000,stp_penalty=20,t_go_max=2.0000,tgt_2023-11-03_01-08-59/checkpoint_000301",
+        "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-11-04-01-17_2b0101f/cur_learning/PPO_multi-uav-sim-v0_7211b_00000_0_use_safe_action=False_2023-11-04_01-17-27/checkpoint_000595"
     )
 
     algo_to_run = exp_config["exp_config"].get("run", "PPO")

@@ -1,8 +1,11 @@
+# Based on code from github.com/parametersharingmadrl/parametersharingmadrl
 from datetime import datetime
 import json
+from tkinter import W
 from ray import air, tune
 from ray.tune.registry import register_env
 import logging
+from uav_sim.envs.curriculum_uav_sim import CurriculumEnv
 
 from uav_sim.utils.utils import get_git_hash
 from uav_sim.envs.uav_sim import UavSim
@@ -19,8 +22,14 @@ from ray.rllib.examples.env.multi_agent import FlexAgentsMultiAgent
 from ray.rllib.policy.policy import Policy
 from ray.rllib.algorithms.algorithm import Algorithm
 from ray.rllib.algorithms.callbacks import DefaultCallbacks
+from ray.rllib.env.apis.task_settable_env import TaskSettableEnv, TaskType
+from ray.rllib.env.env_context import EnvContext
+import warnings
 
-# os.environ["PL_TORCH_DISTRIBUTED_BACKEND"] = "gloo"
+warnings.filterwarnings("ignore")
+
+
+max_num_cpus = os.cpu_count() - 1
 
 PATH = Path(__file__).parent.absolute().resolve()
 
@@ -31,8 +40,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
-
-# Based on code from github.com/parametersharingmadrl/parametersharingmadrl
 
 
 def parse_arguments():
@@ -86,36 +93,61 @@ def parse_arguments():
     return args
 
 
+def curriculum_fn(
+    train_results: dict, task_settable_env: TaskSettableEnv, env_ctx: EnvContext
+) -> TaskType:
+    """Function returning a possibly new task to set `task_settable_env` to.
+
+    Args:
+        train_results: The train results returned by Algorithm.train().
+        task_settable_env: A single TaskSettableEnv object
+            used inside any worker and at any vector position. Use `env_ctx`
+            to get the worker_index, vector_index, and num_workers.
+        env_ctx: The env context object (i.e. env's config dict
+            plus properties worker_index, vector_index and num_workers) used
+            to setup the `task_settable_env`.
+
+    Returns:
+        TaskType: The task to set the env to. This may be the same as the
+            current one.
+    """
+    # Our env supports tasks 1 (default) to 5.
+    # With each task, rewards get scaled up by a factor of 10, such that:
+    # Level 1: Expect rewards between 0.0 and 1.0.
+    # Level 2: Expect rewards between 1.0 and 10.0, etc..
+    # We will thus raise the level/task each time we hit a new power of 10.0
+    time_steps = train_results.get("timesteps_total")
+    new_task = time_steps // 6000000
+    # Clamp between valid values, just in case:
+    new_task = max(min(new_task, 3), 0)
+    print(
+        f"Worker #{env_ctx.worker_index} vec-idx={env_ctx.vector_index}"
+        f"\nR={train_results['episode_reward_mean']}"
+        f"\ntimesteps={train_results['timesteps_total']}"
+        f"\nSetting env to task={new_task}"
+    )
+    return new_task
+
+
 def train(args):
+    ENV_VARIABLES = {
+        "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+        "PYTHONWARNINGS": "ignore::DeprecationWarning",
+    }
+    my_runtime_env = {"env_vars": ENV_VARIABLES}
     # args.local_mode = True
-    # ray.init(local_mode=args.local_mode, num_gpus=1)
-    ray.init(num_gpus=1)
+    ray.init(local_mode=args.local_mode, runtime_env=my_runtime_env, num_gpus=1)
 
     temp_env = UavSim(args.config)
     num_gpus = int(os.environ.get("RLLIB_NUM_GPUS", args.gpu))
 
-    args.config["env_config"]["use_safe_action"] = tune.grid_search([False, True])
-    args.config["env_config"]["tgt_reward"] = tune.grid_search([100])
-    args.config["env_config"]["stp_penalty"] = tune.grid_search([5])
-    args.config["env_config"]["beta"] = tune.grid_search([0.3])
-    # args.config["env_config"]["beta"] = tune.grid_search([0.3])
-    args.config["env_config"]["d_thresh"] = tune.grid_search([0.01])
-    args.config["env_config"]["t_go_max"] = tune.grid_search([2.0])
-    args.config["env_config"]["uav_collision_weight"] = tune.grid_search([0.5])
-    args.config["env_config"]["obstacle_collision_weight"] = tune.grid_search(
-        # [0.1, 0.5, 1, 5]
-        [0.1]
-    )
-    # args.config["env_config"]["uav_collision_weight"] = tune.grid_search([0.1])
-    # args.config["env_config"]["obstacle_collision_weight"] = tune.grid_search([0.15])
-    # args.config["env_config"]["dt_go_penalty"] = tune.grid_search([10])
-    # args.config["env_config"]["stp_penalty"] = tune.grid_search([200])
-    # args.config["env_config"]["dt_reward"] = tune.grid_search([500])
-    # args.config["env_config"]["dt_weight"] = tune.grid_search([0.1, 0.5])
-
-    # entropy_coef = tune.grid_search([0.00])
-    # gae_lambda .90 seems to get better peformance of uavs landing
-    # gae_lambda = tune.grid_search([0.95])
+    args.config["env_config"]["use_safe_action"] = tune.grid_search([False])
+    args.config["env_config"]["tgt_reward"] = 100
+    args.config["env_config"]["stp_penalty"] = 20
+    args.config["env_config"]["beta"] = 0.3
+    args.config["env_config"]["d_thresh"] = 0.01
+    args.config["env_config"]["t_go_max"] = 2.0
+    args.config["env_config"]["obstacle_collision_weight"] = 0.1
 
     callback_list = [TrainCallback]
     # multi_callbacks = make_multi_callbacks(callback_list)
@@ -123,24 +155,26 @@ def train(args):
     train_config = (
         get_trainable_cls(args.run)
         .get_default_config()
-        .environment(env=args.env_name, env_config=args.config["env_config"])
+        .environment(
+            env=args.env_name,
+            env_config=args.config["env_config"],
+            env_task_fn=curriculum_fn,
+        )
         .framework(args.framework)
         # .callbacks(multi_callbacks)
         .rollouts(
-            num_rollout_workers=1
+            num_rollout_workers=4
             if args.smoke_test
             else args.num_rollout_workers,  # set 0 to main worker run sim
             num_envs_per_worker=args.num_envs_per_worker,
+            create_env_on_local_worker=True,
             batch_mode="complete_episodes",
         )
         # Use GPUs iff `RLLIB_NUM_GPUS` env var set to > 0.
         .debugging(log_level="ERROR", seed=123)  # DEBUG, INFO
         .resources(
             num_gpus=0 if args.smoke_test else num_gpus,
-            num_learner_workers=1,
-            # num_gpus=args.gpu,
-            # num_cpus_per_worker=args.cpu,
-            # num_gpus_per_worker=args.gpu,
+            # num_learner_workers=1,
             num_gpus_per_learner_worker=0 if args.smoke_test else args.gpu,
         )
         # See for changing model options https://docs.ray.io/en/latest/rllib/rllib-models.html
@@ -159,11 +193,11 @@ def train(args):
             vf_clip_param=10.0,
             vf_loss_coeff=0.5,
             clip_param=0.2,
+            grad_clip=1.0,
             # entropy_coeff=0.0,
             # # seeing if this solves the error:
             # # https://neptune.ai/blog/understanding-gradient-clipping-and-how-it-can-fix-exploding-gradients-problem
             # # Expected parameter loc (Tensor of shape (4096, 3)) of distribution Normal(loc: torch.Size([4096, 3]), scale: torch.Size([4096, 3])) to satisfy the constraint Real(),
-            grad_clip=1.0,
             # kl_coeff=1.0,
             # kl_target=0.0068,
         )
@@ -223,8 +257,9 @@ def train(args):
 
     # algo = train_config.build()
 
-    # while True:
+    # for _ in range(stop["training_iteration"]):
     #     algo.train()
+    #     # print(f"Step {_} done")
 
     # # # trainable_with_resources = tune.with_resources(args.run, {"cpu": 18, "gpu": 1.0})
     # # # If you have 4 CPUs and 1 GPU on your machine, this will run 1 trial at a time.
@@ -247,15 +282,6 @@ def train(args):
     )
 
     results = tuner.fit()
-
-    # results = tune.run(
-    #     args.run,
-    #     stop=stop,
-    #     config=train_config.to_dict(),
-    #     local_dir=args.log_dir,
-    #     name=args.name,
-    #     resources_per_trial={"gpu": 1},
-    # )
 
     ray.shutdown()
 
@@ -281,8 +307,7 @@ if __name__ == "__main__":
 
     env_config = args.config["env_config"]
 
-    register_env(args.env_name, lambda env_config: UavSim(env_config))
-    # register_env(args.env_name, lambda _: FlexAgentsMultiAgent() )
+    register_env(args.env_name, lambda env_config: CurriculumEnv(env_config))
 
-    check_env(UavSim(env_config))
+    # check_env(CurriculumEnv(env_config))
     train(args)
