@@ -7,11 +7,14 @@ import numpy as np
 from uav_sim.envs.uav_sim import UavSim
 from pathlib import Path
 import mpl_toolkits.mplot3d.art3d as art3d
+from ray.rllib.algorithms.algorithm import Algorithm
+from ray.rllib.algorithms.ppo import PPOConfig
 
 import os
 import logging
 import json
 from uav_sim.utils.safety_layer import SafetyLayer
+from ray import tune
 
 from uav_sim.utils.utils import get_git_hash
 
@@ -39,6 +42,50 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
 
     env = UavSim(env_config)
 
+    # checkpoint = exp_config.get("checkpoint", None)
+    checkpoint = exp_config.get(
+        "checkpoint",
+        # "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-10-17-06-06_49cb1b5/paper/PPO_multi-uav-sim-v0_e77fe_00001_1_beta=0.1000,d_thresh=0.2000,dt_go_penalty=1.0000,obstacle_collision_weight=0.1500,stp_penalty=2_2023-10-17_06-06-56/checkpoint_000228",
+        # "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-10-19-01-49_b04b083/time_together/PPO_multi-uav-sim-v0_4d5d3_00002_2_beta=0.0100,d_thresh=0.2000,dt_go_penalty=10,dt_reward=500,dt_weight=0.1000,obstacle_collision__2023-10-19_01-49-43/checkpoint_000226"
+        # "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-10-20-10-43_36f5c1f/gae_lambda90_safe/PPO_multi-uav-sim-v0_0d681_00002_2_beta=0.0100,d_thresh=0.0100,obstacle_collision_weight=0.1500,tgt_reward=100,uav_collision_weigh_2023-10-20_10-43-37/checkpoint_000453",
+        # "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-11-01-05-43_9ddf71b/collision/PPO_multi-uav-sim-v0_2457b_00005_5_beta=0.3000,d_thresh=0.0100,obstacle_collision_weight=0.5000,stp_penalty=5,tgt_reward=100,use_s_2023-11-01_05-43-42/checkpoint_000301",
+        # "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-11-01-05-43_9ddf71b/collision/PPO_multi-uav-sim-v0_2457b_00000_0_beta=0.3000,d_thresh=0.0100,obstacle_collision_weight=0.1000,stp_penalty=0.0000,tgt_reward=100,_2023-11-01_05-43-42/checkpoint_000301",
+        # "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-11-01-05-43_9ddf71b/collision/PPO_multi-uav-sim-v0_2457b_00008_8_beta=0.3000,d_thresh=0.0100,obstacle_collision_weight=0.1000,stp_penalty=20,tgt_reward=100,use__2023-11-01_05-43-42/checkpoint_000301",
+        # "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-11-02-06-00_8fd74b4/t_go_max_2_3/PPO_multi-uav-sim-v0_b67d3_00002_2_beta=0.3000,d_thresh=0.0100,obstacle_collision_weight=0.1000,stp_penalty=20,t_go_max=2.0000,tgt_2023-11-02_06-00-55/checkpoint_000301"
+        # "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-11-03-01-08_6686e46/tgt_rew_100/PPO_multi-uav-sim-v0_19006_00000_0_beta=0.3000,d_thresh=0.0100,obstacle_collision_weight=0.1000,stp_penalty=20,t_go_max=2.0000,tgt_2023-11-03_01-08-59/checkpoint_000301",
+        "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-11-04-01-17_2b0101f/cur_learning/PPO_multi-uav-sim-v0_7211b_00000_0_use_safe_action=False_2023-11-04_01-17-27/checkpoint_000595"
+    )
+
+    algo_to_run = exp_config["exp_config"].get("run", "PPO")
+    if algo_to_run == "PPO":
+        if checkpoint:
+            algo = Algorithm.from_checkpoint(checkpoint)
+        else:
+            algo = (
+                PPOConfig()
+                .environment(env=exp_config["env_name"])
+                .resources(num_gpus=0)
+                .rollouts(num_rollout_workers=1)
+                .multi_agent(
+                    policies={
+                        "shared_policy": (
+                            None,
+                            env.observation_space[0],
+                            env.action_space[0],
+                            {},
+                        )
+                    },
+                    # Always use "shared" policy.
+                    policy_mapping_fn=(
+                        lambda agent_id, episode, worker, **kwargs: "shared_policy"
+                    ),
+                )
+                .framework("torch")
+                .build()
+            )
+
+    # policy_to_run = algo.get_policy("shared_policy")
+
     if exp_config["exp_config"]["safe_action_type"] == "nn_cbf":
         sl = SafetyLayer(env, exp_config["safety_layer_cfg"])
 
@@ -46,10 +93,13 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
     uav_collision_list = [[] for idx in range(env.num_uavs)]
     obstacle_collision_list = [[] for idx in range(env.num_uavs)]
     uav_done_list = [[] for idx in range(env.num_uavs)]
+    uav_done_dt_list = [[] for idx in range(env.num_uavs)]
+    uav_dt_go_list = [[] for idx in range(env.num_uavs)]
     rel_pad_dist = [[] for idx in range(env.num_uavs)]
     rel_pad_vel = [[] for idx in range(env.num_uavs)]
-    # uav_state = [[] for idx in range(env.num_uavs)]
-    # target_state = []
+    uav_state = [[] for idx in range(env.num_uavs)]
+    uav_reward = [[] for idx in range(env.num_uavs)]
+    target_state = []
 
     results = {
         "num_episodes": 0.0,
@@ -60,19 +110,22 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
         "episode_time": [],
         "episode_data": {
             "time_step_list": [],
-            "time_step_list": [],
             "uav_collision_list": [],
             "obstacle_collision_list": [],
             "uav_done_list": [],
+            "uav_done_dt_list": [],
+            "uav_dt_go_list": [],
             "rel_pad_dist": [],
             "rel_pad_vel": [],
-            # "uav_state": [],
-            # "target_state": [],
+            "uav_state": [],
+            "uav_reward": [],
+            "target_state": [],
         },
     }
 
     num_episodes = 0
-    obs, done = env.reset(), {i.id: False for i in env.uavs}
+    env_out, done = env.reset(), {i.id: False for i in env.uavs.values()}
+    obs, info = env_out
     done["__all__"] = False
 
     logger.debug("running experiment")
@@ -82,7 +135,14 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
     while num_episodes < max_num_episodes:
         actions = {}
         for idx in range(env.num_uavs):
-            actions[idx] = env.get_time_coord_action(env.uavs[idx])
+            # classic control
+            if algo_to_run == "cc":
+                actions[idx] = env.get_time_coord_action(env.uavs[idx])
+                # actions[idx] = env.get_tc_controller(env.uavs[idx])
+            elif algo_to_run == "PPO":
+                actions[idx] = algo.compute_single_action(
+                    obs[idx], policy_id="shared_policy"
+                )
 
             if exp_config["exp_config"]["safe_action_type"] != "none":
                 if exp_config["exp_config"]["safe_action_type"] == "cbf":
@@ -94,7 +154,7 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
                 else:
                     print("unknow safe action type")
 
-        obs, rew, done, info = env.step(actions)
+        obs, rew, done, truncated, info = env.step(actions)
         for k, v in info.items():
             results["uav_collision"] += v["uav_collision"]
             results["obs_collision"] += v["obstacle_collision"]
@@ -103,12 +163,15 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
             uav_collision_list[k].append(v["uav_collision"])
             obstacle_collision_list[k].append(v["obstacle_collision"])
             uav_done_list[k].append(v["uav_landed"])
+            uav_done_dt_list[k].append(v["uav_done_dt"])
+            uav_dt_go_list[k].append(v["uav_dt_go"])
             rel_pad_dist[k].append(v["uav_rel_dist"])
             rel_pad_vel[k].append(v["uav_rel_vel"])
+            uav_reward[k].append(rew[k])
 
-        # for k, v in obs.items():
-        #     uav_state[k].append(v["state"].tolist())
-        #     target_state.append(v["target"].tolist())
+        for k, v in obs.items():
+            uav_state[k].append(v["state"].tolist())
+            target_state.append(v["target"].tolist())
 
         if render:
             env.render()
@@ -117,7 +180,7 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
             num_episodes += 1
             for k, v in info.items():
                 results["uav_done"][k].append(v["uav_landed"])
-                results["uav_done_time"][k].append(v["uav_done_time"])
+                results["uav_done_time"][k].append(v["uav_done_dt"])
             results["num_episodes"] = num_episodes
             results["episode_time"].append(env.time_elapsed)
             results["episode_data"]["time_step_list"].append(time_step_list)
@@ -126,27 +189,26 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
                 obstacle_collision_list
             )
             results["episode_data"]["uav_done_list"].append(uav_done_list)
+            results["episode_data"]["uav_done_dt_list"].append(uav_done_dt_list)
+            results["episode_data"]["uav_dt_go_list"].append(uav_dt_go_list)
             results["episode_data"]["rel_pad_dist"].append(rel_pad_dist)
             results["episode_data"]["rel_pad_vel"].append(rel_pad_vel)
-            # results["episode_data"]["uav_state"].append(uav_state)
-            # results["episode_data"]["target_state"].append(target_state)
+            results["episode_data"]["uav_state"].append(uav_state)
+            results["episode_data"]["target_state"].append(target_state)
+            results["episode_data"]["uav_reward"].append(uav_reward)
 
+            if render:
+                fig = env.render(done=True)
             if plot_results:
-                plot_uav_states(
-                    env.num_uavs,
-                    uav_collision_list,
-                    obstacle_collision_list,
-                    uav_done_list,
-                    rel_pad_dist,
-                    rel_pad_vel,
-                    # uav_state,
-                    # target_state,
-                )
+                plot_uav_states(env.num_uavs, results, num_episodes - 1)
 
             if num_episodes == max_num_episodes:
                 end_time = time() - start_time
                 break
-            obs, done = env.reset(), {agent.id: False for agent in env.uavs}
+            env_out, done = env.reset(), {
+                agent.id: False for agent in env.uavs.values()
+            }
+            obs, info = env_out
             done["__all__"] = False
 
             # reinitialize data arrays
@@ -154,9 +216,12 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
             uav_collision_list = [[] for idx in range(env.num_uavs)]
             obstacle_collision_list = [[] for idx in range(env.num_uavs)]
             uav_done_list = [[] for idx in range(env.num_uavs)]
+            uav_done_dt_list = [[] for idx in range(env.num_uavs)]
+            uav_dt_go_list = [[] for idx in range(env.num_uavs)]
             rel_pad_dist = [[] for idx in range(env.num_uavs)]
             rel_pad_vel = [[] for idx in range(env.num_uavs)]
-            # uav_state = [[] for idx in range(env.num_uavs)]
+            uav_state = [[] for idx in range(env.num_uavs)]
+            uav_reward = [[] for idx in range(env.num_uavs)]
 
     env.close()
 
@@ -182,42 +247,61 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
     logger.debug("done")
 
 
-def plot_uav_states(
-    num_uavs,
-    uav_collision_list,
-    obstacle_collision_list,
-    uav_done_list,
-    rel_pad_dist,
-    rel_pad_vel,
-    # uav_state,
-    # target_state,
-):
-    # uav_state = np.array(uav_state)
-    # target_state = np.array(target_state)
+def plot_uav_states(num_uavs, results, num_episode=0):
+    uav_collision_list = results["episode_data"]["uav_collision_list"][num_episode]
+    obstacle_collision_list = results["episode_data"]["obstacle_collision_list"][
+        num_episode
+    ]
+    uav_done_list = results["episode_data"]["uav_done_list"][num_episode]
+    uav_done_dt_list = results["episode_data"]["uav_done_dt_list"][num_episode]
+    uav_dt_go_list = results["episode_data"]["uav_dt_go_list"][num_episode]
+    rel_pad_dist = results["episode_data"]["rel_pad_dist"][num_episode]
+    rel_pad_vel = results["episode_data"]["rel_pad_vel"][num_episode]
+    uav_reward = results["episode_data"]["uav_reward"][num_episode]
+
+    uav_state = np.array(results["episode_data"]["uav_state"])[num_episode]
+    target_state = np.array(results["episode_data"]["target_state"])[num_episode]
+
     axs = []
     fig = plt.figure(figsize=(10, 6))
-    ax = fig.add_subplot(311)
-    ax1 = fig.add_subplot(312)
-    ax2 = fig.add_subplot(313)
+    ax = fig.add_subplot(211)
+    ax1 = fig.add_subplot(212)
+
+    fig = plt.figure(figsize=(10, 6))
+    ax21 = fig.add_subplot(411)
+    ax22 = fig.add_subplot(412)
+    ax23 = fig.add_subplot(413)
+    ax24 = fig.add_subplot(414)
     fig = plt.figure(figsize=(10, 6))
     ax3 = fig.add_subplot(211)
     ax4 = fig.add_subplot(212)
-    # fig = plt.figure(figsize=(10, 6))
-    # ax5 = fig.add_subplot(111, projection="3d")
-    axs.extend([ax, ax2, ax3, ax4])
+    fig = plt.figure(figsize=(10, 6))
+    ax5 = fig.add_subplot(111, projection="3d")
+    axs.extend([ax, ax21, ax3, ax4])
     for idx in range(num_uavs):
         ax.plot(uav_collision_list[idx], label=f"uav_id:{idx}")
+        ax.title.set_text("uav collision")
         ax1.plot(obstacle_collision_list[idx], label=f"uav_id:{idx}")
-        ax2.plot(uav_done_list[idx], label=f"uav_id:{idx}")
+        ax1.title.set_text("obstacle collision")
+        ax21.plot(uav_done_list[idx], label=f"uav_id:{idx}")
+        ax21.title.set_text("uav done")
+        ax22.plot(uav_done_dt_list[idx], label=f"uav_id:{idx}")
+        ax22.title.set_text("uav done delta time")
+        ax23.plot(uav_dt_go_list[idx], label=f"uav_id:{idx}")
+        ax23.title.set_text("relative vs time_elapsed")
+        ax24.plot(uav_reward[idx], label=f"uav_id:{idx}")
+        ax24.title.set_text("uav rewrad")
         ax3.plot(rel_pad_dist[idx], label=f"uav_id:{idx}")
+        ax3.title.set_text("uav relative dist to target")
         ax4.plot(rel_pad_vel[idx], label=f"uav_id:{idx}")
-    #     ax5.plot(
-    #         uav_state[idx, :, 0],
-    #         uav_state[idx, :, 1],
-    #         uav_state[idx, :, 2],
-    #         label=f"uav_id:{idx}",
-    #     )
-    # ax5.plot(target_state[:, 0], target_state[:, 1], target_state[:, 2], label="target")
+        # ax4.title.set_text("uav relative velocity to target")
+        ax5.plot(
+            uav_state[idx, :, 0],
+            uav_state[idx, :, 1],
+            uav_state[idx, :, 2],
+            label=f"uav_id:{idx}",
+        )
+    ax5.plot(target_state[:, 0], target_state[:, 1], target_state[:, 2], label="target")
     for ax_ in axs:
         ax_.legend()
     plt.legend()
@@ -234,6 +318,7 @@ def parse_arguments():
     parser.add_argument("-v", help="version number of experiment")
     parser.add_argument("--max_num_episodes", type=int, default=1)
     parser.add_argument("--experiment_num", type=int, default=0)
+    parser.add_argument("--env_name", type=str, default="multi-uav-sim-v0")
     parser.add_argument("--render", action="store_true", default=False)
     parser.add_argument("--write_exp", action="store_true")
     parser.add_argument("--plot_results", action="store_true", default=False)
@@ -249,6 +334,14 @@ def main():
     if args.load_config:
         with open(args.load_config, "rt") as f:
             args.config = json.load(f)
+
+    if not args.config["exp_config"]["run"] == "cc":
+        if args.env_name == "multi-uav-sim-v0":
+            args.config["env_name"] = args.env_name
+            tune.register_env(
+                args.config["env_name"],
+                lambda env_config: UavSim(env_config=env_config),
+            )
 
     args.config["env_config"].update(
         {

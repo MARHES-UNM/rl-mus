@@ -213,3 +213,84 @@ https://github.com/vwxyzjn/ppo-implementation-details/blob/main/ppo_continuous_a
 https://github.com/marlbenchmark/on-policy/blob/main/onpolicy/algorithms/r_mappo/r_mappo.py
 * refactor uav class to be modular [done]
 * update uav reward to be more in line with: https://arc.aiaa.org/doi/epdf/10.2514/1.I010961
+
+
+In order to fix this problem, do the following:
+
+1) Run `pip install gymnasium` on your command line.
+2) Change all your import statements in your code from
+   `import gym` -> `import gymnasium as gym` OR
+   `from gym.space import Discrete` -> `from gymnasium.spaces import Discrete`
+
+For your custom (single agent) gym.Env classes:
+3.1) Either wrap your old Env class via the provided `from gymnasium.wrappers import
+     EnvCompatibility` wrapper class.
+3.2) Alternatively to 3.1:
+ - Change your `reset()` method to have the call signature 'def reset(self, *,
+   seed=None, options=None)'
+ - Return an additional info dict (empty dict should be fine) from your `reset()`
+   method.
+ - Return an additional `truncated` flag from your `step()` method (between `done` and
+   `info`). This flag should indicate, whether the episode was terminated prematurely
+   due to some time constraint or other kind of horizon setting.
+
+For your custom RLlib `MultiAgentEnv` classes:
+4.1) Either wrap your old MultiAgentEnv via the provided
+     `from ray.rllib.env.wrappers.multi_agent_env_compatibility import
+     MultiAgentEnvCompatibility` wrapper class.
+4.2) Alternatively to 4.1:
+ - Change your `reset()` method to have the call signature
+   'def reset(self, *, seed=None, options=None)'
+ - Return an additional per-agent info dict (empty dict should be fine) from your
+   `reset()` method.
+ - Rename `dones` into `terminateds` and only set this to True, if the episode is really
+   done (as opposed to has been terminated prematurely due to some horizon/time-limit
+   setting).
+ - Return an additional `truncateds` per-agent dictionary flag from your `step()`
+   method, including the `__all__` key (100% analogous to your `dones/terminateds`
+   per-agent dict).
+   Return this new `truncateds` dict between `dones/terminateds` and `infos`. This
+   flag should indicate, whether the episode (for some agent or all agents) was
+   terminated prematurely due to some time constraint or other kind of horizon setting.
+
+
+TODO: 
+watch this video for hints on clipping the gradient
+https://www.youtube.com/watch?v=OAKAZhFmYoI
+
+
+## TODO: 
+* use curriculum learning to get better results
+use this example from [Rllib](https://github.com/ray-project/ray/blob/ray-2.6.3/rllib/examples/curriculum_learning.py) to train the agents to define a curriculum function
+*  create a wrapper around the multiagent environment to and make it harder and harder each task. 
+https://github.com/ray-project/ray/blob/ray-2.6.3/rllib/examples/env/curriculum_capable_env.py
+* an example of tasks could be: 
+1. define a large radius around the target area
+2. reduce the radius around the target area till we get to 0.01
+3. now add penalty for getting to the target area too soon
+
+4. use equation to convert from x,yz to spherical coordinate: 
+https://en.wikipedia.org/wiki/Spherical_coordinate_system
+https://qiita.com/7of9/items/ceea99b35b58a47e5911
+
+
+Take a look at this paper on MASAC, https://www.frontiersin.org/articles/10.3389/fnbot.2022.932671/full
+maybe there's something here to learn and compare against MAPPO.
+
+https://discuss.ray.io/t/how-to-implement-curriculum-learning-as-in-narvekar-and-stone-2018/3124
+
+
+access model state like so: 
+https://docs.ray.io/en/latest/rllib/rllib-training.html
+
+policy_checkpoint = r"/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-10-30-05-59_6341c86/beta_0_3_pen_5/PPO_multi-uav-sim-v0_161e9_00003_3_beta=0.3000,d_thresh=0.2000,obstacle_collision_weight=5.0000,tgt_reward=300.0000,uav_collision__2023-10-30_05-59-59/checkpoint_000454/policies/shared_policy"
+
+algo = Policy.from_checkpoint(policy_checkpoint)
+https://github.com/ray-project/ray/blob/ray-2.6.3/rllib/examples/restore_1_of_n_agents_from_checkpoint.py
+
+https://discuss.ray.io/t/how-to-use-my-pretrained-model-as-policy-and-value-netwok/11040
+https://discuss.ray.io/t/updating-policy-mapping-fn-while-using-tune-run-and-restoring-from-a-checkpoint/11018/4
+
+
+Joint Synthis of Safety index: 
+https://proceedings.mlr.press/v168/ma22a/ma22a.pdf

@@ -16,6 +16,38 @@
             }
         },
         {
+            "name": "train_agent",
+            "type": "python",
+            "request": "launch",
+            "program": "${cwd}/train_agent.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "cwd": "${workspaceFolder}",
+            "env": {
+                // "DISPLAY": "192.168.1.18:0.0"
+            },
+            "args": [
+                // "--gpu",
+                // "1"
+            ]
+        },
+        {
+            "name": "train_multi_uav",
+            "type": "python",
+            "request": "launch",
+            "program": "${cwd}/multi_agent_shared_parameter.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "cwd": "${workspaceFolder}",
+            "env": {
+                // "DISPLAY": "192.168.1.18:0.0"
+            },
+            "args": [
+                // "--gpu",
+                // "1"
+            ]
+        },
+        {
             "name": "Run Multi Experiment",
             "type": "python",
             "request": "launch",
@@ -74,7 +106,7 @@
             },
             "args": [
                 "--plot_results",
-                "--render"
+                // "--render"
             ]
         },
         {
@@ -89,6 +121,22 @@
             },
             "args": [
                 "-v"
+            ]
+        },
+        {
+            "name": "unittest_curriculum_env",
+            "type": "python",
+            "request": "launch",
+            "module": "unittest",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}",
+            "env": {
+                // "DISPLAY": "192.168.1.18:0.0"
+            },
+            "args": [
+                "-v",
+                "${cwd}/tests/test_curriculum_env.py"
             ]
         },
         {

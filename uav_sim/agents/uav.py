@@ -228,7 +228,19 @@ class Target(Entity):
 
 
 class UavBase(Entity):
-    def __init__(self, _id, x=0, y=0, z=0, r=0.1, dt=1 / 10, m=0.18, l=0.086, pad=None):
+    def __init__(
+        self,
+        _id,
+        x=0,
+        y=0,
+        z=0,
+        r=0.1,
+        dt=1 / 10,
+        m=0.18,
+        l=0.086,
+        pad=None,
+        d_thresh=0.01,
+    ):
         super().__init__(_id, x, y, z, r, _type=AgentType.U)
 
         # timestep
@@ -250,6 +262,7 @@ class UavBase(Entity):
         self.landed = False
         self.pad = pad
         self.done_time = None
+        self.d_thresh = d_thresh
 
     def rk4(self, state, action):
         """Based on: https://github.com/mahaitongdae/Safety_Index_Synthesis/blob/master/envs_and_models/collision_avoidance_env.py#L194
@@ -308,15 +321,21 @@ class UavBase(Entity):
 
         self._state[2] = max(0, self._state[2])
 
-    # TODO: Combine the functions below into one
-    def get_landed(self, pad):
-        dist = np.linalg.norm(self._state[0:3] - pad._state[0:3])
-        return dist <= 0.01
+    # # TODO: Combine the functions below into one
+    # def get_landed(self, pad):
+    #     dist = np.linalg.norm(self._state[0:3] - pad._state[0:3])
+    #     return dist <= 0.01
 
     # TODO: combine into one.
-    def check_dest_reached(self):
-        dist = np.linalg.norm(self._state[0:3] - self.pad._state[0:3])
-        return dist <= 0.01, dist
+    def check_dest_reached(self, pad=None):
+        if pad is None:
+            pad = self.pad
+
+        rel_dist = np.linalg.norm(self._state[0:3] - pad.state[0:3])
+        rel_vel = np.linalg.norm(self._state[3:6] - pad.state[3:6])
+        # return rel_dist <= (self.r + pad.r), rel_dist, rel_vel
+        # TODO: set this to be a small number to make it more challenging
+        return rel_dist <= self.d_thresh, rel_dist, rel_vel
 
     # TODO: combine with equations above
     def get_rel_pad_dist(self):
@@ -346,17 +365,10 @@ class Uav(UavBase):
         k=None,
         use_ode=False,
         pad=None,
+        d_thresh=0.01,
     ):
         super().__init__(
-            _id=_id,
-            x=x,
-            y=y,
-            z=z,
-            r=r,
-            dt=dt,
-            m=m,
-            l=l,
-            pad=pad,
+            _id=_id, x=x, y=y, z=z, r=r, dt=dt, m=m, l=l, pad=pad, d_thresh=d_thresh
         )
 
         self.use_ode = use_ode

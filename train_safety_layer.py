@@ -8,6 +8,10 @@ import numpy as np
 
 from ray import tune
 
+os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":16:8"
+os.environ["PYTHONWARNINGS"] = "ignore::DeprecationWarning"
+
+
 # from ray.air import Checkpoint, session
 
 from uav_sim.envs.uav_sim import UavSim
@@ -36,6 +40,7 @@ def parse_arguments():
     )
     parser.add_argument("--name", type=str, help="experiment name", default="debug")
     parser.add_argument("--log_dir", type=str)
+    parser.add_argument("--tune_run", action="store_true", default=False)
 
     subparsers = parser.add_subparsers(dest="command")
     train_sub = subparsers.add_parser("train")
@@ -50,7 +55,6 @@ def parse_arguments():
     checkpoint_or_experiment = test_sub.add_mutually_exclusive_group()
     checkpoint_or_experiment.add_argument("--checkpoint", type=str)
     checkpoint_or_experiment.add_argument("--experiment", type=str)
-    test_sub.add_argument("--tune_run", action="store_true", default=False)
     test_sub.add_argument("--max_num_episodes", type=int, default=100)
     test_sub.set_defaults(func=test)
 
@@ -61,7 +65,7 @@ def parse_arguments():
 
 def train_safety_layer(config, checkpoint_dir=None):
     env = UavSim(config["env_config"])
-    config["safety_layer_cfg"]["report_tune"] = True
+    # config["safety_layer_cfg"]["tune_run"]
 
     # # for use with ray air session
     # checkpoint = session.get_checkpoint()
@@ -79,28 +83,39 @@ def train_safety_layer(config, checkpoint_dir=None):
 
 def train(args):
     args.config["safety_layer_cfg"]["device"] = "cuda"
-    args.config["env_config"]["target_v"] = tune.grid_search([0.0])
+    args.config["safety_layer_cfg"]["tune_run"] = args.tune_run
+    args.config["safety_layer_cfg"]["log_dir"] = (
+        pathlib.Path(args.log_dir) / args.name
+    ).resolve()
+    args.config["safety_layer_cfg"]["use_rl"] = True
+    args.config["safety_layer_cfg"]["num_training_steps"] = 6000
+    args.config["safety_layer_cfg"]["num_eval_steps"] = 10
+    args.config["safety_layer_cfg"]["num_epochs"] = 500
+    args.config["safety_layer_cfg"]["num_iter_per_epoch"] = 100
+    args.config["env_config"]["target_v"] = 0.0
     args.config["env_config"]["num_obstacles"] = 4
     args.config["env_config"]["max_num_obstacles"] = 4
-    args.config["env_config"]["obstacle_radius"] = tune.grid_search([1.0])
-    args.config["safety_layer_cfg"]["num_training_steps"] = 6000
-    args.config["safety_layer_cfg"]["num_epochs"] = 500
-    # args.config["safety_layer_cfg"]["num_iter_per_epoch"] = tune.grid_search([50])
-    args.config["safety_layer_cfg"]["lr"] = 5e-4
+    # args.config["env_config"]["obstacle_radius"] = tune.grid_search([1.0])
+    # args.config["safety_layer_cfg"]["use_rl"] = tune.grid_search([True])
+    # args.config["safety_layer_cfg"]["num_training_steps"] = 10
+    # args.config["safety_layer_cfg"]["num_eval_steps"] = 10
+    # args.config["safety_layer_cfg"]["num_epochs"] = 50
+    # args.config["safety_layer_cfg"]["num_iter_per_epoch"] = 1
+    # args.config["safety_layer_cfg"]["batch_size"] = tune.grid_search([64])
+    # # args.config["safety_layer_cfg"]["num_iter_per_epoch"] = tune.grid_search([50])
+    # args.config["safety_layer_cfg"]["lr"] = 5e-4
 
-    # args.config["safety_layer_cfg"]["eps"] = tune.loguniform(0.003, 0.2)
-    # args.config["safety_layer_cfg"]["eps_deriv"] = tune.loguniform(0.003, 0.2)
-    # args.config["safety_layer_cfg"]["loss_action_weight"] = tune.loguniform(1e-3, 0.2)
+    # # args.config["safety_layer_cfg"]["eps"] = tune.loguniform(0.003, 0.2)
+    # # args.config["safety_layer_cfg"]["eps_deriv"] = tune.loguniform(0.003, 0.2)
+    # # args.config["safety_layer_cfg"]["loss_action_weight"] = tune.loguniform(1e-3, 0.2)
 
-    args.config["safety_layer_cfg"]["eps_safe"] = tune.grid_search([0.001])
-    args.config["safety_layer_cfg"]["eps_dang"] = tune.grid_search([0.05])
-    args.config["safety_layer_cfg"]["eps_deriv_safe"] = tune.grid_search([0.0])
-    args.config["safety_layer_cfg"]["eps_deriv_dang"] = tune.grid_search([8e-2])
-    args.config["safety_layer_cfg"]["eps_deriv_mid"] = tune.grid_search([3e-2])
-    args.config["safety_layer_cfg"]["eps_action"] = tune.grid_search([0.0])
-    args.config["safety_layer_cfg"]["loss_action_weight"] = tune.grid_search([1.0])
-    args.config["safety_layer_cfg"]["num_iter_per_epoch"] = 100
-    args.config["safety_layer_cfg"]["batch_size"] = tune.grid_search([1024])
+    # args.config["safety_layer_cfg"]["eps_safe"] = tune.grid_search([0.001])
+    # args.config["safety_layer_cfg"]["eps_dang"] = tune.grid_search([0.05])
+    # args.config["safety_layer_cfg"]["eps_deriv_safe"] = tune.grid_search([0.0])
+    # args.config["safety_layer_cfg"]["eps_deriv_dang"] = tune.grid_search([8e-2])
+    # args.config["safety_layer_cfg"]["eps_deriv_mid"] = tune.grid_search([3e-2])
+    # args.config["safety_layer_cfg"]["eps_action"] = tune.grid_search([0.0])
+    # args.config["safety_layer_cfg"]["loss_action_weight"] = tune.grid_search([1.0])
 
     # [1.0, 0.8, 0.5]
     # [1.0, 0.8, 0.5]
@@ -128,23 +143,29 @@ def train(args):
 
     # TODO: implement with Ray session air
     # https://pytorch.org/tutorials/beginner/hyperparameter_tuning_tutorial.html
-    results = tune.run(
-        train_safety_layer,
-        stop={
-            # "timesteps_total": args.num_timesteps,
-            "training_iteration": args.config["safety_layer_cfg"]["num_epochs"],
-            "time_total_s": args.duration,
-        },
-        # num_samples=32,
-        resources_per_trial={"cpu": 1, "gpu": 0.25},
-        config=args.config,
-        # checkpoint_freq=5,
-        # checkpoint_at_end=True,
-        local_dir=args.log_dir,
-        name=args.name,
-        restore=args.restore,
-        resume=args.resume,
-    )
+    if args.tune_run:
+        results = tune.run(
+            train_safety_layer,
+            stop={
+                # "timesteps_total": args.num_timesteps,
+                "training_iteration": args.config["safety_layer_cfg"]["num_epochs"],
+                "time_total_s": args.duration,
+            },
+            # num_samples=32,
+            resources_per_trial=tune.PlacementGroupFactory(
+                [{"CPU": 1.0, "GPU": 0.25}] + [{"CPU": 1.0, "GPU": 0.25}]
+            ),
+            # resources_per_trial={"cpu": 1, "gpu": 0.25},
+            config=args.config,
+            # checkpoint_freq=5,
+            # checkpoint_at_end=True,
+            local_dir=args.log_dir,
+            name=args.name,
+            restore=args.restore,
+            resume=args.resume,
+        )
+    else:
+        train_safety_layer(args.config)
 
 
 def test(args):
@@ -191,11 +212,12 @@ def test_safe_action(config):
         # ] = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-09-01-06-54_6a6ba7e/debug/train_safety_layer_00757_00011_11_eps=0.0100,eps_deriv=0.0100,lr=0.0020,weight_decay=0.0001_2023-09-01_17-58-53/checkpoint_000244/checkpoint"
         # ] = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-09-01-06-54_6a6ba7e/debug/train_safety_layer_00757_00017_17_eps=0.0100,eps_deriv=0.0000,lr=0.0013,weight_decay=0.0005_2023-09-01_23-56-57/checkpoint_000244/checkpoint"
         # ] = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-09-04-00-12_fd3b073/debug/train_safety_layer_545fd_00007_7_num_obstacles=8,target_v=1.0000,loss_action_weight=0.0800_2023-09-04_04-48-25/checkpoint_000199/checkpoint"
-    ] = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-09-09-14-08_d056fbe/small_1_dist/train_safety_layer_d1e8e_00001_1_batch_size=128,eps=0.1000,eps_deriv=0.0300,loss_action_weight=0.0000,lr=0.0005,n_hidden=32,num_it_2023-09-09_14-08-05/checkpoint_000024/checkpoint"
+        # ] = r"/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-09-09-14-08_d056fbe/small_1_dist/train_safety_layer_d1e8e_00001_1_batch_size=128,eps=0.1000,eps_deriv=0.0300,loss_action_weight=0.0000,lr=0.0005,n_hidden=32,num_it_2023-09-09_14-08-05/checkpoint_000024/checkpoint"
+    ] = r"/home/prime/Documents/workspace/rl_multi_uav_sim/results/safety_layer/safety_layer2023-11-03-06-33_60d01c6/no_determinism/checkpoint_9/checkpoint"
 
     safe_layer = SafetyLayer(env, config["safety_layer_cfg"])
 
-    obs, dones = env.reset(), {uav.id: False for uav in env.uavs}
+    (obs, info), dones = env.reset(), {uav.id: False for uav in env.uavs.values()}
     dones["__all__"] = False
 
     results = {
@@ -219,7 +241,7 @@ def test_safe_action(config):
 
             actions[uav_id] = action
 
-        obs, rewards, dones, infos = env.step(actions)
+        obs, rewards, dones, truncates, infos = env.step(actions)
         results["uav_collision"] += sum([v["uav_collision"] for k, v in infos.items()])
         results["obs_collision"] += sum(
             [v["obstacle_collision"] for k, v in infos.items()]
@@ -234,7 +256,7 @@ def test_safe_action(config):
                 results["uav_done_time"] += v["uav_done_time"]
             if tune_run:
                 tune.report(**results)
-            obs = env.reset()
+            obs, info = env.reset()
             dones["__all__"] = False
 
 

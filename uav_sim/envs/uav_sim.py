@@ -1,8 +1,6 @@
 import sys
 from gym import spaces
 import numpy as np
-import gym
-
 from gym.utils import seeding
 from uav_sim.agents.uav import Obstacle, UavBase, Uav, ObsType
 from uav_sim.agents.uav import Target
@@ -11,11 +9,13 @@ from qpsolvers import solve_qp
 from scipy.integrate import odeint
 import logging
 import random
+from ray.rllib.env.multi_agent_env import MultiAgentEnv
+
 
 logger = logging.getLogger(__name__)
 
 
-class UavSim(gym.Env):
+class UavSim(MultiAgentEnv):
     metadata = {
         "render_modes": ["human", "rgb_array"],
         "render_fps": 30,
@@ -35,12 +35,23 @@ class UavSim(gym.Env):
             f"Max number of obstacles {self.max_num_obstacles} is less than number of obstacles {self.num_obstacles}"
         )
         self.obstacle_collision_weight = env_config.setdefault(
-            "obstacle_collision_weight", 1
+            "obstacle_collision_weight", 0.1
         )
-        self.uav_collision_weight = env_config.setdefault("uav_collision_weight", 1)
+        self.uav_collision_weight = env_config.setdefault("uav_collision_weight", 0.1)
+        # self.uav_collision_weight = env_config.setdefault(
+        #     "uav_collision_weight", 0.1
+        # )
         self._use_safe_action = env_config.setdefault("use_safe_action", False)
         self.time_final = env_config.setdefault("time_final", 20.0)
+        self.t_go_max = env_config.setdefault("t_go_max", 2.0)
         self.t_go_n = env_config.setdefault("t_go_n", 1.0)
+        self._beta = env_config.setdefault("beta", 0.01)
+        self._d_thresh = env_config.setdefault("d_thresh", 0.01)  # uav.rad + pad.rad
+        self._tgt_reward = env_config.setdefault("tgt_reward", 100.0)
+        self._dt_go_penalty = env_config.setdefault("dt_go_penalty", 10.0)
+        self._stp_penalty = env_config.setdefault("stp_penalty", 100.0)
+        self._dt_reward = env_config.setdefault("dt_reward", 0.0)
+        self._dt_weight = env_config.setdefault("dt_weight", 0.0)
 
         self._agent_ids = set(range(self.num_uavs))
         self._uav_type = getattr(
@@ -52,7 +63,8 @@ class UavSim(gym.Env):
         self.env_max_h = env_config.setdefault("env_max_h", 4)
         self.target_v = env_config.setdefault("target_v", 0)
         self.target_w = env_config.setdefault("target_w", 0)
-        self.max_time = env_config.setdefault("max_time", 40)
+        # self.max_time = env_config.setdefault("max_time", 40)
+        self.max_time = self.time_final + self.t_go_max
 
         self.env_config = env_config
         self.norm_action_high = np.ones(3)
@@ -74,7 +86,12 @@ class UavSim(gym.Env):
         The uav action consist of acceleration in x, y, and z component."""
         return spaces.Dict(
             {
-                i: spaces.Box(low=-np.inf, high=np.inf, shape=(3,), dtype=np.float32)
+                i: spaces.Box(
+                    low=self.action_low,
+                    high=self.action_high,
+                    shape=(3,),
+                    dtype=np.float32,
+                )
                 for i in range(self.num_uavs)
             }
         )
@@ -94,6 +111,12 @@ class UavSim(gym.Env):
                             high=np.inf,
                             shape=self.uavs[0].state.shape,
                             dtype=np.float32,
+                        ),
+                        "done_dt": spaces.Box(
+                            low=-np.inf, high=np.inf, shape=(1,), dtype=np.float32
+                        ),
+                        "dt_go": spaces.Box(
+                            low=-np.inf, high=np.inf, shape=(1,), dtype=np.float32
                         ),
                         "target": spaces.Box(
                             low=-np.inf,
@@ -144,7 +167,7 @@ class UavSim(gym.Env):
         """Return single uav constraint"""
         constraints = []
 
-        for other_uav in self.uavs:
+        for other_uav in self.uavs.values():
             if other_uav.id != uav.id:
                 delta_p = uav.pos - other_uav.pos
 
@@ -209,6 +232,59 @@ class UavSim(gym.Env):
 
         return action.squeeze()
 
+    def get_tc_controller(self, uav):
+        mean_tg_error = np.array(
+            [
+                # x.get_t_go_est() - (self.time_final - self.time_elapsed)
+                x.get_t_go_est()  # - (self.time_final - self.time_elapsed)
+                for x in self.uavs.values()
+                if x.id != uav.id
+            ]
+        ).mean()
+        cum_tg_error = (self.num_uavs / (self.num_uavs - 1)) * (
+            # mean_tg_error - (uav.get_t_go_est() - (self.time_final - self.time_elapsed))
+            mean_tg_error
+            - (uav.get_t_go_est())  # - (self.time_final - self.time_elapsed)
+        )
+        cum_tg_error = 0
+
+        for other_uav in self.uavs.values():
+            if other_uav.id != uav.id:
+                cum_tg_error += other_uav.get_t_go_est() - uav.get_t_go_est()
+
+        des_pos = np.zeros(12)
+        des_pos[0:6] = uav.pad.state[0:6]
+        pos_er = des_pos - uav.state
+
+        action = np.zeros(3)
+        # if uav.id == 0:
+
+        #     action = -1 * cum_tg_error * np.array([pos_er[0], pos_er[1], pos_er[2]])
+        # else:
+        #     action = (
+        #         # -0.5 * cum_tg_error * np.array([pos_er[0], pos_er[1], pos_er[2]])
+        #         -0.05
+        #         * cum_tg_error
+        #         * np.array([pos_er[0], pos_er[1], pos_er[2]])
+        #     )
+        # action = (
+        #     # -0.5 * cum_tg_error * np.array([pos_er[0], pos_er[1], pos_er[2]])
+        #     # -0.05
+        #     # -5 / (uav.init_r * uav.init_tg)
+        #     -0.5
+        #     * cum_tg_error
+        #     * np.array([pos_er[0], pos_er[1], pos_er[2]])
+        # )
+        cum_tg_error = self.time_final - self.time_elapsed
+        action += (
+            3 * np.array([pos_er[0], pos_er[1], pos_er[2]]) * (-0.3 * cum_tg_error)
+        )
+
+        # action += 2 * cum_tg_error * np.array([pos_er[3], pos_er[4], pos_er[5]])
+        action += 3 * np.array([pos_er[3], pos_er[4], pos_er[5]])
+
+        return action
+
     def get_p_mat(self, tf, N=1, t0=0.0):
         A = np.zeros((2, 2))
         A[0, 1] = 1.0
@@ -255,7 +331,7 @@ class UavSim(gym.Env):
         )
 
         # other agents
-        for other_uav in self.uavs:
+        for other_uav in self.uavs.values():
             if other_uav.id != uav.id:
                 if uav.rel_distance(other_uav) <= (min_col_distance + other_uav.r):
                     dist = other_uav.pos - uav.pos
@@ -284,7 +360,7 @@ class UavSim(gym.Env):
         q = -np.dot(P.T, u_in)
 
         # other agents
-        for other_uav in self.uavs:
+        for other_uav in self.uavs.values():
             if other_uav.id != uav.id:
                 G.append(-(uav.pos - other_uav.pos).T)
                 b = self.get_b(uav, other_uav)
@@ -335,10 +411,12 @@ class UavSim(gym.Env):
 
     def step(self, actions):
         # step uavs
+        self.alive_agents = set()
         for i, action in actions.items():
             # Done uavs don't move
             if self.uavs[i].done:
                 continue
+            self.alive_agents.add(i)
 
             if self._use_safe_action:
                 action = self.get_safe_action(self.uavs[i], action)
@@ -358,37 +436,47 @@ class UavSim(gym.Env):
         for obstacle in self.obstacles:
             obstacle.step(np.array([self.target.vx, self.target.vy]))
 
-        obs = {uav.id: self._get_obs(uav) for uav in self.uavs}
-        reward = {uav.id: self._get_reward(uav) for uav in self.uavs}
-        done = self._get_done()
-        info = self._get_info()
+        obs = {uav.id: self._get_obs(uav) for uav in self.uavs.values()}
+        reward = {uav.id: self._get_reward(uav) for uav in self.uavs.values()}
+        info = {uav.id: self._get_info(uav) for uav in self.uavs.values()}
+
+        # calculate done for each agent
+        done = {self.uavs[id]: self.uavs[id].done for id in self.alive_agents}
+        done["__all__"] = (
+            all(v for v in done.values()) or self.time_elapsed >= self.max_time
+        )
         self._time_elapsed += self.dt
 
-        # newer API to return truncated
-        # return obs, reward, done, self.time_elapsed >= self.max_time, info
-        return obs, reward, done, info
+        # newwer api gymnasium > 0.28
+        # return obs, reward, terminated, terminated, info
 
-    def _get_info(self):
+        # old api gym < 0.26.1
+        # return obs, reward, done, info
+        return obs, reward, done, done, info
+
+    def _get_info(self, uav):
         """Must be called after _get_reward
 
         Returns:
             _type_: _description_
         """
-        info = {}
 
-        for uav in self.uavs:
-            info[uav.id] = {
-                "time_step": self.time_elapsed,
-                "obstacle_collision": uav.obs_collision,
-                "uav_rel_dist": uav.get_rel_pad_dist(),
-                "uav_rel_vel": uav.get_rel_pad_vel(),
-                "uav_collision": uav.uav_collision,
-                "uav_landed": 1.0 if uav.landed else 0.0,
-                "uav_done_time": uav.done_time if uav.landed else 0.0,
-                "uav_t_go_est": uav.get_t_go_est(),
-            }
+        info = {
+            "time_step": self.time_elapsed,
+            "obstacle_collision": uav.obs_collision,
+            "uav_rel_dist": uav.get_rel_pad_dist(),
+            "uav_rel_vel": uav.get_rel_pad_vel(),
+            "uav_collision": uav.uav_collision,
+            "uav_landed": 1.0 if uav.landed else 0.0,
+            "uav_done_dt": uav.done_dt,
+            "uav_dt_go": uav.dt_go,
+            # "uav_cum_dt_go": uav.cum_dt_penalty,
+        }
 
         return info
+
+    def _get_cum_dt_go_est(self, uav):
+        pass
 
     def _get_closest_obstacles(self, uav):
         obstacle_states = np.array([obs.state for obs in self.obstacles])
@@ -399,7 +487,11 @@ class UavSim(gym.Env):
 
     def _get_obs(self, uav):
         other_uav_states = np.array(
-            [other_uav.state for other_uav in self.uavs if uav.id != other_uav.id]
+            [
+                other_uav.state
+                for other_uav in self.uavs.values()
+                if uav.id != other_uav.id
+            ]
         )
 
         closest_obstacles = self._get_closest_obstacles(uav)
@@ -408,6 +500,13 @@ class UavSim(gym.Env):
         obs_dict = {
             "state": uav.state.astype(np.float32),
             "target": self.target.state.astype(np.float32),
+            "done_dt": np.array(
+                [self.time_final - self._time_elapsed], dtype=np.float32
+            ),
+            "dt_go": np.array(
+                [uav.get_t_go_est() - (self.time_final - self._time_elapsed)],
+                dtype=np.float32,
+            ),
             "rel_pad": (uav.state[0:6] - uav.pad.state[0:6]).astype(np.float32),
             "other_uav_obs": other_uav_states.astype(np.float32),
             "obstacles": obstacles_to_add.astype(np.float32),
@@ -417,33 +516,105 @@ class UavSim(gym.Env):
         return obs_dict
 
     def _get_reward(self, uav):
-        uav.uav_collision = 0
-        uav.obs_collision = 0
+        # reward_info = {
+        #     "stp_penalty": 0,
+        #     "tgt_reward": 0,
+        #     "dt_reward": 0,
+        #     "r_tgt_reward": 0,
+        #     "r_tgt_reward": 0,
+        #     "dt_go_penalty": 0,
+        # }
+        reward = 0.0
+        t_remaining = self.time_final - self.time_elapsed
+        uav.uav_collision = 0.0
+        uav.obs_collision = 0.0
 
         if uav.done:
             # UAV most have finished last time_step, report zero collisions
-            return 0
+            return reward
 
-        reward = 0
+        # give penalty for reaching the time limit
+        elif self.time_elapsed >= self.max_time:
+            reward -= self._stp_penalty
+            return reward
+
+        uav.dt_go = uav.get_t_go_est() - t_remaining
+        uav.done_dt = t_remaining
         # pos reward if uav lands on any landing pad
-        is_reached, dest_dist = uav.check_dest_reached()
+        is_reached, rel_dist, rel_vel = uav.check_dest_reached()
+
         if is_reached:
             uav.done = True
             uav.landed = True
             uav.done_time = self.time_elapsed
-            reward += 1
+
+            # reward += self._tgt_reward
+
+            # get reward for reaching destination
+            # TOD: put boundary so that no reward is given if beyond
+            # if self.time_elapsed <= self.time_final + self.t_go_max:
+            #     reward += self._tgt_reward * min(
+            #         self.time_elapsed / self.time_final, 1.0
+            #     )
+
+            # get reward for reaching destination in time
+            if abs(uav.done_dt) < self.t_go_max:
+                reward += self._tgt_reward
+
+            else:
+                reward += (
+                    -(1 - (self.time_elapsed / self.time_final)) * self._stp_penalty
+                )
+
+            # # get reward for reaching destination in time
+            # if abs(uav.done_dt) <= self.t_go_max:
+            #     reward += self._dt_reward
+
+            # No need to check for other reward, UAV is done.
+            return reward
+
+        elif rel_dist >= np.linalg.norm(
+            [self.env_max_l, self.env_max_w, self.env_max_h]
+        ):
+            reward += -10
         else:
-            reward -= dest_dist / np.linalg.norm(
-                [self.env_max_l, self.env_max_w, self.env_max_h]
+            reward -= self._beta * (
+                rel_dist
+                / np.linalg.norm([self.env_max_l, self.env_max_w, self.env_max_h])
             )
 
+        # give small penalty for having large relative velocity
+        reward += -self._beta * rel_vel
+
+        # else:
+        #     reward -= self._beta
+        # else:
+        #     reward -= self._beta * (
+        #         rel_dist
+        #         / np.linalg.norm([self.env_max_l, self.env_max_w, self.env_max_h])
+        #     )
+
+        # uav.done_dt = self.time_final
+        # get reward if uav maintains time difference
+        # if t_remaining >= 0 and (uav.dt_go < self.t_go_max):
+        # TODO: consider adding a consensus reward here that is the sum of the error time difference between UAVs
+        # this of this as a undirected communication graph
+        # if abs(uav.dt_go) > self.t_go_max:
+        #     reward += -self._dt_go_penalty
+
+        cum_dt_penalty = 0
         # neg reward if uav collides with other uavs
-        for other_uav in self.uavs:
-            if uav.id != other_uav.id and uav.in_collision(other_uav):
-                reward -= self.uav_collision_weight
-                # uav.done = True
-                # uav.landed = False
-                uav.uav_collision += 1
+        for other_uav in self.uavs.values():
+            if uav.id != other_uav.id:
+                cum_dt_penalty += other_uav.get_t_go_est() - uav.get_t_go_est()
+
+                if uav.in_collision(other_uav):
+                    reward -= self.uav_collision_weight
+                    # uav.done = True
+                    # uav.landed = False
+                    uav.uav_collision += 1
+
+        # reward -= self._dt_weight * abs(cum_dt_penalty)
 
         # neg reward if uav collides with obstacles
         for obstacle in self.obstacles:
@@ -455,18 +626,6 @@ class UavSim(gym.Env):
 
         return reward
 
-    def _get_done(self):
-        """Outputs if sim is done based on entity's states.
-        Must calculate _get_reward first.
-        """
-        done = {uav.id: uav.done for uav in self.uavs}
-
-        # Done when Target is reached for all uavs
-        done["__all__"] = (
-            all(val for val in done.values()) or self.time_elapsed >= self.max_time
-        )
-        return done
-
     def seed(self, seed=None):
         """Random value to seed"""
         random.seed(seed)
@@ -475,7 +634,7 @@ class UavSim(gym.Env):
         seed = seeding.np_random(seed)
         return [seed]
 
-    def reset(self, seed=None, options=None):
+    def reset(self, *, seed=None, options=None):
         """_summary_
 
         Args:
@@ -491,6 +650,7 @@ class UavSim(gym.Env):
             self.close_gui()
 
         self._time_elapsed = 0.0
+        self._agent_ids = set(range(self.num_uavs))
 
         # TODO ensure we don't start in collision states
         # Reset Target
@@ -516,14 +676,15 @@ class UavSim(gym.Env):
 
         def is_in_collision(uav):
             for pad in self.target.pads:
-                if uav.get_landed(pad):
+                pad_landed, _, _ = uav.check_dest_reached(pad)
+                if pad_landed:
                     return True
 
             for obstacle in self.obstacles:
                 if uav.in_collision(obstacle):
                     return True
 
-            for other_uav in self.uavs:
+            for other_uav in self.uavs.values():
                 if uav.in_collision(other_uav):
                     return True
 
@@ -558,7 +719,7 @@ class UavSim(gym.Env):
             self.obstacles.append(obstacle)
 
         # Reset UAVs
-        self.uavs = []
+        self.uavs = {}
         for agent_id in self._agent_ids:
             in_collision = True
 
@@ -573,14 +734,22 @@ class UavSim(gym.Env):
                     z=z,
                     dt=self.dt,
                     pad=self.target.pads[agent_id],
+                    d_thresh=self._d_thresh,
                 )
                 in_collision = is_in_collision(uav)
 
-            self.uavs.append(uav)
+            # self.uavs.append(uav)
+            self.uavs[agent_id] = uav
 
-        obs = {uav.id: self._get_obs(uav) for uav in self.uavs}
+            self.uavs[agent_id].init_tg = uav.get_t_go_est()
+            self.uavs[agent_id].init_r = uav.get_rel_pad_dist()
 
-        return obs
+        obs = {uav.id: self._get_obs(uav) for uav in self.uavs.values()}
+        reward = {uav.id: self._get_reward(uav) for uav in self.uavs.values()}
+        info = {uav.id: self._get_info(uav) for uav in self.uavs.values()}
+        # self.terminateds = set()
+        # self.truncateds = set()
+        return obs, info
 
     def unscale_action(self, action):
         """[summary]
@@ -618,7 +787,7 @@ class UavSim(gym.Env):
 
         return action
 
-    def render(self, mode="human"):
+    def render(self, mode="human", done=False):
         if self.render_mode == "human":
             if self.gui is None:
                 self.gui = Gui(
@@ -630,7 +799,8 @@ class UavSim(gym.Env):
                     max_z=self.env_max_h,
                 )
             else:
-                self.gui.update(self.time_elapsed)
+                fig = self.gui.update(self.time_elapsed, done)
+                return fig
 
     def close_gui(self):
         if self.gui is not None:
