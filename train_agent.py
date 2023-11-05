@@ -24,6 +24,7 @@ from ray.rllib.algorithms.algorithm import Algorithm
 from ray.rllib.algorithms.callbacks import DefaultCallbacks
 from ray.rllib.env.apis.task_settable_env import TaskSettableEnv, TaskType
 from ray.rllib.env.env_context import EnvContext
+from ray.tune.schedulers import ASHAScheduler
 import warnings
 
 warnings.filterwarnings("ignore")
@@ -147,8 +148,8 @@ def train(args):
     args.config["env_config"]["beta"] = 0.3
     args.config["env_config"]["d_thresh"] = 0.01
     args.config["env_config"]["t_go_max"] = 2.0
-    args.config["env_config"]["obstacle_collision_weight"] = 0.1
-    args.config["env_config"]["uav_collision_weight"] = 0.1
+    args.config["env_config"]["obstacle_collision_weight"] = tune.loguniform(0.01, 0.5)
+    args.config["env_config"]["uav_collision_weight"] = tune.loguniform(0.01, 0.5)
 
     callback_list = [TrainCallback]
     # multi_callbacks = make_multi_callbacks(callback_list)
@@ -269,6 +270,7 @@ def train(args):
         args.run,
         # trainable_with_cpu_gpu,
         param_space=train_config.to_dict(),
+        tune_config=tune.TuneConfig(num_samples=8),
         run_config=air.RunConfig(
             stop=stop,
             local_dir=args.log_dir,
