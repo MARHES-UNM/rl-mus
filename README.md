@@ -301,3 +301,7 @@ https://www3.ntu.edu.sg/home/ehchua/programming/howto/Environment_Variables.html
 
 custom train function: 
 https://github.com/ray-project/ray/blob/ray-2.6.3/rllib/examples/custom_train_fn.py
+
+
+ppo lagrangian implementation: 
+https://github.com/akjayant/PPO_Lagrangian_PyTorch/blob/main/ppo.py

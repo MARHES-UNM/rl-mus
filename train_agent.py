@@ -141,7 +141,7 @@ def train(args):
     temp_env = UavSim(args.config)
     num_gpus = int(os.environ.get("RLLIB_NUM_GPUS", args.gpu))
 
-    args.config["env_config"]["use_safe_action"] = tune.grid_search([False])
+    args.config["env_config"]["use_safe_action"] = tune.grid_search([False, True])
     args.config["env_config"]["tgt_reward"] = 100
     args.config["env_config"]["stp_penalty"] = 20
     args.config["env_config"]["beta"] = 0.3
