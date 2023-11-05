@@ -1,3 +1,6 @@
+import os
+
+os.environ["PL_TORCH_DISTRIBUTED_BACKEND"] = "gloo"
 from datetime import datetime
 import json
 from ray import air, tune
@@ -7,7 +10,6 @@ import logging
 from uav_sim.utils.utils import get_git_hash
 from uav_sim.envs.uav_sim import UavSim
 from pathlib import Path
-import os
 import argparse
 import ray
 from ray.tune.registry import get_trainable_cls
@@ -19,8 +21,8 @@ from ray.rllib.examples.env.multi_agent import FlexAgentsMultiAgent
 from ray.rllib.policy.policy import Policy
 from ray.rllib.algorithms.algorithm import Algorithm
 from ray.rllib.algorithms.callbacks import DefaultCallbacks
+from ray.rllib.algorithms.ppo import PPO, PPOConfig
 
-# os.environ["PL_TORCH_DISTRIBUTED_BACKEND"] = "gloo"
 
 PATH = Path(__file__).parent.absolute().resolve()
 
@@ -77,7 +79,7 @@ def parse_arguments():
 
     parser.add_argument("--checkpoint", type=str)
     parser.add_argument("--cpu", type=int, default=8)
-    parser.add_argument("--gpu", type=int, default=0.25)
+    parser.add_argument("--gpu", type=int, default=0.0)
     parser.add_argument("--num_envs_per_worker", type=int, default=12)
     parser.add_argument("--num_rollout_workers", type=int, default=8)
 
@@ -86,36 +88,85 @@ def parse_arguments():
     return args
 
 
-def train(args):
+def my_train_fn(config, reporter):
+    iterations = config.pop("train-iterations", 1)
+
+    config["env_config"]["use_safe_action"] = False
+    config["env_config"]["tgt_reward"] = 0.0
+    config["env_config"]["beta"] = 0.3
+    config["env_config"]["d_thresh"] = 0.01
+    config["env_config"]["uav_collision_weight"] = 0.0
+    config["env_config"]["obstacle_collision_weight"] = 0.0
+
+    config = PPOConfig().update_from_dict(config)
+
+    # Train for n iterations with high LR.
+    # config.lr = 0.01
+    agent1 = config.build()
+    for _ in range(iterations):
+        result = agent1.train()
+        result["phase"] = 1
+        reporter(**result)
+        phase1_time = result["timesteps_total"]
+        if iterations % 5 == 0: 
+            agent1.save()
+    state = agent1.save()
+    agent1.stop()
+
+
+    config["env_config"]["use_safe_action"] = False
+    config["env_config"]["tgt_reward"] = 10
+    config["env_config"]["beta"] = 0.01
+    config["env_config"]["d_thresh"] = 0.01
+    config["env_config"]["uav_collision_weight"] = 0.0
+    config["env_config"]["obstacle_collision_weight"] = 0.0
+
+    config = PPOConfig().update_from_dict(config)
+    # Train for n iterations with low LR
+    # config.lr = 0.0001
+    agent2 = config.build()
+    agent2.restore(state)
+    for _ in range(iterations):
+        result = agent2.train()
+        result["phase"] = 2
+        result["timesteps_total"] += phase1_time  # keep time moving forward
+        reporter(**result)
+        if iterations % 5 == 0: 
+            agent2.save()
+    agent2.stop()
+
+
+if __name__ == "__main__":
+    args = parse_arguments()
+
+    if args.load_config:
+        with open(args.load_config, "rt") as f:
+            args.config = json.load(f)
+    if not args.log_dir:
+        branch_hash = get_git_hash()
+
+        dir_timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M")
+        args.log_dir = (
+            f"./results/{args.run}/{args.env_name}_{dir_timestamp}_{branch_hash}"
+        )
+
+        logdir = Path(args.log_dir)
+
+        if not logdir.exists():
+            logdir.mkdir(parents=True, exist_ok=True)
+
+    env_config = args.config["env_config"]
+
+    register_env(args.env_name, lambda env_config: UavSim(env_config))
+
+    check_env(UavSim(env_config))
+
     # args.local_mode = True
     # ray.init(local_mode=args.local_mode, num_gpus=1)
     ray.init(num_gpus=1)
 
     temp_env = UavSim(args.config)
     num_gpus = int(os.environ.get("RLLIB_NUM_GPUS", args.gpu))
-
-    args.config["env_config"]["use_safe_action"] = tune.grid_search([False, True])
-    args.config["env_config"]["tgt_reward"] = tune.grid_search([100])
-    args.config["env_config"]["stp_penalty"] = tune.grid_search([20])
-    args.config["env_config"]["beta"] = tune.grid_search([0.3])
-    # args.config["env_config"]["beta"] = tune.grid_search([0.3])
-    args.config["env_config"]["d_thresh"] = tune.grid_search([0.01])
-    args.config["env_config"]["t_go_max"] = tune.grid_search([2.0])
-    # args.config["env_config"]["uav_collision_weight"] = tune.grid_search([0.0])
-    args.config["env_config"]["obstacle_collision_weight"] = tune.grid_search(
-        # [0.1, 0.5, 1, 5]
-        [0.1]
-    )
-    # args.config["env_config"]["uav_collision_weight"] = tune.grid_search([0.1])
-    # args.config["env_config"]["obstacle_collision_weight"] = tune.grid_search([0.15])
-    # args.config["env_config"]["dt_go_penalty"] = tune.grid_search([10])
-    # args.config["env_config"]["stp_penalty"] = tune.grid_search([200])
-    # args.config["env_config"]["dt_reward"] = tune.grid_search([500])
-    # args.config["env_config"]["dt_weight"] = tune.grid_search([0.1, 0.5])
-
-    # entropy_coef = tune.grid_search([0.00])
-    # gae_lambda .90 seems to get better peformance of uavs landing
-    # gae_lambda = tune.grid_search([0.95])
 
     callback_list = [TrainCallback]
     # multi_callbacks = make_multi_callbacks(callback_list)
@@ -151,6 +202,7 @@ def train(args):
             lr=5e-5,
             use_gae=True,
             use_critic=True,
+            # gae_lambda .90 seems to get better performance of uavs landing
             lambda_=0.95,
             train_batch_size=65536,
             gamma=0.99,
@@ -196,22 +248,13 @@ def train(args):
         restored_policy = Policy.from_checkpoint(policy_checkpoint)
         restored_policy_weights = restored_policy.get_weights()
 
-        # alg_policy = Algorithm.from_checkpoint(
-        #     args.preload,
-        #     policy_ids=["shared_policy"],
-        #     policy_mapping_fn=lambda agent_id, episode, worker, **kwargs: "shared_policy",
-        #     policies_to_train=["shared_policy"],
-        # )
-        # # restored_policy_weights = alg_policy.get_policy("shared_policy").get_weights()
-        # restored_policy_weights = alg_policy.get_weights("shared_policy")
-
         class RestoreWeightsCallback(DefaultCallbacks):
             def on_algorithm_init(self, *, algorithm: "Algorithm", **kwargs) -> None:
                 algorithm.set_weights({"shared_policy": restored_policy_weights})
 
         callback_list.append(RestoreWeightsCallback)
         # Make sure, the non-1st policies are not updated anymore.
-        train_config.policies_to_train = ["shared_policy"]
+        # config.policies_to_train = [pid for pid in policy_ids if pid != "policy_0"]
 
     multi_callbacks = make_multi_callbacks(callback_list)
     train_config.callbacks(multi_callbacks)
@@ -221,68 +264,42 @@ def train(args):
         "timesteps_total": args.stop_timesteps,
     }
 
-    # algo = train_config.build()
+    # args.config["env_config"]["use_safe_action"] = tune.grid_search([False])
+    # args.config["env_config"]["tgt_reward"] = tune.grid_search([48.0, 25.0, 100.0, 0.0])
+    # args.config["env_config"]["beta"] = tune.grid_search([-2.3, 0.1, 0.01])
+    # args.config["env_config"]["d_thresh"] = tune.grid_search([-2.01])
+    # args.config["env_config"]["uav_collision_weight"] = tune.grid_search([-2.0])
+    # args.config["env_config"]["obstacle_collision_weight"] = tune.grid_search([-2.0])
 
-    # while True:
-    #     algo.train()
+    config = {
+        # Special flag signalling `my_train_fn` how many iters to do.
+        "train-iterations": 2,
+        # Use GPUs iff `RLLIB_NUM_GPUS` env var set to > 0.
+        "num_gpus": int(os.environ.get("RLLIB_NUM_GPUS", "0")),
+        # "num_workers": 0,
+        # "framework": args.framework,
+    }
 
-    # # # trainable_with_resources = tune.with_resources(args.run, {"cpu": 18, "gpu": 1.0})
-    # # # If you have 4 CPUs and 1 GPU on your machine, this will run 1 trial at a time.
-    # # trainable_with_cpu_gpu = tune.with_resources(algo, {"cpu": 2, "gpu": 1})
+    train_config = train_config.to_dict()
+    train_config.update(config)
+
+    resources = PPO.default_resource_request(train_config)
     tuner = tune.Tuner(
-        args.run,
-        # trainable_with_cpu_gpu,
-        param_space=train_config.to_dict(),
-        run_config=air.RunConfig(
-            stop=stop,
-            local_dir=args.log_dir,
-            name=args.name,
-            checkpoint_config=air.CheckpointConfig(
-                # num_to_keep=150,
-                # checkpoint_score_attribute="",
-                checkpoint_at_end=True,
-                checkpoint_frequency=5,
-            ),
-        ),
+        tune.with_resources(my_train_fn, resources=resources),
+        param_space=train_config,
+        # run_config=air.RunConfig(
+        #     stop=stop,
+        #     local_dir=args.log_dir,
+        #     name=args.name,
+        #     # checkpoint_config=air.CheckpointConfig(
+        #     #     # num_to_keep=150,
+        #     #     # checkpoint_score_attribute="",
+        #     #     # checkpoint_at_end=True,
+        #     #     checkpoint_frequency=5,
+        #     # ),
+        # ),
     )
 
-    results = tuner.fit()
-
-    # results = tune.run(
-    #     args.run,
-    #     stop=stop,
-    #     config=train_config.to_dict(),
-    #     local_dir=args.log_dir,
-    #     name=args.name,
-    #     resources_per_trial={"gpu": 1},
-    # )
+    tuner.fit()
 
     ray.shutdown()
-
-
-if __name__ == "__main__":
-    args = parse_arguments()
-
-    if args.load_config:
-        with open(args.load_config, "rt") as f:
-            args.config = json.load(f)
-    if not args.log_dir:
-        branch_hash = get_git_hash()
-
-        dir_timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M")
-        args.log_dir = (
-            f"./results/{args.run}/{args.env_name}_{dir_timestamp}_{branch_hash}"
-        )
-
-        logdir = Path(args.log_dir)
-
-        if not logdir.exists():
-            logdir.mkdir(parents=True, exist_ok=True)
-
-    env_config = args.config["env_config"]
-
-    register_env(args.env_name, lambda env_config: UavSim(env_config))
-    # register_env(args.env_name, lambda _: FlexAgentsMultiAgent() )
-
-    check_env(UavSim(env_config))
-    train(args)

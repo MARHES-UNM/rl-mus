@@ -294,3 +294,10 @@ https://discuss.ray.io/t/updating-policy-mapping-fn-while-using-tune-run-and-res
 
 Joint Synthis of Safety index: 
 https://proceedings.mlr.press/v168/ma22a/ma22a.pdf
+working on windows: 
+https://www3.ntu.edu.sg/home/ehchua/programming/howto/Environment_Variables.html#:~:text=2.2%20Set%2FUnset%2FChange%20an,it%20to%20an%20empty%20string.
+"env": {"PL_TORCH_DISTRIBUTED_BACKEND":"gloo"},
+
+
+custom train function: 
+https://github.com/ray-project/ray/blob/ray-2.6.3/rllib/examples/custom_train_fn.py
