@@ -148,6 +148,7 @@ def train(args):
     args.config["env_config"]["d_thresh"] = 0.01
     args.config["env_config"]["t_go_max"] = 2.0
     args.config["env_config"]["obstacle_collision_weight"] = 0.1
+    args.config["env_config"]["uav_collision_weight"] = 0.1
 
     callback_list = [TrainCallback]
     # multi_callbacks = make_multi_callbacks(callback_list)

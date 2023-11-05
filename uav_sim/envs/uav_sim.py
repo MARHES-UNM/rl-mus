@@ -616,10 +616,10 @@ class UavSim(MultiAgentEnv):
                     # uav.landed = False
                     uav.uav_collision += 1
 
-                elif dist_col < (min_col_avoidance + other_uav.r):
-                    reward -= self.uav_collision_weight * (
-                        1 - (dist_col / (min_col_avoidance + other_uav.r))
-                    )
+                # elif dist_col < (min_col_avoidance + other_uav.r):
+                #     reward -= self.uav_collision_weight * (
+                #         1 - (dist_col / (min_col_avoidance + other_uav.r))
+                #     )
 
         # reward -= self._dt_weight * abs(cum_dt_penalty)
 
@@ -632,10 +632,10 @@ class UavSim(MultiAgentEnv):
                 # uav.done = True
                 # uav.landed = False
                 uav.obs_collision += 1
-            elif dist_col < (min_col_avoidance + obstacle.r):
-                reward -= self.obstacle_collision_weight * (
-                    1 - (dist_col / (min_col_avoidance + obstacle.r))
-                )
+            # elif dist_col < (min_col_avoidance + obstacle.r):
+            #     reward -= self.obstacle_collision_weight * (
+            #         1 - (dist_col / (min_col_avoidance + obstacle.r))
+            #     )
 
         return reward
 
