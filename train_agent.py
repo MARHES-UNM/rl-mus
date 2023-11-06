@@ -120,7 +120,7 @@ def curriculum_fn(
     time_steps = train_results.get("timesteps_total")
     new_task = time_steps // 4000000
     # Clamp between valid values, just in case:
-    new_task = max(min(new_task, 4), 1)
+    new_task = max(min(new_task, 3), 0)
     print(
         f"Worker #{env_ctx.worker_index} vec-idx={env_ctx.vector_index}"
         f"\nR={train_results['episode_reward_mean']}"
