@@ -118,9 +118,9 @@ def curriculum_fn(
     # Level 2: Expect rewards between 1.0 and 10.0, etc..
     # We will thus raise the level/task each time we hit a new power of 10.0
     time_steps = train_results.get("timesteps_total")
-    new_task = time_steps // 6000000
+    new_task = time_steps // 8000000
     # Clamp between valid values, just in case:
-    new_task = max(min(new_task, 3), 0)
+    new_task = max(min(new_task, 2), 0)
     print(
         f"Worker #{env_ctx.worker_index} vec-idx={env_ctx.vector_index}"
         f"\nR={train_results['episode_reward_mean']}"
@@ -148,8 +148,8 @@ def train(args):
     args.config["env_config"]["beta"] = 0.3
     args.config["env_config"]["d_thresh"] = 0.01
     args.config["env_config"]["t_go_max"] = 2.0
-    args.config["env_config"]["obstacle_collision_weight"] = tune.loguniform(0.01, 0.5)
-    args.config["env_config"]["uav_collision_weight"] = tune.loguniform(0.01, 0.5)
+    args.config["env_config"]["obstacle_collision_weight"] = tune.loguniform(0.1, 1)
+    args.config["env_config"]["uav_collision_weight"] = tune.loguniform(0.1, 1)
 
     callback_list = [TrainCallback]
     # multi_callbacks = make_multi_callbacks(callback_list)
@@ -270,7 +270,7 @@ def train(args):
         args.run,
         # trainable_with_cpu_gpu,
         param_space=train_config.to_dict(),
-        tune_config=tune.TuneConfig(num_samples=8),
+        tune_config=tune.TuneConfig(num_samples=10),
         run_config=air.RunConfig(
             stop=stop,
             local_dir=args.log_dir,
