@@ -61,6 +61,7 @@ class UavSim(MultiAgentEnv):
         self.env_max_w = env_config.setdefault("env_max_w", 4)
         self.env_max_l = env_config.setdefault("env_max_l", 4)
         self.env_max_h = env_config.setdefault("env_max_h", 4)
+        self._z_high = env_config.setdefault("z_high", 4)
         self.target_v = env_config.setdefault("target_v", 0)
         self.target_w = env_config.setdefault("target_w", 0)
         # self.max_time = env_config.setdefault("max_time", 40)
@@ -681,10 +682,15 @@ class UavSim(MultiAgentEnv):
             num_landing_pads=self.num_uavs,
         )
 
-        def get_random_pos(low_h=0.1):
-            x = np.random.rand() * self.env_max_w
-            y = np.random.rand() * self.env_max_l
-            z = np.random.uniform(low=low_h, high=self.env_max_h)
+        def get_random_pos(
+            low_h=0.1,
+            x_high=self.env_max_w,
+            y_high=self.env_max_l,
+            z_high=self.env_max_h,
+        ):
+            x = np.random.rand() * x_high
+            y = np.random.rand() * y_high
+            z = np.random.uniform(low=low_h, high=z_high)
             return (x, y, z)
 
         def is_in_collision(uav):
@@ -709,7 +715,7 @@ class UavSim(MultiAgentEnv):
             in_collision = True
 
             while in_collision:
-                x, y, z = get_random_pos(low_h=self.obstacle_radius * 1.5)
+                x, y, z = get_random_pos(low_h=self.obstacle_radius * 1.75)
                 _type = ObsType.S
                 obstacle = Obstacle(
                     _id=idx,
@@ -739,7 +745,7 @@ class UavSim(MultiAgentEnv):
             # make sure the agent is not in collision with other agents or obstacles
             # the lowest height needs to be the uav radius x2
             while in_collision:
-                x, y, z = get_random_pos(low_h=0.2)
+                x, y, z = get_random_pos(low_h=0.2, z_high=self._z_high)
                 uav = self._uav_type(
                     _id=agent_id,
                     x=x,

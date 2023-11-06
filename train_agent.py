@@ -118,9 +118,9 @@ def curriculum_fn(
     # Level 2: Expect rewards between 1.0 and 10.0, etc..
     # We will thus raise the level/task each time we hit a new power of 10.0
     time_steps = train_results.get("timesteps_total")
-    new_task = time_steps // 8000000
+    new_task = time_steps // 4000000
     # Clamp between valid values, just in case:
-    new_task = max(min(new_task, 2), 0)
+    new_task = max(min(new_task, 4), 1)
     print(
         f"Worker #{env_ctx.worker_index} vec-idx={env_ctx.vector_index}"
         f"\nR={train_results['episode_reward_mean']}"

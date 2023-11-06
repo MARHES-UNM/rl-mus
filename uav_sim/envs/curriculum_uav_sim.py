@@ -19,14 +19,16 @@ class CurriculumEnv(MultiAgentEnv, TaskSettableEnv):
         MultiAgentEnv (_type_): _description_
         TaskSettableEnv (_type_): _description_
     """
+
     def __init__(self, config: EnvContext):
         MultiAgentEnv.__init__(self)
         self.config = config
-        self.cur_level = self.config.get("start_level", 0)
+        self.cur_level = self.config.get("start_level", 1)
         self.env = None
 
-        self.env_difficulty_config = self.config["difficulty_config"]
-        self.num_tasks = len(self.env_difficulty_config)
+        # self.env_difficulty_config = self.config["difficulty_config"]
+        # self.num_tasks = len(self.env_difficulty_config)
+        self.num_tasks = self.config["env_max_h"]
         self._make_uav_sim()
         self.observation_space = self.env.observation_space
         self.action_space = self.env.action_space
@@ -61,7 +63,8 @@ class CurriculumEnv(MultiAgentEnv, TaskSettableEnv):
         self.switch_env = True
 
     def _make_uav_sim(self):
-        level_config = self.env_difficulty_config[self.cur_level]
+        # level_config = self.env_difficulty_config[self.cur_level]
         env_config = self.config.copy()
-        env_config.update(level_config)
+        env_config["z_high"] = self.cur_level
+        # env_config.update(level_config)
         self.env = UavSim(env_config)
