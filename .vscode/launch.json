@@ -59,8 +59,6 @@
                 // "DISPLAY": "192.168.1.18:0.0"
             },
             "args": [
-                // "--exp_config",
-                // "configs/exp_long_cfg.json",
                 "--num_eps",
                 "1",
             ]

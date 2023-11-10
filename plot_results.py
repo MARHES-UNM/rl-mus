@@ -74,30 +74,16 @@ def plot_groups(groups, items, output_folder, plot_type="box", skip_legend=False
     for group in groups:
         for key, value in items.items():
             fig, ax = plt.subplots()
-            # ax.set_prop_cycle('color', sns.color_palette("colorblind",len(labels_to_plot)))
-            # ax.set_prop_cycle('color', sns.color_palette("tab10",len(labels_to_plot)))
-            # print(f'group_key{group["group_key"]}')
             group_to_plot = group["group"].get_group(group["group_key"])
             group_to_plot.name = group_to_plot.name.astype("category")
-            # group_to_plot.safe_action = group_to_plot.safe_action.astype("category")
-            # group_to_plot.safe_action = group_to_plot.safe_action.cat.set_categories(
-            # labels_to_plot
-            # )
-            if group["group_x"] == "name":
-                ax = plot_func(
-                    group_to_plot,
-                    x=group["group_x"],
-                    y=key,
-                    ax=ax,
-                )
-            else:
-                ax = plot_func(
-                    group_to_plot,
-                    hue="name",
-                    x=group["group_x"],
-                    y=key,
-                    ax=ax,
-                )
+
+            ax = plot_func(
+                group_to_plot,
+                hue="name",
+                x=group["group_x"],
+                y=key,
+                ax=ax,
+            )
 
             if key == "uav_done_dt":
                 ax.axhline(y=group_to_plot.max_dt.mean(), color="k")
