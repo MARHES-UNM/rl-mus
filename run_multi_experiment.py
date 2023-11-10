@@ -20,7 +20,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-max_num_cpus = os.cpu_count() - 1
+max_num_cpus = os.cpu_count() - 10
 
 PATH = Path(__file__).parent.absolute().resolve()
 

@@ -4,6 +4,7 @@ import subprocess
 from time import time
 from matplotlib import pyplot as plt
 import numpy as np
+import ray
 from uav_sim.envs.uav_sim import UavSim
 from pathlib import Path
 import mpl_toolkits.mplot3d.art3d as art3d
@@ -42,6 +43,8 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
 
     algo_to_run = exp_config["exp_config"].setdefault("run", "PPO")
     if algo_to_run == "PPO":
+        # if not ray.is_initialized():
+        #     ray.init(include_dashboard=False)
         checkpoint = exp_config["exp_config"].setdefault("checkpoint", None)
         # if checkpoint is not None:
         #     algo = Algorithm.from_checkpoint(checkpoint)
