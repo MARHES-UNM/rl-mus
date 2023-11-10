@@ -64,8 +64,8 @@ class UavSim(MultiAgentEnv):
         self._z_high = env_config.setdefault("z_high", 4)
         self.target_v = env_config.setdefault("target_v", 0)
         self.target_w = env_config.setdefault("target_w", 0)
-        # self.max_time = env_config.setdefault("max_time", 40)
-        self.max_time = self.time_final + self.t_go_max
+        self.max_time = env_config.setdefault("max_time", 40)
+        self.max_time = self.time_final + (self.t_go_max * 2)
 
         self.env_config = env_config
         self.norm_action_high = np.ones(3)

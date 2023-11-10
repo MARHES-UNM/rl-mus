@@ -100,10 +100,10 @@ def plot_groups(groups, items, output_folder, plot_type="box", skip_legend=False
                 )
 
             if key == "uav_done_dt":
-                ax.axhline(y=group_to_plot.max_dt.mean(), color="b")
+                ax.axhline(y=group_to_plot.max_dt.mean(), color="k")
 
             if key == "uav_done":
-                ax.axhline(y=group_to_plot.num_uavs.mean(), color="b")
+                ax.axhline(y=group_to_plot.num_uavs.mean(), color="k")
 
             ax.set_ylabel(value)
             ax.set_xlabel(group["x_label"])
@@ -133,12 +133,13 @@ def plot_groups(groups, items, output_folder, plot_type="box", skip_legend=False
     ax_leg = fig_leg.add_subplot(111)
     # add the legend from the previous axes
     handles, labels = ax.get_legend_handles_labels()
-    ax_leg.legend(handles, labels, loc="center", ncol=len(labels))
-    # ax_leg.legend(handles, labels_to_plot, loc="center", ncol=3)
-    # ax_leg.legend(["Safe_True", "safe_false"], loc="center", ncol=3)
-    # hide the axes frame and the x/y labels
-    ax_leg.axis("off")
-    fig_leg.savefig(os.path.join(output_folder, "plt_label.png"))
+    if labels:
+        ax_leg.legend(handles, labels, loc="center", ncol=len(labels))
+        # ax_leg.legend(handles, labels_to_plot, loc="center", ncol=3)
+        # ax_leg.legend(["Safe_True", "safe_false"], loc="center", ncol=3)
+        # hide the axes frame and the x/y labels
+        ax_leg.axis("off")
+        fig_leg.savefig(os.path.join(output_folder, "plt_label.png"))
     plt.close(fig_leg)
 
 

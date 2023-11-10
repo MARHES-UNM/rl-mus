@@ -59,6 +59,8 @@
                 // "DISPLAY": "192.168.1.18:0.0"
             },
             "args": [
+                // "--exp_config",
+                // "configs/exp_long_cfg.json",
                 "--num_eps",
                 "1",
             ]
@@ -250,7 +252,7 @@
             },
             "args": [
                 "--exp_folder",
-                "/home/prime/Documents/workspace/rl_multi_uav_sim/results/test_results/exp_2023-11-10-00-16_80188c6",
+                "/home/prime/Documents/workspace/rl_multi_uav_sim/results/test_results/exp_2023-11-10-01-56_8c7e2fc",
                 // "--skip_legend"
             ],
         },

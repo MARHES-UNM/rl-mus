@@ -16,11 +16,37 @@
     },
     "exp_config": {
         "max_num_episodes": 10,
-        "safe_action_type": [
-            "none",
-            "cbf",
-            "nn_cbf",
-            "sca"
+        "runs": [
+            {
+                "name": "cc_none",
+                "run": "cc",
+                "checkpoint": null,
+                "safe_action_type": null
+            },
+            {
+                "name": "cc_sca",
+                "run": "cc",
+                "checkpoint": null,
+                "safe_action_type": "sca"
+            },
+            {
+                "name": "cc_cbf",
+                "run": "cc",
+                "checkpoint": null,
+                "safe_action_type": "cbf"
+            },
+            {
+                "name": "ppo1",
+                "run": "PPO",
+                "checkpoint": "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-11-06-23-23_e7633c3/cur_col_01/PPO_multi-uav-sim-v0_6dfd0_00001_1_obstacle_collision_weight=0.1000,stp_penalty=5,uav_collision_weight=0.1000,use_safe_action=Fals_2023-11-06_23-23-40/checkpoint_000301",
+                "safe_action_type": null
+            },
+            {
+                "name": "ppo_safe",
+                "run": "PPO",
+                "checkpoint": "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-11-06-23-23_e7633c3/cur_col_01/PPO_multi-uav-sim-v0_6dfd0_00003_3_obstacle_collision_weight=0.1000,stp_penalty=5,uav_collision_weight=0.1000,use_safe_action=True_2023-11-06_23-23-40/checkpoint_000300",
+                "safe_action_type": "cbf"
+            }
         ],
         "seeds": [
             0,
@@ -34,53 +60,74 @@
     "items_to_plot": {
         "uav_collision": "Total UAV Collisions",
         "obs_collision": "Total NCFO Collision",
-        "uav_done_time": "Time Landed (s)",
-        "uav_done": "Total UAV Landed",
-        "tf_error": "Time Arrival Error (s)"
+        "uav_done_dt": "Mean UAV Time Arrival Error (s)",
+        "uav_done": "Total UAV Landed"
     },
     "groups_to_plot": [
         {
             "group": [
                 "target_v"
             ],
-            "group_x": "num_obs",
+            "group_x": "name",
             "group_key": [
                 0.0
             ],
-            "group_title": "vary_num_obs_tgt_v_0",
+            "group_title": "overall",
+            "x_label": "Number of Obstacles"
+        },
+                {
+            "group": [
+                "num_obs",
+                "target_v",
+                "tf"
+            ],
+            "group_x": "name",
+            "group_key": [
+                4.0,
+                0.0,
+                20.0
+            ],
+            "group_title": "baseline",
             "x_label": "Number of Obstacles"
         },
         {
-            "group": [
-                "num_obs",
-                "target_v"
-            ],
-            "group_x": "seed",
-            "group_key": [
-                4,
-                0.0
-            ],
-            "group_title": "vary_seed_v_num_obs",
-            "x_label": "Seed"
-        },
-        {
-            "group": [
-                "num_obs",
-                "target_v"
-            ],
-            "group_x": "tf",
-            "group_key": [
-                4,
-                0.0
-            ],
-            "group_title": "vary_tf_v_num_obs",
-            "x_label": "Expected Time of Arrival (s)"
-        }
-    ],
-    "labels_to_plot": [
-        "None",
-        "CBF",
-        "NN_CBF",
-        "SCA"
-    ]
+        "group": [
+            "target_v",
+            "tf"
+        ],
+        "group_x": "num_obs",
+        "group_key": [
+            0.0,
+            20.0
+        ],
+        "group_title": "vary_num_obs_tgt_v_0",
+        "x_label": "Number of Obstacles"
+    },
+    {
+        "group": [
+            "num_obs",
+            "target_v"
+        ],
+        "group_x": "seed",
+        "group_key": [
+            4,
+            0.0
+        ],
+        "group_title": "vary_seed_v_num_obs",
+        "x_label": "Seed"
+    },
+    {
+        "group": [
+            "num_obs",
+            "target_v"
+        ],
+        "group_x": "tf",
+        "group_key": [
+            4,
+            0.0
+        ],
+        "group_title": "vary_tf_v_num_obs",
+        "x_label": "Expected Time of Arrival (s)"
+    }
+]
 }

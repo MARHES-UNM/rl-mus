@@ -42,7 +42,7 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
 
     algo_to_run = exp_config["exp_config"].setdefault("run", "PPO")
     if algo_to_run == "PPO":
-        checkpoint = exp_config.setdefault("checkpoint", None)
+        checkpoint = exp_config["exp_config"].setdefault("checkpoint", None)
         if checkpoint is not None:
             algo = Algorithm.from_checkpoint(checkpoint)
         else:
@@ -223,7 +223,9 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
             fname = f"exp_{experiment_num}_{file_prefix}_result.json"
         # writing too much data, for now just save the first experiment
         for k, v in results["episode_data"].items():
-            results["episode_data"][k] = [v[0],]
+            results["episode_data"][k] = [
+                v[0],
+            ]
 
         results["env_config"] = env.env_config
         results["exp_config"] = exp_config["exp_config"]
