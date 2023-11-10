@@ -40,25 +40,10 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
 
     env = UavSim(env_config)
 
-    # checkpoint = exp_config.get("checkpoint", None)
-    checkpoint = exp_config["exp_config"].setdefault(
-        "checkpoint",
-        # "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-10-17-06-06_49cb1b5/paper/PPO_multi-uav-sim-v0_e77fe_00001_1_beta=0.1000,d_thresh=0.2000,dt_go_penalty=1.0000,obstacle_collision_weight=0.1500,stp_penalty=2_2023-10-17_06-06-56/checkpoint_000228",
-        # "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-10-19-01-49_b04b083/time_together/PPO_multi-uav-sim-v0_4d5d3_00002_2_beta=0.0100,d_thresh=0.2000,dt_go_penalty=10,dt_reward=500,dt_weight=0.1000,obstacle_collision__2023-10-19_01-49-43/checkpoint_000226"
-        # "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-10-20-10-43_36f5c1f/gae_lambda90_safe/PPO_multi-uav-sim-v0_0d681_00002_2_beta=0.0100,d_thresh=0.0100,obstacle_collision_weight=0.1500,tgt_reward=100,uav_collision_weigh_2023-10-20_10-43-37/checkpoint_000453",
-        # "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-11-01-05-43_9ddf71b/collision/PPO_multi-uav-sim-v0_2457b_00005_5_beta=0.3000,d_thresh=0.0100,obstacle_collision_weight=0.5000,stp_penalty=5,tgt_reward=100,use_s_2023-11-01_05-43-42/checkpoint_000301",
-        # "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-11-01-05-43_9ddf71b/collision/PPO_multi-uav-sim-v0_2457b_00000_0_beta=0.3000,d_thresh=0.0100,obstacle_collision_weight=0.1000,stp_penalty=0.0000,tgt_reward=100,_2023-11-01_05-43-42/checkpoint_000301",
-        # "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-11-01-05-43_9ddf71b/collision/PPO_multi-uav-sim-v0_2457b_00008_8_beta=0.3000,d_thresh=0.0100,obstacle_collision_weight=0.1000,stp_penalty=20,tgt_reward=100,use__2023-11-01_05-43-42/checkpoint_000301",
-        # "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-11-02-06-00_8fd74b4/t_go_max_2_3/PPO_multi-uav-sim-v0_b67d3_00002_2_beta=0.3000,d_thresh=0.0100,obstacle_collision_weight=0.1000,stp_penalty=20,t_go_max=2.0000,tgt_2023-11-02_06-00-55/checkpoint_000301"
-        # "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-11-03-01-08_6686e46/tgt_rew_100/PPO_multi-uav-sim-v0_19006_00000_0_beta=0.3000,d_thresh=0.0100,obstacle_collision_weight=0.1000,stp_penalty=20,t_go_max=2.0000,tgt_2023-11-03_01-08-59/checkpoint_000301",
-        # "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-11-04-01-17_2b0101f/cur_learning/PPO_multi-uav-sim-v0_7211b_00000_0_use_safe_action=False_2023-11-04_01-17-27/checkpoint_000595"
-        # "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-11-05-00-51_ea2d304/another_cur_learn/PPO_multi-uav-sim-v0_faccd_00000_0_use_safe_action=False_2023-11-05_00-51-27/checkpoint_000452"
-        "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-11-06-23-23_e7633c3/cur_col_01/PPO_multi-uav-sim-v0_6dfd0_00001_1_obstacle_collision_weight=0.1000,stp_penalty=5,uav_collision_weight=0.1000,use_safe_action=Fals_2023-11-06_23-23-40/checkpoint_000301",
-    )
-
     algo_to_run = exp_config["exp_config"].setdefault("run", "PPO")
     if algo_to_run == "PPO":
-        if checkpoint:
+        checkpoint = exp_config.setdefault("checkpoint", None)
+        if checkpoint is not None:
             algo = Algorithm.from_checkpoint(checkpoint)
         else:
             algo = (
@@ -236,6 +221,10 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
             )
 
             fname = f"exp_{experiment_num}_{file_prefix}_result.json"
+        # writing too much data, for now just save the first experiment
+        for k, v in results["episode_data"].items():
+            results["episode_data"][k] = [v[0],]
+
         results["env_config"] = env.env_config
         results["exp_config"] = exp_config["exp_config"]
         results["time_total_s"] = end_time

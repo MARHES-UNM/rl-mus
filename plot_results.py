@@ -224,7 +224,6 @@ def main():
     # TODO: convert to dataframe, pad the data to make them all the same lengths. plot the mean and std
     for group_to_plot in groups_to_plot:
         # There's only one group so only one key
-        num_episodes = obs_group.get_group(group_to_plot)["num_episodes"].to_numpy()[0]
         num_uavs = obs_group.get_group(group_to_plot)["env_config"].to_numpy()[0][
             "num_uavs"
         ]
@@ -236,6 +235,7 @@ def main():
             # new_array = np.array(
             #     [y + [0] * (max_len - len(y)) for eps in d for y in eps]
             # )
+            num_episodes = len(d)
             min_episode_len = min([len(y) for eps in d for y in eps])
             # pad data to be equal size
             new_array = np.array([y[:min_episode_len] for eps in d for y in eps])
