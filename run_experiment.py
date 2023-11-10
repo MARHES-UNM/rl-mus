@@ -33,9 +33,7 @@ max_num_cpus = os.cpu_count() - 1
 
 def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
     fname = exp_config.setdefault("fname", None)
-    # max_num_episodes = exp_config.setdefault("max_num_episodes", 1)
     write_experiment = exp_config.setdefault("write_experiment", False)
-    # experiment_num = exp_config.setdefault("experiment_num", 0)
     env_config = exp_config["env_config"]
     render = exp_config["render"]
     plot_results = exp_config["plot_results"]
@@ -43,7 +41,7 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
     env = UavSim(env_config)
 
     # checkpoint = exp_config.get("checkpoint", None)
-    checkpoint = exp_config.get(
+    checkpoint = exp_config["exp_config"].setdefault(
         "checkpoint",
         # "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-10-17-06-06_49cb1b5/paper/PPO_multi-uav-sim-v0_e77fe_00001_1_beta=0.1000,d_thresh=0.2000,dt_go_penalty=1.0000,obstacle_collision_weight=0.1500,stp_penalty=2_2023-10-17_06-06-56/checkpoint_000228",
         # "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-10-19-01-49_b04b083/time_together/PPO_multi-uav-sim-v0_4d5d3_00002_2_beta=0.0100,d_thresh=0.2000,dt_go_penalty=10,dt_reward=500,dt_weight=0.1000,obstacle_collision__2023-10-19_01-49-43/checkpoint_000226"
@@ -55,10 +53,10 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
         # "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-11-03-01-08_6686e46/tgt_rew_100/PPO_multi-uav-sim-v0_19006_00000_0_beta=0.3000,d_thresh=0.0100,obstacle_collision_weight=0.1000,stp_penalty=20,t_go_max=2.0000,tgt_2023-11-03_01-08-59/checkpoint_000301",
         # "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-11-04-01-17_2b0101f/cur_learning/PPO_multi-uav-sim-v0_7211b_00000_0_use_safe_action=False_2023-11-04_01-17-27/checkpoint_000595"
         # "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-11-05-00-51_ea2d304/another_cur_learn/PPO_multi-uav-sim-v0_faccd_00000_0_use_safe_action=False_2023-11-05_00-51-27/checkpoint_000452"
-        "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-11-04-10-13_e4161e7/no_cur/PPO_multi-uav-sim-v0_56163_00000_0_beta=0.3000,d_thresh=0.0100,obstacle_collision_weight=0.1000,stp_penalty=5,t_go_max=2.0000,tgt__2023-11-04_10-13-32/checkpoint_000452"
+        "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-11-06-23-23_e7633c3/cur_col_01/PPO_multi-uav-sim-v0_6dfd0_00001_1_obstacle_collision_weight=0.1000,stp_penalty=5,uav_collision_weight=0.1000,use_safe_action=Fals_2023-11-06_23-23-40/checkpoint_000301",
     )
 
-    algo_to_run = exp_config["exp_config"].get("run", "PPO")
+    algo_to_run = exp_config["exp_config"].setdefault("run", "PPO")
     if algo_to_run == "PPO":
         if checkpoint:
             algo = Algorithm.from_checkpoint(checkpoint)
@@ -86,8 +84,6 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
                 .build()
             )
 
-    # policy_to_run = algo.get_policy("shared_policy")
-
     if exp_config["exp_config"]["safe_action_type"] == "nn_cbf":
         sl = SafetyLayer(env, exp_config["safety_layer_cfg"])
 
@@ -108,7 +104,7 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
         "uav_collision": 0.0,
         "obs_collision": 0.0,
         "uav_done": [[] for idx in range(env.num_uavs)],
-        "uav_done_time": [[] for idx in range(env.num_uavs)],
+        "uav_done_dt": [[] for idx in range(env.num_uavs)],
         "episode_time": [],
         "episode_data": {
             "time_step_list": [],
@@ -146,7 +142,7 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
                     obs[idx], policy_id="shared_policy"
                 )
 
-            if exp_config["exp_config"]["safe_action_type"] != "none":
+            if exp_config["exp_config"]["safe_action_type"] is not None:
                 if exp_config["exp_config"]["safe_action_type"] == "cbf":
                     actions[idx] = env.get_safe_action(env.uavs[idx], actions[idx])
                 elif exp_config["exp_config"]["safe_action_type"] == "nn_cbf":
@@ -182,7 +178,7 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
             num_episodes += 1
             for k, v in info.items():
                 results["uav_done"][k].append(v["uav_landed"])
-                results["uav_done_time"][k].append(v["uav_done_dt"])
+                results["uav_done_dt"][k].append(v["uav_done_dt"])
             results["num_episodes"] = num_episodes
             results["episode_time"].append(env.time_elapsed)
             results["episode_data"]["time_step_list"].append(time_step_list)
@@ -345,23 +341,6 @@ def main():
                 lambda env_config: UavSim(env_config=env_config),
             )
 
-    args.config["env_config"].update(
-        {
-            # "max_num_obstacles": 6,
-            # "num_obstacles": 4,
-            # "obstacle_radius": 0.1,
-            #         "env_max_w": 4,
-            #         "env_max_l": 4,
-            #         "env_max_h": 4,
-        }
-    )
-
-    # args.config["exp_config"].update({"safe_action_type": "nn_cbf"})
-    # args.config["safety_layer_cfg"].update(
-    #     {
-    #         "checkpoint_dir": "/home/prime/Documents/workspace/uav_sim/results/safety_layer/safety_layer2023-10-12-04-59_60a92ef/acc_w_2/train_safety_layer_a39dc_00000_0_obstacle_radius=1.0000,target_v=0.0000,batch_size=1024,eps_action=0.0000,eps_dang=0.0500,eps_deri_2023-10-12_04-59-23/checkpoint_000499/checkpoint"
-    #     }
-    # )
     logger.debug(f"config: {args.config}")
 
     if not args.log_dir:

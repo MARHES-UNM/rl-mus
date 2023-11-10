@@ -40,17 +40,20 @@ def get_data(all_progress):
                 print(f"error reading {progress.absolute()} skipping.")
                 continue
             data["target_v"] = data["env_config"]["target_v"]
-            data["safe_action"] = data["exp_config"]["safe_action_type"]
+            # data["safe_action"] = data["exp_config"]["safe_action_type"]
+            data["name"] = data["exp_config"]["name"]
             data["num_obs"] = data["env_config"]["max_num_obstacles"]
+            data["num_uavs"] = data["env_config"]["num_uavs"]
             data["seed"] = data["env_config"]["seed"]
             data["tf"] = data["env_config"]["time_final"]
+            data["max_dt"] = data["env_config"]["t_go_max"]
             data["uav_done"] = np.average(data["uav_done"], axis=1).sum()
-            uav_done_time = np.nan_to_num(
-                np.array(data["uav_done_time"], dtype=np.float64), nan=100
-            )
-            # print(uav_done_time)
-            data["uav_done_time"] = np.nanmean(uav_done_time)
-            data["tf_error"] = np.nanmean(np.abs(uav_done_time - data["tf"]))
+            data["uav_done_dt"] = np.mean(np.abs(data["uav_done_dt"]))
+            # uav_done_time = np.nan_to_num(
+            #     np.array(data["uav_done_time"], dtype=np.float64), nan=100
+            # )
+            # data["uav_done_time"] = np.nanmean(uav_done_time)
+            # data["tf_error"] = np.nanmean(np.abs(uav_done_time - data["tf"]))
             for k, v in data.items():
                 if k not in data_dict:
                     data_dict[k] = []
@@ -61,9 +64,7 @@ def get_data(all_progress):
     return df
 
 
-def plot_groups(
-    groups, items, output_folder, labels_to_plot, plot_type="box", skip_legend=False
-):
+def plot_groups(groups, items, output_folder, plot_type="box", skip_legend=False):
     if plot_type == "bar":
         plot_func = sns.barplot
     elif plot_type == "box":
@@ -77,11 +78,12 @@ def plot_groups(
             # ax.set_prop_cycle('color', sns.color_palette("tab10",len(labels_to_plot)))
             # print(f'group_key{group["group_key"]}')
             group_to_plot = group["group"].get_group(group["group_key"])
-            group_to_plot.safe_action = group_to_plot.safe_action.astype("category")
-            group_to_plot.safe_action = group_to_plot.safe_action.cat.set_categories(
-                labels_to_plot
-            )
-            if group["group_x"] == "safe_action":
+            group_to_plot.name = group_to_plot.name.astype("category")
+            # group_to_plot.safe_action = group_to_plot.safe_action.astype("category")
+            # group_to_plot.safe_action = group_to_plot.safe_action.cat.set_categories(
+            # labels_to_plot
+            # )
+            if group["group_x"] == "name":
                 ax = plot_func(
                     group_to_plot,
                     x=group["group_x"],
@@ -91,15 +93,22 @@ def plot_groups(
             else:
                 ax = plot_func(
                     group_to_plot,
-                    hue="safe_action",
+                    hue="name",
                     x=group["group_x"],
                     y=key,
                     ax=ax,
                 )
+
+            if key == "uav_done_dt":
+                ax.axhline(y=group_to_plot.max_dt.mean(), color="b")
+
+            if key == "uav_done":
+                ax.axhline(y=group_to_plot.num_uavs.mean(), color="b")
+
             ax.set_ylabel(value)
             ax.set_xlabel(group["x_label"])
             # if item == "episode_reward":
-            #     ax.invert_yaxis()
+            # ax.invert_yaxis()
             ax.grid()
 
             if skip_legend:
@@ -186,31 +195,31 @@ def main():
     items_to_plot = exp_config["items_to_plot"]
     sns.color_palette("colorblind")
 
-    safe_action_type = exp_config["exp_config"]["safe_action_type"]
-    labels_to_plot = exp_config["labels_to_plot"]
-    df["safe_action"] = df["safe_action"].replace(
-        {sa_type: label for sa_type, label in zip(safe_action_type, labels_to_plot)}
-    )
+    # safe_action_type = exp_config["exp_config"]["safe_action_type"]
+    # labels_to_plot = exp_config["labels_to_plot"]
+    # df["safe_action"] = df["safe_action"].replace(
+    #     {sa_type: label for sa_type, label in zip(safe_action_type, labels_to_plot)}
+    # )
     plot_groups(
         groups_to_plot,
         items_to_plot,
         image_folder,
-        labels_to_plot,
         plot_type=args.plot_type,
         skip_legend=args.skip_legend,
     )
 
-    obs_group = df.groupby(["seed", "num_obs", "safe_action", "target_v"])
+    obs_group = df.groupby(["seed", "num_obs", "name", "target_v"])
     obs_group.groups.keys()
 
     target_v = exp_config["env_config"]["target_v"]
     max_num_obstacles = exp_config["env_config"]["max_num_obstacles"]
     seeds = exp_config["exp_config"]["seeds"]
+    runs = exp_config["exp_config"]["runs"]
 
     groups_to_plot = []
-    for action in labels_to_plot:
+    for run in runs:
         for v in target_v:
-            groups_to_plot.append((seeds[0], max_num_obstacles[0], action, v))
+            groups_to_plot.append((seeds[0], max_num_obstacles[0], run["name"], v))
 
     # TODO: convert to dataframe, pad the data to make them all the same lengths. plot the mean and std
     for group_to_plot in groups_to_plot:

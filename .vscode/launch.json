@@ -58,7 +58,10 @@
             "env": {
                 // "DISPLAY": "192.168.1.18:0.0"
             },
-            "args": []
+            "args": [
+                "--num_eps",
+                "1",
+            ]
         },
         {
             "name": "safety_layer: test",
@@ -102,7 +105,7 @@
             "justMyCode": true,
             "cwd": "${workspaceFolder}",
             "env": {
-                // "DISPLAY": "192.168.1.18:0.0"
+                "DISPLAY": "192.168.1.18:0.0"
             },
             "args": [
                 "--plot_results",
@@ -247,7 +250,7 @@
             },
             "args": [
                 "--exp_folder",
-                "/home/prime/Documents/workspace/uav_sim/results/test_results/exp_2023-09-09-19-01_7f28f11",
+                "/home/prime/Documents/workspace/rl_multi_uav_sim/results/test_results/exp_2023-11-10-00-16_80188c6",
                 // "--skip_legend"
             ],
         },

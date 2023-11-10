@@ -32,7 +32,8 @@ def run_experiment(exp_config, log_dir, max_num_episodes):
         config = json.load(f)
 
     config["exp_config"].update(exp_config["exp_config"])
-    config["safety_layer_cfg"].update(exp_config["safety_layer_cfg"])
+    if config["exp_config"]["safe_action_type"] == "nn_cbf":
+        config["safety_layer_cfg"].update(exp_config["safety_layer_cfg"])
     config["env_config"].update(exp_config["env_config"])
 
     output_folder = os.path.join(log_dir, exp_config["exp_name"])
@@ -109,10 +110,11 @@ if __name__ == "__main__":
         max_num_episodes = exp_config["exp_config"]["max_num_episodes"]
 
     target_v = exp_config["env_config"]["target_v"]
-    safe_action_type = exp_config["exp_config"]["safe_action_type"]
     max_num_obstacles = exp_config["env_config"]["max_num_obstacles"]
     seeds = exp_config["exp_config"]["seeds"]
     time_final = exp_config["env_config"]["time_final"]
+    runs = exp_config["exp_config"]["runs"]
+    run_nums = [i for i in range(len(runs))]
 
     if args.nn_cbf_dir is not None:
         checkpoint_dir = args.nn_cbf_dir
@@ -123,24 +125,28 @@ if __name__ == "__main__":
     experiment_num = 0
 
     exp_items = list(
-        itertools.product(
-            seeds, target_v, safe_action_type, max_num_obstacles, time_final
-        )
+        itertools.product(seeds, target_v, run_nums, max_num_obstacles, time_final)
     )
 
     for exp_item in exp_items:
         seed = exp_item[0]
         target = exp_item[1]
-        action_type = exp_item[2]
+        run_num = exp_item[2]
         num_obstacle = exp_item[3]
         t_final = exp_item[4]
 
         exp_config = {}
-        exp_config["exp_config"] = {"safe_action_type": action_type}
-        exp_config["safety_layer_cfg"] = {
-            "checkpoint_dir": checkpoint_dir,
-            "seed": seed,
+        exp_config["exp_config"] = {
+            "name": runs[run_num]["name"],
+            "run": runs[run_num]["run"],
+            "checkpoint": runs[run_num]["checkpoint"],
+            "safe_action_type": runs[run_num]["safe_action_type"],
         }
+        if exp_config["exp_config"]["safe_action_type"] == "nn_cbf":
+            exp_config["safety_layer_cfg"] = {
+                "checkpoint_dir": checkpoint_dir,
+                "seed": seed,
+            }
 
         exp_config["env_config"] = {
             "target_v": target,
@@ -151,7 +157,8 @@ if __name__ == "__main__":
 
         file_prefix = {
             "tgt_v": target,
-            "sa": action_type,
+            "r": runs[run_num]["run"],
+            "sa": runs[run_num]["safe_action_type"],
             "o": num_obstacle,
             "s": seed,
             "tf": t_final,
