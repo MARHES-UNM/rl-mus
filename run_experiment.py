@@ -47,34 +47,33 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
         #     ray.init(include_dashboard=False)
         checkpoint = exp_config["exp_config"].setdefault("checkpoint", None)
         # if checkpoint is not None:
-        #     algo = Algorithm.from_checkpoint(checkpoint)
-        # else:
-        algo = (
-            PPOConfig()
-            .framework("torch")
-            .environment(env=exp_config["env_name"])
-            .resources(num_gpus=0)
-            .rollouts(num_rollout_workers=0)
-            .multi_agent(
-                policies={
-                    "shared_policy": (
-                        None,
-                        env.observation_space[0],
-                        env.action_space[0],
-                        {},
-                    )
-                },
-                # Always use "shared" policy.
-                policy_mapping_fn=(
-                    lambda agent_id, episode, worker, **kwargs: "shared_policy"
-                ),
-            )
-            .framework("torch")
-            .build()
-        )
+        algo = Algorithm.from_checkpoint(checkpoint)
+        # # else:
+        # algo = (
+        #     PPOConfig()
+        #     .framework("torch")
+        #     .environment(env=exp_config["env_name"])
+        #     .resources(num_gpus=0)
+        #     .rollouts(num_rollout_workers=0)
+        #     .multi_agent(
+        #         policies={
+        #             "shared_policy": (
+        #                 None,
+        #                 env.observation_space[0],
+        #                 env.action_space[0],
+        #                 {},
+        #             )
+        #         },
+        #         # Always use "shared" policy.
+        #         policy_mapping_fn=(
+        #             lambda agent_id, episode, worker, **kwargs: "shared_policy"
+        #         ),
+        #     )
+        #     .build()
+        # )
 
-        if checkpoint is not None:
-            algo.restore(checkpoint)
+        # if checkpoint is not None:
+        #     algo.from_checkpoint(checkpoint)
 
     if exp_config["exp_config"]["safe_action_type"] == "nn_cbf":
         sl = SafetyLayer(env, exp_config["safety_layer_cfg"])
