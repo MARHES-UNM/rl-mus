@@ -49,6 +49,7 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
         # if checkpoint is not None:
         # algo = Algorithm.from_checkpoint(checkpoint)
 
+        # ray.init(num_cpus=1, num_gpus=0)
         algo = (
             PPOConfig()
             .environment(

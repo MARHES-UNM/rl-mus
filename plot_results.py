@@ -71,11 +71,18 @@ def plot_groups(groups, items, output_folder, plot_type="box", skip_legend=False
         plot_func = sns.boxplot
     else:
         raise NameError("unknown plot_type")
+
+    categories = list(items.keys())
     for group in groups:
+        group_to_plot = group["group"].get_group(group["group_key"])
+        group_to_plot.name = group_to_plot.name.astype("category")
+
+        avg_group = group_to_plot.groupby("name")[categories].mean()
+        avg_group.rename(columns=items, inplace=True)
+        avg_group.to_csv(os.path.join(output_folder, f"df_{group['group_title']}.csv"))
+
         for key, value in items.items():
             fig, ax = plt.subplots()
-            group_to_plot = group["group"].get_group(group["group_key"])
-            group_to_plot.name = group_to_plot.name.astype("category")
 
             ax = plot_func(
                 group_to_plot,

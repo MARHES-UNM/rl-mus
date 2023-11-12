@@ -250,7 +250,7 @@
             },
             "args": [
                 "--exp_folder",
-                "/home/prime/Documents/workspace/rl_multi_uav_sim/results/test_results/exp_2023-11-10-01-56_8c7e2fc",
+                "/home/prime/Documents/workspace/rl_multi_uav_sim/results/test_results/exp_2023-11-12-09-05_a7e95b9",
                 // "--skip_legend"
             ],
         },
