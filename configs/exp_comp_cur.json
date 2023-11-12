@@ -1,0 +1,67 @@
+{
+    "env_config": {
+        "target_v": [
+            0.0
+        ],
+        "max_num_obstacles": [
+            4
+        ],
+        "time_final": [
+            20
+        ]
+    },
+    "exp_config": {
+        "max_num_episodes": 10,
+        "runs": [
+            {
+                "name": "cc_none",
+                "run": "cc",
+                "checkpoint": null,
+                "safe_action_type": null
+            },
+            {
+                "name": "cc_sca",
+                "run": "cc",
+                "checkpoint": null,
+                "safe_action_type": "sca"
+            },
+            {
+                "name": "ppo_no_cur",
+                "run": "PPO",
+                "checkpoint": "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-11-07-08-16_80188c6/low_stp/PPO_multi-uav-sim-v0_d51c0_00000_0_beta=0.3000,d_thresh=0.0100,obstacle_collision_weight=0.1000,stp_penalty=5,t_go_max=2.0000,tgt__2023-11-07_08-16-16/checkpoint_000301",
+                "safe_action_type": null
+            },
+            {
+                "name": "ppo",
+                "run": "PPO",
+                "checkpoint": "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-11-06-23-23_e7633c3/cur_col_01/PPO_multi-uav-sim-v0_6dfd0_00001_1_obstacle_collision_weight=0.1000,stp_penalty=5,uav_collision_weight=0.1000,use_safe_action=Fals_2023-11-06_23-23-40/checkpoint_000301",
+                "safe_action_type": null
+            }
+        ],
+        "seeds": [
+            0
+        ]
+    },
+    "safety_layer_cfg": {
+        "checkpoint_dir": null
+    },
+    "items_to_plot": {
+        "uav_collision": "Total UAV Collisions",
+        "obs_collision": "Total NCFO Collision",
+        "uav_done_dt": "Mean UAV Time Arrival Error (s)",
+        "uav_done": "Total UAV Landed"
+    },
+    "groups_to_plot": [
+        {
+            "group": [
+                "target_v"
+            ],
+            "group_x": "name",
+            "group_key": [
+                0.0
+            ],
+            "group_title": "overall",
+            "x_label": "Number of Obstacles"
+        }
+    ]
+}

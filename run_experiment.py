@@ -43,20 +43,21 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
 
     algo_to_run = exp_config["exp_config"].setdefault("run", "PPO")
     if algo_to_run == "PPO":
-        # if not ray.is_initialized():
-        #     ray.init(include_dashboard=False)
         checkpoint = exp_config["exp_config"].setdefault("checkpoint", None)
-        
-        # Reload the algorithm as is from training. 
+
+        # Reload the algorithm as is from training.
         # if checkpoint is not None:
-            # algo = Algorithm.from_checkpoint(checkpoint)
+        # algo = Algorithm.from_checkpoint(checkpoint)
 
         algo = (
             PPOConfig()
+            .environment(
+                env=exp_config["env_name"], env_config=exp_config["env_config"]
+            )
             .framework("torch")
-            .environment(env=exp_config["env_name"])
-            .resources(num_gpus=0)
             .rollouts(num_rollout_workers=0)
+            .debugging(log_level="ERROR", seed=exp_config["env_config"]["seed"])
+            .resources(num_gpus=0)
             .multi_agent(
                 policies={
                     "shared_policy": (
