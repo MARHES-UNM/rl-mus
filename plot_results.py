@@ -79,7 +79,16 @@ def plot_groups(groups, items, output_folder, plot_type="box", skip_legend=False
 
         avg_group = group_to_plot.groupby("name")[categories].mean()
         avg_group.rename(columns=items, inplace=True)
-        avg_group.to_csv(os.path.join(output_folder, f"df_{group['group_title']}.csv"))
+        # avg_group.to_csv(
+        #     os.path.join(output_folder, f"df_{group['group_title']}.csv"),
+        #     float_format="{:.2f}".format,
+        # )
+        avg_group.to_latex(
+            os.path.join(output_folder, f"df_{group['group_title']}.tex"),
+            index=False,
+            formatters={},
+            float_format="{:.2f}".format,
+        )
 
         for key, value in items.items():
             fig, ax = plt.subplots()
