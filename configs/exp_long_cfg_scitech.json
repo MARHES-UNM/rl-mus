@@ -35,14 +35,15 @@
         "uav_collision": "Total UAV Collisions",
         "obs_collision": "Total NCFO Collision",
         "uav_done_dt": "Mean UAV Time Arrival Error (s)",
-        "uav_done": "Total UAV Landed"
+        "uav_done": "Total UAV Landed",
+        "time_total_s": "Total Experiment Runtime (s)"
     },
     "groups_to_plot": [
         {
             "group": [
                 "target_v"
             ],
-            "group_x": "safe_action",
+            "group_x": "name",
             "group_key": [
                 0.0
             ],
@@ -55,7 +56,7 @@
                 "target_v",
                 "tf"
             ],
-            "group_x": "safe_action",
+            "group_x": "name",
             "group_key": [
                 4.0,
                 0.0,
