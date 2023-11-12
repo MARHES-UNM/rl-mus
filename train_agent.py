@@ -1,7 +1,6 @@
 # Based on code from github.com/parametersharingmadrl/parametersharingmadrl
 from datetime import datetime
 import json
-from tkinter import W
 from ray import air, tune
 from ray.tune.registry import register_env
 import logging
