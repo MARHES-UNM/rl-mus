@@ -500,9 +500,12 @@ class SafetyLayer:
                 tune.report(**train_val_stats)
 
                 checkpoint_dir = tune.checkpoint_dir(epoch)
-            else:
+            # else:
+            elif self._log_dir is not None:
                 checkpoint_dir = (Path(self._log_dir) / f"checkpoint_{epoch}").resolve()
-            if (epoch + 1) % self._checkpoint_freq == 0:
+            else:
+                checkpoint_dir = None
+            if (epoch + 1) % self._checkpoint_freq == 0 and checkpoint_dir is not None:
                 # with tune.checkpoint_dir(epoch) as checkpoint_dir:
                 # path = os.path.join(checkpoint_dir, "checkpoint")
                 if not checkpoint_dir.exists():

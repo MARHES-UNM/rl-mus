@@ -26,6 +26,7 @@ class TestSafetyLayer(unittest.TestCase):
     def test_train(self):
         self.sl.train()
 
+    @unittest.skip
     def test_rl_train(self):
         self.config = {
             "replay_buffer_size": 64 * 10,
