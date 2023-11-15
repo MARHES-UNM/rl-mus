@@ -92,6 +92,7 @@ def train(args):
     args.config["safety_layer_cfg"]["num_eval_steps"] = 10
     args.config["safety_layer_cfg"]["num_epochs"] = 500
     args.config["safety_layer_cfg"]["num_iter_per_epoch"] = 100
+    args.config["safety_layer_cfg"]["checkpoint_freq"] = 1
     args.config["env_config"]["target_v"] = 0.0
     args.config["env_config"]["num_obstacles"] = 4
     args.config["env_config"]["max_num_obstacles"] = 4

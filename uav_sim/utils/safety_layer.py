@@ -499,26 +499,35 @@ class SafetyLayer:
                 # train_val_stats.update(val_sample_stats)
                 tune.report(**train_val_stats)
 
-                checkpoint_dir = tune.checkpoint_dir(epoch)
+                if (epoch + 1) % self._checkpoint_freq == 0:
+                    with tune.checkpoint_dir(epoch) as checkpoint_dir:
+                        path = os.path.join(checkpoint_dir, "checkpoint")
+
+                        torch.save(
+                            (
+                                self._nn_action_model.state_dict(),
+                                self._nn_action_optimizer.state_dict(),
+                            ),
+                            path,
+                        )
             # else:
             elif self._log_dir is not None:
                 checkpoint_dir = (Path(self._log_dir) / f"checkpoint_{epoch}").resolve()
-            else:
-                checkpoint_dir = None
-            if (epoch + 1) % self._checkpoint_freq == 0 and checkpoint_dir is not None:
-                # with tune.checkpoint_dir(epoch) as checkpoint_dir:
-                # path = os.path.join(checkpoint_dir, "checkpoint")
                 if not checkpoint_dir.exists():
                     checkpoint_dir.mkdir(exist_ok=True, parents=True)
-                path = checkpoint_dir / "checkpoint"
+                if (
+                    epoch + 1
+                ) % self._checkpoint_freq == 0 and checkpoint_dir is not None:
+                    path = checkpoint_dir / "checkpoint"
 
-                torch.save(
-                    (
-                        self._nn_action_model.state_dict(),
-                        self._nn_action_optimizer.state_dict(),
-                    ),
-                    path,
-                )
+                    torch.save(
+                        (
+                            self._nn_action_model.state_dict(),
+                            self._nn_action_optimizer.state_dict(),
+                        ),
+                        path,
+                    )
+
                 # TODO: This should work with session report but api is not stable yet.
 
                 #     checkpoint_data = {
