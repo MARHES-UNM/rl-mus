@@ -110,13 +110,15 @@ def train(args):
     # # args.config["safety_layer_cfg"]["eps_deriv"] = tune.loguniform(0.003, 0.2)
     # # args.config["safety_layer_cfg"]["loss_action_weight"] = tune.loguniform(1e-3, 0.2)
 
-    # args.config["safety_layer_cfg"]["eps_safe"] = tune.grid_search([0.001])
-    # args.config["safety_layer_cfg"]["eps_dang"] = tune.grid_search([0.05])
-    # args.config["safety_layer_cfg"]["eps_deriv_safe"] = tune.grid_search([0.0])
-    # args.config["safety_layer_cfg"]["eps_deriv_dang"] = tune.grid_search([8e-2])
-    # args.config["safety_layer_cfg"]["eps_deriv_mid"] = tune.grid_search([3e-2])
-    # args.config["safety_layer_cfg"]["eps_action"] = tune.grid_search([0.0])
-    # args.config["safety_layer_cfg"]["loss_action_weight"] = tune.grid_search([1.0])
+    args.config["safety_layer_cfg"]["eps_safe"] = tune.grid_search([0])
+    args.config["safety_layer_cfg"]["eps_dang"] = tune.grid_search([0.0])
+    args.config["safety_layer_cfg"]["eps_deriv_safe"] = tune.grid_search([0.0])
+    args.config["safety_layer_cfg"]["eps_deriv_dang"] = tune.grid_search([0.0])
+    args.config["safety_layer_cfg"]["eps_deriv_mid"] = tune.grid_search([0.0])
+    args.config["safety_layer_cfg"]["eps_action"] = tune.grid_search([0.0])
+    args.config["safety_layer_cfg"]["loss_action_weight"] = tune.grid_search(
+        [0.0, 0.01, 0.1]
+    )
 
     # [1.0, 0.8, 0.5]
     # [1.0, 0.8, 0.5]
@@ -153,10 +155,10 @@ def train(args):
                 "time_total_s": args.duration,
             },
             # num_samples=32,
-            resources_per_trial=tune.PlacementGroupFactory(
-                [{"CPU": 1.0, "GPU": 0.25}] + [{"CPU": 1.0, "GPU": 0.25}]
-            ),
-            # resources_per_trial={"cpu": 1, "gpu": 0.25},
+            # resources_per_trial=tune.PlacementGroupFactory(
+            #     [{"CPU": 1.0, "GPU": 0.25}] + [{"CPU": 1.0, "GPU": 0.25}]
+            # ),
+            resources_per_trial={"cpu": 1, "gpu": 0.25},
             config=args.config,
             # checkpoint_freq=5,
             # checkpoint_at_end=True,
