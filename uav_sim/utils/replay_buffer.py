@@ -15,6 +15,7 @@ class ReplayBuffer:
         self._filled_till = 0
 
     def _increment(self):
+        # reset current_index to beginning of buffer when buffer is full
         self._current_index = (self._current_index + 1) % self._buffer_size
         self._filled_till = min(self._filled_till + 1, self._buffer_size)
 
@@ -38,7 +39,9 @@ class ReplayBuffer:
             print(
                 f"warning: batch size: {batch_size} > current buffer size: {self._buffer_size}"
             )
-        random_indices = self._rng.integers(low=0, high=self._filled_till, size=batch_size)
+        random_indices = self._rng.integers(
+            low=0, high=self._filled_till, size=batch_size
+        )
         return {k: v[random_indices] for k, v in self._buffers.items()}
 
     def get_sequential(self, batch_size):

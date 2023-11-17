@@ -451,7 +451,7 @@ class SafetyLayer:
         train_results = [self._train_batch() for _ in range(self._num_iter_per_epoch)]
 
         loss, train_acc_stats = self.parse_results(train_results)
-        self._replay_buffer.clear()
+        # self._replay_buffer.clear()
         self._train_global_step += 1
 
         sample_stats = {f"train_{k}": v for k, v in sample_stats.items()}
@@ -470,9 +470,9 @@ class SafetyLayer:
             train_loss, train_acc_stats, train_sample_stats = self.fit()
             print(
                 f"Finished training epoch {epoch} with loss: {train_loss}.\n\tstats: {train_sample_stats}.\n\t{train_acc_stats}"
-                # \nRunning validation:"
             )
 
+            # print("Running validation:")
             # val_loss, val_acc_stats, val_sample_stats = self.evaluate()
             # print(
             #     f"Validation completed, average loss {val_loss}. val stats: {val_sample_stats}"
