@@ -87,7 +87,7 @@ def train(args):
     args.config["safety_layer_cfg"]["log_dir"] = (
         pathlib.Path(args.log_dir) / args.name
     ).resolve()
-    args.config["safety_layer_cfg"]["use_rl"] = False
+    args.config["safety_layer_cfg"]["use_rl"] = tune.grid_search([True, False])
     args.config["safety_layer_cfg"]["num_training_steps"] = 6000
     args.config["safety_layer_cfg"]["num_eval_steps"] = 10
     args.config["safety_layer_cfg"]["num_epochs"] = 500

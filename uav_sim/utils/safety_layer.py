@@ -34,7 +34,7 @@ os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
 os.environ["PYTHONWARNINGS"] = "ignore::DeprecationWarning"
 
 PATH = os.path.dirname(os.path.abspath(__file__))
-torch.use_deterministic_algorithms(True)
+# torch.use_deterministic_algorithms(True)
 
 
 class SafetyLayer:
@@ -280,6 +280,7 @@ class SafetyLayer:
 
         safe_mask = (constraints >= self._safe_margin).float()
         unsafe_mask = (constraints <= self._unsafe_margin).float()
+
         mid_mask = (1 - safe_mask) * (1 - unsafe_mask)
 
         return safe_mask, unsafe_mask, mid_mask
