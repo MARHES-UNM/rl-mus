@@ -59,7 +59,7 @@ class SafetyLayer:
 
         if self._checkpoint_dir:
             model_state, parameter_state = torch.load(
-                self._checkpoint_dir, map_location=torch.device("cpu")
+                self._checkpoint_dir, map_location=torch.device(self._device)
             )
             self._nn_action_model.load_state_dict(model_state)
             self._nn_action_optimizer.load_state_dict(parameter_state)

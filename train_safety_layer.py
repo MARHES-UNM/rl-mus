@@ -87,7 +87,10 @@ def train(args):
     args.config["safety_layer_cfg"]["log_dir"] = (
         pathlib.Path(args.log_dir) / args.name
     ).resolve()
-    args.config["safety_layer_cfg"]["use_rl"] = tune.grid_search([True, False])
+    args.config["safety_layer_cfg"]["use_rl"] = tune.grid_search([False])
+    args.config["safety_layer_cfg"][
+        "checkpoint_dir"
+    ] = "/home/prime/Documents/workspace/rl_multi_uav_sim/results/safety_layer/safety_layer2023-11-17-12-38_307119e/ppo_nn_cbf/train_safety_layer_2150e_00001_1_obstacle_radius=1.0000,target_v=0.0000,batch_size=1024,eps_action=0.0000,eps_dang=0.0500,eps_deri_2023-11-17_12-38-33/checkpoint_000104/checkpoint"
     args.config["safety_layer_cfg"]["num_training_steps"] = 6000
     args.config["safety_layer_cfg"]["num_eval_steps"] = 10
     args.config["safety_layer_cfg"]["num_epochs"] = 500
