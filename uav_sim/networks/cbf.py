@@ -34,9 +34,10 @@ class CBF(nn.Module):
         x = self.activation(self.conv1(x))
         x = self.activation(self.conv2(x))  # (bs, 128, n_state)
         x = self.activation(self.conv3(x))
-        x, _ = torch.max(x, dim=2)  # (bs, 128)
-        x = self.fc0(x)
-        # x = self.conv4(x)
+        # x = self.activation(self.conv4(x))
+        # x, _ = torch.max(x, dim=2)  # (bs, 128)
+        # x = self.fc0(x)
+        x = self.conv4(x)
         h = torch.squeeze(x, dim=1)  # (bs, n_state)
         return h
 
