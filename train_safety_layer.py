@@ -83,7 +83,6 @@ def train_safety_layer(config, checkpoint_dir=None):
 
 def train(args):
     args.config["safety_layer_cfg"]["device"] = "cuda"
-    args.config["env_config"]["target_v"] = tune.grid_search([0.0])
     args.config["safety_layer_cfg"]["tune_run"] = args.tune_run
     args.config["safety_layer_cfg"]["log_dir"] = (
         pathlib.Path(args.log_dir) / args.name
@@ -92,16 +91,7 @@ def train(args):
     args.config["safety_layer_cfg"]["num_training_steps"] = 6000
     args.config["safety_layer_cfg"]["num_eval_steps"] = 10
     args.config["safety_layer_cfg"]["num_epochs"] = 500
-    args.config["safety_layer_cfg"]["num_iter_per_epoch"] = 100
     args.config["safety_layer_cfg"]["lr"] = 5e-4
-
-    # args.config["safety_layer_cfg"]["checkpoint_freq"] = 1
-    args.config["env_config"]["num_obstacles"] = 4
-    args.config["env_config"]["max_num_obstacles"] = 4
-    args.config["env_config"]["obstacle_radius"] = tune.grid_search([1.0])
-    args.config["env_config"]["target_v"] = tune.grid_search([0.0])
-
-
     args.config["safety_layer_cfg"]["eps_safe"] = tune.grid_search([0.001])
     args.config["safety_layer_cfg"]["eps_dang"] = tune.grid_search([0.05])
     args.config["safety_layer_cfg"]["eps_deriv_safe"] = tune.grid_search([0.0])
@@ -110,8 +100,12 @@ def train(args):
     args.config["safety_layer_cfg"]["eps_action"] = tune.grid_search([0.0])
     args.config["safety_layer_cfg"]["loss_action_weight"] = tune.grid_search([1.0])
     args.config["safety_layer_cfg"]["num_iter_per_epoch"] = 100
-    args.config["safety_layer_cfg"]["batch_size"] = tune.grid_search([1024])
+    args.config["safety_layer_cfg"]["batch_size"] = tune.grid_search([1024, 256, 512])
 
+    args.config["env_config"]["num_obstacles"] = 4
+    args.config["env_config"]["max_num_obstacles"] = 4
+    args.config["env_config"]["obstacle_radius"] = tune.grid_search([1.0])
+    args.config["env_config"]["target_v"] = tune.grid_search([0.0])
 
     # TODO: implement with Ray session air
     # https://pytorch.org/tutorials/beginner/hyperparameter_tuning_tutorial.html
