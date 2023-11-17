@@ -100,7 +100,7 @@ def train(args):
     args.config["safety_layer_cfg"]["eps_action"] = tune.grid_search([0.0])
     args.config["safety_layer_cfg"]["loss_action_weight"] = tune.grid_search([1.0])
     args.config["safety_layer_cfg"]["num_iter_per_epoch"] = 100
-    args.config["safety_layer_cfg"]["batch_size"] = tune.grid_search([1024, 256, 512])
+    args.config["safety_layer_cfg"]["batch_size"] = tune.grid_search([1024])
 
     args.config["env_config"]["num_obstacles"] = 4
     args.config["env_config"]["max_num_obstacles"] = 4
