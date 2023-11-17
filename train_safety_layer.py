@@ -143,7 +143,7 @@ def test(args):
     args.config["safety_layer_cfg"]["seed"] = 999
     args.config["safety_layer_cfg"][
         "checkpoint_dir"
-    ] = "/home/prime/Documents/workspace/rl_multi_uav_sim/results/safety_layer/safety_layer2023-11-17-03-03_32ac4e0/h_deepset_buffer/train_safety_layer_d6e67_00000_0_obstacle_radius=1.0000,target_v=0.0000,batch_size=1024,eps_action=0.0000,eps_dang=0.0500,eps_deri_2023-11-17_03-03-49/checkpoint_000089/checkpoint"
+    ] = "/home/prime/Documents/workspace/rl_multi_uav_sim/results/safety_layer/safety_layer2023-11-17-03-03_32ac4e0/h_deepset_buffer/train_safety_layer_d6e67_00000_0_obstacle_radius=1.0000,target_v=0.0000,batch_size=1024,eps_action=0.0000,eps_dang=0.0500,eps_deri_2023-11-17_03-03-49/checkpoint_000264/checkpoint"
 
     if args.tune_run:
         results = tune.run(

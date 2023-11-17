@@ -11,7 +11,8 @@ class CBF(nn.Module):
         self.conv1 = nn.Conv1d(64, 128, 1)
         self.conv2 = nn.Conv1d(128, 128, 1)
         self.conv3 = nn.Conv1d(128, 128, 1)
-        self.conv4 = nn.Conv1d(128, 128, 1)
+        # self.conv4 = nn.Conv1d(128, 128, 1)
+        self.conv4 = nn.Conv1d(128, 1, 1)
         self.fc0 = nn.Linear(128, 1)
         self.activation = nn.ReLU()
 
@@ -34,9 +35,10 @@ class CBF(nn.Module):
         x = self.activation(self.conv1(x))
         x = self.activation(self.conv2(x))  # (bs, 128, n_state)
         x = self.activation(self.conv3(x))
-        x = self.activation(self.conv4(x))
-        x, _ = torch.max(x, dim=2)  # (bs, 128)
-        x = self.fc0(x)
+        # x = self.activation(self.conv4(x))
+        # x, _ = torch.max(x, dim=2)  # (bs, 128)
+        # x = self.fc0(x)
+        x = self.conv4(x)
         h = torch.squeeze(x, dim=1)  # (bs, n_state)
         return h
 

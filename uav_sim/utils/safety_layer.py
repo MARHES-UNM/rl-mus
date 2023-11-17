@@ -16,7 +16,7 @@ import ray.tune as tune
 from ray.air import Checkpoint, session
 from ray.rllib.algorithms.algorithm import Algorithm
 from uav_sim.envs import UavSim
-import ray
+from ray.rllib.algorithms.ppo import PPOConfig
 
 ENV_VARIABLES = {
     "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
@@ -157,8 +157,34 @@ class SafetyLayer:
                 lambda env_config: self._env,
             )
 
-            self._algo = Algorithm.from_checkpoint(
-                "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-11-01-05-43_9ddf71b/collision/PPO_multi-uav-sim-v0_2457b_00008_8_beta=0.3000,d_thresh=0.0100,obstacle_collision_weight=0.1000,stp_penalty=20,tgt_reward=100,use__2023-11-01_05-43-42/checkpoint_000301"
+            self._algo = (
+                PPOConfig()
+                # .environment(
+                #     env=exp_config["env_name"], env_config=exp_config["env_config"]
+                # )
+                .framework("torch")
+                .rollouts(num_rollout_workers=0)
+                .debugging(log_level="ERROR", seed=self._seed)
+                .resources(num_gpus=0)
+                .multi_agent(
+                    policies={
+                        "shared_policy": (
+                            None,
+                            self._env.observation_space[0],
+                            self._env.action_space[0],
+                            {},
+                        )
+                    },
+                    # Always use "shared" policy.
+                    policy_mapping_fn=(
+                        lambda agent_id, episode, worker, **kwargs: "shared_policy"
+                    ),
+                )
+                .build()
+            )
+
+            self._algo.restore(
+                "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-11-06-23-23_e7633c3/cur_col_01/PPO_multi-uav-sim-v0_6dfd0_00001_1_obstacle_collision_weight=0.1000,stp_penalty=5,uav_collision_weight=0.1000,use_safe_action=Fals_2023-11-06_23-23-40/checkpoint_000301"
             )
 
     def _as_tensor(self, ndarray, requires_grad=False):
@@ -249,9 +275,11 @@ class SafetyLayer:
         return results
 
     def _get_mask(self, constraints):
-        safe_mask = torch.all((constraints >= self._safe_margin), dim=1).float()
-        unsafe_mask = torch.any((constraints <= self._unsafe_margin), dim=1).float()
+        # safe_mask = torch.all((constraints >= self._safe_margin), dim=1).float()
+        # unsafe_mask = torch.any((constraints <= self._unsafe_margin), dim=1).float()
 
+        safe_mask = (constraints >= self._safe_margin).float()
+        unsafe_mask = (constraints <= self._unsafe_margin).float()
         mid_mask = (1 - safe_mask) * (1 - unsafe_mask)
 
         return safe_mask, unsafe_mask, mid_mask
