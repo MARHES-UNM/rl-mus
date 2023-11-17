@@ -143,7 +143,7 @@ def test(args):
     args.config["safety_layer_cfg"]["seed"] = 999
     args.config["safety_layer_cfg"][
         "checkpoint_dir"
-    ] = "/home/prime/Documents/workspace/rl_multi_uav_sim/results/safety_layer/safety_layer2023-11-15-21-24_bbf8ef4/test_no_action/train_safety_layer_3df7a_00001_1_eps_action=0.0000,eps_dang=0.0000,eps_deriv_dang=0.0000,eps_deriv_mid=0.0000,eps_deriv_safe=0.000_2023-11-15_21-24-17/checkpoint_000024/checkpoint"
+    ] = "/home/prime/Documents/workspace/rl_multi_uav_sim/results/safety_layer/safety_layer2023-11-17-03-03_32ac4e0/h_deepset_buffer/train_safety_layer_d6e67_00000_0_obstacle_radius=1.0000,target_v=0.0000,batch_size=1024,eps_action=0.0000,eps_dang=0.0500,eps_deri_2023-11-17_03-03-49/checkpoint_000089/checkpoint"
 
     if args.tune_run:
         results = tune.run(
@@ -194,7 +194,8 @@ def test_safe_action(config):
         "uav_collision": 0.0,
         "obs_collision": 0.0,
         "uav_done": 0.0,
-        "uav_done_time": 0.0,
+        "uav_done_dt": 0.0,
+        "uav_rel_dist": 0.0,
     }
 
     logger.debug("running experiment")
@@ -221,8 +222,9 @@ def test_safe_action(config):
 
         if dones["__all__"]:
             for k, v in infos.items():
+                results["uav_rel_dist"] += v["uav_rel_dist"]
                 results["uav_done"] += v["uav_landed"]
-                results["uav_done_time"] += v["uav_done_time"]
+                results["uav_done_dt"] += v["uav_done_dt"]
             if tune_run:
                 tune.report(**results)
             obs, info = env.reset()
