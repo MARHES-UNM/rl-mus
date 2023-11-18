@@ -6,6 +6,7 @@ import numpy as np
 import tempfile
 from ray import tune
 import os
+from pathlib import Path
 
 
 class TestSafetyLayer(unittest.TestCase):
@@ -86,7 +87,7 @@ class TestSafetyLayer(unittest.TestCase):
                 config["safety_layer_cfg"]["checkpoint_dir"] = os.path.join(
                     checkpoint_dir, "checkpoint"
                 )
-            self.sl = SafetyLayer(self.env, config=self.config)
+            self.sl = SafetyLayer(self.env, config=config)
             self.sl.train()
 
         results = tune.run(
@@ -102,6 +103,23 @@ class TestSafetyLayer(unittest.TestCase):
         )
 
         print(f"temporary directory: {dir_to_write_to.name}")
+        chckpoint_file = list(
+            Path(dir_to_write_to.name).rglob("**/checkpoint_000000/checkpoint")
+        )[0]
+        print(f"checkpoint_dir: {chckpoint_file}")
+        self.config["checkpoint_dir"] = chckpoint_file
+
+        results = tune.run(
+            temp_train_sl,
+            stop={
+                "training_iteration": self.config["num_epochs"],
+                "time_total_s": 60,
+            },
+            resources_per_trial={"cpu": 1, "gpu": 0},
+            config=self.config,
+            local_dir=dir_to_write_to.name,
+            name="temp_file",
+        )
 
 
 if __name__ == "__main__":

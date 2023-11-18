@@ -58,6 +58,7 @@ class SafetyLayer:
         )
 
         if self._checkpoint_dir:
+            print(f"chdir: {self._checkpoint_dir}")
             checkpoint_state = torch.load(
                 self._checkpoint_dir, map_location=torch.device(self._device)
             )
@@ -572,7 +573,7 @@ class SafetyLayer:
                             "cbf_state_dict": self._cbf_model.state_dict(),
                             "nn_action_state_dict": self._nn_action_model.state_dict(),
                             "cbf_optimizer_state_dict": self._cbf_optimizer.state_dict(),
-                            "nn_action_optimizer_state_dict": self._cbf_optimizer.state_dict(),
+                            "nn_action_optimizer_state_dict": self._nn_action_optimizer.state_dict(),
                         },
                             path,
                         )
@@ -591,7 +592,7 @@ class SafetyLayer:
                             "cbf_state_dict": self._cbf_model.state_dict(),
                             "nn_action_state_dict": self._nn_action_model.state_dict(),
                             "cbf_optimizer_state_dict": self._cbf_optimizer.state_dict(),
-                            "nn_action_optimizer_state_dict": self._cbf_optimizer.state_dict(),
+                            "nn_action_optimizer_state_dict": self._nn_action_optimizer.state_dict(),
                         },
                         path,
                     )
