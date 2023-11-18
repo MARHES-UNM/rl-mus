@@ -34,7 +34,7 @@ os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
 os.environ["PYTHONWARNINGS"] = "ignore::DeprecationWarning"
 
 PATH = os.path.dirname(os.path.abspath(__file__))
-# torch.use_deterministic_algorithms(True)
+torch.use_deterministic_algorithms(True)
 
 
 class SafetyLayer:

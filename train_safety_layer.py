@@ -100,8 +100,9 @@ def train(args):
     args.config["safety_layer_cfg"]["eps_deriv_safe"] = tune.grid_search([0.0])
     args.config["safety_layer_cfg"]["eps_deriv_dang"] = tune.grid_search([8e-2])
     args.config["safety_layer_cfg"]["eps_deriv_mid"] = tune.grid_search([3e-2])
-    args.config["safety_layer_cfg"]["eps_action"] = tune.grid_search([0.1])
-    args.config["safety_layer_cfg"]["loss_action_weight"] = tune.grid_search([1.5])
+    args.config["safety_layer_cfg"]["eps_action"] = tune.loguniform(0.00001, 0.2)
+    # args.config["safety_layer_cfg"]["eps_action"] = 0.0
+    args.config["safety_layer_cfg"]["loss_action_weight"] = tune.choice([3, 2, 1, 0.8])
     args.config["safety_layer_cfg"]["num_iter_per_epoch"] = 100
     args.config["safety_layer_cfg"]["batch_size"] = tune.grid_search([1024])
 
@@ -120,7 +121,7 @@ def train(args):
                 "training_iteration": args.config["safety_layer_cfg"]["num_epochs"],
                 "time_total_s": args.duration,
             },
-            # num_samples=32,
+            num_samples=12,
             # resources_per_trial=tune.PlacementGroupFactory(
             #     [{"CPU": 1.0, "GPU": 0.25}] + [{"CPU": 1.0, "GPU": 0.25}]
             # ),

@@ -1,6 +1,5 @@
 import argparse
 from datetime import datetime
-import subprocess
 from time import time
 from matplotlib import pyplot as plt
 import numpy as np
@@ -8,7 +7,6 @@ import ray
 from uav_sim.envs.uav_sim import UavSim
 from pathlib import Path
 import mpl_toolkits.mplot3d.art3d as art3d
-from ray.rllib.algorithms.algorithm import Algorithm
 from ray.rllib.algorithms.ppo import PPOConfig
 
 import os
