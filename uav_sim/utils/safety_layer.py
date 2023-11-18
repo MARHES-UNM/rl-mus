@@ -568,10 +568,12 @@ class SafetyLayer:
                         path = os.path.join(checkpoint_dir, "checkpoint")
 
                         torch.save(
-                            (
-                                self._nn_action_model.state_dict(),
-                                self._nn_action_optimizer.state_dict(),
-                            ),
+                        {
+                            "cbf_state_dict": self._cbf_model.state_dict(),
+                            "nn_action_state_dict": self._nn_action_model.state_dict(),
+                            "cbf_optimizer_state_dict": self._cbf_optimizer.state_dict(),
+                            "nn_action_optimizer_state_dict": self._cbf_optimizer.state_dict(),
+                        },
                             path,
                         )
             # else:

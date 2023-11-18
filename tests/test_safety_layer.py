@@ -3,6 +3,9 @@ import unittest
 from uav_sim.envs.uav_sim import UavSim
 from uav_sim.utils.safety_layer import SafetyLayer
 import numpy as np
+import tempfile
+from ray import tune
+import os
 
 
 class TestSafetyLayer(unittest.TestCase):
@@ -64,18 +67,42 @@ class TestSafetyLayer(unittest.TestCase):
             print(f"unsafe: {unsafe_mask}")
 
     def test_saving(self):
+        dir_to_write_to = tempfile.TemporaryDirectory()
         self.config = {
             "replay_buffer_size": 4,
             "batch_size": 4,
-            "num_epochs": 1,
+            "num_epochs": 2,
+            "checkpoint_freq": 1,
             "device": "cpu",
             "num_iter_per_epoch": 1,
             "num_training_steps": 1,
             "num_eval_steps": 1,
             "use_rl": False,
+            "tune_run": True,
         }
 
-        self.sl = SafetyLayer(self.env, config=self.config)
+        def temp_train_sl(config, checkpoint_dir=None):
+            if checkpoint_dir:
+                config["safety_layer_cfg"]["checkpoint_dir"] = os.path.join(
+                    checkpoint_dir, "checkpoint"
+                )
+            self.sl = SafetyLayer(self.env, config=self.config)
+            self.sl.train()
+
+        results = tune.run(
+            temp_train_sl,
+            stop={
+                "training_iteration": self.config["num_epochs"],
+                "time_total_s": 60,
+            },
+            resources_per_trial={"cpu": 1, "gpu": 0},
+            config=self.config,
+            local_dir=dir_to_write_to.name,
+            name="temp_file",
+        )
+
+        print(f"temporary directory: {dir_to_write_to.name}")
+
 
 if __name__ == "__main__":
     unittest.main()
