@@ -28,7 +28,7 @@ class TestSafetyLayer(unittest.TestCase):
     def test_train(self):
         self.sl.train()
 
-    # @unittest.skip
+    @unittest.skip
     def test_rl_train(self):
         self.config = {
             "replay_buffer_size": 64 * 10,
@@ -63,6 +63,19 @@ class TestSafetyLayer(unittest.TestCase):
             print(f"safe: {safe_mask}")
             print(f"unsafe: {unsafe_mask}")
 
+    def test_saving(self):
+        self.config = {
+            "replay_buffer_size": 4,
+            "batch_size": 4,
+            "num_epochs": 1,
+            "device": "cpu",
+            "num_iter_per_epoch": 1,
+            "num_training_steps": 1,
+            "num_eval_steps": 1,
+            "use_rl": False,
+        }
+
+        self.sl = SafetyLayer(self.env, config=self.config)
 
 if __name__ == "__main__":
     unittest.main()

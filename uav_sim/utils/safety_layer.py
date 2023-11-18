@@ -58,11 +58,20 @@ class SafetyLayer:
         )
 
         if self._checkpoint_dir:
-            model_state, parameter_state = torch.load(
+            checkpoint_state = torch.load(
                 self._checkpoint_dir, map_location=torch.device(self._device)
             )
-            self._nn_action_model.load_state_dict(model_state)
-            self._nn_action_optimizer.load_state_dict(parameter_state)
+            self._cbf_model.load_state_dict(checkpoint_state["cbf_state_dict"])
+            self._nn_action_model.load_state_dict(
+                checkpoint_state["nn_action_state_dict"]
+            )
+
+            self._cbf_optimizer.load_state_dict(
+                checkpoint_state["cbf_optimizer_state_dict"]
+            )
+            self._nn_action_optimizer.load_state_dict(
+                checkpoint_state["nn_action_optimizer_state_dict"]
+            )
 
         # TODO: load the buffer with the save states
         if self._load_buffer:
@@ -74,9 +83,16 @@ class SafetyLayer:
         if self._checkpoint:
             checkpoint_state = self._checkpoint.to_dict()
             self._train_global_step = checkpoint_state["epoch"]
-            self._nn_action_model.load_state_dict(checkpoint_state["net_state_dict"])
+            self._cbf_model.load_state_dict(checkpoint_state["cbf_state_dict"])
+            self._nn_action_model.load_state_dict(
+                checkpoint_state["nn_action_state_dict"]
+            )
+
+            self._cbf_optimizer.load_state_dict(
+                checkpoint_state["cbf_optimizer_state_dict"]
+            )
             self._nn_action_optimizer.load_state_dict(
-                checkpoint_state["optimizer_state_dict"]
+                checkpoint_state["nn_action_optimizer_state_dict"]
             )
         else:
             self._train_global_step = 0
@@ -460,12 +476,27 @@ class SafetyLayer:
         return loss, acc_stat, sample_stats
 
     def get_action(self, obs, action):
+        """
+        See faq on need to disable both:
+        https://stackoverflow.com/questions/55627780/evaluating-pytorch-models-with-torch-no-grad-vs-model-eval
+
+        Args:
+            obs (_type_): _description_
+            action (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
         state = torch.unsqueeze(self._as_tensor(obs["state"]), dim=0)
         rel_pad = torch.unsqueeze(self._as_tensor(obs["rel_pad"]), dim=0)
         other_uav_obs = torch.unsqueeze(self._as_tensor(obs["other_uav_obs"]), dim=0)
         obstacles = torch.unsqueeze(self._as_tensor(obs["obstacles"]), dim=0)
         constraint = torch.unsqueeze(self._as_tensor(obs["constraint"]), dim=0)
         u_nominal = torch.unsqueeze(self._as_tensor(action.squeeze()), dim=0)
+
+        self._cbf_model.eval()
+        self._nn_action_model.eval()
+
         with torch.no_grad():
             u = self._nn_action_model(
                 state, rel_pad, other_uav_obs, obstacles, u_nominal
@@ -475,6 +506,10 @@ class SafetyLayer:
 
     def fit(self):
         sample_stats = self._sample_steps(self._num_training_steps)
+
+        # make sure we're in training mode
+        self._cbf_model.train()
+        self._nn_action_model.train()
 
         # iterate through the buffer and get batches at a time
         train_results = [self._train_batch() for _ in range(self._num_iter_per_epoch)]
@@ -550,10 +585,12 @@ class SafetyLayer:
                     path = checkpoint_dir / "checkpoint"
 
                     torch.save(
-                        (
-                            self._nn_action_model.state_dict(),
-                            self._nn_action_optimizer.state_dict(),
-                        ),
+                        {
+                            "cbf_state_dict": self._cbf_model.state_dict(),
+                            "nn_action_state_dict": self._nn_action_model.state_dict(),
+                            "cbf_optimizer_state_dict": self._cbf_optimizer.state_dict(),
+                            "nn_action_optimizer_state_dict": self._cbf_optimizer.state_dict(),
+                        },
                         path,
                     )
 
