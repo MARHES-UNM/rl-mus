@@ -93,23 +93,22 @@ def train(args):
     # ] = "/home/prime/Documents/workspace/rl_multi_uav_sim/results/safety_layer/safety_layer2023-11-17-12-38_307119e/ppo_nn_cbf/train_safety_layer_2150e_00001_1_obstacle_radius=1.0000,target_v=0.0000,batch_size=1024,eps_action=0.0000,eps_dang=0.0500,eps_deri_2023-11-17_12-38-33/checkpoint_000104/checkpoint"
     args.config["safety_layer_cfg"]["num_training_steps"] = 6000
     args.config["safety_layer_cfg"]["num_eval_steps"] = 10
-    args.config["safety_layer_cfg"]["num_epochs"] = 500
+    args.config["safety_layer_cfg"]["num_epochs"] = tune.grid_search([700])
     args.config["safety_layer_cfg"]["lr"] = 5e-4
-    args.config["safety_layer_cfg"]["eps_safe"] = tune.grid_search([0.001])
-    args.config["safety_layer_cfg"]["eps_dang"] = tune.grid_search([0.05])
-    args.config["safety_layer_cfg"]["eps_deriv_safe"] = tune.grid_search([0.0])
-    args.config["safety_layer_cfg"]["eps_deriv_dang"] = tune.grid_search([8e-2])
-    args.config["safety_layer_cfg"]["eps_deriv_mid"] = tune.grid_search([3e-2])
-    args.config["safety_layer_cfg"]["eps_action"] = tune.loguniform(0.00001, 0.2)
-    # args.config["safety_layer_cfg"]["eps_action"] = 0.0
-    args.config["safety_layer_cfg"]["loss_action_weight"] = tune.choice([3, 2, 1, 0.8])
-    args.config["safety_layer_cfg"]["num_iter_per_epoch"] = 100
-    args.config["safety_layer_cfg"]["batch_size"] = tune.grid_search([1024])
+    args.config["safety_layer_cfg"]["eps_safe"] = 0.001
+    args.config["safety_layer_cfg"]["eps_dang"] = 0.05
+    args.config["safety_layer_cfg"]["eps_deriv_safe"] = 0.0
+    args.config["safety_layer_cfg"]["eps_deriv_dang"] = 8e-2
+    args.config["safety_layer_cfg"]["eps_deriv_mid"] = 3e-2
+    args.config["safety_layer_cfg"]["eps_action"] = tune.choice([0.0])
+    args.config["safety_layer_cfg"]["loss_action_weight"] = tune.grid_search([1.0])
+    args.config["safety_layer_cfg"]["num_iter_per_epoch"] = tune.choice([100])
+    args.config["safety_layer_cfg"]["batch_size"] = 1024
 
     args.config["env_config"]["num_obstacles"] = 4
     args.config["env_config"]["max_num_obstacles"] = 4
-    args.config["env_config"]["obstacle_radius"] = tune.grid_search([1.0])
-    args.config["env_config"]["target_v"] = tune.grid_search([0.0])
+    args.config["env_config"]["obstacle_radius"] = 1.0
+    args.config["env_config"]["target_v"] = 0.0
 
     # TODO: implement with Ray session air
     # https://pytorch.org/tutorials/beginner/hyperparameter_tuning_tutorial.html
@@ -121,7 +120,7 @@ def train(args):
                 "training_iteration": args.config["safety_layer_cfg"]["num_epochs"],
                 "time_total_s": args.duration,
             },
-            num_samples=12,
+            num_samples=1,
             # resources_per_trial=tune.PlacementGroupFactory(
             #     [{"CPU": 1.0, "GPU": 0.25}] + [{"CPU": 1.0, "GPU": 0.25}]
             # ),
