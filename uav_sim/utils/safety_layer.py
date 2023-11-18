@@ -275,11 +275,11 @@ class SafetyLayer:
         return results
 
     def _get_mask(self, constraints):
-        # safe_mask = torch.all((constraints >= self._safe_margin), dim=1).float()
-        # unsafe_mask = torch.any((constraints <= self._unsafe_margin), dim=1).float()
+        safe_mask = torch.all((constraints >= self._safe_margin), dim=1).float()
+        unsafe_mask = torch.any((constraints <= self._unsafe_margin), dim=1).float()
 
-        safe_mask = (constraints >= self._safe_margin).float()
-        unsafe_mask = (constraints <= self._unsafe_margin).float()
+        # safe_mask = (constraints >= self._safe_margin).float()
+        # unsafe_mask = (constraints <= self._unsafe_margin).float()
 
         mid_mask = (1 - safe_mask) * (1 - unsafe_mask)
 
@@ -384,10 +384,10 @@ class SafetyLayer:
         # loss = (1 / (1 + self.loss_action_weight)) * (
         loss = (
             loss_h_safe
-            + loss_h_dang
+            + 3.0 * loss_h_dang
             + loss_deriv_safe
-            + loss_deriv_dang
-            + loss_deriv_mid
+            + 3.0 * loss_deriv_dang
+            + 2.0 * loss_deriv_mid
             + self.loss_action_weight * loss_action
         )
         # ) + loss_action * self.loss_action_weight / (1 + self.loss_action_weight)

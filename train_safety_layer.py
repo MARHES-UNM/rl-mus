@@ -95,22 +95,20 @@ def train(args):
     args.config["safety_layer_cfg"]["num_eval_steps"] = 10
     args.config["safety_layer_cfg"]["num_epochs"] = 500
     args.config["safety_layer_cfg"]["lr"] = 5e-4
-    args.config["safety_layer_cfg"]["eps_safe"] = 0.1
-    args.config["safety_layer_cfg"]["eps_dang"] = 0.1
-    args.config["safety_layer_cfg"]["eps_deriv_safe"] = 3e-2
-    args.config["safety_layer_cfg"]["eps_deriv_dang"] = 3e-2
-    args.config["safety_layer_cfg"]["eps_deriv_mid"] = 3e-2
-    args.config["safety_layer_cfg"]["eps_action"] = tune.grid_search([0.2])
-    args.config["safety_layer_cfg"]["safe_margin"] = tune.grid_search([0.1])
-    args.config["safety_layer_cfg"]["unsafe_margin"] = tune.grid_search([0.05])
-    args.config["safety_layer_cfg"]["loss_action_weight"] = tune.grid_search([1.0])
+    args.config["safety_layer_cfg"]["eps_safe"] = tune.grid_search([0.001])
+    args.config["safety_layer_cfg"]["eps_dang"] = tune.grid_search([0.05])
+    args.config["safety_layer_cfg"]["eps_deriv_safe"] = tune.grid_search([0.0])
+    args.config["safety_layer_cfg"]["eps_deriv_dang"] = tune.grid_search([8e-2])
+    args.config["safety_layer_cfg"]["eps_deriv_mid"] = tune.grid_search([3e-2])
+    args.config["safety_layer_cfg"]["eps_action"] = tune.grid_search([0.0])
+    args.config["safety_layer_cfg"]["loss_action_weight"] = tune.grid_search([1.5])
     args.config["safety_layer_cfg"]["num_iter_per_epoch"] = 100
     args.config["safety_layer_cfg"]["batch_size"] = tune.grid_search([1024])
 
     args.config["env_config"]["num_obstacles"] = 4
     args.config["env_config"]["max_num_obstacles"] = 4
-    args.config["env_config"]["obstacle_radius"] = 1.0
-    args.config["env_config"]["target_v"] = 0.0
+    args.config["env_config"]["obstacle_radius"] = tune.grid_search([1.0])
+    args.config["env_config"]["target_v"] = tune.grid_search([0.0])
 
     # TODO: implement with Ray session air
     # https://pytorch.org/tutorials/beginner/hyperparameter_tuning_tutorial.html
@@ -148,7 +146,7 @@ def test(args):
     args.config["safety_layer_cfg"]["seed"] = 999
     args.config["safety_layer_cfg"][
         "checkpoint_dir"
-    ] = "/home/prime/Documents/workspace/rl_multi_uav_sim/results/safety_layer/safety_layer2023-11-17-03-03_32ac4e0/h_deepset_buffer/train_safety_layer_d6e67_00000_0_obstacle_radius=1.0000,target_v=0.0000,batch_size=1024,eps_action=0.0000,eps_dang=0.0500,eps_deri_2023-11-17_03-03-49/checkpoint_000264/checkpoint"
+    ] = "/home/prime/Documents/workspace/rl_multi_uav_sim/results/safety_layer/safety_layer2023-11-17-15-39_bbe8d8c/dev_cbf_deepset/train_safety_layer_7124b_00000_0_obstacle_radius=1.0000,target_v=0.0000,batch_size=1024,eps_action=0.0000,eps_dang=0.0500,eps_deri_2023-11-17_15-39-45/checkpoint_000419/checkpoint"
 
     if args.tune_run:
         results = tune.run(
