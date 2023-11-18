@@ -100,9 +100,9 @@ def train(args):
     args.config["safety_layer_cfg"]["eps_deriv_safe"] = 0.0
     args.config["safety_layer_cfg"]["eps_deriv_dang"] = 8e-2
     args.config["safety_layer_cfg"]["eps_deriv_mid"] = 3e-2
-    args.config["safety_layer_cfg"]["eps_action"] = tune.choice([0.0])
-    args.config["safety_layer_cfg"]["loss_action_weight"] = tune.grid_search([1.0])
-    args.config["safety_layer_cfg"]["num_iter_per_epoch"] = tune.choice([100])
+    args.config["safety_layer_cfg"]["eps_action"] = tune.choice([0.0, 0.01, 0.1])
+    args.config["safety_layer_cfg"]["loss_action_weight"] = tune.choice([1.0, 2.0])
+    args.config["safety_layer_cfg"]["num_iter_per_epoch"] = tune.choice([25, 50, 100])
     args.config["safety_layer_cfg"]["batch_size"] = 1024
 
     args.config["env_config"]["num_obstacles"] = 4
@@ -120,11 +120,11 @@ def train(args):
                 "training_iteration": args.config["safety_layer_cfg"]["num_epochs"],
                 "time_total_s": args.duration,
             },
-            num_samples=1,
+            num_samples=9,
             # resources_per_trial=tune.PlacementGroupFactory(
             #     [{"CPU": 1.0, "GPU": 0.25}] + [{"CPU": 1.0, "GPU": 0.25}]
             # ),
-            resources_per_trial={"cpu": 1, "gpu": 0.25},
+            resources_per_trial={"cpu": 1, "gpu": 0.3},
             config=args.config,
             # checkpoint_freq=5,
             # checkpoint_at_end=True,
