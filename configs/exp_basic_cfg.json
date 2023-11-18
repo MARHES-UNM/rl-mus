@@ -26,6 +26,19 @@
                 "safe_action_type": "sca"
             },
             {
+                "name": "cc_cbf",
+                "run": "cc",
+                "checkpoint": null,
+                "safe_action_type": "cbf"
+            },
+            {
+                "name": "cc_nn_cbf",
+                "run": "cc",
+                "checkpoint": null,
+                "safe_action_type": "nn_cbf",
+                "sa_checkpoint_dir": "/home/prime/Documents/workspace/rl_multi_uav_sim/results/safety_layer/safety_layer2023-11-17-15-39_bbe8d8c/dev_cbf_deepset/train_safety_layer_7124b_00000_0_obstacle_radius=1.0000,target_v=0.0000,batch_size=1024,eps_action=0.0000,eps_dang=0.0500,eps_deri_2023-11-17_15-39-45/checkpoint_000434/checkpoint"
+            },
+            {
                 "name": "ppo",
                 "run": "PPO",
                 "checkpoint": "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-11-06-23-23_e7633c3/cur_col_01/PPO_multi-uav-sim-v0_6dfd0_00001_1_obstacle_collision_weight=0.1000,stp_penalty=5,uav_collision_weight=0.1000,use_safe_action=Fals_2023-11-06_23-23-40/checkpoint_000301",

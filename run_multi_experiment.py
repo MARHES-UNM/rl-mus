@@ -80,7 +80,6 @@ def parse_arguments():
         help="load experiment configuration.",
         default=f"{PATH}/configs/exp_basic_cfg.json",
     )
-    parser.add_argument("--nn_cbf_dir", help="checkpoint for learned cbf")
     parser.add_argument("--num_eps", help="Maximum number of episodes to run for.")
 
     args = parser.parse_args()
@@ -116,11 +115,6 @@ if __name__ == "__main__":
     runs = exp_config["exp_config"]["runs"]
     run_nums = [i for i in range(len(runs))]
 
-    if args.nn_cbf_dir is not None:
-        checkpoint_dir = args.nn_cbf_dir
-    else:
-        checkpoint_dir = exp_config["safety_layer_cfg"]["checkpoint_dir"]
-
     exp_configs = []
     experiment_num = 0
 
@@ -143,6 +137,7 @@ if __name__ == "__main__":
             "safe_action_type": runs[run_num]["safe_action_type"],
         }
         if exp_config["exp_config"]["safe_action_type"] == "nn_cbf":
+            checkpoint_dir = runs[run_num].get("sa_checkpoint_dir", None)
             exp_config["safety_layer_cfg"] = {
                 "checkpoint_dir": checkpoint_dir,
                 "seed": seed,
