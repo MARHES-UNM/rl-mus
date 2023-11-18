@@ -100,11 +100,13 @@ def train(args):
     args.config["safety_layer_cfg"]["eps_deriv_safe"] = 0.0
     args.config["safety_layer_cfg"]["eps_deriv_dang"] = 8e-2
     args.config["safety_layer_cfg"]["eps_deriv_mid"] = 3e-2
-    args.config["safety_layer_cfg"]["eps_action"] = tune.choice([0.0, 0.01, 0.1])
-    args.config["safety_layer_cfg"]["loss_action_weight"] = tune.choice([1.0, 2.0])
-    args.config["safety_layer_cfg"]["num_iter_per_epoch"] = tune.choice([25, 50, 100])
+    args.config["safety_layer_cfg"]["eps_action"] = tune.choice([0.0, 0.01])
+    args.config["safety_layer_cfg"]["loss_action_weight"] = tune.choice([1.0])
+    args.config["safety_layer_cfg"]["num_iter_per_epoch"] = tune.choice([50, 100, 200])
     args.config["safety_layer_cfg"]["batch_size"] = 1024
-
+    args.config["safety_layer_cfg"]["replay_buffer_size"] = tune.grid_search(
+        [64000, 100000, 1000000]
+    )
     args.config["env_config"]["num_obstacles"] = 4
     args.config["env_config"]["max_num_obstacles"] = 4
     args.config["env_config"]["obstacle_radius"] = 1.0
