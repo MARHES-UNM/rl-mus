@@ -183,12 +183,12 @@ def plot_uav_states(
     all_figs = []
 
     # UAV collisions
-    fig = plt.figure(figsize=(10, 6))
+    fig = plt.figure(figsize=(10, 7))
     all_figs.append(fig)
     ax = fig.add_subplot(211)
     ax1 = fig.add_subplot(212)
 
-    fig = plt.figure(figsize=(10, 6))
+    fig = plt.figure(figsize=(10, 7))
     all_figs.append(fig)
     ax21 = fig.add_subplot(411)
     ax22 = fig.add_subplot(412)
@@ -196,12 +196,12 @@ def plot_uav_states(
     ax24 = fig.add_subplot(414)
 
     # uav delta_r and delta_v
-    fig = plt.figure(figsize=(10, 6))
+    fig = plt.figure(figsize=(10, 7))
     all_figs.append(fig)
     ax3 = fig.add_subplot(211)
     ax31 = fig.add_subplot(212)
 
-    fig = plt.figure(figsize=(10, 6))
+    fig = plt.figure(figsize=(10, 7))
     all_figs.append(fig)
     ax5 = fig.add_subplot(111, projection="3d")
 
