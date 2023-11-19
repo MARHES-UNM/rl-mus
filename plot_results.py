@@ -13,14 +13,15 @@ import argparse
 from tkinter import W
 import pandas as pd
 from matplotlib import pyplot as plt
+import mpl_toolkits.mplot3d.art3d as art3d
 
 plt.style.use(r"configs/paper_plot_style.mplstyle")
 import seaborn as sns
 import json
-from scipy import stats
 import os
 import numpy as np
 
+from matplotlib.patches import Circle
 from pathlib import Path
 
 PATH = Path(__file__).parent.absolute().resolve()
@@ -145,6 +146,139 @@ def plot_groups(groups, items, output_folder, plot_type="box", skip_legend=False
     plt.close(fig_leg)
 
 
+def plot_uav_states(
+    results,
+    env_config,
+    num_episode=0,
+    skip_legend=False,
+    save_plot=False,
+    image_folder=None,
+    plt_prefix=None,
+):
+    num_uavs = env_config["num_uavs"]
+    num_obstacles = env_config["max_num_obstacles"]
+    target_r = env_config["target_r"]
+    pad_r = env_config["pad_r"]
+    obstacle_radius = env_config["obstacle_radius"]
+    uav_collision_list = results["episode_data"]["uav_collision_list"][num_episode]
+    obstacle_collision_list = results["episode_data"]["obstacle_collision_list"][
+        num_episode
+    ]
+    uav_done_list = results["episode_data"]["uav_done_list"][num_episode]
+    uav_done_dt_list = results["episode_data"]["uav_done_dt_list"][num_episode]
+    uav_dt_go_list = results["episode_data"]["uav_dt_go_list"][num_episode]
+    rel_pad_dist = results["episode_data"]["rel_pad_dist"][num_episode]
+    rel_pad_vel = results["episode_data"]["rel_pad_vel"][num_episode]
+    uav_reward = results["episode_data"]["uav_reward"][num_episode]
+    time_step_list = results["episode_data"]["time_step_list"][num_episode]
+
+    uav_state = np.array(results["episode_data"]["uav_state"])[num_episode]
+    target_state = np.array(results["episode_data"]["target_state"])[num_episode]
+    rel_pad_state = np.array(results["episode_data"]["rel_pad_state"])[num_episode]
+    obstacle_state = np.array(results["episode_data"]["obstacle_state"])[num_episode]
+
+    c_map = plt.get_cmap("tab10")
+
+    all_axes = []
+    all_figs = []
+
+    # UAV collisions
+    fig = plt.figure(figsize=(10, 6))
+    all_figs.append(fig)
+    ax = fig.add_subplot(211)
+    ax1 = fig.add_subplot(212)
+
+    fig = plt.figure(figsize=(10, 6))
+    all_figs.append(fig)
+    ax21 = fig.add_subplot(411)
+    ax22 = fig.add_subplot(412)
+    ax23 = fig.add_subplot(413)
+    ax24 = fig.add_subplot(414)
+
+    fig = plt.figure(figsize=(10, 6))
+    all_figs.append(fig)
+    ax3 = fig.add_subplot(211)
+    ax4 = fig.add_subplot(212)
+
+    fig = plt.figure(figsize=(10, 6))
+    all_figs.append(fig)
+    ax5 = fig.add_subplot(111, projection="3d")
+
+    all_axes.extend([ax, ax21, ax3, ax4])
+
+    c_idx = 0
+    for idx in range(num_uavs):
+        uav_c = c_map(c_idx)
+        c_idx += 1
+
+        ax.plot(time_step_list, uav_collision_list[idx], label=f"uav_id:{idx}")
+        ax.set_ylabel("UAV Collisions")
+        ax1.plot(time_step_list, obstacle_collision_list[idx], label=f"uav_id:{idx}")
+        ax1.set_ylabel("NCFO Collisions")
+
+        ax21.plot(time_step_list, uav_done_list[idx], label=f"uav_id:{idx}")
+        ax21.title.set_text("uav done")
+        ax22.plot(time_step_list, uav_done_dt_list[idx], label=f"uav_id:{idx}")
+        ax22.title.set_text("uav done delta time")
+        ax23.plot(time_step_list, uav_dt_go_list[idx], label=f"uav_id:{idx}")
+        ax23.title.set_text("relative vs time_elapsed")
+        ax24.plot(time_step_list, uav_reward[idx], label=f"uav_id:{idx}")
+        ax24.title.set_text("uav reward")
+        ax3.plot(time_step_list, rel_pad_dist[idx], label=f"uav_id:{idx}")
+        ax4.set_ylabel("$\parallel \Delta \mathbf{r} \parallel")
+        ax4.plot(time_step_list, rel_pad_vel[idx], label=f"uav_id:{idx}")
+        ax4.set_ylabel("$\parallel \Delta \mathbf{v} \parallel")
+        ax5.plot(
+            uav_state[idx, :, 0],
+            uav_state[idx, :, 1],
+            uav_state[idx, :, 2],
+            label=f"uav_id:{idx}",
+            color=uav_c,
+        )
+
+        uav_pad = Circle(
+            (
+                rel_pad_state[idx, 0, 0],
+                rel_pad_state[idx, 0, 1],
+                rel_pad_state[idx, 0, 2],
+            ),
+            pad_r,
+            fill=False,
+            color=uav_c,
+        )
+        ax5.add_patch(uav_pad)
+        art3d.patch_2d_to_3d(uav_pad, z=0, zdir="z")
+    radius = obstacle_radius
+    u, v = np.mgrid[0 : 2 * np.pi : 20j, 0 : np.pi : 10j]
+
+    target_c = c_map(c_idx)
+    tareget_circle = Circle(
+        (target_state[0, 0], target_state[0, 1]), target_r, fill=False, color=target_c
+    )
+    ax5.add_patch(tareget_circle)
+    art3d.patch_2d_to_3d(tareget_circle, z=0, zdir="z")
+
+    for obs_id in range(num_obstacles):
+        center = obstacle_state[obs_id, 0, 0:3]
+        x = center[0] + radius * np.cos(u) * np.sin(v)
+        y = center[1] + radius * np.sin(u) * np.sin(v)
+        z = center[2] + radius * np.cos(v)
+        ax5.plot_wireframe(x, y, z, color="r", alpha=0.1)
+
+    for ax_ in all_axes:
+        ax_.set_xlabel("t (s)")
+
+        ax_.label_outer()
+
+        if skip_legend:
+            ax_.legend().remove()
+        else:
+            ax_.legend()
+
+    # plt.legend()
+    plt.show()
+
+
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument("--exp_folder", help="Path to experiments")
@@ -196,7 +330,7 @@ def main():
         )
 
     items_to_plot = exp_config["items_to_plot"]
-    sns.color_palette("colorblind")
+    sns.color_palette("tab10")
 
     # safe_action_type = exp_config["exp_config"]["safe_action_type"]
     # labels_to_plot = exp_config["labels_to_plot"]
