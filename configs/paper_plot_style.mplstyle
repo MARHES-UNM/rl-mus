@@ -22,7 +22,9 @@
 # length by height
 figure.figsize: 14, 12
 axes.titlesize : 35
-axes.labelsize : 28
+axes.labelsize : 20
+axes.labelpad : 13
+axes.grid : True
 lines.linewidth : 1
 lines.markersize : 1
 xtick.labelsize : 18
