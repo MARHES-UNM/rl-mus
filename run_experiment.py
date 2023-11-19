@@ -208,7 +208,9 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
 
             if render:
                 im = env.render(mode="rgb_array", done=True)
-
+                # fig, ax = plt.subplots()
+                # im = ax.imshow(im)
+                # plt.show()
             if plot_results:
                 plot_uav_states(results, env_config, num_episodes - 1)
 

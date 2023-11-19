@@ -61,6 +61,8 @@
             "args": [
                 "--num_eps",
                 "1",
+                "--exp_config",
+                "configs/exp_basic_cfg_cc.json"
             ]
         },
         {

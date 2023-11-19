@@ -10,7 +10,6 @@
 
 # %%
 import argparse
-from tkinter import W
 import pandas as pd
 from matplotlib import pyplot as plt
 import mpl_toolkits.mplot3d.art3d as art3d
@@ -151,9 +150,10 @@ def plot_uav_states(
     env_config,
     num_episode=0,
     skip_legend=False,
-    save_plot=False,
+    save_figs=False,
     image_folder=None,
     plt_prefix=None,
+    show_plot=True,
 ):
     num_uavs = env_config["num_uavs"]
     num_obstacles = env_config["max_num_obstacles"]
@@ -195,44 +195,47 @@ def plot_uav_states(
     ax23 = fig.add_subplot(413)
     ax24 = fig.add_subplot(414)
 
+    # uav delta_r and delta_v
     fig = plt.figure(figsize=(10, 6))
     all_figs.append(fig)
     ax3 = fig.add_subplot(211)
-    ax4 = fig.add_subplot(212)
+    ax31 = fig.add_subplot(212)
 
     fig = plt.figure(figsize=(10, 6))
     all_figs.append(fig)
     ax5 = fig.add_subplot(111, projection="3d")
 
-    all_axes.extend([ax, ax21, ax3, ax4])
+    all_axes.extend([ax, ax21, ax3, ax31])
 
     c_idx = 0
     for idx in range(num_uavs):
         uav_c = c_map(c_idx)
         c_idx += 1
 
-        ax.plot(time_step_list, uav_collision_list[idx], label=f"uav_id:{idx}")
+        ax.plot(time_step_list, uav_collision_list[idx], label=f"uav_{idx}")
         ax.set_ylabel("UAV Collisions")
-        ax1.plot(time_step_list, obstacle_collision_list[idx], label=f"uav_id:{idx}")
+        ax1.plot(time_step_list, obstacle_collision_list[idx], label=f"uav_{idx}")
         ax1.set_ylabel("NCFO Collisions")
 
-        ax21.plot(time_step_list, uav_done_list[idx], label=f"uav_id:{idx}")
-        ax21.title.set_text("uav done")
-        ax22.plot(time_step_list, uav_done_dt_list[idx], label=f"uav_id:{idx}")
-        ax22.title.set_text("uav done delta time")
-        ax23.plot(time_step_list, uav_dt_go_list[idx], label=f"uav_id:{idx}")
-        ax23.title.set_text("relative vs time_elapsed")
-        ax24.plot(time_step_list, uav_reward[idx], label=f"uav_id:{idx}")
-        ax24.title.set_text("uav reward")
-        ax3.plot(time_step_list, rel_pad_dist[idx], label=f"uav_id:{idx}")
-        ax4.set_ylabel("$\parallel \Delta \mathbf{r} \parallel")
-        ax4.plot(time_step_list, rel_pad_vel[idx], label=f"uav_id:{idx}")
-        ax4.set_ylabel("$\parallel \Delta \mathbf{v} \parallel")
+        ax21.plot(time_step_list, uav_done_list[idx], label=f"uav_{idx}")
+        ax21.set_ylabel("UAV done")
+        ax22.plot(time_step_list, uav_done_dt_list[idx], label=f"uav_{idx}")
+        ax22.set_ylabel("uav Done $\Delta t$")
+        ax23.plot(time_step_list, uav_dt_go_list[idx], label=f"uav_{idx}")
+        ax23.set_ylabel("UAV Done $\Delta t\_go$")
+        ax24.plot(time_step_list, uav_reward[idx], label=f"uav_{idx}")
+        ax24.set_ylabel("UAV Reward")
+
+        ax3.plot(time_step_list, rel_pad_dist[idx], label=f"uav_{idx}")
+        ax3.set_ylabel("$\parallel \Delta \mathbf{r} \parallel$")
+        ax31.plot(time_step_list, rel_pad_vel[idx], label=f"uav_{idx}")
+        ax31.set_ylabel("$\parallel \Delta \mathbf{v} \parallel$")
+
         ax5.plot(
             uav_state[idx, :, 0],
             uav_state[idx, :, 1],
             uav_state[idx, :, 2],
-            label=f"uav_id:{idx}",
+            label=f"uav_{idx}",
             color=uav_c,
         )
 
@@ -265,6 +268,10 @@ def plot_uav_states(
         z = center[2] + radius * np.cos(v)
         ax5.plot_wireframe(x, y, z, color="r", alpha=0.1)
 
+    ax5.set_xlabel("X (m)")
+    ax5.set_ylabel("Y (m)")
+    ax5.set_zlabel("Z (m)")
+
     for ax_ in all_axes:
         ax_.set_xlabel("t (s)")
 
@@ -275,8 +282,33 @@ def plot_uav_states(
         else:
             ax_.legend()
 
-    # plt.legend()
-    plt.show()
+    if save_figs:
+        suffixes = [
+            "uav_ncfo_col.png",
+            "uav_done.png",
+            "r_v_time.png",
+            "uav_3d_states.png",
+        ]
+
+        for fig_, suffix in zip(all_figs, suffixes):
+            file_name = image_folder / f"{plt_prefix}_{suffix}"
+            fig_.savefig(file_name)
+            plt.close(fig_)
+
+        figsize = (10, 3)
+        fig_leg = plt.figure(figsize=figsize)
+        ax_leg = fig_leg.add_subplot(111)
+        # add the legend from the previous axes
+        handles, labels = all_axes[0].get_legend_handles_labels()
+        ax_leg.legend(
+            handles, [f"UAV {idx}" for idx in range(num_uavs)], loc="center", ncol=4
+        )
+        # hide the axes frame and the x/y labels
+        ax_leg.axis("off")
+        fig_leg.savefig(image_folder / "uav_labels.png")
+
+    if show_plot:
+        plt.show()
 
 
 def parse_arguments():
@@ -364,6 +396,8 @@ def main():
         num_uavs = obs_group.get_group(group_to_plot)["env_config"].to_numpy()[0][
             "num_uavs"
         ]
+
+        env_config = obs_group.get_group(group_to_plot)["env_config"].to_numpy()[0]
         data = obs_group.get_group(group_to_plot)["episode_data"].to_numpy()[0]
 
         def get_padded_array(d):
@@ -380,55 +414,18 @@ def main():
             new_array = new_array.reshape((num_uavs, num_episodes, -1))
             return new_array
 
-        time_step_list = get_padded_array(data["time_step_list"])[0, 0]
-        uav_collision_list = get_padded_array(data["uav_collision_list"])
-        obstacle_collision_list = get_padded_array(data["obstacle_collision_list"])
-        rel_pad_dist = get_padded_array(data["rel_pad_dist"])
-        rel_pad_vel = get_padded_array(data["rel_pad_vel"])
+        results = {"episode_data": {}}
+        time_step_list = data["time_step_list"]
+        results["episode_data"]["uav_collision_list"] = get_padded_array(
+            data["uav_collision_list"]
+        )
+        results["episode_data"]["obstacle_collision_list"] = get_padded_array(
+            data["obstacle_collision_list"]
+        )
+        results["episode_data"]["rel_pad_dist"] = get_padded_array(data["rel_pad_dist"])
+        results["episode_data"]["rel_pad_vel"] = get_padded_array(data["rel_pad_vel"])
 
-        all_axes = []
-        all_figs = []
-        for i in range(4):
-            fig = plt.figure(figsize=(12, 8))
-            all_axes.append(fig.add_subplot(111))
-            all_figs.append(fig)
-
-        # TODO: plot mean and stad for each param
-        for idx in range(num_uavs):
-            all_axes[0].plot(
-                time_step_list,
-                uav_collision_list[idx].mean(axis=0),
-                label=f"uav_{idx}",
-            )
-            all_axes[1].plot(
-                time_step_list,
-                obstacle_collision_list[idx].mean(axis=0),
-                label=f"uav_{idx}",
-            )
-            all_axes[2].plot(
-                time_step_list,
-                rel_pad_dist[idx].mean(axis=0),
-                label=f"uav_{idx}",
-            )
-            all_axes[3].plot(
-                time_step_list,
-                rel_pad_vel[idx].mean(axis=0),
-                label=f"uav_{idx}",
-            )
-
-        all_axes[0].set_ylabel("UAV collisions")
-        all_axes[1].set_ylabel("NCFO collisions")
-        all_axes[2].set_ylabel("$\parallel \Delta \mathbf{r} \parallel$")
-        all_axes[3].set_ylabel("$\parallel \Delta \mathbf{v} \parallel$")
-
-        for ax_ in all_axes:
-            ax_.set_xlabel("t (s)")
-            if args.skip_legend:
-                # don't plot legends here. see below
-                ax_.legend().remove()
-            else:
-                ax_.legend()
-
+        results["episode_data"] = data
         plt_prefix = {
             "seed": group_to_plot[0],
             "obs": group_to_plot[1],
@@ -438,24 +435,16 @@ def main():
 
         plt_prefix = "_".join([f"{k}_{str(v)}" for k, v in plt_prefix.items()])
 
-        suffixes = ["uav_col.png", "ncfo_col.png", "r_time.png", "v_time.png"]
-
-        for fig_, suffix in zip(all_figs, suffixes):
-            file_name = image_folder / f"{plt_prefix}_{suffix}"
-            fig_.savefig(file_name)
-            plt.close(fig_)
-
-    figsize = (10, 3)
-    fig_leg = plt.figure(figsize=figsize)
-    ax_leg = fig_leg.add_subplot(111)
-    # add the legend from the previous axes
-    handles, labels = all_axes[0].get_legend_handles_labels()
-    ax_leg.legend(
-        handles, [f"UAV {idx}" for idx in range(num_uavs)], loc="center", ncol=4
-    )
-    # hide the axes frame and the x/y labels
-    ax_leg.axis("off")
-    fig_leg.savefig(image_folder / "uav_labels.png")
+        plot_uav_states(
+            results,
+            env_config,
+            num_episode=0,
+            skip_legend=args.skip_legend,
+            save_figs=True,
+            image_folder=image_folder,
+            plt_prefix=plt_prefix,
+            show_plot=False,
+        )
 
 
 if __name__ == "__main__":
