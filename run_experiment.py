@@ -1,6 +1,8 @@
 import argparse
+import cmath
 from datetime import datetime
 from time import time
+from turtle import color
 from matplotlib import pyplot as plt
 import numpy as np
 import ray
@@ -14,6 +16,7 @@ import logging
 import json
 from uav_sim.utils.safety_layer import SafetyLayer
 from ray import tune
+from matplotlib.patches import Circle
 
 from uav_sim.utils.utils import get_git_hash
 
@@ -90,6 +93,8 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
     rel_pad_vel = [[] for idx in range(env.num_uavs)]
     uav_state = [[] for idx in range(env.num_uavs)]
     uav_reward = [[] for idx in range(env.num_uavs)]
+    rel_pad_state = [[] for idx in range(env.num_uavs)]
+    obstacle_state = [[] for idx in range(env.num_obstacles)]
     target_state = []
 
     results = {
@@ -110,6 +115,8 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
             "rel_pad_vel": [],
             "uav_state": [],
             "uav_reward": [],
+            "rel_pad_state": [],
+            "obstacle_state": [],
             "target_state": [],
         },
     }
@@ -150,19 +157,31 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
             results["uav_collision"] += v["uav_collision"]
             results["obs_collision"] += v["obstacle_collision"]
 
-            time_step_list[k].append(v["time_step"])
-            uav_collision_list[k].append(v["uav_collision"])
-            obstacle_collision_list[k].append(v["obstacle_collision"])
-            uav_done_list[k].append(v["uav_landed"])
-            uav_done_dt_list[k].append(v["uav_done_dt"])
-            uav_dt_go_list[k].append(v["uav_dt_go"])
-            rel_pad_dist[k].append(v["uav_rel_dist"])
-            rel_pad_vel[k].append(v["uav_rel_vel"])
-            uav_reward[k].append(rew[k])
+        # only get for 1st episode
+        if num_episodes == 0:
+            for k, v in info.items():
+                time_step_list[k].append(v["time_step"])
+                uav_collision_list[k].append(v["uav_collision"])
+                obstacle_collision_list[k].append(v["obstacle_collision"])
+                uav_done_list[k].append(v["uav_landed"])
+                uav_done_dt_list[k].append(v["uav_done_dt"])
+                uav_dt_go_list[k].append(v["uav_dt_go"])
+                rel_pad_dist[k].append(v["uav_rel_dist"])
+                rel_pad_vel[k].append(v["uav_rel_vel"])
+                uav_reward[k].append(rew[k])
 
-        for k, v in obs.items():
-            uav_state[k].append(v["state"].tolist())
-            target_state.append(v["target"].tolist())
+            for uav_idx in range(env.num_uavs):
+                uav_state[uav_idx].append(env.uavs[uav_idx].state.tolist())
+                rel_pad_state[uav_idx].append(env.uavs[uav_idx].pad.state.tolist())
+
+            target_state.append(env.target.state.tolist())
+            # for k, v in obs.items():
+            #     uav_state[k].append(v["state"].tolist())
+            #     target_state.append(v["target"].tolist())
+            #     rel_pad_state[k].append(v["rel_pad"].tolist())
+
+            for obs_idx in range(env.num_obstacles):
+                obstacle_state[obs_idx].append(env.obstacles[obs_idx].state.tolist())
 
         if render:
             env.render()
@@ -174,19 +193,23 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
                 results["uav_done_dt"][k].append(v["uav_done_dt"])
             results["num_episodes"] = num_episodes
             results["episode_time"].append(env.time_elapsed)
-            results["episode_data"]["time_step_list"].append(time_step_list)
-            results["episode_data"]["uav_collision_list"].append(uav_collision_list)
-            results["episode_data"]["obstacle_collision_list"].append(
-                obstacle_collision_list
-            )
-            results["episode_data"]["uav_done_list"].append(uav_done_list)
-            results["episode_data"]["uav_done_dt_list"].append(uav_done_dt_list)
-            results["episode_data"]["uav_dt_go_list"].append(uav_dt_go_list)
-            results["episode_data"]["rel_pad_dist"].append(rel_pad_dist)
-            results["episode_data"]["rel_pad_vel"].append(rel_pad_vel)
-            results["episode_data"]["uav_state"].append(uav_state)
-            results["episode_data"]["target_state"].append(target_state)
-            results["episode_data"]["uav_reward"].append(uav_reward)
+
+            if num_episodes <= 1:
+                results["episode_data"]["time_step_list"].append(time_step_list)
+                results["episode_data"]["uav_collision_list"].append(uav_collision_list)
+                results["episode_data"]["obstacle_collision_list"].append(
+                    obstacle_collision_list
+                )
+                results["episode_data"]["uav_done_list"].append(uav_done_list)
+                results["episode_data"]["uav_done_dt_list"].append(uav_done_dt_list)
+                results["episode_data"]["uav_dt_go_list"].append(uav_dt_go_list)
+                results["episode_data"]["rel_pad_dist"].append(rel_pad_dist)
+                results["episode_data"]["rel_pad_vel"].append(rel_pad_vel)
+                results["episode_data"]["uav_state"].append(uav_state)
+                results["episode_data"]["target_state"].append(target_state)
+                results["episode_data"]["uav_reward"].append(uav_reward)
+                results["episode_data"]["rel_pad_state"].append(rel_pad_state)
+                results["episode_data"]["obstacle_state"].append(obstacle_state)
 
             if render:
                 im = env.render(mode="rgb_array", done=True)
@@ -194,7 +217,7 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
                 # im = ax.imshow(im)
                 # plt.show()
             if plot_results:
-                plot_uav_states(env.num_uavs, results, num_episodes - 1)
+                plot_uav_states(results, env_config, num_episodes - 1)
 
             if num_episodes == max_num_episodes:
                 end_time = time() - start_time
@@ -216,6 +239,9 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
             rel_pad_vel = [[] for idx in range(env.num_uavs)]
             uav_state = [[] for idx in range(env.num_uavs)]
             uav_reward = [[] for idx in range(env.num_uavs)]
+            rel_pad_state = [[] for idx in range(env.num_uavs)]
+            obstacle_state = [[] for idx in range(env.num_obstacles)]
+            target_state = []
 
     env.close()
 
@@ -247,7 +273,12 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
     logger.debug("done")
 
 
-def plot_uav_states(num_uavs, results, num_episode=0):
+def plot_uav_states(results, env_config, num_episode=0):
+    num_uavs = env_config["num_uavs"]
+    num_obstacles = env_config["max_num_obstacles"]
+    target_r = env_config["target_r"]
+    pad_r = env_config["pad_r"]
+    obstacle_radius = env_config["obstacle_radius"]
     uav_collision_list = results["episode_data"]["uav_collision_list"][num_episode]
     obstacle_collision_list = results["episode_data"]["obstacle_collision_list"][
         num_episode
@@ -261,6 +292,9 @@ def plot_uav_states(num_uavs, results, num_episode=0):
 
     uav_state = np.array(results["episode_data"]["uav_state"])[num_episode]
     target_state = np.array(results["episode_data"]["target_state"])[num_episode]
+    rel_pad_state = np.array(results["episode_data"]["rel_pad_state"])[num_episode]
+    obstacle_state = np.array(results["episode_data"]["obstacle_state"])[num_episode]
+    c_map = plt.get_cmap("tab10")
 
     axs = []
     fig = plt.figure(figsize=(10, 6))
@@ -278,7 +312,11 @@ def plot_uav_states(num_uavs, results, num_episode=0):
     fig = plt.figure(figsize=(10, 6))
     ax5 = fig.add_subplot(111, projection="3d")
     axs.extend([ax, ax21, ax3, ax4])
+
+    c_idx = 0
     for idx in range(num_uavs):
+        uav_c = c_map(c_idx)
+        c_idx += 1
         ax.plot(uav_collision_list[idx], label=f"uav_id:{idx}")
         ax.title.set_text("uav collision")
         ax1.plot(obstacle_collision_list[idx], label=f"uav_id:{idx}")
@@ -300,8 +338,38 @@ def plot_uav_states(num_uavs, results, num_episode=0):
             uav_state[idx, :, 1],
             uav_state[idx, :, 2],
             label=f"uav_id:{idx}",
+            color=uav_c,
         )
-    ax5.plot(target_state[:, 0], target_state[:, 1], target_state[:, 2], label="target")
+
+        uav_pad = Circle(
+            (
+                rel_pad_state[idx, 0, 0],
+                rel_pad_state[idx, 0, 1],
+                rel_pad_state[idx, 0, 2],
+            ),
+            0.1,
+            fill=False,
+            color=uav_c,
+        )
+        ax5.add_patch(uav_pad)
+        art3d.patch_2d_to_3d(uav_pad, z=0, zdir="z")
+    radius = obstacle_radius
+    u, v = np.mgrid[0 : 2 * np.pi : 20j, 0 : np.pi : 10j]
+
+    target_c = c_map(c_idx)
+    tareget_circle = Circle(
+        (target_state[0, 0], target_state[0, 1]), target_r, fill=False, color=target_c
+    )
+    ax5.add_patch(tareget_circle)
+    art3d.patch_2d_to_3d(tareget_circle, z=0, zdir="z")
+
+    for obs_id in range(num_obstacles):
+        center = obstacle_state[obs_id, 0, 0:3]
+        x = center[0] + radius * np.cos(u) * np.sin(v)
+        y = center[1] + radius * np.sin(u) * np.sin(v)
+        z = center[2] + radius * np.cos(v)
+        ax5.plot_wireframe(x, y, z, color="r", alpha=0.1)
+
     for ax_ in axs:
         ax_.legend()
     plt.legend()

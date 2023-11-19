@@ -92,11 +92,11 @@ class Obstacle(Entity):
 
 
 class Pad(Entity):
-    def __init__(self, _id, x, y):
+    def __init__(self, _id, x, y, r=0.1):
         self.x = x
         self.y = y
         self.id = _id
-        super().__init__(_id=_id, x=x, y=y, z=0, _type=AgentType.P)
+        super().__init__(_id=_id, x=x, y=y, z=0, r=r, _type=AgentType.P)
 
 
 class Target(Entity):
@@ -112,6 +112,7 @@ class Target(Entity):
         r=1,
         num_landing_pads=1,
         pad_offset=0.5,
+        pad_r=0.1,
     ):
         super().__init__(_id=_id, x=x, y=y, z=0, r=r, _type=AgentType.T)
         self.id = _id
@@ -119,6 +120,7 @@ class Target(Entity):
         self.psi = psi
         self.num_landing_pads = num_landing_pads
         self.r = r  # radius, m
+        self.pad_r = pad_r
         self.pad_offset = pad_offset  # m
 
         # x, y, z, x_dot, y_dot, z_dot, psi, psi_dot
@@ -132,7 +134,7 @@ class Target(Entity):
             np.testing.assert_almost_equal(self.psi, np.arctan2(self.vy, self.vx))
         self._state = np.array([x, y, 0, self.vx, self.vy, 0, psi, self.w])
         self.pads = [
-            Pad(_id, pad_loc[0], pad_loc[1])
+            Pad(_id, pad_loc[0], pad_loc[1], r=self.pad_r)
             for _id, pad_loc in enumerate(self.get_pad_offsets())
         ]
         self.update_pads_state()

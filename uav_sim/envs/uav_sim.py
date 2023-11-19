@@ -63,8 +63,10 @@ class UavSim(MultiAgentEnv):
         self.env_max_l = env_config.setdefault("env_max_l", 4)
         self.env_max_h = env_config.setdefault("env_max_h", 4)
         self._z_high = env_config.setdefault("z_high", 4)
+        self.pad_r = env_config.setdefault("pad_r", 0.01)
         self.target_v = env_config.setdefault("target_v", 0)
         self.target_w = env_config.setdefault("target_w", 0)
+        self.target_r = env_config.setdefault("target_r", 1)
         self.max_time = env_config.setdefault("max_time", 40)
         self.max_time = self.time_final + (self.t_go_max * 2)
 
@@ -680,6 +682,7 @@ class UavSim(MultiAgentEnv):
             v=self.target_v,
             w=self.target_w,
             dt=self.dt,
+            r=self.target_r,
             num_landing_pads=self.num_uavs,
         )
 
