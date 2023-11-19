@@ -1,8 +1,6 @@
 import argparse
-import cmath
 from datetime import datetime
 from time import time
-from turtle import color
 from matplotlib import pyplot as plt
 import numpy as np
 import ray
