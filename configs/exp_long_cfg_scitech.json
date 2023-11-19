@@ -15,16 +15,35 @@
         ]
     },
     "exp_config": {
-        "max_num_episodes": 10,
-        "safe_action_type": [
-            "none",
-            "cbf",
-            "nn_cbf",
-            "sca"
+        "max_num_episodes": 100,
+        "runs": [
+            {
+                "name": "cc_none",
+                "run": "cc",
+                "checkpoint": null,
+                "safe_action_type": null
+            },
+            {
+                "name": "cc_sca",
+                "run": "cc",
+                "checkpoint": null,
+                "safe_action_type": "sca"
+            },
+            {
+                "name": "cc_cbf",
+                "run": "cc",
+                "checkpoint": null,
+                "safe_action_type": "cbf"
+            },
+            {
+                "name": "cc_nn_cbf",
+                "run": "cc",
+                "checkpoint": null,
+                "safe_action_type": "nn_cbf",
+                "sa_checkpoint_dir": "/home/prime/Documents/workspace/rl_multi_uav_sim/results/safety_layer/safety_layer2023-11-18-14-04_8ceed4d/cbf_h_deeset/train_safety_layer_59767_00000_0_eps_action=0.0000,loss_action_weight=1.0000,num_epochs=700,num_iter_per_epoch=100,use_rl=False,tr_2023-11-18_14-04-50/checkpoint_000599/checkpoint"
+            }
         ],
         "seeds": [
-            0,
-            5000,
             173
         ]
     },
@@ -48,7 +67,7 @@
                 0.0
             ],
             "group_title": "overall",
-            "x_label": "Number of Obstacles"
+            "x_label": ""
         },
         {
             "group": [
