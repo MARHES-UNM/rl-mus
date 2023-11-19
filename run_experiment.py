@@ -189,7 +189,10 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
             results["episode_data"]["uav_reward"].append(uav_reward)
 
             if render:
-                fig = env.render(done=True)
+                im = env.render(mode="rgb_array", done=True)
+                # fig, ax = plt.subplots()
+                # im = ax.imshow(im)
+                # plt.show()
             if plot_results:
                 plot_uav_states(env.num_uavs, results, num_episodes - 1)
 

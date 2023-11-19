@@ -10,6 +10,7 @@ from scipy.integrate import odeint
 import logging
 import random
 from ray.rllib.env.multi_agent_env import MultiAgentEnv
+import io
 
 
 logger = logging.getLogger(__name__)
@@ -807,19 +808,29 @@ class UavSim(MultiAgentEnv):
         return action
 
     def render(self, mode="human", done=False):
-        if self.render_mode == "human":
-            if self.gui is None:
-                self.gui = Gui(
-                    self.uavs,
-                    target=self.target,
-                    obstacles=self.obstacles,
-                    max_x=self.env_max_w,
-                    max_y=self.env_max_l,
-                    max_z=self.env_max_h,
-                )
-            else:
-                fig = self.gui.update(self.time_elapsed, done)
-                return fig
+        if self.gui is None:
+            self.gui = Gui(
+                self.uavs,
+                target=self.target,
+                obstacles=self.obstacles,
+                max_x=self.env_max_w,
+                max_y=self.env_max_l,
+                max_z=self.env_max_h,
+            )
+
+        if mode == "human":
+            self.gui.update(self._time_elapsed, done)
+
+        elif mode == "rgb_array":
+            fig = self.gui.update(self._time_elapsed, done)
+
+            with io.BytesIO() as buff:
+                fig.savefig(buff, format="raw")
+                buff.seek(0)
+                data = np.frombuffer(buff.getvalue(), dtype=np.uint8)
+                w, h = fig.canvas.get_width_height()
+                im = data.reshape((int(h), int(w), -1))
+            return im
 
     def close_gui(self):
         if self.gui is not None:
