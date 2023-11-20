@@ -91,7 +91,7 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
     uav_state = [[] for idx in range(env.num_uavs)]
     uav_reward = [[] for idx in range(env.num_uavs)]
     rel_pad_state = [[] for idx in range(env.num_uavs)]
-    obstacle_state = [[] for idx in range(env.num_obstacles)]
+    obstacle_state = [[] for idx in range(env.max_num_obstacles)]
     target_state = []
 
     results = {
@@ -173,7 +173,7 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
             target_state.append(env.target.state.tolist())
             time_step_list.append(env.time_elapsed)
 
-            for obs_idx in range(env.num_obstacles):
+            for obs_idx in range(env.max_num_obstacles):
                 obstacle_state[obs_idx].append(env.obstacles[obs_idx].state.tolist())
 
         if render:
