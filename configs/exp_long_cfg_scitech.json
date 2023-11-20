@@ -15,7 +15,7 @@
         ]
     },
     "exp_config": {
-        "max_num_episodes": 100,
+        "max_num_episodes": 200,
         "runs": [
             {
                 "name": "cc_none",
@@ -40,11 +40,13 @@
                 "run": "cc",
                 "checkpoint": null,
                 "safe_action_type": "nn_cbf",
-                "sa_checkpoint_dir": "/home/prime/Documents/workspace/rl_multi_uav_sim/results/safety_layer/safety_layer2023-11-18-14-04_8ceed4d/cbf_h_deeset/train_safety_layer_59767_00000_0_eps_action=0.0000,loss_action_weight=1.0000,num_epochs=700,num_iter_per_epoch=100,use_rl=False,tr_2023-11-18_14-04-50/checkpoint_000599/checkpoint"
+                "sa_checkpoint_dir": "/home/prime/Documents/workspace/rl_multi_uav_sim/results/safety_layer/safety_layer2023-11-19-04-48_462dc11/tgn_1/train_safety_layer_c7689_00000_0_t_go_n=1.0000,eps_action=0.0000,eps_dang=0.0010,loss_action_weight=1.0000,num_epochs=500,num_iter_2023-11-19_04-48-23/checkpoint_000494/checkpoint"
             }
         ],
         "seeds": [
-            173
+            173,
+            0,
+            5001
         ]
     },
     "safety_layer_cfg": {
@@ -82,7 +84,7 @@
                 20.0
             ],
             "group_title": "baseline",
-            "x_label": "Number of Obstacles"
+            "x_label": ""
         },
         {
             "group": [

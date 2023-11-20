@@ -58,7 +58,6 @@ class SafetyLayer:
         )
 
         if self._checkpoint_dir:
-            print(f"chdir: {self._checkpoint_dir}")
             checkpoint_state = torch.load(
                 self._checkpoint_dir, map_location=torch.device(self._device)
             )
@@ -292,11 +291,11 @@ class SafetyLayer:
         return results
 
     def _get_mask(self, constraints):
-        # safe_mask = torch.all((constraints >= self._safe_margin), dim=1).float()
-        # unsafe_mask = torch.any((constraints <= self._unsafe_margin), dim=1).float()
+        safe_mask = torch.all((constraints >= self._safe_margin), dim=1).float()
+        unsafe_mask = torch.any((constraints <= self._unsafe_margin), dim=1).float()
 
-        safe_mask = (constraints >= self._safe_margin).float()
-        unsafe_mask = (constraints <= self._unsafe_margin).float()
+        # safe_mask = (constraints >= self._safe_margin).float()
+        # unsafe_mask = (constraints <= self._unsafe_margin).float()
 
         mid_mask = (1 - safe_mask) * (1 - unsafe_mask)
 

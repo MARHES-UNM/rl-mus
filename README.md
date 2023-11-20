@@ -305,3 +305,8 @@ https://github.com/ray-project/ray/blob/ray-2.6.3/rllib/examples/custom_train_fn
 
 ppo lagrangian implementation: 
 https://github.com/akjayant/PPO_Lagrangian_PyTorch/blob/main/ppo.py
+
+
+### Creating custom environments
+https://blog.paperspace.com/creating-custom-environments-openai-gym/
+https://gymnasium.farama.org/api/env/#gymnasium.Env.render_mode

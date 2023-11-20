@@ -33,10 +33,10 @@ class CBF(nn.Module):
         x = self.activation(self.conv0(x))
         x = self.activation(self.conv1(x))
         x = self.activation(self.conv2(x))  # (bs, 128, n_state)
-        x = self.activation(self.conv3(x))
-        # x, _ = torch.max(x, dim=2)  # (bs, 128)
-        # x = self.fc0(x)
-        x = self.conv4(x)
+        # x = self.activation(self.conv3(x))
+        x, _ = torch.max(x, dim=2)  # (bs, 128)
+        x = self.fc0(x)
+        # x = self.conv4(x)
         h = torch.squeeze(x, dim=1)  # (bs, n_state)
         return h
 
@@ -83,7 +83,7 @@ class NN_Action(nn.Module):
         x = torch.cat((other_uav_state_diff, obstacle_state_diff), dim=2)
         x = self.activation(self.conv0(x))
         x = self.activation(self.conv1(x))
-        x = self.activation(self.conv2(x))  # (bs, 128, k_obstacle)
+        # x = self.activation(self.conv2(x))  # (bs, 128, k_obstacle)
         # x = torch.squeeze(self.activation(self.fc0_(x)), dim=-1)
         x, _ = torch.max(x, dim=2)  # (bs, 128)
         x = torch.cat([x, u_nominal, rel_pad], dim=1)  # (bs, 128 + m_control)

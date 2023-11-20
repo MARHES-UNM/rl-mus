@@ -811,6 +811,17 @@ class UavSim(MultiAgentEnv):
         return action
 
     def render(self, mode="human", done=False):
+        """
+        See this example for converting python figs to images:
+        https://stackoverflow.com/questions/7821518/save-plot-to-numpy-array
+
+        Args:
+            mode (str, optional): _description_. Defaults to "human".
+            done (bool, optional): _description_. Defaults to False.
+
+        Returns:
+            _type_: _description_
+        """
         if self.gui is None:
             self.gui = Gui(
                 self.uavs,
