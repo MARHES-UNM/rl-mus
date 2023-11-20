@@ -363,7 +363,7 @@ class Gui:
         self.fig.canvas.mpl_connect("key_press_event", self.keypress_routine)
 
         # view is elevation and azimuth angle
-        self.ax["ax_3d"].view_init(25, 45)
+        # self.ax["ax_3d"].view_init(25, 45)
         # Overhead Z
         # self.ax["ax_3d"].view_init(90, 270)
 

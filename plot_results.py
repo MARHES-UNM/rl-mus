@@ -13,6 +13,7 @@ import argparse
 import pandas as pd
 from matplotlib import pyplot as plt
 import mpl_toolkits.mplot3d.art3d as art3d
+import itertools
 
 plt.style.use(r"configs/paper_plot_style.mplstyle")
 import seaborn as sns
@@ -368,11 +369,13 @@ def main():
     items_to_plot = exp_config["items_to_plot"]
     sns.color_palette("tab10")
 
-    # safe_action_type = exp_config["exp_config"]["safe_action_type"]
-    # labels_to_plot = exp_config["labels_to_plot"]
-    # df["safe_action"] = df["safe_action"].replace(
-    #     {sa_type: label for sa_type, label in zip(safe_action_type, labels_to_plot)}
-    # )
+    exp_config["labels"] = [
+        (run["name"], run["label"]) for run in exp_config["exp_config"]["runs"]
+    ]
+
+    df["name"] = df["name"].replace(
+        {name: label for (name, label) in exp_config["labels"]}
+    )
     plot_groups(
         groups_to_plot,
         items_to_plot,
@@ -387,12 +390,20 @@ def main():
     target_v = exp_config["env_config"]["target_v"]
     max_num_obstacles = exp_config["env_config"]["max_num_obstacles"]
     seeds = exp_config["exp_config"]["seeds"]
-    runs = exp_config["exp_config"]["runs"]
+    names = [label[1] for label in exp_config["labels"]]
 
-    groups_to_plot = []
-    for run in runs:
-        for v in target_v:
-            groups_to_plot.append((seeds[0], max_num_obstacles[0], run["name"], v))
+    groups_to_plot = list(
+        itertools.product(
+            [
+                seeds[0],
+            ],
+            [
+                max_num_obstacles[0],
+            ],
+            names,
+            target_v,
+        )
+    )
 
     # TODO: convert to dataframe, pad the data to make them all the same lengths. plot the mean and std
     for group_to_plot in groups_to_plot:
@@ -433,7 +444,7 @@ def main():
         plt_prefix = {
             "seed": group_to_plot[0],
             "obs": group_to_plot[1],
-            "sa": group_to_plot[2],
+            "sa": group_to_plot[2].lower().replace("-", "_"),
             "tgt_v": group_to_plot[3],
         }
 

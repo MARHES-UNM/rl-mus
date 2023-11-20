@@ -110,7 +110,8 @@
                 // "DISPLAY": "192.168.1.18:0.0"
             },
             "args": [
-                // "--load_config", "/home/prime/Documents/workspace/rl_multi_uav_sim/results/test_results/exp_2023-11-19-21-15_4f06ca6/exp_35_tgt_v_0.0_r_cc_sa_nn_cbf_o_6_s_173_tf_30/exp_sim_config.cfg",
+                // "--load_config",
+                // "/home/prime/Documents/workspace/rl_multi_uav_sim/configs/exp_sim_config.cfg",
                 "--plot_results",
                 // "--render"
             ]
@@ -252,8 +253,10 @@
                 // "DISPLAY": "192.168.1.18:0.0"
             },
             "args": [
+                "--exp_config",
+                "configs/exp_long_cfg_scitech_copy.json",
                 "--exp_folder",
-                "/home/prime/Documents/workspace/rl_multi_uav_sim/results/test_results/exp_2023-11-12-09-05_a7e95b9",
+                "/home/prime/Documents/workspace/rl_multi_uav_sim/results/test_results/exp_2023-11-19-22-46_d8b75f4_copy",
                 // "--skip_legend"
             ],
         },

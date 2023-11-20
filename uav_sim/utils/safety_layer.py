@@ -107,18 +107,16 @@ class SafetyLayer:
         self._nn_action_model.to(self._device)
 
     def _set_seed(self):
-        random.seed(self._seed)
-        np.random.seed(self._seed)
+        """Assumes random, np.random.seed has already been seeded from environment."""
+        # random.seed(self._seed)
+        # np.random.seed(self._seed)
         torch.manual_seed(self._seed)
 
     def _parse_config(self):
-        # TODO: update config inputs
-        # default 1000000
         self._replay_buffer_size = self._config.get("replay_buffer_size", 1000000)
         self._episode_length = self._config.get("episode_length", 400)
         self._lr = self._config.get("lr", 0.01)
         self._weight_decay = self._config.get("weight_decay", 1e-5)
-        # default 256
         self._batch_size = self._config.get("batch_size", 64)
         self._num_eval_steps = self._config.get("num_eval_steps", 1500)
         self._num_training_steps = self._config.get("num_training_steps", 6000)
@@ -568,12 +566,12 @@ class SafetyLayer:
                         path = os.path.join(checkpoint_dir, "checkpoint")
 
                         torch.save(
-                        {
-                            "cbf_state_dict": self._cbf_model.state_dict(),
-                            "nn_action_state_dict": self._nn_action_model.state_dict(),
-                            "cbf_optimizer_state_dict": self._cbf_optimizer.state_dict(),
-                            "nn_action_optimizer_state_dict": self._nn_action_optimizer.state_dict(),
-                        },
+                            {
+                                "cbf_state_dict": self._cbf_model.state_dict(),
+                                "nn_action_state_dict": self._nn_action_model.state_dict(),
+                                "cbf_optimizer_state_dict": self._cbf_optimizer.state_dict(),
+                                "nn_action_optimizer_state_dict": self._nn_action_optimizer.state_dict(),
+                            },
                             path,
                         )
             # else:
