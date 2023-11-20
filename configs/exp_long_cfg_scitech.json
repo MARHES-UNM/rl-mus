@@ -21,26 +21,30 @@
                 "name": "cc_none",
                 "run": "cc",
                 "checkpoint": null,
-                "safe_action_type": null
+                "safe_action_type": null,
+                "label": "TTC"
             },
             {
                 "name": "cc_sca",
                 "run": "cc",
                 "checkpoint": null,
-                "safe_action_type": "sca"
+                "safe_action_type": "sca",
+                "label": "TTC-CA"
             },
             {
                 "name": "cc_cbf",
                 "run": "cc",
                 "checkpoint": null,
-                "safe_action_type": "cbf"
+                "safe_action_type": "cbf",
+                "label": "MORRIS"
             },
             {
                 "name": "cc_nn_cbf",
                 "run": "cc",
                 "checkpoint": null,
                 "safe_action_type": "nn_cbf",
-                "sa_checkpoint_dir": "/home/prime/Documents/workspace/rl_multi_uav_sim/results/safety_layer/safety_layer2023-11-19-04-48_462dc11/tgn_1/train_safety_layer_c7689_00000_0_t_go_n=1.0000,eps_action=0.0000,eps_dang=0.0010,loss_action_weight=1.0000,num_epochs=500,num_iter_2023-11-19_04-48-23/checkpoint_000494/checkpoint"
+                "sa_checkpoint_dir": "/home/prime/Documents/workspace/rl_multi_uav_sim/results/safety_layer/safety_layer2023-11-19-04-48_462dc11/tgn_1/train_safety_layer_c7689_00000_0_t_go_n=1.0000,eps_action=0.0000,eps_dang=0.0010,loss_action_weight=1.0000,num_epochs=500,num_iter_2023-11-19_04-48-23/checkpoint_000494/checkpoint",
+                "label": "MORRIS-NN_CBF"
             }
         ],
         "seeds": [
