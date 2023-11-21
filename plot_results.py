@@ -310,6 +310,7 @@ def plot_uav_states(
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument("--exp_folder", help="Path to experiments")
+    parser.add_argument("--img_folder", help="Folder to output plots")
     parser.add_argument(
         "--exp_config",
         help="experiment config",
@@ -338,13 +339,27 @@ def main():
 
     basedir_path = Path(args.exp_folder)
     basedir_list = list(basedir_path.glob("**/result.json"))
-    image_folder = basedir_path / "images"
+
+    if args.img_folder is not None:
+        image_folder = basedir_path / args.img_folder
+    else:
+        image_folder = basedir_path / "images"
 
     if not image_folder.exists():
         image_folder.mkdir(parents=True, exist_ok=True)
 
     df = get_data(basedir_list)
 
+    exp_config["labels"] = [
+        (run["name"], run["label"]) for run in exp_config["exp_config"]["runs"]
+    ]
+
+    df["name"] = df["name"].replace(
+        {name: label for (name, label) in exp_config["labels"]}
+    )
+
+    names = [label[1] for label in exp_config["labels"]]
+    df = df[df["name"].isin(names)]
     groups_to_plot = exp_config["groups_to_plot"]
 
     for idx, group in enumerate(groups_to_plot):
@@ -358,15 +373,8 @@ def main():
         )
 
     items_to_plot = exp_config["items_to_plot"]
+
     sns.color_palette("tab10")
-
-    exp_config["labels"] = [
-        (run["name"], run["label"]) for run in exp_config["exp_config"]["runs"]
-    ]
-
-    df["name"] = df["name"].replace(
-        {name: label for (name, label) in exp_config["labels"]}
-    )
     plot_groups(
         groups_to_plot,
         items_to_plot,
