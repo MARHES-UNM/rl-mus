@@ -183,13 +183,6 @@ def plot_uav_states(
     all_axes = []
     all_figs = []
 
-    # UAV collisions
-    # fig = plt.figure(figsize=(10, 7))
-    fig = plt.figure()
-    all_figs.append(fig)
-    ax = fig.add_subplot(211)
-    ax1 = fig.add_subplot(212)
-
     # fig = plt.figure(figsize=(10, 7))
     fig = plt.figure()
     all_figs.append(fig)
@@ -198,14 +191,13 @@ def plot_uav_states(
     ax23 = fig.add_subplot(413)
     ax24 = fig.add_subplot(414)
 
-    # uav delta_r and delta_v
     fig = plt.figure()
-    # fig = plt.figure(figsize=(10, 7))
     all_figs.append(fig)
-    ax3 = fig.add_subplot(211)
-    ax31 = fig.add_subplot(212)
+    ax = fig.add_subplot(411)  # uav collision
+    ax1 = fig.add_subplot(412)  # ncfo collision
+    ax3 = fig.add_subplot(413)  # delta_r
+    ax31 = fig.add_subplot(414)  # delta_v
 
-    # fig = plt.figure(figsize=(10, 7))
     fig = plt.figure()
     all_figs.append(fig)
     ax5 = fig.add_subplot(111, projection="3d")
@@ -217,11 +209,6 @@ def plot_uav_states(
         uav_c = c_map(c_idx)
         c_idx += 1
 
-        ax.plot(time_step_list, uav_collision_list[idx], label=f"uav_{idx}")
-        ax.set_ylabel("UAV Collisions")
-        ax1.plot(time_step_list, obstacle_collision_list[idx], label=f"uav_{idx}")
-        ax1.set_ylabel("NCFO Collisions")
-
         ax21.plot(time_step_list, uav_done_list[idx], label=f"uav_{idx}")
         ax21.set_ylabel("UAV done")
         ax22.plot(time_step_list, uav_done_dt_list[idx], label=f"uav_{idx}")
@@ -231,6 +218,10 @@ def plot_uav_states(
         ax24.plot(time_step_list, uav_reward[idx], label=f"uav_{idx}")
         ax24.set_ylabel("UAV Reward")
 
+        ax.plot(time_step_list, uav_collision_list[idx], label=f"uav_{idx}")
+        ax.set_ylabel("UAV Collisions")
+        ax1.plot(time_step_list, obstacle_collision_list[idx], label=f"uav_{idx}")
+        ax1.set_ylabel("NCFO Collisions")
         ax3.plot(time_step_list, rel_pad_dist[idx], label=f"uav_{idx}")
         ax3.set_ylabel("$\parallel \Delta \mathbf{r} \parallel$")
         ax31.plot(time_step_list, rel_pad_vel[idx], label=f"uav_{idx}")
@@ -289,7 +280,7 @@ def plot_uav_states(
 
     if save_figs:
         suffixes = [
-            "uav_ncfo_col.png",
+            # "uav_ncfo_col.png",
             "uav_done.png",
             "r_v_time.png",
             "uav_3d_states.png",

@@ -63,6 +63,7 @@ class UavSim(MultiAgentEnv):
         self.env_max_l = env_config.setdefault("env_max_l", 4)
         self.env_max_h = env_config.setdefault("env_max_h", 4)
         self._z_high = env_config.setdefault("z_high", 4)
+        self._z_low = env_config.setdefault("z_low", 4)
         self.pad_r = env_config.setdefault("pad_r", 0.01)
         self.target_v = env_config.setdefault("target_v", 0)
         self.target_w = env_config.setdefault("target_w", 0)
@@ -719,7 +720,7 @@ class UavSim(MultiAgentEnv):
             in_collision = True
 
             while in_collision:
-                x, y, z = get_random_pos(low_h=self.obstacle_radius * 1.75)
+                x, y, z = get_random_pos(low_h=self.obstacle_radius * 1.50, z_high=3.5)
                 _type = ObsType.S
                 obstacle = Obstacle(
                     _id=idx,
@@ -749,7 +750,7 @@ class UavSim(MultiAgentEnv):
             # make sure the agent is not in collision with other agents or obstacles
             # the lowest height needs to be the uav radius x2
             while in_collision:
-                x, y, z = get_random_pos(low_h=0.2, z_high=self._z_high)
+                x, y, z = get_random_pos(low_h=self._z_low, z_high=self._z_high)
                 uav = self._uav_type(
                     _id=agent_id,
                     x=x,
