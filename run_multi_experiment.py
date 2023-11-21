@@ -2,6 +2,7 @@ import argparse
 from datetime import datetime
 import subprocess
 from pathlib import Path
+from time import time
 
 import os
 import concurrent.futures
@@ -18,7 +19,7 @@ logging.basicConfig(
     format=formatter
 )
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 max_num_cpus = os.cpu_count() - 1
 
@@ -170,6 +171,13 @@ if __name__ == "__main__":
         run_experiment, max_num_episodes=max_num_episodes, log_dir=args.log_dir
     )
 
+    start_time = time()
+
+    print("==========================================================")
+    print("----------------------------------------------------------")
+    print(f"Start time: {datetime.fromtimestamp(start_time)}")
+    print("==========================================================")
+
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_num_cpus) as executor:
         future_run_experiment = [
             executor.submit(starter, exp_config=exp_config)
@@ -189,5 +197,7 @@ if __name__ == "__main__":
 
     logger.debug(f"plotting results")
     rv = subprocess.call(args)
-
+    print("==========================================================")
+    print(f"Finished All experiments. Time spent: {(time() - start_time) // 1} secs")
+    print("==========================================================")
     logger.debug(f"Done!")
