@@ -32,6 +32,7 @@ class UavSim(MultiAgentEnv):
         self.num_obstacles = env_config.setdefault("num_obstacles", 4)
         self.obstacle_radius = env_config.setdefault("obstacle_radius", 1)
         self.max_num_obstacles = env_config.setdefault("max_num_obstacles", 4)
+        # self.num_obstacles = min(self.max_num_obstacles, self.num_obstacles)
         assert self.max_num_obstacles >= self.num_obstacles, print(
             f"Max number of obstacles {self.max_num_obstacles} is less than number of obstacles {self.num_obstacles}"
         )
