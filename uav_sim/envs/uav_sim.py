@@ -1,5 +1,5 @@
 import sys
-from gym import spaces
+from gymnasium import spaces
 import numpy as np
 from gym.utils import seeding
 from uav_sim.agents.uav import Obstacle, UavBase, Uav, ObsType
@@ -447,7 +447,7 @@ class UavSim(MultiAgentEnv):
         info = {uav.id: self._get_info(uav) for uav in self.uavs.values()}
 
         # calculate done for each agent
-        done = {self.uavs[id]: self.uavs[id].done for id in self.alive_agents}
+        done = {self.uavs[id].id: self.uavs[id].done for id in self.alive_agents}
         done["__all__"] = (
             all(v for v in done.values()) or self.time_elapsed >= self.max_time
         )

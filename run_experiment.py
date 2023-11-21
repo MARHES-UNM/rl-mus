@@ -40,42 +40,61 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
     env = UavSim(env_config)
 
     algo_to_run = exp_config["exp_config"].setdefault("run", "PPO")
+    if algo_to_run not in ["cc", "PPO"]:
+        print("Unrecognized algorithm. Exiting...")
+        exit(99)
+
     if algo_to_run == "PPO":
         checkpoint = exp_config["exp_config"].setdefault("checkpoint", None)
 
         # Reload the algorithm as is from training.
         # if checkpoint is not None:
         # algo = Algorithm.from_checkpoint(checkpoint)
-
-        # ray.init(num_cpus=1, num_gpus=0)
-        algo = (
-            PPOConfig()
-            .environment(
-                env=exp_config["env_name"], env_config=exp_config["env_config"]
-            )
-            .framework("torch")
-            .rollouts(num_rollout_workers=0)
-            .debugging(log_level="ERROR", seed=exp_config["env_config"]["seed"])
-            .resources(num_gpus=0)
-            .multi_agent(
-                policies={
-                    "shared_policy": (
-                        None,
-                        env.observation_space[0],
-                        env.action_space[0],
-                        {},
-                    )
-                },
-                # Always use "shared" policy.
-                policy_mapping_fn=(
-                    lambda agent_id, episode, worker, **kwargs: "shared_policy"
-                ),
-            )
-            .build()
-        )
-
         if checkpoint is not None:
-            algo.restore(checkpoint)
+            use_policy = True
+            from ray.rllib.policy.policy import Policy
+
+            algo = Policy.from_checkpoint(
+                "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-11-06-23-23_e7633c3/cur_col_01/PPO_multi-uav-sim-v0_6dfd0_00001_1_obstacle_collision_weight=0.1000,stp_penalty=5,uav_collision_weight=0.1000,use_safe_action=Fals_2023-11-06_23-23-40/checkpoint_000301/policies/shared_policy"
+            )
+
+            from ray.rllib.models.preprocessors import get_preprocessor
+
+            prep = get_preprocessor(env.observation_space[0])
+            prep = prep(env.observation_space[0])
+        else:
+            use_policy = False
+            algo = (
+                PPOConfig()
+                .environment(
+                    env=exp_config["env_name"], env_config=exp_config["env_config"]
+                )
+                .framework("torch")
+                .rollouts(num_rollout_workers=0)
+                .debugging(log_level="ERROR", seed=exp_config["env_config"]["seed"])
+                .resources(
+                    num_gpus=0,
+                    placement_strategy=[{"cpu": 1}, {"cpu": 1}],
+                    num_gpus_per_learner_worker=0,
+                )
+                .multi_agent(
+                    policies={
+                        "shared_policy": (
+                            None,
+                            env.observation_space[0],
+                            env.action_space[0],
+                            {},
+                        )
+                    },
+                    # Always use "shared" policy.
+                    policy_mapping_fn=(
+                        lambda agent_id, episode, worker, **kwargs: "shared_policy"
+                    ),
+                )
+                .build()
+            )
+            # restore algorithm if need be:
+            # algo.restore(checkpoint)
 
     if exp_config["exp_config"]["safe_action_type"] == "nn_cbf":
         sl = SafetyLayer(env, exp_config["safety_layer_cfg"])
@@ -135,9 +154,14 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
                 actions[idx] = env.get_time_coord_action(env.uavs[idx])
                 # actions[idx] = env.get_tc_controller(env.uavs[idx])
             elif algo_to_run == "PPO":
-                actions[idx] = algo.compute_single_action(
-                    obs[idx], policy_id="shared_policy"
-                )
+                if use_policy:
+                    actions[idx] = algo.compute_single_action(prep.transform(obs[idx]))[
+                        0
+                    ]
+                else:
+                    actions[idx] = algo.compute_single_action(
+                        obs[idx], policy_id="shared_policy"
+                    )
 
             if exp_config["exp_config"]["safe_action_type"] is not None:
                 if exp_config["exp_config"]["safe_action_type"] == "cbf":
