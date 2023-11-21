@@ -51,17 +51,16 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
         # if checkpoint is not None:
         # algo = Algorithm.from_checkpoint(checkpoint)
         if checkpoint is not None:
+            # use policy here instead of algorithm because it's more efficient
             use_policy = True
             from ray.rllib.policy.policy import Policy
-
-            algo = Policy.from_checkpoint(
-                "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-11-06-23-23_e7633c3/cur_col_01/PPO_multi-uav-sim-v0_6dfd0_00001_1_obstacle_collision_weight=0.1000,stp_penalty=5,uav_collision_weight=0.1000,use_safe_action=Fals_2023-11-06_23-23-40/checkpoint_000301/policies/shared_policy"
-            )
-
             from ray.rllib.models.preprocessors import get_preprocessor
 
-            prep = get_preprocessor(env.observation_space[0])
-            prep = prep(env.observation_space[0])
+            algo = Policy.from_checkpoint(checkpoint)
+
+            # need preprocesor here if using policy
+            # https://docs.ray.io/en/releases-2.6.3/rllib/rllib-training.html
+            prep = get_preprocessor(env.observation_space[0])(env.observation_space[0])
         else:
             use_policy = False
             algo = (
