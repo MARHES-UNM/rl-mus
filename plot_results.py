@@ -375,7 +375,7 @@ def main():
         skip_legend=args.skip_legend,
     )
 
-    obs_group = df.groupby(["seed", "num_obs", "name", "target_v"])
+    obs_group = df.groupby(["seed", "num_obs", "name", "target_v", "tf"])
     obs_group.groups.keys()
 
     target_v = exp_config["env_config"]["target_v"]
@@ -393,6 +393,9 @@ def main():
             ],
             names,
             target_v,
+            [
+                20,
+            ],
         )
     )
 

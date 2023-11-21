@@ -253,11 +253,11 @@
                 // "DISPLAY": "192.168.1.18:0.0"
             },
             "args": [
-                // "--exp_config",
-                // "configs/exp_long_cfg_scitech_copy.json",
-                // "--exp_folder",
-                // "/home/prime/Documents/workspace/rl_multi_uav_sim/results/test_results/exp_2023-11-19-22-46_d8b75f4_copy",
-                // "--skip_legend"
+                "--exp_config",
+                "configs/exp_long_cfg_ppo.json",
+                "--exp_folder",
+                "/home/prime/Documents/workspace/rl_multi_uav_sim/results/test_results/exp_2023-11-21-11-15_0f2a08c",
+                "--skip_legend"
             ],
         },
         {
