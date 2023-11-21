@@ -1,3 +1,5 @@
+# See the main matplotlibrc for full list of options
+# https://github.com/matplotlib/matplotlib/blob/v3.8.0/lib/matplotlib/mpl-data/matplotlibrc
 # https://stackoverflow.com/questions/12444716/how-do-i-set-the-figure-title-and-axes-labels-font-size-in-matplotlib
 # https://matplotlib.org/stable/tutorials/introductory/customizing.html
 # https://github.com/matteocourthoud/Blog-Posts/blob/main/notebooks/src/utils.py
@@ -20,15 +22,18 @@
 # legend.fontsize:  x-small
 
 # length by height
-figure.figsize: 14, 12
+figure.figsize: 16, 14
 axes.titlesize : 35
-axes.labelsize : 20
-axes.labelpad : 13
+axes.labelsize : 25
+axes.labelpad : 20
 axes.grid : True
-lines.linewidth : 1
-lines.markersize : 1
-xtick.labelsize : 18
-ytick.labelsize : 18
-legend.fontsize:  18
+lines.linewidth : 5
+lines.markersize : 5
+xtick.labelsize : 25
+ytick.labelsize : 25
+legend.fontsize:  25
 #‘xx-small’, ‘x-small’, ‘small’, ‘medium’, ‘large’,‘x-large’, ‘xx-large’
 axes.prop_cycle: cycler('color', ['1f77b4', 'ff7f0e', '2ca02c', 'd62728', '9467bd', '8c564b', 'e377c2', '7f7f7f', 'bcbd22', '17becf'])
+
+# grids
+grid.linewidth: 1.0

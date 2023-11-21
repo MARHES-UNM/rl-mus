@@ -202,7 +202,7 @@ def plot_uav_states(
     all_figs.append(fig)
     ax5 = fig.add_subplot(111, projection="3d")
 
-    all_axes.extend([ax, ax21, ax3, ax31])
+    all_axes.extend([ax, ax1, ax21, ax3, ax31])
 
     c_idx = 0
     for idx in range(num_uavs):
