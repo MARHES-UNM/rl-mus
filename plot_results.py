@@ -202,7 +202,7 @@ def plot_uav_states(
     all_figs.append(fig)
     ax5 = fig.add_subplot(111, projection="3d")
 
-    all_axes.extend([ax, ax1, ax21, ax3, ax31])
+    all_axes.extend([ax21, ax22, ax23, ax24, ax, ax1, ax3, ax31])
 
     c_idx = 0
     for idx in range(num_uavs):
@@ -219,9 +219,9 @@ def plot_uav_states(
         ax24.set_ylabel("UAV Reward")
 
         ax.plot(time_step_list, uav_collision_list[idx], label=f"uav_{idx}")
-        ax.set_ylabel("UAV Collisions")
+        ax.set_ylabel("UAV_col")
         ax1.plot(time_step_list, obstacle_collision_list[idx], label=f"uav_{idx}")
-        ax1.set_ylabel("NCFO Collisions")
+        ax1.set_ylabel("NCFO_col")
         ax3.plot(time_step_list, rel_pad_dist[idx], label=f"uav_{idx}")
         ax3.set_ylabel("$\parallel \Delta \mathbf{r} \parallel$")
         ax31.plot(time_step_list, rel_pad_vel[idx], label=f"uav_{idx}")
@@ -264,6 +264,7 @@ def plot_uav_states(
         z = center[2] + radius * np.cos(v)
         ax5.plot_wireframe(x, y, z, color="r", alpha=0.1)
 
+    ax5.axis("equal")
     ax5.set_xlabel("X (m)")
     ax5.set_ylabel("Y (m)")
     ax5.set_zlabel("Z (m)")
@@ -291,7 +292,7 @@ def plot_uav_states(
             fig_.savefig(file_name)
             plt.close(fig_)
 
-        figsize = (10, 3)
+        figsize = (12, 4)
         fig_leg = plt.figure(figsize=figsize)
         ax_leg = fig_leg.add_subplot(111)
         # add the legend from the previous axes

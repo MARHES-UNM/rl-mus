@@ -101,7 +101,7 @@
                 20.0
             ],
             "group_title": "vary_num_obs_tgt_v_0",
-            "x_label": "Number of Obstacles"
+            "x_label": "Number of NCFOs"
         },
         {
             "group": [
@@ -127,7 +127,7 @@
                 0.0
             ],
             "group_title": "vary_tf_v_num_obs",
-            "x_label": "Expected Time of Arrival (s)"
+            "x_label": "Expected Time of Arrival, $t^f$ (s)"
         }
     ]
 }
