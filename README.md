@@ -1,1 +1,1 @@
-# rl-mus
+# RL Multi-UAV Simulator
