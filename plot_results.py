@@ -131,7 +131,7 @@ def plot_groups(groups, items, output_folder, plot_type="box", skip_legend=False
     # https://stackoverflow.com/questions/4534480/get-legend-as-a-separate-picture-in-matplotlib
     # then create a new image
     # adjust the figure size as necessary
-    figsize = (12, 3)
+    figsize = (18, 2)
     fig_leg = plt.figure(figsize=figsize)
     ax_leg = fig_leg.add_subplot(111)
     # add the legend from the previous axes
@@ -292,7 +292,7 @@ def plot_uav_states(
             fig_.savefig(file_name)
             plt.close(fig_)
 
-        figsize = (12, 4)
+        figsize = (18,2)
         fig_leg = plt.figure(figsize=figsize)
         ax_leg = fig_leg.add_subplot(111)
         # add the legend from the previous axes
