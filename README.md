@@ -310,3 +310,8 @@ https://github.com/akjayant/PPO_Lagrangian_PyTorch/blob/main/ppo.py
 ### Creating custom environments
 https://blog.paperspace.com/creating-custom-environments-openai-gym/
 https://gymnasium.farama.org/api/env/#gymnasium.Env.render_mode
+
+
+capture screen
+https://trac.ffmpeg.org/wiki/Capture/Desktop
+ffmpeg -video_size 1360x768 -framerate 25 -f x11grab -i :0.0 output.mp4

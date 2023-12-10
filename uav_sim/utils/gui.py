@@ -7,7 +7,6 @@ from matplotlib.patches import Circle
 import numpy as np
 import mpl_toolkits.mplot3d.art3d as art3d
 
-
 class Sprite:
     def __init__(self, ax, t_lim=30):
         self.t_lim = t_lim

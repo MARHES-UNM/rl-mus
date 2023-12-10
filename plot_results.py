@@ -15,7 +15,8 @@ from matplotlib import pyplot as plt
 import mpl_toolkits.mplot3d.art3d as art3d
 import itertools
 
-plt.style.use(r"configs/paper_plot_style.mplstyle")
+# plt.style.use(r"configs/paper_plot_style.mplstyle")
+plt.style.use("default")
 import seaborn as sns
 import json
 import os
