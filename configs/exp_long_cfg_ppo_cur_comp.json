@@ -22,14 +22,14 @@
                 "run": "PPO",
                 "checkpoint": "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-11-07-08-16_80188c6/low_stp/PPO_multi-uav-sim-v0_d51c0_00000_0_beta=0.3000,d_thresh=0.0100,obstacle_collision_weight=0.1000,stp_penalty=5,t_go_max=2.0000,tgt__2023-11-07_08-16-16/checkpoint_000301/policies/shared_policy",
                 "safe_action_type": null,
-                "label": "PPO_NO_CUR"
+                "label": "POETIC_NO_CUR"
             },
             {
                 "name": "ppo",
                 "run": "PPO",
                 "checkpoint": "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-11-06-23-23_e7633c3/cur_col_01/PPO_multi-uav-sim-v0_6dfd0_00001_1_obstacle_collision_weight=0.1000,stp_penalty=5,uav_collision_weight=0.1000,use_safe_action=Fals_2023-11-06_23-23-40/checkpoint_000301/policies/shared_policy",
                 "safe_action_type": null,
-                "label": "PPO"
+                "label": "POETIC"
             }
         ],
         "seeds": [
