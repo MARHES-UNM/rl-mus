@@ -1,0 +1,65 @@
+{
+    "env_config": {
+        "target_v": [
+            0.0
+        ],
+        "max_num_obstacles": [
+            4
+        ],
+        "time_final": [
+            20
+        ]
+    },
+    "exp_config": {
+        "max_num_episodes": 1,
+        "runs": [
+            {
+                "name": "cc_none",
+                "run": "cc",
+                "checkpoint": null,
+                "safe_action_type": null,
+                "label": "TTC"
+            },
+            {
+                "name": "cc_sca",
+                "run": "cc",
+                "checkpoint": null,
+                "safe_action_type": "sca",
+                "label": "TTC-CA"
+            },
+            {
+                "name": "cc_cbf",
+                "run": "cc",
+                "checkpoint": null,
+                "safe_action_type": "cbf",
+                "label": "MORRIS"
+            }
+        ],
+        "seeds": [
+            50
+        ]
+    },
+    "safety_layer_cfg": {
+        "checkpoint_dir": null
+    },
+    "items_to_plot": {
+        "uav_collision": "Total UAV Collisions",
+        "obs_collision": "Total NCFO Collision",
+        "uav_done_dt": "Mean UAV Time Arrival Error (s)",
+        "uav_done": "Total UAV Landed",
+        "time_total_s": "Total Experiment Runtime (s)"
+    },
+    "groups_to_plot": [
+        {
+            "group": [
+                "target_v"
+            ],
+            "group_x": "name",
+            "group_key": [
+                0.0
+            ],
+            "group_title": "overall",
+            "x_label": ""
+        }
+    ]
+}

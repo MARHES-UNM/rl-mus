@@ -1,0 +1,290 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "env": {
+                
+            }
+        },
+        {
+            "name": "train_agent",
+            "type": "python",
+            "request": "launch",
+            "program": "${cwd}/train_agent.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "cwd": "${workspaceFolder}",
+            "env": {
+                // 
+            },
+            "args": [
+                // "--gpu",
+                // "1"
+            ]
+        },
+        {
+            "name": "train_multi_uav",
+            "type": "python",
+            "request": "launch",
+            "program": "${cwd}/multi_agent_shared_parameter.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "cwd": "${workspaceFolder}",
+            "env": {
+                // 
+            },
+            "args": [
+                // "--gpu",
+                // "1"
+            ]
+        },
+        {
+            "name": "Run Multi Experiment",
+            "type": "python",
+            "request": "launch",
+            "program": "${cwd}/run_multi_experiment.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}",
+            "env": {
+                // 
+            },
+            "args": [
+                "--num_eps",
+                "1",
+                "--exp_config",
+                "configs/exp_basic_cfg.json"
+            ]
+        },
+        {
+            "name": "safety_layer: test",
+            "type": "python",
+            "request": "launch",
+            "program": "${cwd}/train_safety_layer.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}",
+            "env": {
+                // 
+            },
+            "args": [
+                "test",
+                // "--plot_results"
+                // "--render"
+            ]
+        },
+        {
+            "name": "unittest_gui",
+            "type": "python",
+            "request": "launch",
+            "module": "unittest",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}",
+            "env": {
+                
+            },
+            "args": [
+                "-v",
+                "${cwd}/tests/test_gui.py"
+            ]
+        },
+        {
+            "name": "run_experiment",
+            "type": "python",
+            "request": "launch",
+            "program": "${cwd}/run_experiment.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}",
+            "env": {
+                // 
+            },
+            "args": [
+                "--plot_results",
+            ]
+        },
+        {
+            "name": "Run All Unit Tests",
+            "type": "python",
+            "request": "launch",
+            "module": "unittest",
+            "justMyCode": true,
+            "env": {
+            },
+            "args": [
+                "-v"
+            ]
+        },
+        {
+            "name": "unittest_curriculum_env",
+            "type": "python",
+            "request": "launch",
+            "module": "unittest",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}",
+            "env": {
+                // 
+            },
+            "args": [
+                "-v",
+                "${cwd}/tests/test_curriculum_env.py"
+            ]
+        },
+        {
+            "name": "unittest_target",
+            "type": "python",
+            "request": "launch",
+            "module": "unittest",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}",
+            "env": {
+                
+            },
+            "args": [
+                "-v",
+                "${cwd}/tests/test_target.py"
+            ]
+        },
+        {
+            "name": "unittest_quad_2d",
+            "type": "python",
+            "request": "launch",
+            "module": "unittest",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}",
+            "env": {
+            },
+            "args": [
+                "-v",
+                "tests.test_quad_2d.TestQuad2D.test_f_dot_torch",
+                "--failfast"
+            ]
+        },
+        {
+            "name": "unittest_uav",
+            "type": "python",
+            "request": "launch",
+            "module": "unittest",
+            // "program": "${cwd}/tests/test_uav.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}",
+            "env": {
+            },
+            "args": [
+                "-v",
+                "${cwd}/tests/test_uav.py",
+                // "tests.test_uav.TestUav.test_controller_des_controller",
+                // "tests.test_uav.TestUav.test_traj_line",
+                // "tests.test_uav.TestUav.test_controller_des_pos",
+                "--failfast"
+            ]
+        },
+        {
+            "name": "unittest_uav_sim",
+            "type": "python",
+            "request": "launch",
+            "module": "unittest",
+            // "program": "${cwd}/uav_sim/tests/test_uav_sim.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}",
+            "env": {
+                
+            },
+            "args": [
+                "-v",
+                "tests.test_uav_sim.TestUavSim.test_constraints",
+                // "tests.test_uav_sim.TestUavSim.test_time_coordinated_control_mat",
+                // "tests.test_uav_sim.TestUavSim.test_lqr_landing_cbf",
+                // "tests.test_uav_sim.TestUavSim.test_time_coordinated_control_mat",
+                // "tests.test_uav_sim.TestUavSim.test_landing_minimum_traj",
+                // "tests.test_uav_sim.TestUavSim.test_observation_space",
+                "--failfast"
+            ]
+        },
+        {
+            "name": "unittest_replay_buffer",
+            "type": "python",
+            "request": "launch",
+            "module": "unittest",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}",
+            "env": {
+                
+            },
+            "args": [
+                "-v",
+                "tests.test_replay_buffer",
+                "--failfast"
+            ]
+        },
+        {
+            "name": "plot_results",
+            "type": "python",
+            "request": "launch",
+            "program": "${cwd}/plot_results.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}",
+            "env": {
+                // 
+            },
+            "args": [
+                "--exp_config",
+                "configs/exp_long_cfg_ppo.json",
+                "--exp_folder",
+                "/home/prime/Documents/workspace/rl_multi_uav_sim/results/test_results/exp_2023-11-21-11-15_0f2a08c",
+                "--skip_legend"
+            ],
+        },
+        {
+            "name": "unittest_safety_layer",
+            "type": "python",
+            "request": "launch",
+            "module": "unittest",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}",
+            "env": {
+                // 
+            },
+            "args": [
+                "-v",
+                "tests.test_safety_layer",
+                "--failfast"
+            ]
+        },
+        {
+            "name": "unittest_test_utils",
+            "type": "python",
+            "request": "launch",
+            "module": "unittest",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}",
+            "env": {
+                
+            },
+            "args": [
+                "-v",
+                "tests.test_utils",
+                "--failfast"
+            ]
+        }
+    ]
+}
