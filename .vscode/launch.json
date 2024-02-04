@@ -107,13 +107,13 @@
             "justMyCode": true,
             "cwd": "${workspaceFolder}",
             "env": {
-                // "DISPLAY": "192.168.1.18:0.0"
+                "DISPLAY": "192.168.1.10:0.0"
             },
             "args": [
                 // "--load_config",
                 // "/home/prime/Documents/workspace/rl_multi_uav_sim/configs/exp_sim_config.cfg",
-                "--plot_results",
-                // "--render"
+                // "--plot_results",
+                "--render"
             ]
         },
         {

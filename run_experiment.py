@@ -229,6 +229,7 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
 
             if render:
                 im = env.render(mode="rgb_array", done=True)
+                plt.show()
                 # fig, ax = plt.subplots()
                 # im = ax.imshow(im)
                 # plt.show()
