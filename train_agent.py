@@ -143,7 +143,7 @@ def train(args):
 
     args.config["env_config"]["use_safe_action"] = tune.grid_search([False])
     args.config["env_config"]["tgt_reward"] = 100
-    args.config["env_config"]["stp_penalty"] = tune.grid_search([0, 0.5, 1])
+    args.config["env_config"]["stp_penalty"] = tune.grid_search([5])
     args.config["env_config"]["beta"] = 0.3
     args.config["env_config"]["d_thresh"] = 0.01
     args.config["env_config"]["t_go_max"] = 2.0
