@@ -419,9 +419,9 @@ class UavSim(MultiAgentEnv):
         # step uavs
         self.alive_agents = set()
         for i, action in actions.items():
-            # Done uavs don't move
-            if self.uavs[i].done:
-                continue
+            # # Done uavs don't move
+            # if self.uavs[i].done:
+            #     continue
             self.alive_agents.add(i)
 
             if self._use_safe_action:
@@ -442,12 +442,17 @@ class UavSim(MultiAgentEnv):
         for obstacle in self.obstacles:
             obstacle.step(np.array([self.target.vx, self.target.vy]))
 
-        obs = {uav.id: self._get_obs(uav) for uav in self.uavs.values()}
-        reward = {uav.id: self._get_reward(uav) for uav in self.uavs.values()}
-        info = {uav.id: self._get_info(uav) for uav in self.uavs.values()}
+        obs, reward, info = {}, {}, {}
+        for uav_id in self.alive_agents:
+            obs[uav_id] = self._get_obs(self.uavs[uav_id])
+            reward[uav_id] = self._get_reward(self.uavs[uav_id])
+            info[uav_id] = self._get_info(self.uavs[uav_id])
+        # obs = {uav.id: self._get_obs(uav) for uav in self.uavs.values()}
+        # reward = {uav.id: self._get_reward(uav) for uav in self.uavs.values()}
+        # info = {uav.id: self._get_info(uav) for uav in self.uavs.values()}
 
         # calculate done for each agent
-        done = {self.uavs[id].id: self.uavs[id].done for id in self.alive_agents}
+        done = {self.uavs[uav_id].id: self.uavs[uav_id].done for uav_id in self.alive_agents}
         done["__all__"] = (
             all(v for v in done.values()) or self.time_elapsed >= self.max_time
         )
