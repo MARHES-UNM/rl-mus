@@ -23,6 +23,7 @@ from ray.rllib.algorithms.callbacks import DefaultCallbacks
 # os.environ["PL_TORCH_DISTRIBUTED_BACKEND"] = "gloo"
 
 PATH = Path(__file__).parent.absolute().resolve()
+RESULTS_DIR = Path.home() / "ray_results"
 
 formatter = "%(asctime)s: %(name)s - %(levelname)s - <%(module)s:%(funcName)s:%(lineno)d> - %(message)s"
 logging.basicConfig(
@@ -128,9 +129,9 @@ def train(args):
         .framework(args.framework)
         # .callbacks(multi_callbacks)
         .rollouts(
-            num_rollout_workers=1
-            if args.smoke_test
-            else args.num_rollout_workers,  # set 0 to main worker run sim
+            num_rollout_workers=(
+                1 if args.smoke_test else args.num_rollout_workers
+            ),  # set 0 to main worker run sim
             num_envs_per_worker=args.num_envs_per_worker,
             batch_mode="complete_episodes",
         )
@@ -273,9 +274,11 @@ if __name__ == "__main__":
         branch_hash = get_git_hash()
 
         dir_timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M")
-        args.log_dir = (
-            f"./results/{args.run}/{args.env_name}_{dir_timestamp}_{branch_hash}"
-        )
+        # args.log_dir = (
+        #     f"./results/{args.run}/{args.env_name}_{dir_timestamp}_{branch_hash}"
+        # )
+        log_dir = f"train/{args.run}/{args.env_name}_{dir_timestamp}_{branch_hash}/{args.name}"
+        args.log_dir = RESULTS_DIR / log_dir
 
         logdir = Path(args.log_dir)
 
