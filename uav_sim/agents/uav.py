@@ -158,7 +158,7 @@ class Target(Entity):
                 [
                     pad.x,
                     pad.y,
-                    0,
+                    pad.z,
                     self.vx,
                     self.vy,
                     0,
@@ -227,7 +227,7 @@ class Target(Entity):
         self.psi = self.wrap_angle(self.psi)
 
         self._state = np.array(
-            [self.x, self.y, 0, self.vx, self.vy, 0, self.psi, self.w]
+            [self.x, self.y, self.z, self.vx, self.vy, 0, self.psi, self.w]
         )
 
         self.update_pads_state()
