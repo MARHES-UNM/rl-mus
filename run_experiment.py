@@ -208,6 +208,11 @@ def test(args):
             print(f"******************seed: {args.seed}")
             seed_val = none_or_int(args.seed)
             args.config["env_config"]["seed"] = seed_val
+        if args.checkpoint:
+            args.config["exp_config"]["checkpoint"] = args.checkpoint
+
+        if args.uav_type:
+            args.config["env_config"]["uav_type"] = args.uav_type
 
         max_num_episodes = args.max_num_episodes
         experiment_num = args.experiment_num
@@ -517,10 +522,11 @@ def parse_arguments():
     subparsers = parser.add_subparsers(dest="command")
     test_sub = subparsers.add_parser("test")
     test_sub.add_argument("--checkpoint")
+    test_sub.add_argument("--uav_type", type=str)
     test_sub.add_argument("--max_num_episodes", type=int, default=1)
     test_sub.add_argument("--experiment_num", type=int, default=0)
     test_sub.add_argument("--render", action="store_true", default=False)
-    test_sub.add_argument("--write_exp", action="store_true")
+    test_sub.add_argument("--write_exp", action="store_true", default=False)
     test_sub.add_argument("--plot_results", action="store_true", default=False)
     test_sub.add_argument("--tune_run", action="store_true", default=False)
     test_sub.add_argument("--seed")

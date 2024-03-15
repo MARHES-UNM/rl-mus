@@ -426,9 +426,9 @@ class UavSim(MultiAgentEnv):
         # step uavs
         self.alive_agents = set()
         for i, action in actions.items():
-            # # Done uavs don't move
-            # if self.uavs[i].done:
-            #     continue
+            # Done uavs don't move
+            if self.uavs[i].done:
+                continue
             self.alive_agents.add(i)
 
             if self._use_safe_action:

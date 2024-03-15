@@ -30,7 +30,7 @@
         "seed": 123,
         "start_level": 1,
         "stp_penalty": 5,
-        "t_go_max": 1.0,
+        "t_go_max": 2.0,
         "t_go_n": 1,
         "target_v": 0.0,
         "target_w": 0,
