@@ -25,6 +25,7 @@
         "obstacle_collision_weight": 0.1,
         "obstacle_radius": 1,
         "pad_r": 0.1,
+        "render": false,
         "render_mode": "human",
         "seed": 123,
         "start_level": 1,
@@ -43,9 +44,10 @@
         "z_low": 0.2
     },
     "exp_config": {
-        "run": "cc",
+        "run": "PPO",
         "checkpoint": null,
-        "safe_action_type": null
+        "safe_action_type": null,
+        "framework": "torch"
     },
     "safety_layer_cfg": {
         "batch_size": 256,

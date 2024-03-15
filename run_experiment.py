@@ -4,9 +4,13 @@ from time import time
 from matplotlib import pyplot as plt
 import numpy as np
 import ray
+from ray import air, tune
 from uav_sim.envs.uav_sim import UavSim
 from pathlib import Path
 from ray.rllib.algorithms.ppo import PPOConfig
+from ray.tune.registry import get_trainable_cls
+from uav_sim.utils.callbacks import TrainCallback
+from ray.rllib.algorithms.callbacks import make_multi_callbacks
 
 import os
 import logging
@@ -17,17 +21,208 @@ from plot_results import plot_uav_states
 
 from uav_sim.utils.utils import get_git_hash
 
+
 PATH = Path(__file__).parent.absolute().resolve()
-
-formatter = "%(asctime)s: %(name)s - %(levelname)s - <%(module)s:%(funcName)s:%(lineno)d> - %(message)s"
-logging.basicConfig(
-    # filename=os.path.join(app_log_path, log_file_name),
-    format=formatter
-)
+RESULTS_DIR = Path.home() / "ray_results"
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
 max_num_cpus = os.cpu_count() - 1
+
+
+def setup_stream(logging_level=logging.DEBUG):
+    # Turns on logging to console
+    ch = logging.StreamHandler()
+    ch.setLevel(logging_level)
+    formatter = logging.Formatter(
+        "%(asctime)s - %(name)s - %(levelname)s - "
+        "<%(module)s:%(funcName)s:%(lineno)s> - %(message)s",
+        "%Y-%m-%d %H:%M:%S",
+    )
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
+    logger.setLevel(logging_level)
+
+
+def get_obs_act_space(config):
+
+    # Need to create a temporary environment to get obs and action space
+    env_config = config["env_config"]
+    render = env_config["render"]
+    env_config["render"] = False
+    temp_env = UavSim(env_config)
+
+    env_obs_space = temp_env.observation_space[0]
+    env_action_space = temp_env.action_space[0]
+    temp_env.close()
+    env_config["render"] = render
+
+    return env_obs_space, env_action_space
+
+
+def get_algo_config(config, env_obs_space, env_action_space):
+
+    algo_config = (
+        get_trainable_cls(config["exp_config"]["run"])
+        .get_default_config()
+        .environment(env=config["env_name"], env_config=config["env_config"])
+        .framework(config["exp_config"]["framework"])
+        .rollouts(
+            num_rollout_workers=0,
+            # observation_filter="MeanStdFilter",  # or "NoFilter"
+        )
+        .debugging(log_level="ERROR", seed=config["env_config"]["seed"])
+        .multi_agent(
+            policies={
+                "shared_policy": (
+                    None,
+                    env_obs_space,
+                    env_action_space,
+                    {},
+                )
+            },
+            # Always use "shared" policy.
+            policy_mapping_fn=(
+                lambda agent_id, episode, worker, **kwargs: "shared_policy"
+            ),
+        )
+    )
+
+    return algo_config
+
+
+def train(args):
+
+    # args.local_mode = True
+    ray.init(local_mode=args.local_mode, num_gpus=1)
+
+    # We get the spaces here before test vary the experiment treatments (factors)
+    env_obs_space, env_action_space = get_obs_act_space(args.config)
+
+    # Vary treatments here
+    num_gpus = int(os.environ.get("RLLIB_NUM_GPUS", args.gpu))
+    args.config["env_config"]["num_uavs"] = tune.grid_search([4])
+    args.config["env_config"]["d_thresh"] = tune.grid_search([0.1, 0.01])
+    args.config["env_config"]["target_pos_rand"] = True
+    # args.config["env_config"]["use_safe_action"] = tune.grid_search([False])
+
+    args.config["env_config"]["tgt_reward"] = 10
+    args.config["env_config"]["stp_penalty"] = 0.1
+    args.config["env_config"]["time_final"] = 8
+    args.config["env_config"]["t_go_max"] = 2.0
+
+    args.config["env_config"]["beta"] = 0.3
+    args.config["env_config"]["beta_vel"] = 0.0
+    args.config["env_config"]["crash_penalty"] = 1.0
+    args.config["env_config"]["uav_collision_weight"] = 0.0
+
+    obs_filter = "NoFilter"
+    callback_list = [TrainCallback]
+    # multi_callbacks = make_multi_callbacks(callback_list)
+    # Common config params: https://docs.ray.io/en/latest/rllib/rllib-training.html#configuring-rllib-algorithms
+    train_config = (
+        get_algo_config(args.config, env_obs_space, env_action_space).rollouts(
+            num_rollout_workers=(
+                1 if args.smoke_test else args.num_rollout_workers
+            ),  # set 0 to main worker run sim
+            num_envs_per_worker=args.num_envs_per_worker,
+            # create_env_on_local_worker=True,
+            # rollout_fragment_length="auto",
+            batch_mode="complete_episodes",
+            observation_filter=obs_filter,  # or "NoFilter"
+        )
+        # Use GPUs iff `RLLIB_NUM_GPUS` env var set to > 0.
+        .resources(
+            num_gpus=0 if args.smoke_test else num_gpus,
+            num_learner_workers=1,
+            num_gpus_per_learner_worker=0 if args.smoke_test else args.gpu,
+        )
+        # See for changing model options https://docs.ray.io/en/latest/rllib/rllib-models.html
+        # .model()
+        # See for specific ppo config: https://docs.ray.io/en/latest/rllib/rllib-algorithms.html#ppo
+        # See for more on PPO hyperparameters: https://medium.com/aureliantactics/ppo-hyperparameters-and-ranges-6fc2d29bccbe
+        .training(
+            # https://docs.ray.io/en/latest/rllib/rllib-models.html
+            # model={"fcnet_hiddens": [512, 512, 512]},
+            lr=5e-5,
+            use_gae=True,
+            use_critic=True,
+            lambda_=0.95,
+            train_batch_size=65536,
+            gamma=0.99,
+            num_sgd_iter=32,
+            sgd_minibatch_size=4096,
+            vf_clip_param=10.0,
+            vf_loss_coeff=0.5,
+            clip_param=0.2,
+            grad_clip=1.0,
+            # entropy_coeff=0.0,
+            # # seeing if this solves the error:
+            # # https://neptune.ai/blog/understanding-gradient-clipping-and-how-it-can-fix-exploding-gradients-problem
+            # # Expected parameter loc (Tensor of shape (4096, 3)) of distribution Normal(loc: torch.Size([4096, 3]), scale: torch.Size([4096, 3])) to satisfy the constraint Real(),
+            # kl_coeff=1.0,
+            # kl_target=0.0068,
+        )
+        # .reporting(keep_per_episode_custom_metrics=True)
+        # .evaluation(
+        #     evaluation_interval=10, evaluation_duration=10  # default number of episodes
+        # )
+    )
+
+    multi_callbacks = make_multi_callbacks(callback_list)
+    train_config.callbacks(multi_callbacks)
+
+    stop = {
+        "training_iteration": 1 if args.smoke_test else args.stop_iters,
+        "timesteps_total": args.stop_timesteps,
+    }
+
+    # # # trainable_with_resources = tune.with_resources(args.run, {"cpu": 18, "gpu": 1.0})
+    # # # If you have 4 CPUs and 1 GPU on your machine, this will run 1 trial at a time.
+    # # trainable_with_cpu_gpu = tune.with_resources(algo, {"cpu": 2, "gpu": 1})
+    tuner = tune.Tuner(
+        args.run,
+        # trainable_with_cpu_gpu,
+        param_space=train_config.to_dict(),
+        # tune_config=tune.TuneConfig(num_samples=10),
+        run_config=air.RunConfig(
+            stop=stop,
+            local_dir=args.log_dir,
+            name=args.name,
+            checkpoint_config=air.CheckpointConfig(
+                num_to_keep=100,
+                # checkpoint_score_attribute="",
+                checkpoint_at_end=True,
+                checkpoint_frequency=5,
+            ),
+        ),
+    )
+
+    results = tuner.fit()
+
+
+def test(args):
+    if args.tune_run:
+        pass
+    else:
+        if args.seed:
+            print(f"******************seed: {args.seed}")
+            seed_val = none_or_int(args.seed)
+            args.config["env_config"]["seed"] = seed_val
+
+        max_num_episodes = args.max_num_episodes
+        experiment_num = args.experiment_num
+        args.config["render"] = args.render
+        args.config["plot_results"] = args.plot_results
+
+        if args.write_exp:
+            args.config["write_experiment"] = True
+
+            output_folder = Path(args.log_dir)
+            if not output_folder.exists():
+                output_folder.mkdir(parents=True, exist_ok=True)
+
+            args.config["fname"] = output_folder / "result.json"
+
+        experiment(args.config, max_num_episodes, experiment_num)
 
 
 def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
@@ -37,15 +232,15 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
     render = exp_config["render"]
     plot_results = exp_config["plot_results"]
 
-    env = UavSim(env_config)
-
     algo_to_run = exp_config["exp_config"].setdefault("run", "PPO")
     if algo_to_run not in ["cc", "PPO"]:
         print("Unrecognized algorithm. Exiting...")
         exit(99)
 
+    env = UavSim(env_config)
     if algo_to_run == "PPO":
         checkpoint = exp_config["exp_config"].setdefault("checkpoint", None)
+        env_obs_space, env_action_space = get_obs_act_space(exp_config)
 
         # Reload the algorithm as is from training.
         # if checkpoint is not None:
@@ -60,9 +255,11 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
 
             # need preprocesor here if using policy
             # https://docs.ray.io/en/releases-2.6.3/rllib/rllib-training.html
-            prep = get_preprocessor(env.observation_space[0])(env.observation_space[0])
+            prep = get_preprocessor(env_action_space)(env_obs_space)
         else:
             use_policy = False
+            env.close()
+
             algo = (
                 PPOConfig()
                 .environment(
@@ -92,6 +289,8 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
                 )
                 .build()
             )
+
+            env = algo.workers.local_worker().env
             # restore algorithm if need be:
             # algo.restore(checkpoint)
 
@@ -289,20 +488,69 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
     logger.debug("done")
 
 
+def none_or_int(value):
+    if value == "None":
+        return None
+    return int(value)
+
+
 def parse_arguments():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--load_config", default=f"{PATH}/configs/sim_config.cfg")
+    parser.add_argument("--load_config", default=f"{PATH}/configs/sim_config.json")
     parser.add_argument(
         "--log_dir",
     )
-    parser.add_argument("-d", "--debug")
-    parser.add_argument("-v", help="version number of experiment")
-    parser.add_argument("--max_num_episodes", type=int, default=1)
-    parser.add_argument("--experiment_num", type=int, default=0)
-    parser.add_argument("--env_name", type=str, default="multi-uav-sim-v0")
-    parser.add_argument("--render", action="store_true", default=False)
-    parser.add_argument("--write_exp", action="store_true")
-    parser.add_argument("--plot_results", action="store_true", default=False)
+
+    parser.add_argument(
+        "--run", type=str, default="PPO", help="The RLlib-registered algorithm to use."
+    )
+    parser.add_argument("--name", help="Name of experiment.", default="debug")
+    parser.add_argument(
+        "--framework",
+        choices=["tf", "tf2", "torch"],
+        default="torch",
+        help="The DL framework specifier.",
+    )
+    parser.add_argument("--env_name", type=str, default="rl-mus-v0")
+
+    subparsers = parser.add_subparsers(dest="command")
+    test_sub = subparsers.add_parser("test")
+    test_sub.add_argument("--checkpoint")
+    test_sub.add_argument("--max_num_episodes", type=int, default=1)
+    test_sub.add_argument("--experiment_num", type=int, default=0)
+    test_sub.add_argument("--render", action="store_true", default=False)
+    test_sub.add_argument("--write_exp", action="store_true")
+    test_sub.add_argument("--plot_results", action="store_true", default=False)
+    test_sub.add_argument("--tune_run", action="store_true", default=False)
+    test_sub.add_argument("--seed")
+
+    test_sub.set_defaults(func=test)
+
+    train_sub = subparsers.add_parser("train")
+    train_sub.add_argument("--smoke_test", action="store_true", help="run quicktest")
+
+    train_sub.add_argument(
+        "--stop_iters", type=int, default=1000, help="Number of iterations to train."
+    )
+    train_sub.add_argument(
+        "--stop_timesteps",
+        type=int,
+        default=int(30e6),
+        help="Number of timesteps to train.",
+    )
+
+    train_sub.add_argument(
+        "--local-mode",
+        action="store_true",
+        help="Init Ray in local mode for easier debugging.",
+    )
+
+    train_sub.add_argument("--checkpoint", type=str)
+    train_sub.add_argument("--cpu", type=int, default=8)
+    train_sub.add_argument("--gpu", type=int, default=0.50)
+    train_sub.add_argument("--num_envs_per_worker", type=int, default=12)
+    train_sub.add_argument("--num_rollout_workers", type=int, default=8)
+    train_sub.set_defaults(func=train)
 
     args = parser.parse_args()
 
@@ -312,41 +560,27 @@ def parse_arguments():
 def main():
     args = parse_arguments()
 
-    if args.load_config:
-        with open(args.load_config, "rt") as f:
-            args.config = json.load(f)
+    setup_stream()
 
-    if not args.config["exp_config"]["run"] == "cc":
-        if args.env_name == "multi-uav-sim-v0":
-            args.config["env_name"] = args.env_name
-            tune.register_env(
-                args.config["env_name"],
-                lambda env_config: UavSim(env_config=env_config),
-            )
+    with open(args.load_config, "rt") as f:
+        args.config = json.load(f)
+
+    args.config["env_name"] = args.env_name
 
     logger.debug(f"config: {args.config}")
 
     if not args.log_dir:
         branch_hash = get_git_hash()
 
+        num_uavs = args.config["env_config"]["num_uavs"]
+        num_obs = args.config["env_config"]["max_num_obstacles"]
         dir_timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M")
-        args.log_dir = f"./results/test_results/exp_{dir_timestamp}_{branch_hash}"
+        log_dir = f"{args.func.__name__}/{args.run}/{args.env_name}_{dir_timestamp}_{branch_hash}_{num_uavs}u_{num_obs}o/{args.name}"
+        args.log_dir = RESULTS_DIR / log_dir
 
-    max_num_episodes = args.max_num_episodes
-    experiment_num = args.experiment_num
-    args.config["render"] = args.render
-    args.config["plot_results"] = args.plot_results
+    args.log_dir = Path(args.log_dir).resolve()
 
-    if args.write_exp:
-        args.config["write_experiment"] = True
-
-        output_folder = Path(args.log_dir)
-        if not output_folder.exists():
-            output_folder.mkdir(parents=True, exist_ok=True)
-
-        args.config["fname"] = output_folder / "result.json"
-
-    experiment(args.config, max_num_episodes, experiment_num)
+    args.func(args)
 
 
 if __name__ == "__main__":
