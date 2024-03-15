@@ -43,6 +43,7 @@ def parse_arguments():
         "--log_dir",
     )
     parser.add_argument("--name", help="Name of experiment.", default="debug")
+    parser.add_argument("--uav_type", help="Use nonelinear or base dynamics.")
     parser.add_argument(
         "--run", type=str, default="PPO", help="The RLlib-registered algorithm to use."
     )
@@ -246,6 +247,10 @@ if __name__ == "__main__":
     if args.load_config:
         with open(args.load_config, "rt") as f:
             args.config = json.load(f)
+
+    if args.uav_type is not None:
+        args.config["env_config"]["uav_type"] = args.uav_type
+
     if not args.log_dir:
         branch_hash = get_git_hash()
 
