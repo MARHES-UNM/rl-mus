@@ -66,7 +66,7 @@ class UavSim(MultiAgentEnv):
         self.env_max_h = env_config.setdefault("env_max_h", 4)
         self._z_high = env_config.setdefault("z_high", 4)
         self._z_high = min(self.env_max_h, self._z_high)
-        self._z_low = env_config.setdefault("z_low", 0.1)
+        self._z_low = env_config.setdefault("z_low", 4)
         self._z_low = max(0, self._z_low)
         self.pad_r = env_config.setdefault("pad_r", 0.01)
         self.target_v = env_config.setdefault("target_v", 0)

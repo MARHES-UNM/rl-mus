@@ -99,19 +99,21 @@ def train(args):
 
     # Vary treatments here
     num_gpus = int(os.environ.get("RLLIB_NUM_GPUS", args.gpu))
-    args.config["env_config"]["num_uavs"] = tune.grid_search([4])
+    args.config["env_config"]["num_uavs"] = 4
     args.config["env_config"]["uav_type"] = tune.grid_search(["Uav", "UavBase"])
     args.config["env_config"]["use_safe_action"] = tune.grid_search([False, True])
     args.config["env_config"]["target_pos_rand"] = True
 
-    args.config["env_config"]["tgt_reward"] = 10
-    args.config["env_config"]["stp_penalty"] = 0.1
+    args.config["env_config"]["tgt_reward"] = 100
+    args.config["env_config"]["stp_penalty"] = 5
+    args.config["env_config"]["beta"] = 0.3
+    args.config["env_config"]["d_thresh"] = 0.01
     args.config["env_config"]["time_final"] = 8
     args.config["env_config"]["t_go_max"] = 2.0
+    args.config["env_config"]["obstacle_collision_weight"] = 0.1
+    args.config["env_config"]["uav_collision_weight"] = 0.1
 
-    args.config["env_config"]["beta"] = 0.3
-    args.config["env_config"]["crash_penalty"] = 1.0
-    # args.config["env_config"]["uav_collision_weight"] = 1.0
+    args.config["env_config"]["crash_penalty"] = 10
 
     obs_filter = "NoFilter"
     callback_list = [TrainCallback]
@@ -254,7 +256,7 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
 
             # need preprocesor here if using policy
             # https://docs.ray.io/en/releases-2.6.3/rllib/rllib-training.html
-            prep = get_preprocessor(env_action_space)(env_obs_space)
+            prep = get_preprocessor(env_obs_space)(env_obs_space)
         else:
             use_policy = False
             env.close()

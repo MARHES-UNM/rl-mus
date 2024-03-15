@@ -96,6 +96,14 @@ def train(args):
     temp_env = UavSim(args.config)
     num_gpus = int(os.environ.get("RLLIB_NUM_GPUS", args.gpu))
 
+    # args.config["env_config"]["use_safe_action"] = tune.grid_search([False, True])
+    # args.config["env_config"]["tgt_reward"] = tune.grid_search([100])
+    # args.config["env_config"]["stp_penalty"] = tune.grid_search([5])
+    # args.config["env_config"]["beta"] = tune.grid_search([0.3])
+    # # args.config["env_config"]["beta"] = tune.grid_search([0.3])
+    # args.config["env_config"]["d_thresh"] = tune.grid_search([0.01])
+    # args.config["env_config"]["t_go_max"] = tune.grid_search([2.0])
+
     callback_list = [TrainCallback]
     # multi_callbacks = make_multi_callbacks(callback_list)
     # info on common configs: https://docs.ray.io/en/latest/rllib/rllib-training.html#specifying-rollout-workers

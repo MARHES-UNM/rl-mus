@@ -15,6 +15,23 @@
                 
             }
         },
+                {
+            "name": "run_experiment-test",
+            "type": "python",
+            "request": "launch",
+            "program": "${cwd}/run_experiment.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}",
+            "env": {
+                // 
+            },
+            "args": [
+                "test",
+                "--render",
+                "--plot_results",
+            ]
+        },
         {
             "name": "train_agent",
             "type": "python",

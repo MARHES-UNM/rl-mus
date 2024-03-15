@@ -45,7 +45,7 @@
     },
     "exp_config": {
         "run": "PPO",
-        "checkpoint": null,
+        "checkpoint":null,
         "safe_action_type": null,
         "framework": "torch"
     },
