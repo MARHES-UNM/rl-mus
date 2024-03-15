@@ -28,7 +28,7 @@
             },
             "args": [
                 "test",
-                "--render",
+                // "--render",
                 "--plot_results",
             ]
         },

@@ -1,5 +1,4 @@
 from matplotlib import pyplot as plt
-from _archives.full_uav import Quadrotor
 
 from uav_sim.agents.uav import Obstacle, Pad, Uav
 from uav_sim.utils.utils import plot_traj
@@ -154,7 +153,8 @@ class TestUav(unittest.TestCase):
         pad = Pad(0, 1, 1)
 
         # uav should not be on pad
-        self.assertFalse(self.uav.get_landed(pad))
+        is_reached, _, _ = self.uav.check_dest_reached(pad)
+        self.assertFalse(is_reached)
 
         des_pos = np.zeros(15)
 
@@ -174,7 +174,8 @@ class TestUav(unittest.TestCase):
 
         plot_traj(uav_des_traj, uav_trajectory, title="Test Get Landed")
 
-        self.assertTrue(self.uav.get_landed(pad))
+        is_reached, _, _ = self.uav.check_dest_reached(pad)
+        self.assertTrue(is_reached)
 
     def test_uav_collision(self):
         obs = Obstacle(0, 1, 1, 1)

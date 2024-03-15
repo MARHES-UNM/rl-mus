@@ -66,9 +66,9 @@ class UavSim(MultiAgentEnv):
         self.env_max_h = env_config.setdefault("env_max_h", 4)
         self._z_high = env_config.setdefault("z_high", 4)
         self._z_high = min(self.env_max_h, self._z_high)
-        self._z_low = env_config.setdefault("z_low", 4)
+        self._z_low = env_config.setdefault("z_low", 0.2)
         self._z_low = max(0, self._z_low)
-        self.pad_r = env_config.setdefault("pad_r", 0.01)
+        self.pad_r = env_config.setdefault("pad_r", 0.1)
         self.target_v = env_config.setdefault("target_v", 0)
         self.target_w = env_config.setdefault("target_w", 0)
         self.target_r = env_config.setdefault("target_r", 1)
@@ -426,9 +426,9 @@ class UavSim(MultiAgentEnv):
         # step uavs
         self.alive_agents = set()
         for i, action in actions.items():
-            # Done uavs don't move
-            if self.uavs[i].done:
-                continue
+            # # Done uavs don't move
+            # if self.uavs[i].done:
+            #     continue
             self.alive_agents.add(i)
 
             if self._use_safe_action:

@@ -180,7 +180,8 @@ def train(args):
     # # # If you have 4 CPUs and 1 GPU on your machine, this will run 1 trial at a time.
     # # trainable_with_cpu_gpu = tune.with_resources(algo, {"cpu": 2, "gpu": 1})
     tuner = tune.Tuner(
-        args.run,
+        args.config['exp_config']["run"],
+        # args.run,
         # trainable_with_cpu_gpu,
         param_space=train_config.to_dict(),
         # tune_config=tune.TuneConfig(num_samples=10),
@@ -213,6 +214,9 @@ def test(args):
 
         if args.uav_type:
             args.config["env_config"]["uav_type"] = args.uav_type
+
+        if args.run:
+            args.config["exp_config"]["run"] = args.run
 
         max_num_episodes = args.max_num_episodes
         experiment_num = args.experiment_num
@@ -508,7 +512,7 @@ def parse_arguments():
     )
 
     parser.add_argument(
-        "--run", type=str, default="PPO", help="The RLlib-registered algorithm to use."
+        "--run", type=str, help="The RLlib-registered algorithm to use."
     )
     parser.add_argument("--name", help="Name of experiment.", default="debug")
     parser.add_argument(
@@ -582,7 +586,7 @@ def main():
         num_uavs = args.config["env_config"]["num_uavs"]
         num_obs = args.config["env_config"]["max_num_obstacles"]
         dir_timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M")
-        log_dir = f"{args.func.__name__}/{args.run}/{args.env_name}_{dir_timestamp}_{branch_hash}_{num_uavs}u_{num_obs}o/{args.name}"
+        log_dir = f"{args.func.__name__}/{args.config['exp_config']['run']}/{args.env_name}_{dir_timestamp}_{branch_hash}_{num_uavs}u_{num_obs}o/{args.name}"
         args.log_dir = RESULTS_DIR / log_dir
 
     args.log_dir = Path(args.log_dir).resolve()
