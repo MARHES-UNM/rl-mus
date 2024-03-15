@@ -100,9 +100,9 @@ def train(args):
     # Vary treatments here
     num_gpus = int(os.environ.get("RLLIB_NUM_GPUS", args.gpu))
     args.config["env_config"]["num_uavs"] = tune.grid_search([4])
-    args.config["env_config"]["d_thresh"] = tune.grid_search([0.1, 0.01])
+    args.config["env_config"]["uav_type"] = tune.grid_search(["Uav", "UavBase"])
+    args.config["env_config"]["use_safe_action"] = tune.grid_search([False, True])
     args.config["env_config"]["target_pos_rand"] = True
-    # args.config["env_config"]["use_safe_action"] = tune.grid_search([False])
 
     args.config["env_config"]["tgt_reward"] = 10
     args.config["env_config"]["stp_penalty"] = 0.1
@@ -110,9 +110,8 @@ def train(args):
     args.config["env_config"]["t_go_max"] = 2.0
 
     args.config["env_config"]["beta"] = 0.3
-    args.config["env_config"]["beta_vel"] = 0.0
     args.config["env_config"]["crash_penalty"] = 1.0
-    args.config["env_config"]["uav_collision_weight"] = 0.0
+    # args.config["env_config"]["uav_collision_weight"] = 1.0
 
     obs_filter = "NoFilter"
     callback_list = [TrainCallback]
@@ -511,7 +510,7 @@ def parse_arguments():
         default="torch",
         help="The DL framework specifier.",
     )
-    parser.add_argument("--env_name", type=str, default="rl-mus-v0")
+    parser.add_argument("--env_name", type=str, default="multi-uav-sim-v0")
 
     subparsers = parser.add_subparsers(dest="command")
     test_sub = subparsers.add_parser("test")

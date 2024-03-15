@@ -44,12 +44,13 @@ class UavSim(MultiAgentEnv):
         #     "uav_collision_weight", 0.1
         # )
         self._use_safe_action = env_config.setdefault("use_safe_action", False)
-        self.time_final = env_config.setdefault("time_final", 20.0)
+        self.time_final = env_config.setdefault("time_final", 8.0)
         self.t_go_max = env_config.setdefault("t_go_max", 2.0)
         self.t_go_n = env_config.setdefault("t_go_n", 1.0)
         self._beta = env_config.setdefault("beta", 0.01)
         self._d_thresh = env_config.setdefault("d_thresh", 0.01)  # uav.rad + pad.rad
         self._tgt_reward = env_config.setdefault("tgt_reward", 100.0)
+        self._crash_penalty = env_config.setdefault("crash_penalty", 10.0)
         self._dt_go_penalty = env_config.setdefault("dt_go_penalty", 10.0)
         self._stp_penalty = env_config.setdefault("stp_penalty", 100.0)
         self._dt_reward = env_config.setdefault("dt_reward", 0.0)
@@ -64,7 +65,9 @@ class UavSim(MultiAgentEnv):
         self.env_max_l = env_config.setdefault("env_max_l", 4)
         self.env_max_h = env_config.setdefault("env_max_h", 4)
         self._z_high = env_config.setdefault("z_high", 4)
-        self._z_low = env_config.setdefault("z_low", 4)
+        self._z_high = min(self.env_max_h, self._z_high)
+        self._z_low = env_config.setdefault("z_low", 0.1)
+        self._z_low = max(0, self._z_low)
         self.pad_r = env_config.setdefault("pad_r", 0.01)
         self.target_v = env_config.setdefault("target_v", 0)
         self.target_w = env_config.setdefault("target_w", 0)
@@ -85,6 +88,14 @@ class UavSim(MultiAgentEnv):
         self.reset()
         self.action_space = self._get_action_space()
         self.observation_space = self._get_observation_space()
+
+    @property
+    def time_elapsed(self):
+        return self._time_elapsed
+
+    @property
+    def agent_ids(self):
+        return self._agent_ids
 
     def _get_action_space(self):
         """The action of the UAV. We don't normalize the action space in this environment.
@@ -164,10 +175,6 @@ class UavSim(MultiAgentEnv):
         )
 
         return obs_space
-
-    @property
-    def time_elapsed(self):
-        return self._time_elapsed
 
     def _get_uav_constraint(self, uav):
         """Return single uav constraint"""
@@ -449,7 +456,9 @@ class UavSim(MultiAgentEnv):
             info[uav_id] = self._get_info(self.uavs[uav_id])
 
         # calculate done for each agent
-        done = {self.uavs[uav_id].id: self.uavs[uav_id].done for uav_id in self.alive_agents}
+        done = {
+            self.uavs[uav_id].id: self.uavs[uav_id].done for uav_id in self.alive_agents
+        }
         done["__all__"] = (
             all(v for v in done.values()) or self.time_elapsed >= self.max_time
         )
@@ -584,7 +593,7 @@ class UavSim(MultiAgentEnv):
         elif rel_dist >= np.linalg.norm(
             [self.env_max_l, self.env_max_w, self.env_max_h]
         ):
-            reward += -10
+            reward += -self._crash_penalty
         else:
             reward -= self._beta * (
                 rel_dist
@@ -654,6 +663,40 @@ class UavSim(MultiAgentEnv):
 
         seed = seeding.np_random(seed)
         return [seed]
+
+    def get_random_pos(
+        self,
+        low_h=0.1,
+        x_high=None,
+        y_high=None,
+        z_high=None,
+    ):
+        if x_high is None:
+            x_high = self.env_max_w
+        if y_high is None:
+            y_high = self.env_max_l
+        if z_high is None:
+            z_high = self.env_max_h
+
+        x = np.random.uniform(low=-x_high, high=x_high)
+        y = np.random.uniform(low=-y_high, high=y_high)
+        z = np.random.uniform(low=low_h, high=z_high)
+        return np.array([x, y, z])
+
+    def is_in_collision(self, entity, pos, rad):
+        for target in self.targets.values():
+            if target.in_collision(entity, pos, rad):
+                return True
+
+        for obstacle in self.obstacles:
+            if obstacle.in_collision(entity, pos, rad):
+                return True
+
+        for other_uav in self.uavs.values():
+            if other_uav.in_collision(entity, pos, rad):
+                return True
+
+        return False
 
     def reset(self, *, seed=None, options=None):
         """_summary_
@@ -774,8 +817,7 @@ class UavSim(MultiAgentEnv):
         obs = {uav.id: self._get_obs(uav) for uav in self.uavs.values()}
         reward = {uav.id: self._get_reward(uav) for uav in self.uavs.values()}
         info = {uav.id: self._get_info(uav) for uav in self.uavs.values()}
-        # self.terminateds = set()
-        # self.truncateds = set()
+
         return obs, info
 
     def unscale_action(self, action):
