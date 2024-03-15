@@ -23,6 +23,7 @@ from ray.rllib.algorithms.callbacks import DefaultCallbacks
 # os.environ["PL_TORCH_DISTRIBUTED_BACKEND"] = "gloo"
 
 PATH = Path(__file__).parent.absolute().resolve()
+RESULTS_DIR = Path.home() / "ray_results"
 
 formatter = "%(asctime)s: %(name)s - %(levelname)s - <%(module)s:%(funcName)s:%(lineno)d> - %(message)s"
 logging.basicConfig(
@@ -77,7 +78,7 @@ def parse_arguments():
 
     parser.add_argument("--checkpoint", type=str)
     parser.add_argument("--cpu", type=int, default=8)
-    parser.add_argument("--gpu", type=int, default=0.25)
+    parser.add_argument("--gpu", type=int, default=0.50)
     parser.add_argument("--num_envs_per_worker", type=int, default=12)
     parser.add_argument("--num_rollout_workers", type=int, default=8)
 
@@ -249,9 +250,9 @@ if __name__ == "__main__":
         branch_hash = get_git_hash()
 
         dir_timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M")
-        args.log_dir = (
-            f"./results/{args.run}/{args.env_name}_{dir_timestamp}_{branch_hash}"
-        )
+
+        log_dir = f"train/{args.run}/{args.env_name}_{dir_timestamp}_{branch_hash}/{args.name}"
+        args.log_dir = RESULTS_DIR / log_dir
 
         logdir = Path(args.log_dir)
 
