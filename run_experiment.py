@@ -71,7 +71,7 @@ def get_algo_config(config, env_obs_space, env_action_space):
         .debugging(log_level="ERROR", seed=config["env_config"]["seed"])
         .resources(
             num_gpus=0,
-            placement_strategy=[{"cpu": 1}, {"cpu": 1}],
+            # placement_strategy=[{"cpu": 1}, {"cpu": 1}],
             num_gpus_per_learner_worker=0,
         )
         .multi_agent(
@@ -152,10 +152,10 @@ def train(args):
             use_gae=True,
             use_critic=True,
             lambda_=0.95,
-            # train_batch_size=65536,
+            train_batch_size=65536,
             gamma=0.99,
-            # num_sgd_iter=32,
-            # sgd_minibatch_size=4096,
+            num_sgd_iter=32,
+            sgd_minibatch_size=4096,
             vf_clip_param=10.0,
             vf_loss_coeff=0.5,
             clip_param=0.2,
@@ -536,7 +536,7 @@ def parse_arguments():
     )
 
     train_sub.add_argument("--checkpoint", type=str)
-    train_sub.add_argument("--gpu", type=int, default=0.50)
+    train_sub.add_argument("--gpu", type=float, default=0)
     train_sub.add_argument("--num_envs_per_worker", type=int, default=12)
     train_sub.add_argument("--cpu", type=int, default=1, help="num_rollout_workers default is 1")
     train_sub.set_defaults(func=train)
