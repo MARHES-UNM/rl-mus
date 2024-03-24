@@ -127,7 +127,7 @@ def train(args):
     train_config = (
         get_algo_config(args.config, env_obs_space, env_action_space).rollouts(
             num_rollout_workers=(
-                1 if args.smoke_test else args.num_rollout_workers
+                1 if args.smoke_test else args.cpu
             ),  # set 0 to main worker run sim
             num_envs_per_worker=args.num_envs_per_worker,
             # create_env_on_local_worker=True,
@@ -538,7 +538,7 @@ def parse_arguments():
     train_sub.add_argument("--checkpoint", type=str)
     train_sub.add_argument("--gpu", type=int, default=0.50)
     train_sub.add_argument("--num_envs_per_worker", type=int, default=12)
-    train_sub.add_argument("--num_rollout_workers", type=int, default=1)
+    train_sub.add_argument("--cpu", type=int, default=1, help="num_rollout_workers default is 1")
     train_sub.set_defaults(func=train)
 
     args = parser.parse_args()
