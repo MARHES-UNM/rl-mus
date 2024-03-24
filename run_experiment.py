@@ -185,6 +185,8 @@ def train(args):
             observation_filter=obs_filter,  # or "NoFilter"
         )
         # Use GPUs iff `RLLIB_NUM_GPUS` env var set to > 0.
+        # TODO: set num_learner_workers to 0 so to train train main env
+        # https://docs.ray.io/en/latest/rllib/rllib-training.html#rllib-config-resources
         .resources(
             num_gpus=0 if args.smoke_test else num_gpus,
             num_learner_workers=1,
