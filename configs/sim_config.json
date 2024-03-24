@@ -47,7 +47,14 @@
         "run": "PPO",
         "checkpoint": null,
         "safe_action_type": null,
-        "framework": "torch"
+        "framework": "torch",
+        "training": {
+            "lr": 5e-5,
+            "use_gae": true,
+            "use_critic": true,
+            "lambda_": 0.95,
+            "gamma": 0.99
+        }
     },
     "safety_layer_cfg": {
         "batch_size": 256,

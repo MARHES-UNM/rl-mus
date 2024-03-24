@@ -25,7 +25,6 @@ from uav_sim.utils.utils import get_git_hash
 PATH = Path(__file__).parent.absolute().resolve()
 RESULTS_DIR = Path.home() / "ray_results"
 logger = logging.getLogger(__name__)
-max_num_cpus = os.cpu_count() - 1
 
 
 def setup_stream(logging_level=logging.DEBUG):
@@ -70,6 +69,11 @@ def get_algo_config(config, env_obs_space, env_action_space):
             # observation_filter="MeanStdFilter",  # or "NoFilter"
         )
         .debugging(log_level="ERROR", seed=config["env_config"]["seed"])
+        .resources(
+            num_gpus=0,
+            placement_strategy=[{"cpu": 1}, {"cpu": 1}],
+            num_gpus_per_learner_worker=0,
+        )
         .multi_agent(
             policies={
                 "shared_policy": (
@@ -108,7 +112,8 @@ def train(args):
     args.config["env_config"]["stp_penalty"] = 5
     args.config["env_config"]["beta"] = 0.3
     args.config["env_config"]["d_thresh"] = tune.grid_search([0.15, 0.01])
-    args.config["env_config"]["time_final"] = tune.grid_search([8.0, 20.0])
+    # args.config["env_config"]["time_final"] = tune.grid_search([8.0, 20.0])
+    args.config["env_config"]["time_final"] = tune.grid_search([20.0])
     args.config["env_config"]["t_go_max"] = 2.0
     args.config["env_config"]["obstacle_collision_weight"] = 0.1
     args.config["env_config"]["uav_collision_weight"] = 0.1
@@ -147,10 +152,10 @@ def train(args):
             use_gae=True,
             use_critic=True,
             lambda_=0.95,
-            train_batch_size=65536,
+            # train_batch_size=65536,
             gamma=0.99,
-            num_sgd_iter=32,
-            sgd_minibatch_size=4096,
+            # num_sgd_iter=32,
+            # sgd_minibatch_size=4096,
             vf_clip_param=10.0,
             vf_loss_coeff=0.5,
             clip_param=0.2,
@@ -180,7 +185,7 @@ def train(args):
     # # # If you have 4 CPUs and 1 GPU on your machine, this will run 1 trial at a time.
     # # trainable_with_cpu_gpu = tune.with_resources(algo, {"cpu": 2, "gpu": 1})
     tuner = tune.Tuner(
-        args.config['exp_config']["run"],
+        args.config["exp_config"]["run"],
         # args.run,
         # trainable_with_cpu_gpu,
         param_space=train_config.to_dict(),
@@ -271,34 +276,8 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
             env.close()
 
             algo = (
-                PPOConfig()
-                .environment(
-                    env=exp_config["env_name"], env_config=exp_config["env_config"]
-                )
-                .framework("torch")
-                .rollouts(num_rollout_workers=0)
-                .debugging(log_level="ERROR", seed=exp_config["env_config"]["seed"])
-                .resources(
-                    num_gpus=0,
-                    placement_strategy=[{"cpu": 1}, {"cpu": 1}],
-                    num_gpus_per_learner_worker=0,
-                )
-                .multi_agent(
-                    policies={
-                        "shared_policy": (
-                            None,
-                            env.observation_space[0],
-                            env.action_space[0],
-                            {},
-                        )
-                    },
-                    # Always use "shared" policy.
-                    policy_mapping_fn=(
-                        lambda agent_id, episode, worker, **kwargs: "shared_policy"
-                    ),
-                )
-                .build()
-            )
+                get_algo_config(exp_config, env_obs_space, env_action_space)
+            ).build()
 
             env = algo.workers.local_worker().env
             # restore algorithm if need be:
@@ -557,10 +536,9 @@ def parse_arguments():
     )
 
     train_sub.add_argument("--checkpoint", type=str)
-    train_sub.add_argument("--cpu", type=int, default=8)
     train_sub.add_argument("--gpu", type=int, default=0.50)
     train_sub.add_argument("--num_envs_per_worker", type=int, default=12)
-    train_sub.add_argument("--num_rollout_workers", type=int, default=8)
+    train_sub.add_argument("--num_rollout_workers", type=int, default=1)
     train_sub.set_defaults(func=train)
 
     args = parser.parse_args()
@@ -579,6 +557,9 @@ def main():
     args.config["env_name"] = args.env_name
 
     logger.debug(f"config: {args.config}")
+
+    if args.run is not None:
+        args.config["exp_config"]["run"] = args.run
 
     if not args.log_dir:
         branch_hash = get_git_hash()

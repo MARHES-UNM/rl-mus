@@ -150,6 +150,7 @@ dmypy.json
 .pyre/
 
 # personal ones
+ray_results
 results
 plots
 data

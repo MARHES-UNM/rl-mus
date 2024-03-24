@@ -29,7 +29,7 @@
             "args": [
                 "test",
                 // "--render",
-                "--plot_results",
+                // "--plot_results",
             ]
         },
         {
