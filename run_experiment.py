@@ -20,6 +20,7 @@ import json
 from uav_sim.utils.safety_layer import SafetyLayer
 from ray import tune
 from plot_results import plot_uav_states
+import math
 
 from uav_sim.utils.utils import get_git_hash
 
@@ -137,7 +138,7 @@ def curriculum_fn(
 
 def train(args):
 
-    num_gpus = int(os.environ.get("RLLIB_NUM_GPUS", args.gpu))
+    num_gpus = int(math.ceil(os.environ.get("RLLIB_NUM_GPUS", args.gpu)))
     # args.local_mode = True
     ray.init(local_mode=args.local_mode, num_gpus=num_gpus)
 
@@ -158,7 +159,7 @@ def train(args):
     args.config["env_config"]["d_thresh"] = tune.grid_search([0.15, 0.01])
     # args.config["env_config"]["time_final"] = tune.grid_search([8.0, 20.0])
     args.config["env_config"]["time_final"] = tune.grid_search([20.0])
-    args.config["env_config"]["t_go_max"] = 2.0
+    args.config["env_config"]["t_go_max"] = tune.grid_search([2.0])
     args.config["env_config"]["obstacle_collision_weight"] = 0.1
     args.config["env_config"]["uav_collision_weight"] = 0.1
 
