@@ -11,11 +11,27 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "justMyCode": true,
-            "env": {
-                
-            }
+            "env": {}
         },
-                {
+        {
+            "name": "run_experiment-train-cur",
+            "type": "python",
+            "request": "launch",
+            "program": "${cwd}/run_experiment.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}",
+            "env": {
+                // 
+            },
+            "args": [
+                "--env_name", "multi-uav-sim-curriculum-v0",
+                "train",
+                // "--render",
+                // "--plot_results",
+            ]
+        },
+        {
             "name": "run_experiment-test",
             "type": "python",
             "request": "launch",
@@ -107,9 +123,7 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "cwd": "${workspaceFolder}",
-            "env": {
-                
-            },
+            "env": {},
             "args": [
                 "-v",
                 "${cwd}/tests/test_gui.py"
@@ -136,8 +150,7 @@
             "request": "launch",
             "module": "unittest",
             "justMyCode": true,
-            "env": {
-            },
+            "env": {},
             "args": [
                 "-v"
             ]
@@ -166,9 +179,7 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "cwd": "${workspaceFolder}",
-            "env": {
-                
-            },
+            "env": {},
             "args": [
                 "-v",
                 "${cwd}/tests/test_target.py"
@@ -182,8 +193,7 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "cwd": "${workspaceFolder}",
-            "env": {
-            },
+            "env": {},
             "args": [
                 "-v",
                 "tests.test_quad_2d.TestQuad2D.test_f_dot_torch",
@@ -199,8 +209,7 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "cwd": "${workspaceFolder}",
-            "env": {
-            },
+            "env": {},
             "args": [
                 "-v",
                 "${cwd}/tests/test_uav.py",
@@ -219,9 +228,7 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "cwd": "${workspaceFolder}",
-            "env": {
-                
-            },
+            "env": {},
             "args": [
                 "-v",
                 // "tests.test_uav_sim.TestUavSim.test_constraints",
@@ -241,9 +248,7 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "cwd": "${workspaceFolder}",
-            "env": {
-                
-            },
+            "env": {},
             "args": [
                 "-v",
                 "tests.test_replay_buffer",
@@ -294,9 +299,7 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "cwd": "${workspaceFolder}",
-            "env": {
-                
-            },
+            "env": {},
             "args": [
                 "-v",
                 "tests.test_utils",

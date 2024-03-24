@@ -11,6 +11,8 @@ from ray.rllib.algorithms.ppo import PPOConfig
 from ray.tune.registry import get_trainable_cls
 from uav_sim.utils.callbacks import TrainCallback
 from ray.rllib.algorithms.callbacks import make_multi_callbacks
+from ray.rllib.env.apis.task_settable_env import TaskSettableEnv, TaskType
+from ray.rllib.env.env_context import EnvContext
 
 import os
 import logging
@@ -57,12 +59,16 @@ def get_obs_act_space(config):
     return env_obs_space, env_action_space
 
 
-def get_algo_config(config, env_obs_space, env_action_space):
+def get_algo_config(config, env_obs_space, env_action_space, env_task_fn=None):
 
     algo_config = (
         get_trainable_cls(config["exp_config"]["run"])
         .get_default_config()
-        .environment(env=config["env_name"], env_config=config["env_config"])
+        .environment(
+            env=config["env_name"],
+            env_config=config["env_config"],
+            env_task_fn=env_task_fn,
+        )
         .framework(config["exp_config"]["framework"])
         .rollouts(
             num_rollout_workers=0,
@@ -93,24 +99,62 @@ def get_algo_config(config, env_obs_space, env_action_space):
     return algo_config
 
 
+def curriculum_fn(
+    train_results: dict, task_settable_env: TaskSettableEnv, env_ctx: EnvContext
+) -> TaskType:
+    """Function returning a possibly new task to set `task_settable_env` to.
+
+    Args:
+        train_results: The train results returned by Algorithm.train().
+        task_settable_env: A single TaskSettableEnv object
+            used inside any worker and at any vector position. Use `env_ctx`
+            to get the worker_index, vector_index, and num_workers.
+        env_ctx: The env context object (i.e. env's config dict
+            plus properties worker_index, vector_index and num_workers) used
+            to setup the `task_settable_env`.
+
+    Returns:
+        TaskType: The task to set the env to. This may be the same as the
+            current one.
+    """
+    # Our env supports tasks 1 (default) to 5.
+    # With each task, rewards get scaled up by a factor of 10, such that:
+    # Level 1: Expect rewards between 0.0 and 1.0.
+    # Level 2: Expect rewards between 1.0 and 10.0, etc..
+    # We will thus raise the level/task each time we hit a new power of 10.0
+    time_steps = train_results.get("timesteps_total")
+    new_task = time_steps // 4000000
+    # Clamp between valid values, just in case:
+    new_task = max(min(new_task, 3), 0)
+    print(
+        f"Worker #{env_ctx.worker_index} vec-idx={env_ctx.vector_index}"
+        f"\nR={train_results['episode_reward_mean']}"
+        f"\ntimesteps={train_results['timesteps_total']}"
+        f"\nSetting env to task={new_task}"
+    )
+    return new_task
+
+
 def train(args):
 
+    num_gpus = int(os.environ.get("RLLIB_NUM_GPUS", args.gpu))
     # args.local_mode = True
-    ray.init(local_mode=args.local_mode, num_gpus=1)
+    ray.init(local_mode=args.local_mode, num_gpus=num_gpus)
 
     # We get the spaces here before test vary the experiment treatments (factors)
     env_obs_space, env_action_space = get_obs_act_space(args.config)
 
     # Vary treatments here
-    num_gpus = int(os.environ.get("RLLIB_NUM_GPUS", args.gpu))
     args.config["env_config"]["num_uavs"] = 4
-    args.config["env_config"]["uav_type"] = tune.grid_search(["Uav", "UavBase"])
+    # args.config["env_config"]["uav_type"] = tune.grid_search(["Uav", "UavBase"])
+    args.config["env_config"]["uav_type"] = tune.grid_search(["UavBase"])
     args.config["env_config"]["use_safe_action"] = tune.grid_search([False])
     args.config["env_config"]["target_pos_rand"] = True
 
     args.config["env_config"]["tgt_reward"] = 100
     args.config["env_config"]["stp_penalty"] = 5
     args.config["env_config"]["beta"] = 0.3
+    # args.config["env_config"]["d_thresh"] = tune.grid_search([0.15, 0.01])
     args.config["env_config"]["d_thresh"] = tune.grid_search([0.15, 0.01])
     # args.config["env_config"]["time_final"] = tune.grid_search([8.0, 20.0])
     args.config["env_config"]["time_final"] = tune.grid_search([20.0])
@@ -121,11 +165,15 @@ def train(args):
     args.config["env_config"]["crash_penalty"] = 10
 
     obs_filter = "NoFilter"
+    task_fn = curriculum_fn if "curriculum" in args.config["env_name"] else None
+    # task_fn = tune.grid_search([None, curriculum_fn])
     callback_list = [TrainCallback]
     # multi_callbacks = make_multi_callbacks(callback_list)
     # Common config params: https://docs.ray.io/en/latest/rllib/rllib-training.html#configuring-rllib-algorithms
     train_config = (
-        get_algo_config(args.config, env_obs_space, env_action_space).rollouts(
+        get_algo_config(
+            args.config, env_obs_space, env_action_space, env_task_fn=task_fn
+        ).rollouts(
             num_rollout_workers=(
                 1 if args.smoke_test else args.cpu
             ),  # set 0 to main worker run sim
@@ -152,10 +200,10 @@ def train(args):
             use_gae=True,
             use_critic=True,
             lambda_=0.95,
-            # train_batch_size=65536,
+            train_batch_size=65536,
             gamma=0.99,
-            # num_sgd_iter=32,
-            # sgd_minibatch_size=4096,
+            num_sgd_iter=32,
+            sgd_minibatch_size=4096,
             vf_clip_param=10.0,
             vf_loss_coeff=0.5,
             clip_param=0.2,
@@ -538,7 +586,9 @@ def parse_arguments():
     train_sub.add_argument("--checkpoint", type=str)
     train_sub.add_argument("--gpu", type=float, default=0)
     train_sub.add_argument("--num_envs_per_worker", type=int, default=12)
-    train_sub.add_argument("--cpu", type=int, default=1, help="num_rollout_workers default is 1")
+    train_sub.add_argument(
+        "--cpu", type=int, default=1, help="num_rollout_workers default is 1"
+    )
     train_sub.set_defaults(func=train)
 
     args = parser.parse_args()
