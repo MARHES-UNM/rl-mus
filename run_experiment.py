@@ -18,7 +18,6 @@ import os
 import logging
 import json
 from uav_sim.utils.safety_layer import SafetyLayer
-from ray import tune
 from plot_results import plot_uav_states
 import math
 
