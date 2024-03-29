@@ -1,7 +1,7 @@
 import sys
 from gymnasium import spaces
+from gymnasium.utils import seeding
 import numpy as np
-from gym.utils import seeding
 from uav_sim.agents.uav import Obstacle, UavBase, Uav, ObsType
 from uav_sim.agents.uav import Target
 from uav_sim.utils.gui import Gui
