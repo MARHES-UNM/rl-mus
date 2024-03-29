@@ -16,3 +16,6 @@ pip install ray[rllib,tune]==2.6.3 --force
 
 ## TODO: 
 Reduce state to just pos and velocity and compare performance.
+[] Fix UavBase
+[] change target reach metric
+[] fix quadprog

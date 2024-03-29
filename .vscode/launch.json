@@ -186,7 +186,7 @@
             ]
         },
         {
-            "name": "unittest_quad_2d",
+            "name": "unittest_uav_base",
             "type": "python",
             "request": "launch",
             "module": "unittest",
@@ -196,7 +196,7 @@
             "env": {},
             "args": [
                 "-v",
-                "tests.test_quad_2d.TestQuad2D.test_f_dot_torch",
+                "tests.test_uav_base",
                 "--failfast"
             ]
         },
