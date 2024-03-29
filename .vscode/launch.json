@@ -201,7 +201,7 @@
             ]
         },
         {
-            "name": "unittest_uav_base",
+            "name": "unittest: uav_base",
             "type": "python",
             "request": "launch",
             "module": "unittest",

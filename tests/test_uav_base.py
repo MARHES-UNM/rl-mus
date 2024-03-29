@@ -41,6 +41,15 @@ class TestUavBase(unittest.TestCase):
 
         uav.state[0:3] = np.array([1, 1, 0.9])
         self.assertTrue(uav.in_collision(obs))
+    
+    # TODO: update
+    def test_uav_t_go_est(self):
+        t_go_est = self.uav.get_t_go_est()
+        print(t_go_est)
+
+        self.uav._state = np.array([1, 1, 1, 0, 0, 1])
+        t_go_est = self.uav.get_t_go_est()
+        print(t_go_est)
 
 
 if __name__ == "__main__":
