@@ -59,7 +59,7 @@
             "args": [
                 "--run", "cc",
                 "test",
-                // "--render",
+                "--render",
                 "--plot_results",
             ]
         },

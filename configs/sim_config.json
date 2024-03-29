@@ -23,7 +23,7 @@
         "num_obstacles": 4,
         "num_uavs": 4,
         "obstacle_collision_weight": 0.1,
-        "obstacle_radius": 1,
+        "obstacle_radius": 0.5,
         "pad_r": 0.1,
         "render": false,
         "render_mode": "human",
