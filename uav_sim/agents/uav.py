@@ -332,12 +332,11 @@ class UavBase(Entity):
 
         rel_dist = np.linalg.norm(self._state[0:3] - pad.state[0:3])
         rel_vel = np.linalg.norm(self._state[3:6] - pad.state[3:6])
-        # return rel_dist <= (self.r + pad.r), rel_dist, rel_vel
-        # TODO: set this to be a small number to make it more challenging
-        return rel_dist <= self.d_thresh, rel_dist, rel_vel
+        return rel_dist <= (self.r), rel_dist, rel_vel
 
     def get_t_go_est(self):
-        return self.get_rel_pad_dist() / (1e-6 + self.get_rel_pad_vel())
+        _, rel_dist, rel_vel = self.check_dest_reached()
+        return rel_dist / (1e-6 + rel_vel)
 
 
 class Uav(UavBase):

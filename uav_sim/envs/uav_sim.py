@@ -479,13 +479,15 @@ class UavSim(MultiAgentEnv):
             _type_: _description_
         """
 
+        is_reached, rel_dist, rel_vel = uav.check_dest_reached()
+
         info = {
             "time_step": self.time_elapsed,
             "obstacle_collision": uav.obs_collision,
-            "uav_rel_dist": uav.get_rel_pad_dist(),
-            "uav_rel_vel": uav.get_rel_pad_vel(),
+            "uav_rel_dist": rel_dist,
+            "uav_rel_vel": rel_vel,
             "uav_collision": uav.uav_collision,
-            "uav_landed": 1.0 if uav.landed else 0.0,
+            "uav_landed": 1.0 if is_reached else 0.0,
             "uav_done_dt": uav.done_dt,
             "uav_dt_go": uav.dt_go,
             # "uav_cum_dt_go": uav.cum_dt_penalty,
@@ -558,6 +560,7 @@ class UavSim(MultiAgentEnv):
 
         uav.dt_go = uav.get_t_go_est() - t_remaining
         uav.done_dt = t_remaining
+
         # pos reward if uav lands on any landing pad
         is_reached, rel_dist, rel_vel = uav.check_dest_reached()
 
@@ -809,11 +812,10 @@ class UavSim(MultiAgentEnv):
                 )
                 in_collision = is_in_collision(uav)
 
-            # self.uavs.append(uav)
             self.uavs[agent_id] = uav
 
-            self.uavs[agent_id].init_tg = uav.get_t_go_est()
-            self.uavs[agent_id].init_r = uav.get_rel_pad_dist()
+            # self.uavs[agent_id].init_tg = uav.get_t_go_est()
+            # self.uavs[agent_id].init_r = uav.get_rel_pad_dist()
 
         obs = {uav.id: self._get_obs(uav) for uav in self.uavs.values()}
         reward = {uav.id: self._get_reward(uav) for uav in self.uavs.values()}

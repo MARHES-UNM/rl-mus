@@ -5,6 +5,19 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "unittest: test_uav_sim_uav_base",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "unittest",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}",
+            "args": [
+                "-v",
+                "${cwd}/tests/test_uav_sim_uav_base.py"
+            ]
+        },
+        {
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",
@@ -25,7 +38,8 @@
                 // 
             },
             "args": [
-                "--env_name", "multi-uav-sim-curriculum-v0",
+                "--env_name",
+                "multi-uav-sim-curriculum-v0",
                 "train",
                 // "--render",
                 // "--plot_results",
@@ -43,9 +57,10 @@
                 // 
             },
             "args": [
+                "--run", "cc",
                 "test",
                 // "--render",
-                // "--plot_results",
+                "--plot_results",
             ]
         },
         {
@@ -223,8 +238,8 @@
             "name": "unittest_uav_sim",
             "type": "python",
             "request": "launch",
-            "module": "unittest",
-            // "program": "${cwd}/uav_sim/tests/test_uav_sim.py",
+            // "module": "unittest",
+            "program": "${cwd}/uav_sim/tests/test_uav_sim.py",
             "console": "integratedTerminal",
             "justMyCode": true,
             "cwd": "${workspaceFolder}",
@@ -232,7 +247,7 @@
             "args": [
                 "-v",
                 // "tests.test_uav_sim.TestUavSim.test_constraints",
-                "tests.test_uav_sim.TestUavSim.test_time_coordinated_control_mat",
+                // "tests.test_uav_sim.TestUavSim.test_time_coordinated_control_mat",
                 // "tests.test_uav_sim.TestUavSim.test_lqr_landing_cbf",
                 // "tests.test_uav_sim.TestUavSim.test_time_coordinated_control_mat",
                 // "tests.test_uav_sim.TestUavSim.test_landing_minimum_traj",
