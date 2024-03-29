@@ -12,36 +12,38 @@ from uav_sim.utils.trajectory_generator import (
 from ray.rllib.utils import check_env
 
 
-class TestUavSim(unittest.TestCase):
+class TestUavSimBase(unittest.TestCase):
     def setUp(self):
-        self.env = UavSim()
+        self._config = {"uav_type": "UavBase"}
+        self.env = UavSim(self._config)
 
     def test_check_env_single_agent(self):
-        check_env(UavSim({"num_uavs": 1}))
+        self._config.update({"num_uavs": 1})
+        check_env(UavSim(self._config))
 
     def test_check_env(self):
-        check_env(UavSim({}))
+        check_env(self.env)
 
     def test_observation_space(self):
-        env = UavSim({"num_uavs": 1, "num_obstacles": 0})
+        env = UavSim({"uav_type": "UavBase", "num_uavs": 1, "num_obstacles": 0})
         obs_space = env.observation_space
         self.assertEqual(len(obs_space.spaces), 1)
         self.assertEqual(obs_space[0]["obstacles"].shape[0], 0)
         self.assertEqual(obs_space[0]["other_uav_obs"].shape[0], 0)
 
-        env = UavSim({"num_uavs": 1, "num_obstacles": 1})
+        env = UavSim({"uav_type": "UavBase","num_uavs": 1, "num_obstacles": 1})
         obs_space = env.observation_space
         self.assertEqual(len(obs_space.spaces), 1)
         self.assertEqual(obs_space[0]["obstacles"].shape[0], 1)
         self.assertEqual(obs_space[0]["other_uav_obs"].shape[0], 0)
 
-        env = UavSim({"num_uavs": 2, "num_obstacles": 0})
+        env = UavSim({"uav_type": "UavBase","num_uavs": 2, "num_obstacles": 0})
         obs_space = env.observation_space
         self.assertEqual(len(obs_space.spaces), 2)
         self.assertEqual(obs_space[0]["obstacles"].shape[0], 0)
         self.assertEqual(obs_space[0]["other_uav_obs"].shape[0], 1)
 
-        env = UavSim({"num_uavs": 2, "num_obstacles": 1})
+        env = UavSim({"uav_type": "UavBase","num_uavs": 2, "num_obstacles": 1})
         obs_space = env.observation_space
         self.assertEqual(len(obs_space.spaces), 2)
         self.assertEqual(obs_space[0]["obstacles"].shape[0], 1)
@@ -62,6 +64,7 @@ class TestUavSim(unittest.TestCase):
         N = 1.0
         self.env = UavSim(
             {
+                "uav_type": "UavBase",
                 "target_v": 0.0,
                 "num_uavs": 4,
                 "use_safe_action": True,
@@ -182,7 +185,7 @@ class TestUavSim(unittest.TestCase):
                 # # )
 
                 actions[idx] = self.env.get_time_coord_action(self.env.uavs[idx])
-            obs, rew, done, _,  info = self.env.step(actions)
+            obs, rew, done, _, info = self.env.step(actions)
             for k, v in info.items():
                 time_step_list[k].append(v["time_step"])
                 uav_collision_list[k].append(v["uav_collision"])
@@ -427,7 +430,7 @@ class TestUavSim(unittest.TestCase):
                 des_pos[0:6] = self.env.uavs[idx].pad.state[0:6]
                 actions[idx] = self.env.uavs[idx].calc_des_action(des_pos)
 
-            obs, rew, done, _,  info = self.env.step(actions)
+            obs, rew, done, _, info = self.env.step(actions)
             for k, v in info.items():
                 uav_collision_list[k].append(v["uav_collision"])
                 obstacle_collision_list[k].append(v["obstacle_collision"])

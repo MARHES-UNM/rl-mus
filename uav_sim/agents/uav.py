@@ -30,7 +30,7 @@ class Entity:
         self.r = r
 
         # x, y, z, x_dot, y_dot, z_dot
-        self._state = np.array([self.x, self.y, self.z, 0, 0, 0])
+        self._state = np.array([self.x, self.y, self.z, 0.0, 0.0, 0.0])
 
     @property
     def state(self):
@@ -260,13 +260,17 @@ class UavBase(Entity):
         # lenght of arms
         self.l = l  # m
 
+        if pad is None:
+            self.pad = Pad(0, 0, 0)
+        else:
+            self.pad = pad
+
         self._state = np.zeros(12)
         self._state[0] = x
         self._state[1] = y
         self._state[2] = z
         self.done = False
         self.landed = False
-        self.pad = pad
         self.done_time = None
         self.d_thresh = d_thresh
 
@@ -290,9 +294,6 @@ class UavBase(Entity):
         return dot_s
 
     def f_dot(self, state, action):
-        # copies action so we don't corrupt it.
-        temp_action = action.copy()
-        temp_action[2] = 1 / self.m * temp_action[2] - self.g
 
         A = np.zeros((12, 12), dtype=np.float32)
         A[0, 3] = 1.0
@@ -304,7 +305,7 @@ class UavBase(Entity):
         B[4, 1] = 1.0
         B[5, 2] = 1.0
 
-        dxdt = A.dot(state) + B.dot(temp_action)
+        dxdt = A.dot(state) + B.dot(action)
 
         return dxdt
 
@@ -319,39 +320,23 @@ class UavBase(Entity):
             state:
             x, y, z, x_dot, y_dot, z_dot, phi, theta, psi, phi_dot, theta_dot, psi_dot
         """
-        # keep uav hovering
-        action[2] = self.m * (self.g + action[2])
 
         dot_state = self.rk4(self._state, action)
         self._state = self._state + dot_state * self.dt
 
         self._state[2] = max(0, self._state[2])
 
-    # # TODO: Combine the functions below into one
-    # def get_landed(self, pad):
-    #     dist = np.linalg.norm(self._state[0:3] - pad._state[0:3])
-    #     return dist <= 0.01
-
-    # TODO: combine into one.
     def check_dest_reached(self, pad=None):
         if pad is None:
             pad = self.pad
 
         rel_dist = np.linalg.norm(self._state[0:3] - pad.state[0:3])
         rel_vel = np.linalg.norm(self._state[3:6] - pad.state[3:6])
-        # return rel_dist <= (self.r + pad.r), rel_dist, rel_vel
-        # TODO: set this to be a small number to make it more challenging
-        return rel_dist <= self.d_thresh, rel_dist, rel_vel
-
-    # TODO: combine with equations above
-    def get_rel_pad_dist(self):
-        return np.linalg.norm(self._state[:3] - self.pad._state[:3])
-
-    def get_rel_pad_vel(self):
-        return np.linalg.norm(self._state[3:6] - self.pad._state[3:6])
+        return rel_dist <= (self.r), rel_dist, rel_vel
 
     def get_t_go_est(self):
-        return self.get_rel_pad_dist() / (1e-6 + self.get_rel_pad_vel())
+        _, rel_dist, rel_vel = self.check_dest_reached()
+        return rel_dist / (1e-6 + rel_vel)
 
 
 class Uav(UavBase):
