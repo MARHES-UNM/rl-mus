@@ -148,14 +148,14 @@ def train(args):
     args.config["env_config"]["num_uavs"] = 4
     args.config["env_config"]["uav_type"] = tune.grid_search(["Uav", "UavBase"])
     # args.config["env_config"]["uav_type"] = tune.grid_search(["Uav"])
-    args.config["env_config"]["use_safe_action"] = tune.grid_search([False])
+    args.config["env_config"]["use_safe_action"] = tune.grid_search([False, True])
     args.config["env_config"]["target_pos_rand"] = True
 
     args.config["env_config"]["tgt_reward"] = 100
     args.config["env_config"]["stp_penalty"] = 5
     args.config["env_config"]["beta"] = 0.3
     # args.config["env_config"]["d_thresh"] = tune.grid_search([0.15, 0.01])
-    args.config["env_config"]["d_thresh"] = tune.grid_search([0.01])
+    args.config["env_config"]["d_thresh"] = tune.grid_search([0.15])
     # args.config["env_config"]["time_final"] = tune.grid_search([8.0, 20.0])
     args.config["env_config"]["time_final"] = tune.grid_search([20.0])
     args.config["env_config"]["t_go_max"] = tune.grid_search([2.0])
