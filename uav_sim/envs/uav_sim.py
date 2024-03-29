@@ -114,6 +114,7 @@ class UavSim(MultiAgentEnv):
         )
 
     def _get_observation_space(self):
+        num_state_shape=6
         if self.num_obstacles == 0:
             num_obstacle_shape = 6
         else:
@@ -126,37 +127,37 @@ class UavSim(MultiAgentEnv):
                         "state": spaces.Box(
                             low=-np.inf,
                             high=np.inf,
-                            shape=self.uavs[0].state.shape,
+                            shape=(num_state_shape,),
                             dtype=np.float32,
                         ),
                         "done_dt": spaces.Box(
                             low=-np.inf, high=np.inf, shape=(1,), dtype=np.float32
                         ),
-                        "dt_go": spaces.Box(
-                            low=-np.inf, high=np.inf, shape=(1,), dtype=np.float32
-                        ),
-                        "target": spaces.Box(
-                            low=-np.inf,
-                            high=np.inf,
-                            shape=self.target.state.shape,
-                            dtype=np.float32,
-                        ),
+                        # "dt_go": spaces.Box(
+                        #     low=-np.inf, high=np.inf, shape=(1,), dtype=np.float32
+                        # ),
+                        # "target": spaces.Box(
+                        #     low=-np.inf,
+                        #     high=np.inf,
+                        #     shape=self.target.state.shape,
+                        #     dtype=np.float32,
+                        # ),
                         "rel_pad": spaces.Box(
                             low=-np.inf,
                             high=np.inf,
-                            shape=self.uavs[0].pad.state.shape,
+                            shape=(num_state_shape,),
                             dtype=np.float32,
                         ),
-                        "constraint": spaces.Box(
-                            low=-np.inf,
-                            high=np.inf,
-                            shape=(self.num_uavs - 1 + self.num_obstacles,),
-                            dtype=np.float32,
-                        ),
+                        # "constraint": spaces.Box(
+                        #     low=-np.inf,
+                        #     high=np.inf,
+                        #     shape=(self.num_uavs - 1 + self.num_obstacles,),
+                        #     dtype=np.float32,
+                        # ),
                         "other_uav_obs": spaces.Box(
                             low=-np.inf,
                             high=np.inf,
-                            shape=(self.num_uavs - 1, self.uavs[0].state.shape[0]),
+                            shape=(self.num_uavs - 1, num_state_shape),
                             dtype=np.float32,
                         ),
                         "obstacles": spaces.Box(
@@ -164,7 +165,7 @@ class UavSim(MultiAgentEnv):
                             high=np.inf,
                             shape=(
                                 self.num_obstacles,
-                                num_obstacle_shape,
+                                num_state_shape,
                             ),
                             dtype=np.float32,
                         ),
@@ -505,7 +506,7 @@ class UavSim(MultiAgentEnv):
     def _get_obs(self, uav):
         other_uav_states = np.array(
             [
-                other_uav.state
+                other_uav.state[0:6]
                 for other_uav in self.uavs.values()
                 if uav.id != other_uav.id
             ]
@@ -515,19 +516,19 @@ class UavSim(MultiAgentEnv):
         obstacles_to_add = np.array([obs.state for obs in closest_obstacles])
 
         obs_dict = {
-            "state": uav.state.astype(np.float32),
-            "target": self.target.state.astype(np.float32),
+            "state": uav.state[0:6].astype(np.float32),
+            # "target": self.target.state.astype(np.float32),
             "done_dt": np.array(
                 [self.time_final - self._time_elapsed], dtype=np.float32
             ),
-            "dt_go": np.array(
-                [uav.get_t_go_est() - (self.time_final - self._time_elapsed)],
-                dtype=np.float32,
-            ),
+            # "dt_go": np.array(
+            #     [uav.get_t_go_est() - (self.time_final - self._time_elapsed)],
+            #     dtype=np.float32,
+            # ),
             "rel_pad": (uav.state[0:6] - uav.pad.state[0:6]).astype(np.float32),
             "other_uav_obs": other_uav_states.astype(np.float32),
             "obstacles": obstacles_to_add.astype(np.float32),
-            "constraint": self._get_uav_constraint(uav).astype(np.float32),
+            # "constraint": self._get_uav_constraint(uav).astype(np.float32),
         }
 
         return obs_dict
@@ -766,7 +767,7 @@ class UavSim(MultiAgentEnv):
             in_collision = True
 
             while in_collision:
-                x, y, z = get_random_pos(low_h=self.obstacle_radius * 1.50, z_high=3.5)
+                x, y, z = get_random_pos(low_h=self.obstacle_radius * 2.0, z_high=3.5)
                 _type = ObsType.S
                 obstacle = Obstacle(
                     _id=idx,

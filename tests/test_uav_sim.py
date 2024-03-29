@@ -9,11 +9,18 @@ from uav_sim.utils.trajectory_generator import (
     calculate_position,
     calculate_velocity,
 )
+from ray.rllib.utils import check_env
 
 
 class TestUavSim(unittest.TestCase):
     def setUp(self):
         self.env = UavSim()
+
+    def test_check_env_single_agent(self):
+        check_env(UavSim({"num_uavs": 1}))
+
+    def test_check_env(self):
+        check_env(UavSim({}))
 
     def test_observation_space(self):
         env = UavSim({"num_uavs": 1, "num_obstacles": 0})
@@ -59,6 +66,7 @@ class TestUavSim(unittest.TestCase):
                 "num_uavs": 4,
                 "use_safe_action": True,
                 "num_obstacles": 25,
+                "max_num_obstacles": 25,
                 "max_time": 30.0,
                 "seed": 0,
             }
