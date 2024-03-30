@@ -486,8 +486,8 @@ class UavSim(MultiAgentEnv):
             "uav_collision": uav.uav_collision,
             "uav_landed": 1.0 if is_reached else 0.0,
             "uav_done_dt": uav.done_dt,
+            "uav_crashed": 1.0 if uav.crashed else 0.0,
             "uav_dt_go": uav.dt_go,
-            # "uav_cum_dt_go": uav.cum_dt_penalty,
         }
 
         return info
@@ -555,25 +555,21 @@ class UavSim(MultiAgentEnv):
             reward -= self._stp_penalty
             return reward
 
-        uav.dt_go = uav.get_t_go_est() - t_remaining
-        uav.done_dt = t_remaining
-
         # pos reward if uav lands on any landing pad
         is_reached, rel_dist, rel_vel = uav.check_dest_reached()
+
+        if rel_vel == 0:
+            _rel_vel = self.action_high * self.dt
+            uav.dt_go = uav.get_t_go_est(_rel_vel) - t_remaining
+        else:
+            uav.dt_go = uav.get_t_go_est() - t_remaining
+
+        uav.done_dt = t_remaining
 
         if is_reached:
             uav.done = True
             uav.landed = True
             uav.done_time = self.time_elapsed
-
-            # reward += self._tgt_reward
-
-            # get reward for reaching destination
-            # TOD: put boundary so that no reward is given if beyond
-            # if self.time_elapsed <= self.time_final + self.t_go_max:
-            #     reward += self._tgt_reward * min(
-            #         self.time_elapsed / self.time_final, 1.0
-            #     )
 
             # get reward for reaching destination in time
             if abs(uav.done_dt) < self.t_go_max:
@@ -584,33 +580,24 @@ class UavSim(MultiAgentEnv):
                     -(1 - (self.time_elapsed / self.time_final)) * self._stp_penalty
                 )
 
-            # # get reward for reaching destination in time
-            # if abs(uav.done_dt) <= self.t_go_max:
-            #     reward += self._dt_reward
-
             # No need to check for other reward, UAV is done.
             return reward
 
         elif rel_dist >= np.linalg.norm(
-            [self.env_max_l, self.env_max_w, self.env_max_h]
+            [2 * self.env_max_l, 2 * self.env_max_w, self.env_max_h]
         ):
+            uav.crashed = True
             reward += -self._crash_penalty
         else:
             reward -= self._beta * (
                 rel_dist
-                / np.linalg.norm([self.env_max_l, self.env_max_w, self.env_max_h])
+                / np.linalg.norm(
+                    [2 * self.env_max_l, 2 * self.env_max_w, self.env_max_h]
+                )
             )
 
         # give small penalty for having large relative velocity
         reward += -self._beta * rel_vel
-
-        # else:
-        #     reward -= self._beta
-        # else:
-        #     reward -= self._beta * (
-        #         rel_dist
-        #         / np.linalg.norm([self.env_max_l, self.env_max_w, self.env_max_h])
-        #     )
 
         # uav.done_dt = self.time_final
         # get reward if uav maintains time difference
@@ -621,24 +608,16 @@ class UavSim(MultiAgentEnv):
         #     reward += -self._dt_go_penalty
 
         cum_dt_penalty = 0
-        min_col_avoidance = uav.r * 3
+
         # neg reward if uav collides with other uavs
         for other_uav in self.uavs.values():
             if uav.id != other_uav.id:
-                # cum_dt_penalty += other_uav.get_t_go_est() - uav.get_t_go_est()
 
-                dist_col = uav.rel_distance(other_uav)
                 if uav.in_collision(other_uav):
                     reward -= self.uav_collision_weight
-                    # uav.done = True
-                    # uav.landed = False
                     uav.uav_collision += 1
 
-                # elif dist_col < (min_col_avoidance + other_uav.r):
-                #     reward -= self.uav_collision_weight * (
-                #         1 - (dist_col / (min_col_avoidance + other_uav.r))
-                #     )
-
+                # cum_dt_penalty += other_uav.get_t_go_est() - uav.get_t_go_est()
         # reward -= self._dt_weight * abs(cum_dt_penalty)
 
         # neg reward if uav collides with obstacles
@@ -647,13 +626,7 @@ class UavSim(MultiAgentEnv):
 
             if uav.in_collision(obstacle):
                 reward -= self.obstacle_collision_weight
-                # uav.done = True
-                # uav.landed = False
                 uav.obs_collision += 1
-            # elif dist_col < (min_col_avoidance + obstacle.r):
-            #     reward -= self.obstacle_collision_weight * (
-            #         1 - (dist_col / (min_col_avoidance + obstacle.r))
-            #     )
 
         return reward
 

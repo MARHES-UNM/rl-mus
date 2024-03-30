@@ -271,6 +271,8 @@ class UavBase(Entity):
         self._state[2] = z
         self.done = False
         self.landed = False
+        self.crashed = False
+        self.dt_go = 0
         self.done_time = None
         self.d_thresh = d_thresh
 
@@ -334,8 +336,13 @@ class UavBase(Entity):
         rel_vel = np.linalg.norm(self._state[3:6] - pad.state[3:6])
         return rel_dist <= (self.r), rel_dist, rel_vel
 
-    def get_t_go_est(self):
-        _, rel_dist, rel_vel = self.check_dest_reached()
+    def get_t_go_est(self, rel_vel=None):
+
+        _, rel_dist, _rel_vel = self.check_dest_reached()
+
+        if rel_vel is None:
+            rel_vel = _rel_vel
+
         return rel_dist / (1e-6 + rel_vel)
 
 
