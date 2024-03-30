@@ -558,11 +558,13 @@ class UavSim(MultiAgentEnv):
         # pos reward if uav lands on any landing pad
         is_reached, rel_dist, rel_vel = uav.check_dest_reached()
 
-        if rel_vel == 0:
-            _rel_vel = self.action_high * self.dt
-            uav.dt_go = uav.get_t_go_est(_rel_vel) - t_remaining
-        else:
-            uav.dt_go = uav.get_t_go_est() - t_remaining
+        # TODO: fix getting dt_go
+        # if rel_vel == 0:
+        #     _rel_vel = self.action_high * self.dt
+        #     uav.dt_go = uav.get_t_go_est(_rel_vel) - t_remaining
+        # else:
+
+        uav.dt_go = uav.get_t_go_est() - t_remaining
 
         uav.done_dt = t_remaining
 
