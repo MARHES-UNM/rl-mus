@@ -114,7 +114,7 @@ class UavSim(MultiAgentEnv):
         )
 
     def _get_observation_space(self):
-        num_state_shape=6
+        num_state_shape = 6
         if self.num_obstacles == 0:
             num_obstacle_shape = 6
         else:
