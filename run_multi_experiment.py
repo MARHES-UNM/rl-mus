@@ -94,12 +94,13 @@ if __name__ == "__main__":
     with open(args.exp_config, "rt") as f:
         exp_config = json.load(f)
 
+    exp_name = exp_config["exp_name"]
     if not args.log_dir:
         branch_hash = get_git_hash()
 
         dir_timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M")
 
-        args.log_dir = Path(f"./results/test_results/exp_{dir_timestamp}_{branch_hash}")
+        args.log_dir = Path(f"./results/test_results/{exp_name}/exp_{dir_timestamp}_{branch_hash}")
 
     if not args.log_dir.exists():
         args.log_dir.mkdir(parents=True, exist_ok=True)
