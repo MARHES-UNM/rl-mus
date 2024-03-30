@@ -16,6 +16,7 @@ pip install ray[rllib,tune]==2.6.3 --force
 
 ## TODO: 
 Reduce state to just pos and velocity and compare performance.
-[] Fix UavBase
-[] change target reach metric
-[] fix quadprog
+[] add cbf for getting outside the environment
+[] set environment to match the lab, 1.75 x 1.75 x 1.5
+[] use convolution model (objective)
+[] create environment where goal is to reach target simultaneously as fast as possible (objective)
