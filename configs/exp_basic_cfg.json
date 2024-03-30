@@ -11,7 +11,7 @@
         ]
     },
     "exp_config": {
-        "max_num_episodes": 1,
+        "max_num_episodes": 5,
         "runs": [
             {
                 "name": "cc_none",
