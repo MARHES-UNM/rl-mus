@@ -146,9 +146,9 @@ def train(args):
 
     # Vary treatments here
     args.config["env_config"]["num_uavs"] = 4
-    args.config["env_config"]["uav_type"] = tune.grid_search(["Uav", "UavBase"])
+    args.config["env_config"]["uav_type"] = tune.grid_search(["UavBase"])
     # args.config["env_config"]["uav_type"] = tune.grid_search(["Uav"])
-    args.config["env_config"]["use_safe_action"] = tune.grid_search([False])
+    args.config["env_config"]["use_safe_action"] = tune.grid_search([True])
     args.config["env_config"]["target_pos_rand"] = True
 
     args.config["env_config"]["tgt_reward"] = 100
