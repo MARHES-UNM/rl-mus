@@ -151,7 +151,7 @@ def train(args):
     # args.config["env_config"]["target_pos_rand"] = True
 
     args.config["env_config"]["tgt_reward"] = 10
-    args.config["env_config"]["stp_penalty"] = 0.1
+    args.config["env_config"]["stp_penalty"] = 1.0
     args.config["env_config"]["beta"] = 0.3
     # args.config["env_config"]["d_thresh"] = tune.grid_search([0.15, 0.01])
     # args.config["env_config"]["d_thresh"] = tune.grid_search([0.15])
@@ -538,10 +538,11 @@ def parse_arguments():
     parser.add_argument(
         "--log_dir",
     )
-
     parser.add_argument(
         "--run", type=str, help="The RLlib-registered algorithm to use."
     )
+    parser.add_argument("--tf", type=float)
+
     parser.add_argument("--name", help="Name of experiment.", default="debug")
     parser.add_argument(
         "--framework",
@@ -611,6 +612,9 @@ def main():
 
     if args.run is not None:
         args.config["exp_config"]["run"] = args.run
+
+    if args.tf is not None:
+        args.config["env_config"]["time_final"] = args.tf
 
     if not args.log_dir:
         branch_hash = get_git_hash()
