@@ -1,47 +1,22 @@
 {
     "env_config": {
         "beta": 0.3,
-        "d_thresh": 0.01,
-        "difficulty_config": [
-            {
-                "obstacle_radius": 0.01
-            },
-            {
-                "obstacle_radius": 0.5
-            },
-            {
-                "obstacle_radius": 1
-            }
-        ],
-        "dt": 0.1,
-        "env_max_h": 4,
-        "env_max_l": 4,
-        "env_max_w": 4,
-        "gamma": 1,
         "max_num_obstacles": 4,
         "max_time": 23.0,
         "num_obstacles": 4,
         "num_uavs": 4,
         "obstacle_collision_weight": 0.1,
         "obstacle_radius": 0.5,
-        "pad_r": 0.1,
-        "render": false,
-        "render_mode": "human",
         "seed": 123,
         "start_level": 1,
         "stp_penalty": 5,
         "t_go_max": 2.0,
         "t_go_n": 0.1,
-        "target_v": 0.0,
-        "target_w": 0,
-        "target_r": 1,
         "time_final": 8.0,
         "uav_collision_weight": 0.1,
         "uav_type": "UavBase",
         "use_curriculum_learning": false,
-        "use_safe_action": false,
-        "z_high": 4,
-        "z_low": 0.2
+        "use_safe_action": false
     },
     "exp_config": {
         "run": "PPO",

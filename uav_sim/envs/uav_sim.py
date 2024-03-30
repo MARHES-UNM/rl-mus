@@ -30,7 +30,7 @@ class UavSim(MultiAgentEnv):
         self.num_uavs = env_config.setdefault("num_uavs", 4)
         self.gamma = env_config.setdefault("gamma", 1)
         self.num_obstacles = env_config.setdefault("num_obstacles", 4)
-        self.obstacle_radius = env_config.setdefault("obstacle_radius", 1)
+        self.obstacle_radius = env_config.setdefault("obstacle_radius", 0.5)
         self.max_num_obstacles = env_config.setdefault("max_num_obstacles", 4)
         # self.num_obstacles = min(self.max_num_obstacles, self.num_obstacles)
         assert self.max_num_obstacles >= self.num_obstacles, print(
@@ -40,9 +40,6 @@ class UavSim(MultiAgentEnv):
             "obstacle_collision_weight", 0.1
         )
         self.uav_collision_weight = env_config.setdefault("uav_collision_weight", 0.1)
-        # self.uav_collision_weight = env_config.setdefault(
-        #     "uav_collision_weight", 0.1
-        # )
         self._use_safe_action = env_config.setdefault("use_safe_action", False)
         self.time_final = env_config.setdefault("time_final", 8.0)
         self.t_go_max = env_config.setdefault("t_go_max", 2.0)
@@ -61,10 +58,10 @@ class UavSim(MultiAgentEnv):
             sys.modules[__name__], env_config.get("uav_type", "Uav")
         )
 
-        self.env_max_w = env_config.setdefault("env_max_w", 4)
-        self.env_max_l = env_config.setdefault("env_max_l", 4)
-        self.env_max_h = env_config.setdefault("env_max_h", 4)
-        self._z_high = env_config.setdefault("z_high", 4)
+        self.env_max_w = env_config.setdefault("env_max_w", 1.25)
+        self.env_max_l = env_config.setdefault("env_max_l", 1.25)
+        self.env_max_h = env_config.setdefault("env_max_h", 1.75)
+        self._z_high = env_config.setdefault("z_high", self.env_max_h)
         self._z_high = min(self.env_max_h, self._z_high)
         self._z_low = env_config.setdefault("z_low", 0.2)
         self._z_low = max(0, self._z_low)
@@ -722,10 +719,12 @@ class UavSim(MultiAgentEnv):
 
         # TODO ensure we don't start in collision states
         # Reset Target
-        x = np.random.rand() * self.env_max_w
-        y = np.random.rand() * self.env_max_l
-        x = self.env_max_w / 2.0
-        y = self.env_max_h / 2.0
+        # x = np.random.rand() * self.env_max_w
+        # y = np.random.rand() * self.env_max_l
+        # x = self.env_max_w / 2.0
+        # y = self.env_max_h / 2.0
+        x = 0
+        y = 0
         self.target = Target(
             _id=0,
             x=x,
@@ -743,9 +742,12 @@ class UavSim(MultiAgentEnv):
             y_high=self.env_max_l,
             z_high=self.env_max_h,
         ):
-            x = np.random.rand() * x_high
-            y = np.random.rand() * y_high
+            x = np.random.uniform(low=-x_high, high=x_high)
+            y = np.random.uniform(low=-y_high, high=y_high)
             z = np.random.uniform(low=low_h, high=z_high)
+            # x = np.random.rand() * x_high
+            # y = np.random.rand() * y_high
+            # z = np.random.uniform(low=low_h, high=z_high)
             return (x, y, z)
 
         def is_in_collision(uav):
@@ -770,7 +772,9 @@ class UavSim(MultiAgentEnv):
             in_collision = True
 
             while in_collision:
-                x, y, z = get_random_pos(low_h=self.obstacle_radius * 2.0, z_high=3.5)
+                x, y, z = get_random_pos(
+                    low_h=self.obstacle_radius * 2.0, z_high=self.env_max_h - 0.25
+                )
                 _type = ObsType.S
                 obstacle = Obstacle(
                     _id=idx,
@@ -813,9 +817,6 @@ class UavSim(MultiAgentEnv):
                 in_collision = is_in_collision(uav)
 
             self.uavs[agent_id] = uav
-
-            # self.uavs[agent_id].init_tg = uav.get_t_go_est()
-            # self.uavs[agent_id].init_r = uav.get_rel_pad_dist()
 
         obs = {uav.id: self._get_obs(uav) for uav in self.uavs.values()}
         reward = {uav.id: self._get_reward(uav) for uav in self.uavs.values()}
