@@ -211,7 +211,7 @@ def train(args):
         # https://docs.ray.io/en/latest/rllib/rllib-training.html#rllib-config-resources
         .resources(
             num_gpus=0 if args.smoke_test else num_gpus,
-            # num_learner_workers=1,
+            num_learner_workers=1,
             num_gpus_per_learner_worker=0 if args.smoke_test else args.gpu,
         )
         # See for changing model options https://docs.ray.io/en/latest/rllib/rllib-models.html
