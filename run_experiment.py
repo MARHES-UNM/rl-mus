@@ -174,7 +174,7 @@ def train(args):
     # args.config["env_config"]["target_pos_rand"] = True
 
     args.config["env_config"]["tgt_reward"] = 10
-    args.config["env_config"]["stp_penalty"] = tune.grid_search([3.0])
+    args.config["env_config"]["stp_penalty"] = tune.grid_search([5.0])
     args.config["env_config"]["beta"] = 0.3
     # args.config["env_config"]["d_thresh"] = tune.grid_search([0.15, 0.01])
     # args.config["env_config"]["d_thresh"] = tune.grid_search([0.15])
