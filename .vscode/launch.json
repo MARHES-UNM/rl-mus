@@ -57,7 +57,7 @@
                 // 
             },
             "args": [
-                "--run", "cc",
+                "--run", "PPO",
                 "test",
                 "--render",
                 // "--plot_results",

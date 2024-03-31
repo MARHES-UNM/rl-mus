@@ -12,7 +12,33 @@ class DeepsetModel(BaseModel):
             self, obs_space, act_space, num_outputs, model_config, name, *args, **kwargs
         )
         self.pooling_type = model_config["custom_model_config"]["pooling_type"]
+        self.hidden_layer_size = model_config["custom_model_config"][
+            "hidden_layer_size"
+        ]
 
+        self.num_agent_states = model_config["custom_model_config"]["num_agent_states"]
+        self.num_obstacle_states = model_config["custom_model_config"][
+            "num_obstacle_states"
+        ]
+        self.num_evader_other_agent_states = model_config["custom_model_config"][
+            "num_evader_other_agent_states"
+        ]
+
+        # get number of entities in environment
+        self.num_evaders = model_config["custom_model_config"]["num_evaders"]
+        self.num_obstacles = model_config["custom_model_config"]["num_obstacles"]
+        self.num_agents = model_config["custom_model_config"]["num_agents"]
+
+        # max number of entities in environment
+        self.max_num_obstacles = model_config["custom_model_config"][
+            "max_num_obstacles"
+        ]
+        self.max_num_agents = model_config["custom_model_config"]["max_num_agents"]
+        self.max_num_evaders = model_config["custom_model_config"]["max_num_evaders"]
+
+        self.use_safe_action = model_config["custom_model_config"].get(
+            "use_safe_action", False
+        )
         if self.pooling_type == "sum":
             self.pooling_func = torch.sum
         elif self.pooling_type == "mean":

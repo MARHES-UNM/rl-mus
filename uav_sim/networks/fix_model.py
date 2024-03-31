@@ -17,7 +17,7 @@ class TorchFixModel(BaseModel):
 
     @override(ModelV2)
     def forward(self, input_dict, state, seq_lens):
-        model_out, _ = self.model(input_dict, state, seq_lens)
+        model_out, _ = self.model.forward(input_dict, state, seq_lens)
         return model_out, []
 
     @override(ModelV2)

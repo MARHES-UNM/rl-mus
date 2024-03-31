@@ -13,6 +13,7 @@ from uav_sim.utils.callbacks import TrainCallback
 from ray.rllib.algorithms.callbacks import make_multi_callbacks
 from ray.rllib.env.apis.task_settable_env import TaskSettableEnv, TaskType
 from ray.rllib.env.env_context import EnvContext
+from ray.rllib.models import ModelCatalog
 
 import os
 import logging
@@ -21,12 +22,18 @@ from uav_sim.utils.safety_layer import SafetyLayer
 from plot_results import plot_uav_states
 import math
 
+from uav_sim.networks.fix_model import TorchFixModel
+from uav_sim.networks.cnn_model import TorchCnnModel
 from uav_sim.utils.utils import get_git_hash
 
 
 PATH = Path(__file__).parent.absolute().resolve()
 RESULTS_DIR = Path.home() / "ray_results"
 logger = logging.getLogger(__name__)
+
+
+ModelCatalog.register_custom_model("torch_fix_model", TorchFixModel)
+ModelCatalog.register_custom_model("torch_cnn_model", TorchCnnModel)
 
 
 def setup_stream(logging_level=logging.DEBUG):
@@ -80,6 +87,18 @@ def get_algo_config(config, env_obs_space, env_action_space, env_task_fn=None):
             # placement_strategy=[{"cpu": 1}, {"cpu": 1}],
             num_gpus_per_learner_worker=0,
         )
+        # See for changing model options https://docs.ray.io/en/latest/rllib/rllib-models.html
+        # Must set learner_api to use custom model and most set rl_module to False
+        # https://github.com/ray-project/ray/issues/40201
+        .training(
+            model={
+                "custom_model": "torch_cnn_model",
+                # Extra kwargs to be passed to your model's c'tor.
+                "custom_model_config": {"n_agent_state":6, "max_action_val": 5},
+            },
+            _enable_learner_api=False,
+        )
+        .rl_module(_enable_rl_module_api=False)
         .multi_agent(
             policies={
                 "shared_policy": (
