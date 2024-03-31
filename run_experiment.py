@@ -68,6 +68,8 @@ def get_obs_act_space(config):
 
 def get_algo_config(config, env_obs_space, env_action_space, env_task_fn=None):
 
+    custom_model = config["exp_config"].setdefault("custom_model", "torch_cnn_model")
+
     algo_config = (
         get_trainable_cls(config["exp_config"]["run"])
         .get_default_config()
@@ -167,6 +169,8 @@ def train(args):
     args.config["env_config"]["num_uavs"] = 4
     args.config["env_config"]["uav_type"] = tune.grid_search(["UavBase"])
     args.config["env_config"]["use_safe_action"] = tune.grid_search([False, True])
+    # custom_model = tune.grid_search(["torch_fix_model", "torch_cnn_model"])
+    custom_model = tune.grid_search(["torch_cnn_model"])
     # args.config["env_config"]["target_pos_rand"] = True
 
     args.config["env_config"]["tgt_reward"] = 10
@@ -191,7 +195,8 @@ def train(args):
     train_config = (
         get_algo_config(
             args.config, env_obs_space, env_action_space, env_task_fn=task_fn
-        ).rollouts(
+        )
+        .rollouts(
             num_rollout_workers=(
                 1 if args.smoke_test else args.cpu
             ),  # set 0 to main worker run sim
@@ -206,7 +211,7 @@ def train(args):
         # https://docs.ray.io/en/latest/rllib/rllib-training.html#rllib-config-resources
         .resources(
             num_gpus=0 if args.smoke_test else num_gpus,
-            num_learner_workers=1,
+            # num_learner_workers=1,
             num_gpus_per_learner_worker=0 if args.smoke_test else args.gpu,
         )
         # See for changing model options https://docs.ray.io/en/latest/rllib/rllib-models.html
@@ -216,6 +221,12 @@ def train(args):
         .training(
             # https://docs.ray.io/en/latest/rllib/rllib-models.html
             # model={"fcnet_hiddens": [512, 512, 512]},
+            model={
+                "custom_model": custom_model,
+                # Extra kwargs to be passed to your custorm model.
+                "custom_model_config": {"n_agent_state": 6, "max_action_val": 5},
+            },
+            _enable_learner_api=False,
             lr=5e-5,
             use_gae=True,
             use_critic=True,
@@ -235,6 +246,7 @@ def train(args):
             # kl_coeff=1.0,
             # kl_target=0.0068,
         )
+        .rl_module(_enable_rl_module_api=False)
         # .reporting(keep_per_episode_custom_metrics=True)
         # .evaluation(
         #     evaluation_interval=10, evaluation_duration=10  # default number of episodes
@@ -605,7 +617,7 @@ def parse_arguments():
     )
 
     train_sub.add_argument("--checkpoint", type=str)
-    train_sub.add_argument("--gpu", type=float, default=0)
+    train_sub.add_argument("--gpu", type=float, default=0.0)
     train_sub.add_argument("--num_envs_per_worker", type=int, default=12)
     train_sub.add_argument(
         "--cpu", type=int, default=1, help="num_rollout_workers default is 1"

@@ -28,8 +28,10 @@ class UavSim(MultiAgentEnv):
         self._seed = env_config.setdefault("seed", None)
         self.render_mode = env_config.setdefault("render_mode", "human")
         self.num_uavs = env_config.setdefault("num_uavs", 4)
+        self.nom_num_uavs = env_config.setdefault("nom_num_uavs", 4)
         self.gamma = env_config.setdefault("gamma", 1)
         self.num_obstacles = env_config.setdefault("num_obstacles", 4)
+        self.nom_num_obstacles = env_config.setdefault("nom_num_obstacles", 4)
         self.obstacle_radius = env_config.setdefault("obstacle_radius", 0.5)
         self.max_num_obstacles = env_config.setdefault("max_num_obstacles", 4)
         # self.num_obstacles = min(self.max_num_obstacles, self.num_obstacles)
@@ -154,14 +156,14 @@ class UavSim(MultiAgentEnv):
                         "other_uav_obs": spaces.Box(
                             low=-np.inf,
                             high=np.inf,
-                            shape=(self.num_uavs - 1, num_state_shape),
+                            shape=(self.nom_num_uavs - 1, num_state_shape),
                             dtype=np.float32,
                         ),
                         "obstacles": spaces.Box(
                             low=-np.inf,
                             high=np.inf,
                             shape=(
-                                self.num_obstacles,
+                                self.nom_num_obstacles,
                                 num_state_shape,
                             ),
                             dtype=np.float32,
@@ -497,22 +499,41 @@ class UavSim(MultiAgentEnv):
 
     def _get_closest_obstacles(self, uav):
         obstacle_states = np.array([obs.state for obs in self.obstacles])
+        
+        # there must be 0 obstacles return empty list
+        if len(obstacle_states) == 0:
+            return []
+
         dist = np.linalg.norm(obstacle_states[:, :3] - uav.state[:3][None, :], axis=1)
         argsort = np.argsort(dist)[: self.num_obstacles]
         closest_obstacles = [self.obstacles[idx] for idx in argsort]
         return closest_obstacles
 
     def _get_obs(self, uav):
-        other_uav_states = np.array(
-            [
-                other_uav.state[0:6]
-                for other_uav in self.uavs.values()
-                if uav.id != other_uav.id
-            ]
-        )
+        other_uav_state_list = [
+            other_uav.state[0:6]
+            for other_uav in self.uavs.values()
+            if uav.id != other_uav.id
+        ]
+
+        num_active_other_agents = len(other_uav_state_list)
+        if num_active_other_agents < self.nom_num_uavs - 1:
+            fake_uav = [0.0] * 6
+            for _ in range(self.nom_num_uavs - 1 - num_active_other_agents):
+                other_uav_state_list.append(fake_uav.copy())
+
+        other_uav_states = np.array(other_uav_state_list, dtype=np.float32)
 
         closest_obstacles = self._get_closest_obstacles(uav)
-        obstacles_to_add = np.array([obs.state for obs in closest_obstacles])
+
+        obstacle_state_list = [obs.state[0:6] for obs in closest_obstacles]
+        num_active_obstacles = len(obstacle_state_list)
+        if num_active_obstacles < self.nom_num_obstacles:
+            fake_obs = [0.0] * 6
+            for _ in range(self.nom_num_obstacles - num_active_obstacles):
+                obstacle_state_list.append(fake_obs)
+
+        obstacles_to_add = np.array(obstacle_state_list, dtype=np.float32)
 
         obs_dict = {
             "state": uav.state[0:6].astype(np.float32),
