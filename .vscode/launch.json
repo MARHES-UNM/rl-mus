@@ -41,8 +41,7 @@
                 "--env_name",
                 "multi-uav-sim-curriculum-v0",
                 "train",
-                // "--render",
-                // "--plot_results",
+                // "--gpu", "0.5", "--cpu", "8"
             ]
         },
         {
@@ -57,10 +56,9 @@
                 // 
             },
             "args": [
-                "--run", "PPO",
+                "--run",
+                "PPO",
                 "test",
-                // "--checkpoint", 
-                // "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-sim-v0_2024-03-30-22-56_fe37449_4u_4o/debug/debug/PPO_multi-uav-sim-v0_4f05b_00000_0_stp_penalty=3.0000,t_go_max=2.0000,time_final=8.0000,uav_type=UavBase,use_safe_action=False,cus_2024-03-30_22-56-44/checkpoint_000035/policies/shared_policy",
                 "--render",
                 // "--plot_results",
             ]
