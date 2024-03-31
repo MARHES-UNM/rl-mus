@@ -28,7 +28,7 @@ PATH = Path(__file__).parent.absolute().resolve()
 
 def run_experiment(exp_config, log_dir, max_num_episodes):
     logger.debug(f"exp_config:{exp_config}")
-    default_config = f"{PATH}/configs/sim_config.cfg"
+    default_config = f"{PATH}/configs/sim_config.json"
     with open(default_config, "rt") as f:
         config = json.load(f)
 
@@ -58,6 +58,7 @@ def run_experiment(exp_config, log_dir, max_num_episodes):
         f"{output_folder}",
         "--load_config",
         str(exp_file_config),
+        "test",
         "--max_num_episodes",
         str(max_num_episodes),
         "--experiment_num",
@@ -65,7 +66,6 @@ def run_experiment(exp_config, log_dir, max_num_episodes):
     ]
 
     rv = subprocess.call(args)
-    # rv = subprocess.call(args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     logger.debug(f"{exp_config['exp_name']} done running.")
 
@@ -94,12 +94,13 @@ if __name__ == "__main__":
     with open(args.exp_config, "rt") as f:
         exp_config = json.load(f)
 
+    exp_name = exp_config["exp_name"]
     if not args.log_dir:
         branch_hash = get_git_hash()
 
         dir_timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M")
 
-        args.log_dir = Path(f"./results/test_results/exp_{dir_timestamp}_{branch_hash}")
+        args.log_dir = Path(f"./results/test_results/{exp_name}/exp_{dir_timestamp}_{branch_hash}")
 
     if not args.log_dir.exists():
         args.log_dir.mkdir(parents=True, exist_ok=True)
