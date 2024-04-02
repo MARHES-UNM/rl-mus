@@ -562,10 +562,18 @@ def none_or_int(value):
         return None
     return int(value)
 
+def get_default_env_config(path, config):
+    env = UavSim(config["env_config"])
+
+    config["env_config"].update(env.env_config)
+
+    with open(path, "w") as f:
+        json.dump(config, f)
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument("--load_config", default=f"{PATH}/configs/sim_config.json")
+    parser.add_argument("--get_def_config")
     parser.add_argument(
         "--log_dir",
     )
@@ -636,6 +644,10 @@ def main():
 
     with open(args.load_config, "rt") as f:
         args.config = json.load(f)
+
+    if args.get_def_config:
+        get_default_env_config(args.get_def_config, args.config)
+        return 0
 
     args.config["env_name"] = args.env_name
 

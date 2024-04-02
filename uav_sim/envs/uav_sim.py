@@ -35,6 +35,9 @@ class UavSim(MultiAgentEnv):
         self.obstacle_radius = env_config.setdefault("obstacle_radius", 0.5)
         self.max_num_obstacles = env_config.setdefault("max_num_obstacles", 4)
         # self.num_obstacles = min(self.max_num_obstacles, self.num_obstacles)
+        if self.max_num_obstacles < self.num_obstacles:
+            self.num_obstacles = self.max_num_obstacles
+
         assert self.max_num_obstacles >= self.num_obstacles, print(
             f"Max number of obstacles {self.max_num_obstacles} is less than number of obstacles {self.num_obstacles}"
         )
@@ -71,10 +74,10 @@ class UavSim(MultiAgentEnv):
         self.target_v = env_config.setdefault("target_v", 0)
         self.target_w = env_config.setdefault("target_w", 0)
         self.target_r = env_config.setdefault("target_r", 1)
-        self.max_time = env_config.setdefault("max_time", 40)
         self.max_time = self.time_final + self.t_go_max
+        env_config['max_time'] = self.max_time
 
-        self.env_config = env_config
+        self._env_config = env_config
         self.norm_action_high = np.ones(3)
         self.norm_action_low = np.ones(3) * -1
 
@@ -87,6 +90,10 @@ class UavSim(MultiAgentEnv):
         self.reset()
         self.action_space = self._get_action_space()
         self.observation_space = self._get_observation_space()
+
+    @property
+    def env_config(self):
+        return self._env_config
 
     @property
     def time_elapsed(self):
@@ -499,7 +506,7 @@ class UavSim(MultiAgentEnv):
 
     def _get_closest_obstacles(self, uav):
         obstacle_states = np.array([obs.state for obs in self.obstacles])
-        
+
         # there must be 0 obstacles return empty list
         if len(obstacle_states) == 0:
             return []

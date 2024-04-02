@@ -100,7 +100,9 @@ if __name__ == "__main__":
 
         dir_timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M")
 
-        args.log_dir = Path(f"./results/test_results/{exp_name}/exp_{dir_timestamp}_{branch_hash}")
+        args.log_dir = Path(
+            f"./results/test_results/{exp_name}/exp_{dir_timestamp}_{branch_hash}"
+        )
 
     if not args.log_dir.exists():
         args.log_dir.mkdir(parents=True, exist_ok=True)
@@ -111,6 +113,7 @@ if __name__ == "__main__":
         max_num_episodes = exp_config["exp_config"]["max_num_episodes"]
 
     target_v = exp_config["env_config"]["target_v"]
+    num_uavs = exp_config["env_config"]["num_uavs"]
     max_num_obstacles = exp_config["env_config"]["max_num_obstacles"]
     seeds = exp_config["exp_config"]["seeds"]
     time_final = exp_config["env_config"]["time_final"]
@@ -121,7 +124,7 @@ if __name__ == "__main__":
     experiment_num = 0
 
     exp_items = list(
-        itertools.product(seeds, target_v, run_nums, max_num_obstacles, time_final)
+        itertools.product(seeds, target_v, run_nums, max_num_obstacles, time_final, num_uavs)
     )
 
     for exp_item in exp_items:
@@ -130,6 +133,7 @@ if __name__ == "__main__":
         run_num = exp_item[2]
         num_obstacle = exp_item[3]
         t_final = exp_item[4]
+        num_uav = exp_item[5]
 
         exp_config = {}
         exp_config["exp_config"] = {
@@ -150,12 +154,14 @@ if __name__ == "__main__":
             "max_num_obstacles": num_obstacle,
             "seed": seed,
             "time_final": t_final,
+            "num_uavs": num_uav
         }
 
         file_prefix = {
             "tgt_v": target,
             "r": runs[run_num]["run"],
             "sa": runs[run_num]["safe_action_type"],
+            "u": num_uav,
             "o": num_obstacle,
             "s": seed,
             "tf": t_final,
