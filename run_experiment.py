@@ -144,7 +144,7 @@ def curriculum_fn(
     # Level 2: Expect rewards between 1.0 and 10.0, etc..
     # We will thus raise the level/task each time we hit a new power of 10.0
     time_steps = train_results.get("timesteps_total")
-    new_task = time_steps // 3500000
+    new_task = time_steps // 4000000
     # Clamp between valid values, just in case:
     new_task = max(min(new_task, 3), 0)
     print(
@@ -169,17 +169,23 @@ def train(args):
     args.config["env_config"]["num_uavs"] = 4
     args.config["env_config"]["uav_type"] = tune.grid_search(["UavBase"])
     args.config["env_config"]["use_safe_action"] = tune.grid_search([False, True])
-    custom_model = tune.grid_search(["torch_cnn_model", "torch_fix_model"])
+    # custom_model = tune.grid_search(["torch_cnn_model", "torch_fix_model"])
+    custom_model = tune.grid_search(
+        [
+            "torch_fix_model",
+            "torch_cnn_model",
+        ]
+    )
     # custom_model = tune.grid_search(["torch_cnn_model"])
     # args.config["env_config"]["target_pos_rand"] = True
 
-    args.config["env_config"]["tgt_reward"] = 10
+    args.config["env_config"]["tgt_reward"] = 100
     args.config["env_config"]["stp_penalty"] = tune.grid_search([5.0])
     args.config["env_config"]["beta"] = 0.3
     # args.config["env_config"]["d_thresh"] = tune.grid_search([0.15, 0.01])
     # args.config["env_config"]["d_thresh"] = tune.grid_search([0.15])
     # args.config["env_config"]["time_final"] = tune.grid_search([8.0, 20.0])
-    args.config["env_config"]["time_final"] = tune.grid_search([8.0])
+    args.config["env_config"]["time_final"] = tune.grid_search([20.0])
     args.config["env_config"]["t_go_max"] = tune.grid_search([2.0])
     args.config["env_config"]["obstacle_collision_weight"] = 0.1
     args.config["env_config"]["uav_collision_weight"] = 0.1
@@ -562,6 +568,7 @@ def none_or_int(value):
         return None
     return int(value)
 
+
 def get_default_env_config(path, config):
     env = UavSim(config["env_config"])
 
@@ -569,6 +576,7 @@ def get_default_env_config(path, config):
 
     with open(path, "w") as f:
         json.dump(config, f)
+
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
