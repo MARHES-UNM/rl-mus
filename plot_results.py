@@ -51,6 +51,7 @@ def get_data(all_progress):
             data["max_dt"] = data["env_config"]["t_go_max"]
             data["uav_done"] = np.average(data["uav_done"], axis=1).sum()
             data["uav_done_dt"] = np.mean(np.abs(data["uav_done_dt"]))
+            # data["uav_done_dt"] = np.mean(data["uav_done_dt"])
             # uav_done_time = np.nan_to_num(
             #     np.array(data["uav_done_time"], dtype=np.float64), nan=100
             # )

@@ -89,13 +89,15 @@
             "group": [
                 "num_obs",
                 "target_v",
-                "tf"
+                "tf",
+                "num_uavs"
             ],
             "group_x": "name",
             "group_key": [
                 4.0,
                 0.0,
-                8.0
+                8.0,
+                4.0
             ],
             "group_title": "baseline",
             "x_label": ""
@@ -103,12 +105,31 @@
         {
             "group": [
                 "target_v",
-                "tf"
+                "tf",
+                "num_obs"
+
+            ],
+            "group_x": "num_uavs",
+            "group_key": [
+                0.0,
+                8.0,
+                4.0
+            ],
+            "group_title": "vary_num_uavs_tgt_v_0",
+            "x_label": "Number of UAVs"
+        },
+        {
+            "group": [
+                "target_v",
+                "tf",
+                "num_uavs"
+
             ],
             "group_x": "num_obs",
             "group_key": [
                 0.0,
-                8.0
+                8.0,
+                4.0
             ],
             "group_title": "vary_num_obs_tgt_v_0",
             "x_label": "Number of NCFOs"
@@ -116,12 +137,14 @@
         {
             "group": [
                 "num_obs",
-                "target_v"
+                "target_v",
+                "num_uavs"
             ],
             "group_x": "tf",
             "group_key": [
                 4,
-                0.0
+                0.0,
+                4
             ],
             "group_title": "vary_tf_v_num_obs",
             "x_label": "Expected Time of Arrival, $t^f$ (s)"
