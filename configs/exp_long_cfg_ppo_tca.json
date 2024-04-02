@@ -21,7 +21,7 @@
         ]
     },
     "exp_config": {
-        "max_num_episodes": 2,
+        "max_num_episodes": 100,
         "runs": [
             {
                 "name": "cc_sca",
