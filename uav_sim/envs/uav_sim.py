@@ -601,14 +601,18 @@ class UavSim(MultiAgentEnv):
             uav.landed = True
             uav.done_time = self.time_elapsed
 
+            reward += (
+                -( (abs(uav.done_dt) / self.time_final)) * self._stp_penalty
+            )
             # get reward for reaching destination in time
-            if abs(uav.done_dt) < self.t_go_max:
-                reward += self._tgt_reward
+            # if abs(uav.done_dt) < self.t_go_max:
+            #     reward += self._tgt_reward
 
-            else:
-                reward += (
-                    -(1 - (self.time_elapsed / self.time_final)) * self._stp_penalty
-                )
+            # else:
+
+                # reward += (
+                #     -(1 - (self.time_elapsed / self.time_final)) * self._stp_penalty
+                # )
 
             # No need to check for other reward, UAV is done.
             return reward

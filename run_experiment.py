@@ -185,7 +185,7 @@ def train(args):
     # args.config["env_config"]["d_thresh"] = tune.grid_search([0.15, 0.01])
     # args.config["env_config"]["d_thresh"] = tune.grid_search([0.15])
     # args.config["env_config"]["time_final"] = tune.grid_search([8.0, 20.0])
-    args.config["env_config"]["time_final"] = tune.grid_search([20.0])
+    args.config["env_config"]["time_final"] = tune.grid_search([8.0])
     args.config["env_config"]["t_go_max"] = tune.grid_search([2.0])
     args.config["env_config"]["obstacle_collision_weight"] = 0.1
     args.config["env_config"]["uav_collision_weight"] = 0.1
