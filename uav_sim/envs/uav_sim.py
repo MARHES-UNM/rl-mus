@@ -433,10 +433,10 @@ class UavSim(MultiAgentEnv):
         # step uavs
         self.alive_agents = set()
         for i, action in actions.items():
-            # # Done uavs don't move
-            # if self.uavs[i].done:
-            #     continue
             self.alive_agents.add(i)
+            # Done uavs don't move
+            if self.uavs[i].done:
+                continue
 
             if self._use_safe_action:
                 action = self.get_safe_action(self.uavs[i], action)
@@ -493,7 +493,7 @@ class UavSim(MultiAgentEnv):
             "uav_rel_dist": rel_dist,
             "uav_rel_vel": rel_vel,
             "uav_collision": uav.uav_collision,
-            "uav_landed": 1.0 if is_reached else 0.0,
+            "uav_landed": 1.0 if uav.done else 0.0,
             "uav_done_dt": uav.done_dt,
             "uav_crashed": 1.0 if uav.crashed else 0.0,
             "uav_dt_go": uav.dt_go,

@@ -56,11 +56,15 @@
                 // 
             },
             "args": [
+                "--tf", "10",
                 "--run",
                 "PPO",
                 "test",
+                "--checkpoint", 
+                "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-sim-curriculum-v0_2024-04-02-00-23_ca1e39f_4u_4o/uav_base_cur/uav_base_cur/PPO_multi-uav-sim-curriculum-v0_bab31_00002_2_stp_penalty=5.0000,t_go_max=2.0000,time_final=20.0000,uav_type=UavBase,use_safe_acti_2024-04-02_00-23-17/checkpoint_000304/policies/shared_policy",
                 "--render",
-                // "--plot_results",
+                "--seed", "5",
+                "--plot_results"
             ]
         },
         {
