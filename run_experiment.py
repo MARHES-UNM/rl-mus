@@ -300,6 +300,7 @@ def test(args):
             print(f"******************seed: {args.seed}")
             seed_val = none_or_int(args.seed)
             args.config["env_config"]["seed"] = seed_val
+
         if args.checkpoint:
             args.config["exp_config"]["checkpoint"] = args.checkpoint
 
@@ -581,7 +582,7 @@ def get_default_env_config(path, config):
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument("--load_config", default=f"{PATH}/configs/sim_config.json")
-    parser.add_argument("--get_def_config")
+    parser.add_argument("--get_config")
     parser.add_argument(
         "--log_dir",
     )
@@ -653,8 +654,8 @@ def main():
     with open(args.load_config, "rt") as f:
         args.config = json.load(f)
 
-    if args.get_def_config:
-        get_default_env_config(args.get_def_config, args.config)
+    if args.get_config:
+        get_default_env_config(args.get_config, args.config)
         return 0
 
     args.config["env_name"] = args.env_name
