@@ -19,6 +19,8 @@ Reduce state to just pos and velocity and compare performance.
 [] add cbf for getting outside the environment
 [x] set environment to match the lab, 1.75 x 1.75 x 1.5
 [x] track mean dt_go instead of done_dt
-[] use convolution model (objective)
+[x] use convolution model (objective)
 [] create environment where goal is to reach target simultaneously as fast as possible (objective)
+    This can use the to drive the cumulative t_go_estimate error to zero
+[] write collision reward as exponential function
 [] save best checkpoint after training
