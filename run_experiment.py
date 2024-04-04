@@ -92,15 +92,15 @@ def get_algo_config(config, env_obs_space, env_action_space, env_task_fn=None):
         # See for changing model options https://docs.ray.io/en/latest/rllib/rllib-models.html
         # Must set learner_api to use custom model and most set rl_module to False
         # https://github.com/ray-project/ray/issues/40201
-        .training(
-            model={
-                "custom_model": custom_model,
-                # Extra kwargs to be passed to your model's c'tor.
-                "custom_model_config": {"n_agent_state": 6, "max_action_val": 5},
-            },
-            _enable_learner_api=False,
-        )
-        .rl_module(_enable_rl_module_api=False)
+        # .training(
+        #     model={
+        #         "custom_model": custom_model,
+        #         # Extra kwargs to be passed to your model's c'tor.
+        #         "custom_model_config": {"n_agent_state": 6, "max_action_val": 5},
+        #     },
+        #     _enable_learner_api=False,
+        # )
+        # .rl_module(_enable_rl_module_api=False)
         .multi_agent(
             policies={
                 "shared_policy": (
@@ -169,13 +169,12 @@ def train(args):
     args.config["env_config"]["num_uavs"] = 4
     args.config["env_config"]["uav_type"] = tune.grid_search(["UavBase"])
     args.config["env_config"]["use_safe_action"] = tune.grid_search([False, True])
-    # custom_model = tune.grid_search(["torch_cnn_model", "torch_fix_model"])
-    custom_model = tune.grid_search(
-        [
-            "torch_fix_model",
-            "torch_cnn_model",
-        ]
-    )
+    # custom_model = tune.grid_search(
+    #     [
+    #         "torch_fix_model",
+    #         "torch_cnn_model",
+    #     ]
+    # )
     # custom_model = tune.grid_search(["torch_cnn_model"])
     # args.config["env_config"]["target_pos_rand"] = True
 
@@ -227,12 +226,12 @@ def train(args):
         .training(
             # https://docs.ray.io/en/latest/rllib/rllib-models.html
             # model={"fcnet_hiddens": [512, 512, 512]},
-            model={
-                "custom_model": custom_model,
-                # Extra kwargs to be passed to your custorm model.
-                "custom_model_config": {"n_agent_state": 6, "max_action_val": 5},
-            },
-            _enable_learner_api=False,
+            # model={
+            #     "custom_model": custom_model,
+            #     # Extra kwargs to be passed to your custorm model.
+            #     "custom_model_config": {"n_agent_state": 6, "max_action_val": 5},
+            # },
+            # _enable_learner_api=False,
             lr=5e-5,
             use_gae=True,
             use_critic=True,
@@ -252,7 +251,7 @@ def train(args):
             # kl_coeff=1.0,
             # kl_target=0.0068,
         )
-        .rl_module(_enable_rl_module_api=False)
+        # .rl_module(_enable_rl_module_api=False)
         # .reporting(keep_per_episode_custom_metrics=True)
         # .evaluation(
         #     evaluation_interval=10, evaluation_duration=10  # default number of episodes
