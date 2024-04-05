@@ -73,7 +73,7 @@ class UavSim(MultiAgentEnv):
         self.pad_r = env_config.setdefault("pad_r", 0.1)
         self.target_v = env_config.setdefault("target_v", 0)
         self.target_w = env_config.setdefault("target_w", 0)
-        self.target_r = env_config.setdefault("target_r", 1)
+        self.target_r = env_config.setdefault("target_r", 0.26)
         self.max_time = self.time_final + self.t_go_max
         env_config["max_time"] = self.max_time
 
@@ -733,25 +733,6 @@ class UavSim(MultiAgentEnv):
         self._time_elapsed = 0.0
         self._agent_ids = set(range(self.num_uavs))
 
-        # TODO ensure we don't start in collision states
-        # Reset Target
-        # x = np.random.rand() * self.env_max_w
-        # y = np.random.rand() * self.env_max_l
-        # x = self.env_max_w / 2.0
-        # y = self.env_max_h / 2.0
-        x = 0
-        y = 0
-        self.target = Target(
-            _id=0,
-            x=x,
-            y=y,
-            v=self.target_v,
-            w=self.target_w,
-            dt=self.dt,
-            r=self.target_r,
-            num_landing_pads=self.num_uavs,
-        )
-
         def get_random_pos(
             low_h=0.1,
             x_high=self.env_max_w,
@@ -761,10 +742,22 @@ class UavSim(MultiAgentEnv):
             x = np.random.uniform(low=-x_high, high=x_high)
             y = np.random.uniform(low=-y_high, high=y_high)
             z = np.random.uniform(low=low_h, high=z_high)
-            # x = np.random.rand() * x_high
-            # y = np.random.rand() * y_high
-            # z = np.random.uniform(low=low_h, high=z_high)
             return (x, y, z)
+
+        (x, y, z) = get_random_pos(low_h=0)
+        # (x, y, z) = (0.1, 0.0, 0.75)
+
+        self.target = Target(
+            _id=0,
+            x=x,
+            y=y,
+            z=z,
+            v=self.target_v,
+            w=self.target_w,
+            dt=self.dt,
+            r=self.target_r,
+            num_landing_pads=self.num_uavs,
+        )
 
         def is_in_collision(uav):
             for pad in self.target.pads:
@@ -808,7 +801,7 @@ class UavSim(MultiAgentEnv):
                         for other_obstacle in self.obstacles
                         if obstacle.id != other_obstacle.id
                     ]
-                )
+                ) or obstacle.in_collision(self.target)
 
             self.obstacles.append(obstacle)
 

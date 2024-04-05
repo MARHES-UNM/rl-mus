@@ -15,12 +15,12 @@ class Sprite:
     def update(self, t, done=False):
         raise NotImplemented
 
-    def get_sphere(self, center, radius):
+    def get_sphere(self, center, radius, color='r', alpha=0.1):
         u, v = np.mgrid[0 : 2 * np.pi : 20j, 0 : np.pi : 10j]
         x = center[0] + radius * np.cos(u) * np.sin(v)
         y = center[1] + radius * np.sin(u) * np.sin(v)
         z = center[2] + radius * np.cos(v)
-        return self.ax["ax_3d"].plot_wireframe(x, y, z, color="r", alpha=0.1)
+        return self.ax["ax_3d"].plot_wireframe(x, y, z, color=color, alpha=alpha)
 
     def get_cube(self, vertex, l=1, w=1, h=1, alpha=0.1, color="r"):
         x1, y1, z1 = vertex[0], vertex[1], vertex[2]
@@ -47,6 +47,35 @@ class Sprite:
         return body
 
 
+class SphereSprite(Sprite):
+    def __init__(self, ax, color='r', alpha=0.1, t_lim=30):
+        self.color = color
+        self.alpha = alpha
+        self.body = None
+
+        super().__init__(ax, t_lim)
+
+
+    def update(self, t, done=False):
+        if self.body:
+            if isinstance(self.body, list):
+                for body in self.body:
+                    body.remove()
+            else:
+                self.body.remove()
+
+        center = self.obstacle._state[0:3]
+        radius = self.obstacle.r
+
+        self.body = self.get_sphere(center, radius)
+
+    def get_sphere(self, center, radius, color='r', alpha=0.1):
+        u, v = np.mgrid[0 : 2 * np.pi : 20j, 0 : np.pi : 10j]
+        x = center[0] + radius * np.cos(u) * np.sin(v)
+        y = center[1] + radius * np.sin(u) * np.sin(v)
+        z = center[2] + radius * np.cos(v)
+        return self.ax["ax_3d"].plot_wireframe(x, y, z, color=color, alpha=alpha)
+    
 class ObstacleSprite(Sprite):
     def __init__(self, ax, obstacle, t_lim=30):
         super().__init__(ax, t_lim)
@@ -142,7 +171,7 @@ class TargetSprite:
             color=self.color,
         )
         self.ax["ax_3d"].add_patch(self.body)
-        art3d.pathpatch_2d_to_3d(self.body, z=0, zdir="z")
+        art3d.pathpatch_2d_to_3d(self.body, z=self.target.state[2], zdir="z")
 
         self.trajectory["t"].append(t)
         self.trajectory["x"].append(self.target._state[0])
@@ -261,7 +290,7 @@ class UavSprite:
             color=self.color,
         )
         self.ax["ax_3d"].add_patch(self.pad_sprite)
-        art3d.pathpatch_2d_to_3d(self.pad_sprite, z=0, zdir="z")
+        art3d.pathpatch_2d_to_3d(self.pad_sprite, z=self.uav.pad.z, zdir="z")
 
         self.trajectory["t"].append(t)
         self.trajectory["x"].append(self.uav._state[0])

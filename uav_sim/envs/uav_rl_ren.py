@@ -1,17 +1,7 @@
-import sys
 from gymnasium import spaces
-from gymnasium.utils import seeding
 import numpy as np
-from uav_sim.agents.uav import Obstacle, UavBase, Uav, ObsType
-from uav_sim.agents.uav import Target
 from uav_sim.envs.uav_sim import UavSim
-from uav_sim.utils.gui import Gui
-from qpsolvers import solve_qp
-from scipy.integrate import odeint
 import logging
-import random
-from ray.rllib.env.multi_agent_env import MultiAgentEnv
-import io
 
 
 logger = logging.getLogger(__name__)
@@ -150,12 +140,9 @@ class UavRlRen(UavSim):
 
         is_reached, rel_dist, rel_vel = uav.check_dest_reached()
 
-        uav.dt_go = uav.get_t_go_est() - t_remaining
+        uav.dt_go = uav.get_t_go_est()
 
         uav.done_dt = t_remaining
-
-        # self._beta = 0
-        # cum_dt_go_error = self.get_cum_dt_go_error(uav)
 
         if is_reached:
             uav.done = True
@@ -163,9 +150,6 @@ class UavRlRen(UavSim):
             uav.done_time = self.time_elapsed
 
             reward += self._tgt_reward
-
-            # if cum_dt_go_error > .5:
-            #     reward += -100
 
             return reward
 
@@ -190,14 +174,12 @@ class UavRlRen(UavSim):
         # neg reward if uav collides with other uavs
         for other_uav in self.uavs.values():
             if uav.id != other_uav.id:
-
                 if uav.in_collision(other_uav):
                     reward -= self.uav_collision_weight
                     uav.uav_collision += 1
 
         # neg reward if uav collides with obstacles
         for obstacle in self.obstacles:
-
             if uav.in_collision(obstacle):
                 reward -= self.obstacle_collision_weight
                 uav.obs_collision += 1

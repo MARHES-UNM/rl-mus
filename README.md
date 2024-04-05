@@ -24,3 +24,9 @@ Reduce state to just pos and velocity and compare performance.
     This can use the to drive the cumulative t_go_estimate error to zero
 [] write collision reward as exponential function
 [] save best checkpoint after training
+
+
+### RelRen Environment
+[] have target sampled from uniform sphere using this equation:
+https://stackoverflow.com/questions/5837572/generate-a-random-point-within-a-circle-uniformly
+https://karthikkaranth.me/blog/generating-random-points-in-a-sphere/

@@ -105,16 +105,17 @@ class Target(Entity):
         _id,
         x=0,
         y=0,
+        z=0,
         psi=0,
         v=0,
         w=0,
         dt=0.1,
-        r=1,
+        r=0.5,
         num_landing_pads=1,
-        pad_offset=0.5,
+        pad_offset=0.20,
         pad_r=0.1,
     ):
-        super().__init__(_id=_id, x=x, y=y, z=0, r=r, _type=AgentType.T)
+        super().__init__(_id=_id, x=x, y=y, z=z, r=r, _type=AgentType.T)
         self.id = _id
         self.dt = dt
         self.psi = psi
@@ -123,7 +124,6 @@ class Target(Entity):
         self.pad_r = pad_r
         self.pad_offset = pad_offset  # m
 
-        # x, y, z, x_dot, y_dot, z_dot, psi, psi_dot
         self.v = v
         self.w = w
         self.vx = self.v * cos(self.psi)
@@ -132,27 +132,42 @@ class Target(Entity):
         # verifies psi
         if not v == 0:
             np.testing.assert_almost_equal(self.psi, np.arctan2(self.vy, self.vx))
-        self._state = np.array([x, y, 0, self.vx, self.vy, 0, psi, self.w])
+        # x, y, z, x_dot, y_dot, z_dot, psi, psi_dot
+        self._state = np.array([x, y, z, self.vx, self.vy, 0, psi, self.w])
+
         self.pads = [
             Pad(_id, pad_loc[0], pad_loc[1], r=self.pad_r)
             for _id, pad_loc in enumerate(self.get_pad_offsets())
         ]
         self.update_pads_state()
 
+    def get_random_pos(self):
+        """generate random points around a sphere
+        https://karthikkaranth.me/blog/generating-random-points-in-a-sphere/
+
+        """
+        r = self.r * np.sqrt(np.random.random())
+        t = np.random.random() * 2 * np.pi
+
+        x = self._state[0] + r * cos(t)
+        y = self._state[1] + r * sin(t)
+        z = self._state
+
     def get_pad_offsets(self):
         x = self._state[0]
         y = self._state[1]
+        z = self._state[2]
         return [
-            (x - self.pad_offset, y),
-            (x + self.pad_offset, y),
-            (x, y - self.pad_offset),
-            (x, y + self.pad_offset),
+            (x - self.pad_offset, y, z),
+            (x + self.pad_offset, y, z),
+            (x, y - self.pad_offset, z),
+            (x, y + self.pad_offset, z),
         ]
 
     def update_pads_state(self):
         pad_offsets = self.get_pad_offsets()
         for pad, offset in zip(self.pads, pad_offsets):
-            pad.x, pad.y = offset
+            pad.x, pad.y, pad.z = offset
 
             pad._state = np.array(
                 [
