@@ -741,6 +741,8 @@ class UavSim(MultiAgentEnv):
         self._time_elapsed = 0.0
         self._agent_ids = set(range(self.num_uavs))
 
+
+
         def get_random_pos(
             low_h=0.1,
             x_high=self.env_max_w,
