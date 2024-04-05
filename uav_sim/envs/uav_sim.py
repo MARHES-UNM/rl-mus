@@ -253,6 +253,14 @@ class UavSim(MultiAgentEnv):
         return action.squeeze()
 
     def get_tc_controller(self, uav):
+        """https://onlinelibrary.wiley.com/doi/abs/10.1002/asjc.2685
+
+        Args:
+            uav (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
         mean_tg_error = np.array(
             [
                 # x.get_t_go_est() - (self.time_final - self.time_elapsed)
