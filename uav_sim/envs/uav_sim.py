@@ -754,13 +754,13 @@ class UavSim(MultiAgentEnv):
             z = np.random.uniform(low=low_h, high=z_high)
             return (x, y, z)
 
-        (x, y, z) = get_random_pos(
-            low_h=0,
-            x_high=self.env_max_w - self.target_r,
-            y_high=self.env_max_l - self.target_r,
-            z_high=self.env_max_h - self.target_r,
-        )
-        # (x, y, z) = (0.1, 0.0, 0.75)
+        # (x, y, z) = get_random_pos(
+        #     low_h=0,
+        #     x_high=self.env_max_w - self.target_r,
+        #     y_high=self.env_max_l - self.target_r,
+        #     z_high=self.env_max_h - self.target_r,
+        # )
+        (x, y, z) = (0.0, 0.0, 0.75)
 
         self.target = Target(
             _id=0,

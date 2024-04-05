@@ -179,7 +179,7 @@ class UavRlRen(UavSim):
         # give small penalty for having large relative velocity
         reward += -self._beta * rel_vel
 
-        reward += -self.get_cum_dt_go_error(uav)
+        reward += -self._stp_penalty * self.get_cum_dt_go_error(uav)
 
         # neg reward if uav collides with other uavs
         for other_uav in self.uavs.values():
