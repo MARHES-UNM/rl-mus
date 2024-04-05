@@ -1,6 +1,6 @@
 #!/bin/bash
 
-python run_experiment.py --name uav_base_no_cur --run PPO \
+python run_experiment.py --name uav_base_rl_ren --run PPO \
     train \
     --cpu 8 \
     --gpu 0.5 \

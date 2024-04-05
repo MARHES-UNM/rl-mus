@@ -51,7 +51,7 @@ class UavSim(MultiAgentEnv):
         self.t_go_n = env_config.setdefault("t_go_n", 1.0)
         self._beta = env_config.setdefault("beta", 0.01)
         self._d_thresh = env_config.setdefault("d_thresh", 0.01)  # uav.rad + pad.rad
-        self._tgt_reward = env_config.setdefault("tgt_reward", 100.0)
+        self._tgt_reward = env_config.setdefault("tgt_reward", 0.0)
         self._crash_penalty = env_config.setdefault("crash_penalty", 10.0)
         self._dt_go_penalty = env_config.setdefault("dt_go_penalty", 10.0)
         self._stp_penalty = env_config.setdefault("stp_penalty", 100.0)
@@ -75,7 +75,7 @@ class UavSim(MultiAgentEnv):
         self.target_w = env_config.setdefault("target_w", 0)
         self.target_r = env_config.setdefault("target_r", 1)
         self.max_time = self.time_final + self.t_go_max
-        env_config['max_time'] = self.max_time
+        env_config["max_time"] = self.max_time
 
         self._env_config = env_config
         self.norm_action_high = np.ones(3)
@@ -307,14 +307,12 @@ class UavSim(MultiAgentEnv):
 
         # action += 2 * cum_tg_error * np.array([pos_er[3], pos_er[4], pos_er[5]])
 
-
-        K = 3 * (1 - 1 * np.linalg.norm(pos_er[:3]) * cum_tg_error)
-        K = 1
-        action += (
-            K * np.array([pos_er[0], pos_er[1], pos_er[2]]) #* (-0.3 * cum_tg_error)
-        )
-
-
+        # K = 1 * (1 - 1 * np.linalg.norm(pos_er[:3]) * cum_tg_error)
+        # action += 1 * ( 0.3 * np.linalg.norm(pos_er[:3]) * cum_tg_error)
+        # K = 1
+        action += 3 * np.array(
+            [pos_er[0], pos_er[1], pos_er[2]]
+        )  # * (-0.3 * cum_tg_error)
 
         return action
 
@@ -614,18 +612,16 @@ class UavSim(MultiAgentEnv):
             uav.landed = True
             uav.done_time = self.time_elapsed
 
-            reward += (
-                -( (abs(uav.done_dt) / self.time_final)) * self._stp_penalty
-            )
+            reward += -((abs(uav.done_dt) / self.time_final)) * self._stp_penalty
             # get reward for reaching destination in time
             # if abs(uav.done_dt) < self.t_go_max:
             #     reward += self._tgt_reward
 
             # else:
 
-                # reward += (
-                #     -(1 - (self.time_elapsed / self.time_final)) * self._stp_penalty
-                # )
+            # reward += (
+            #     -(1 - (self.time_elapsed / self.time_final)) * self._stp_penalty
+            # )
 
             # No need to check for other reward, UAV is done.
             return reward

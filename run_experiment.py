@@ -5,6 +5,7 @@ from matplotlib import pyplot as plt
 import numpy as np
 import ray
 from ray import air, tune
+from uav_sim.envs.uav_rl_ren import UavRlRen
 from uav_sim.envs.uav_sim import UavSim
 from pathlib import Path
 from ray.rllib.algorithms.ppo import PPOConfig
@@ -56,7 +57,7 @@ def get_obs_act_space(config):
     env_config = config["env_config"]
     render = env_config["render"]
     env_config["render"] = False
-    temp_env = UavSim(env_config)
+    temp_env = UavRlRen(env_config)
 
     env_obs_space = temp_env.observation_space[0]
     env_action_space = temp_env.action_space[0]
@@ -169,6 +170,12 @@ def train(args):
     args.config["env_config"]["num_uavs"] = 4
     args.config["env_config"]["uav_type"] = tune.grid_search(["UavBase"])
     args.config["env_config"]["use_safe_action"] = tune.grid_search([False, True])
+    args.config["env_config"]["beta"] = 0.3
+    args.config["env_config"]["obstacle_collision_weight"] = 0.1
+    args.config["env_config"]["uav_collision_weight"] = 0.1
+    args.config["env_config"]["crash_penalty"] = 10
+    args.config["env_config"]["tgt_reward"] = 10
+    args.config["env_config"]["stp_penalty"] = tune.grid_search([5.0])
     # custom_model = tune.grid_search(
     #     [
     #         "torch_fix_model",
@@ -178,18 +185,11 @@ def train(args):
     # custom_model = tune.grid_search(["torch_cnn_model"])
     # args.config["env_config"]["target_pos_rand"] = True
 
-    args.config["env_config"]["tgt_reward"] = 100
-    args.config["env_config"]["stp_penalty"] = tune.grid_search([5.0])
-    args.config["env_config"]["beta"] = 0.3
     # args.config["env_config"]["d_thresh"] = tune.grid_search([0.15, 0.01])
     # args.config["env_config"]["d_thresh"] = tune.grid_search([0.15])
     # args.config["env_config"]["time_final"] = tune.grid_search([8.0, 20.0])
-    args.config["env_config"]["time_final"] = tune.grid_search([8.0])
-    args.config["env_config"]["t_go_max"] = tune.grid_search([2.0])
-    args.config["env_config"]["obstacle_collision_weight"] = 0.1
-    args.config["env_config"]["uav_collision_weight"] = 0.1
-
-    args.config["env_config"]["crash_penalty"] = 10
+    # args.config["env_config"]["time_final"] = tune.grid_search([8.0])
+    # args.config["env_config"]["t_go_max"] = tune.grid_search([2.0])
 
     obs_filter = "NoFilter"
     task_fn = curriculum_fn if "curriculum" in args.config["env_name"] else None
@@ -338,7 +338,8 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
         print("Unrecognized algorithm. Exiting...")
         exit(99)
 
-    env = UavSim(env_config)
+    # env = UavSim(env_config)
+    env = UavRlRen(env_config)
     if algo_to_run == "PPO":
         checkpoint = exp_config["exp_config"].setdefault("checkpoint", None)
         env_obs_space, env_action_space = get_obs_act_space(exp_config)
@@ -598,7 +599,7 @@ def parse_arguments():
         default="torch",
         help="The DL framework specifier.",
     )
-    parser.add_argument("--env_name", type=str, default="multi-uav-sim-v0")
+    parser.add_argument("--env_name", type=str, default="multi-uav-ren-v0")
 
     subparsers = parser.add_subparsers(dest="command")
     test_sub = subparsers.add_parser("test")
