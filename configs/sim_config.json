@@ -12,7 +12,7 @@
         "stp_penalty": 5,
         "t_go_max": 0.0,
         "t_go_n": 0.1,
-        "time_final": 4.0,
+        "time_final": 6.0,
         "uav_collision_weight": 0.1,
         "uav_type": "UavBase",
         "use_safe_action": false

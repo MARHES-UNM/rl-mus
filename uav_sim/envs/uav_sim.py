@@ -73,7 +73,7 @@ class UavSim(MultiAgentEnv):
         self.pad_r = env_config.setdefault("pad_r", 0.1)
         self.target_v = env_config.setdefault("target_v", 0)
         self.target_w = env_config.setdefault("target_w", 0)
-        self.target_r = env_config.setdefault("target_r", 0.26)
+        self.target_r = env_config.setdefault("target_r", 0.30)
         self.max_time = self.time_final + self.t_go_max
         env_config["max_time"] = self.max_time
 
@@ -744,7 +744,12 @@ class UavSim(MultiAgentEnv):
             z = np.random.uniform(low=low_h, high=z_high)
             return (x, y, z)
 
-        (x, y, z) = get_random_pos(low_h=0)
+        (x, y, z) = get_random_pos(
+            low_h=0,
+            x_high=self.env_max_w - self.target_r,
+            y_high=self.env_max_l - self.target_r,
+            z_high=self.env_max_h - self.target_r,
+        )
         # (x, y, z) = (0.1, 0.0, 0.75)
 
         self.target = Target(

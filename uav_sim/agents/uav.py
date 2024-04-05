@@ -112,7 +112,7 @@ class Target(Entity):
         dt=0.1,
         r=0.5,
         num_landing_pads=1,
-        pad_offset=0.20,
+        pad_offset=0.25,
         pad_r=0.1,
     ):
         super().__init__(_id=_id, x=x, y=y, z=z, r=r, _type=AgentType.T)
