@@ -32,7 +32,7 @@ class UavSim(MultiAgentEnv):
         self.gamma = env_config.setdefault("gamma", 1)
         self.num_obstacles = env_config.setdefault("num_obstacles", 4)
         self.nom_num_obstacles = env_config.setdefault("nom_num_obstacles", 4)
-        self.obstacle_radius = env_config.setdefault("obstacle_radius", 0.5)
+        self.obstacle_radius = env_config.setdefault("obstacle_radius", 0.1)
         self.max_num_obstacles = env_config.setdefault("max_num_obstacles", 4)
         # self.num_obstacles = min(self.max_num_obstacles, self.num_obstacles)
         if self.max_num_obstacles < self.num_obstacles:
@@ -266,11 +266,11 @@ class UavSim(MultiAgentEnv):
             mean_tg_error
             - (uav.get_t_go_est())  # - (self.time_final - self.time_elapsed)
         )
-        cum_tg_error = 0
+        # cum_tg_error = 0
 
-        for other_uav in self.uavs.values():
-            if other_uav.id != uav.id:
-                cum_tg_error += other_uav.get_t_go_est() - uav.get_t_go_est()
+        # for other_uav in self.uavs.values():
+        #     if other_uav.id != uav.id:
+        #         cum_tg_error += other_uav.get_t_go_est() - uav.get_t_go_est()
 
         des_pos = np.zeros(12)
         des_pos[0:6] = uav.pad.state[0:6]
@@ -295,13 +295,26 @@ class UavSim(MultiAgentEnv):
         #     * cum_tg_error
         #     * np.array([pos_er[0], pos_er[1], pos_er[2]])
         # )
-        cum_tg_error = self.time_final - self.time_elapsed
-        action += (
-            3 * np.array([pos_er[0], pos_er[1], pos_er[2]]) * (-0.3 * cum_tg_error)
-        )
+        # cum_tg_error = self.time_final - self.time_elapsed
+        # action += (
+        #     3 * np.array([pos_er[0], pos_er[1], pos_er[2]]) #* (-0.3 * cum_tg_error)
+        # )
+
+        # action +=  3 * np.linalg.norm([pos_er[0], pos_er[1], pos_er[2]]) * cum_tg_error
+        # action += 2 * (1 - 2 * np.linalg.norm(pos_er[:3])*cum_tg_error)
+        # action +=  2* cum_tg_error
+        # action += 3 * np.array([pos_er[3], pos_er[4], pos_er[5]])
 
         # action += 2 * cum_tg_error * np.array([pos_er[3], pos_er[4], pos_er[5]])
-        action += 3 * np.array([pos_er[3], pos_er[4], pos_er[5]])
+
+
+        K = 3 * (1 - 1 * np.linalg.norm(pos_er[:3]) * cum_tg_error)
+        K = 1
+        action += (
+            K * np.array([pos_er[0], pos_er[1], pos_er[2]]) #* (-0.3 * cum_tg_error)
+        )
+
+
 
         return action
 

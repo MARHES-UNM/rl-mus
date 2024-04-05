@@ -334,7 +334,7 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
     plot_results = exp_config["plot_results"]
 
     algo_to_run = exp_config["exp_config"].setdefault("run", "PPO")
-    if algo_to_run not in ["cc", "PPO"]:
+    if algo_to_run not in ["cc", "ren", "PPO"]:
         print("Unrecognized algorithm. Exiting...")
         exit(99)
 
@@ -425,7 +425,8 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
             # classic control
             if algo_to_run == "cc":
                 actions[idx] = env.get_time_coord_action(env.uavs[idx])
-                # actions[idx] = env.get_tc_controller(env.uavs[idx])
+            elif algo_to_run == "ren":
+                actions[idx] = env.get_tc_controller(env.uavs[idx])
             elif algo_to_run == "PPO":
                 if use_policy:
                     actions[idx] = algo.compute_single_action(prep.transform(obs[idx]))[
