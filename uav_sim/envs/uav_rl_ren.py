@@ -145,10 +145,19 @@ class UavRlRen(UavSim):
         # cum_tg_error = abs(
         #     (self.num_uavs / (self.num_uavs - 1)) * (mean_tg_error - uav.get_t_go_est())
         # )
-        cum_tg_error = abs(mean_tg_error - uav.get_t_go_est())
+        uav_tg_error = np.array(
+            [
+                abs(other_uav.get_t_go_est() - uav.get_t_go_est())
+                for other_uav in self.uavs.values()
+                if other_uav.id != uav.id
+            ]
+        ).mean()
 
-        # return (cum_tg_error / mean_tg_error)
-        return cum_tg_error / mean_tg_error
+        return uav_tg_error
+        # return uav_tg_error / mean_tg_error
+
+        # cum_tg_error = abs(mean_tg_error - uav.get_t_go_est())
+        # return cum_tg_error / mean_tg_error
 
     def _get_reward(self, uav):
 
