@@ -170,12 +170,13 @@ def train(args):
     args.config["env_config"]["num_uavs"] = 4
     args.config["env_config"]["uav_type"] = tune.grid_search(["UavBase"])
     args.config["env_config"]["use_safe_action"] = tune.grid_search([False])
-    args.config["env_config"]["beta"] = 0.3
+    args.config["env_config"]["beta"] = tune.loguniform(0.1, 0.3)
     args.config["env_config"]["obstacle_collision_weight"] = 0.1
     args.config["env_config"]["uav_collision_weight"] = 0.1
     args.config["env_config"]["crash_penalty"] = 10
     args.config["env_config"]["tgt_reward"] = 10
-    args.config["env_config"]["stp_penalty"] = tune.grid_search([0.0, 1.0, 3.0, 10.0])
+    # args.config["env_config"]["stp_penalty"] = tune.grid_search([0.0, 1.0, 3.0, 10.0])
+    args.config["env_config"]["stp_penalty"] = tune.loguniform(1.0, 8.0)
     # custom_model = tune.grid_search(
     #     [
     #         "torch_fix_model",
@@ -200,8 +201,7 @@ def train(args):
     train_config = (
         get_algo_config(
             args.config, env_obs_space, env_action_space, env_task_fn=task_fn
-        )
-        .rollouts(
+        ).rollouts(
             num_rollout_workers=(
                 1 if args.smoke_test else args.cpu
             ),  # set 0 to main worker run sim
@@ -274,7 +274,7 @@ def train(args):
         # args.run,
         # trainable_with_cpu_gpu,
         param_space=train_config.to_dict(),
-        # tune_config=tune.TuneConfig(num_samples=10),
+        tune_config=tune.TuneConfig(num_samples=10),
         run_config=air.RunConfig(
             stop=stop,
             local_dir=args.log_dir,
