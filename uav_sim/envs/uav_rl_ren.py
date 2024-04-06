@@ -25,7 +25,7 @@ class UavRlRen(UavSim):
                             shape=(num_state_shape,),
                             dtype=np.float32,
                         ),
-                        "done_dt": spaces.Box(
+                        "dt_go_error": spaces.Box(
                             low=-np.inf, high=np.inf, shape=(1,), dtype=np.float32
                         ),
                         "rel_pad": spaces.Box(
@@ -37,7 +37,7 @@ class UavRlRen(UavSim):
                         "other_uav_obs": spaces.Box(
                             low=-np.inf,
                             high=np.inf,
-                            shape=(self.nom_num_uavs - 1, num_state_shape),
+                            shape=(self.nom_num_uavs - 1, num_state_shape + 1),
                             dtype=np.float32,
                         ),
                         "obstacles": spaces.Box(
@@ -82,15 +82,22 @@ class UavRlRen(UavSim):
         return info
 
     def _get_obs(self, uav):
-        other_uav_state_list = [
-            other_uav.state[0:6]
-            for other_uav in self.uavs.values()
-            if uav.id != other_uav.id
-        ]
+        other_uav_state_list = []
+        for other_uav in self.uavs.values():
+            if uav.id != other_uav.id:
+                temp_list = other_uav.state[:6].tolist()
+                temp_list.append(self.get_cum_dt_go_error(other_uav))
+                other_uav_state_list.append(temp_list)
+
+        # other_uav_state_list = [
+        #     other_uav.state[0:6].tolist()
+        #     for other_uav in self.uavs.values()
+        #     if uav.id != other_uav.id
+        # ]
 
         num_active_other_agents = len(other_uav_state_list)
         if num_active_other_agents < self.nom_num_uavs - 1:
-            fake_uav = [0.0] * 6
+            fake_uav = [0.0] * 7
             for _ in range(self.nom_num_uavs - 1 - num_active_other_agents):
                 other_uav_state_list.append(fake_uav.copy())
 
@@ -109,7 +116,7 @@ class UavRlRen(UavSim):
 
         obs_dict = {
             "state": uav.state[0:6].astype(np.float32),
-            "done_dt": np.array([self.get_cum_dt_go_error(uav)], dtype=np.float32),
+            "dt_go_error": np.array([self.get_cum_dt_go_error(uav)], dtype=np.float32),
             "rel_pad": (uav.state[0:6] - uav.pad.state[0:6]).astype(np.float32),
             "other_uav_obs": other_uav_states.astype(np.float32),
             "obstacles": obstacles_to_add.astype(np.float32),

@@ -175,7 +175,7 @@ def train(args):
     args.config["env_config"]["uav_collision_weight"] = 0.1
     args.config["env_config"]["crash_penalty"] = 10
     args.config["env_config"]["tgt_reward"] = 10
-    args.config["env_config"]["stp_penalty"] = tune.grid_search([0.0, 1.0])
+    args.config["env_config"]["stp_penalty"] = tune.grid_search([0.0, 1.0, 3.0, 10.0])
     # custom_model = tune.grid_search(
     #     [
     #         "torch_fix_model",
