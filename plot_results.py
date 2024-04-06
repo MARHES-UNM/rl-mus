@@ -49,8 +49,12 @@ def get_data(all_progress):
             data["seed"] = data["env_config"]["seed"]
             data["tf"] = data["env_config"]["time_final"]
             data["max_dt"] = data["env_config"]["t_go_max"]
-            data["uav_done"] = np.average(data["uav_done"], axis=1).sum()
+            # data["uav_done"] = np.mean(data["uav_done"], axis=1).sum()
+            # sum up to to the number of uavs in the mean and gives the average across episodes
+            data["uav_done"] = np.sum(data["uav_done"], axis=0).mean()
             data["uav_done_dt"] = np.mean(np.abs(data["uav_done_dt"]))
+            data["uav_done_time_std"] = np.std(data["uav_done_time"], axis=0).mean()
+
             # data["uav_done_dt"] = np.mean(data["uav_done_dt"])
             # uav_done_time = np.nan_to_num(
             #     np.array(data["uav_done_time"], dtype=np.float64), nan=100

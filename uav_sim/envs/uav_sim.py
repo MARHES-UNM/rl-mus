@@ -269,11 +269,14 @@ class UavSim(MultiAgentEnv):
                 if x.id != uav.id
             ]
         ).mean()
-        cum_tg_error = (self.num_uavs / (self.num_uavs - 1)) * (
-            # mean_tg_error - (uav.get_t_go_est() - (self.time_final - self.time_elapsed))
-            mean_tg_error
-            - (uav.get_t_go_est())  # - (self.time_final - self.time_elapsed)
-        )
+        if self.num_uavs > 1:
+            cum_tg_error = (self.num_uavs / (self.num_uavs - 1)) * (
+                # mean_tg_error - (uav.get_t_go_est() - (self.time_final - self.time_elapsed))
+                mean_tg_error
+                - (uav.get_t_go_est())  # - (self.time_final - self.time_elapsed)
+            )
+        else:
+            cum_tg_error = mean_tg_error - uav.get_t_go_est()
         # cum_tg_error = 0
 
         # for other_uav in self.uavs.values():
@@ -740,8 +743,6 @@ class UavSim(MultiAgentEnv):
 
         self._time_elapsed = 0.0
         self._agent_ids = set(range(self.num_uavs))
-
-
 
         def get_random_pos(
             low_h=0.1,

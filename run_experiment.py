@@ -378,6 +378,7 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
     obstacle_collision_list = [[] for idx in range(env.num_uavs)]
     uav_done_list = [[] for idx in range(env.num_uavs)]
     uav_done_dt_list = [[] for idx in range(env.num_uavs)]
+    uav_done_time_list = [[] for idx in range(env.num_uavs)]
     uav_dt_go_list = [[] for idx in range(env.num_uavs)]
     rel_pad_dist = [[] for idx in range(env.num_uavs)]
     rel_pad_vel = [[] for idx in range(env.num_uavs)]
@@ -393,6 +394,7 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
         "obs_collision": 0.0,
         "uav_done": [[] for idx in range(env.num_uavs)],
         "uav_done_dt": [[] for idx in range(env.num_uavs)],
+        "uav_done_time": [[] for idx in range(env.num_uavs)],
         "episode_time": [],
         "episode_data": {
             "time_step_list": [],
@@ -460,6 +462,7 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
                 obstacle_collision_list[k].append(v["obstacle_collision"])
                 uav_done_list[k].append(v["uav_landed"])
                 uav_done_dt_list[k].append(v["uav_done_dt"])
+                uav_done_time_list[k].append(v["uav_done_time"])
                 uav_dt_go_list[k].append(v["uav_dt_go"])
                 rel_pad_dist[k].append(v["uav_rel_dist"])
                 rel_pad_vel[k].append(v["uav_rel_vel"])
@@ -483,6 +486,7 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
             for k, v in info.items():
                 results["uav_done"][k].append(v["uav_landed"])
                 results["uav_done_dt"][k].append(v["uav_done_dt"])
+                results["uav_done_time"][k].append(v["uav_done_time"])
             results["num_episodes"] = num_episodes
             results["episode_time"].append(env.time_elapsed)
 
@@ -526,6 +530,7 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
             obstacle_collision_list = [[] for idx in range(env.num_uavs)]
             uav_done_list = [[] for idx in range(env.num_uavs)]
             uav_done_dt_list = [[] for idx in range(env.num_uavs)]
+            uav_done_time_list = [[] for idx in range(env.num_uavs)]
             uav_dt_go_list = [[] for idx in range(env.num_uavs)]
             rel_pad_dist = [[] for idx in range(env.num_uavs)]
             rel_pad_vel = [[] for idx in range(env.num_uavs)]

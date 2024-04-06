@@ -73,9 +73,10 @@ class UavRlRen(UavSim):
             "uav_rel_vel": rel_vel,
             "uav_collision": uav.uav_collision,
             "uav_landed": 1.0 if uav.done else 0.0,
-            "uav_done_dt": self.get_cum_dt_go_error(uav),
+            "uav_done_dt": uav.done_dt,
             "uav_crashed": 1.0 if uav.crashed else 0.0,
             "uav_dt_go": uav.dt_go,
+            "uav_done_time": uav.done_time
         }
 
         return info
@@ -158,11 +159,11 @@ class UavRlRen(UavSim):
         uav.dt_go = uav.get_t_go_est()
 
         uav.done_dt = t_remaining
+        uav.done_time = self.time_elapsed
 
         if is_reached:
             uav.done = True
             uav.landed = True
-            uav.done_time = self.time_elapsed
 
             reward += self._tgt_reward
 

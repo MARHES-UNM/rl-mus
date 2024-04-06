@@ -288,6 +288,7 @@ class UavBase(Entity):
         self.landed = False
         self.crashed = False
         self.dt_go = 0
+        self.done_dt = 0
         self.done_time = None
         self.d_thresh = d_thresh
 
