@@ -394,6 +394,7 @@ def main():
     obs_group.groups.keys()
 
     target_v = exp_config["env_config"]["target_v"]
+    time_final = exp_config["env_config"]["time_final"]
     max_num_obstacles = exp_config["env_config"]["max_num_obstacles"]
     seeds = exp_config["exp_config"]["seeds"]
     names = [label[1] for label in exp_config["labels"]]
@@ -409,7 +410,7 @@ def main():
             names,
             target_v,
             [
-                20,
+                time_final[0],
             ],
         )
     )

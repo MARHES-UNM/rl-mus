@@ -134,6 +134,10 @@ class UavRlRen(UavSim):
         Returns:
             _type_: _description_
         """
+
+        if self.num_uavs == 1:
+            return 0
+
         mean_tg_error = np.array(
             [
                 x.get_t_go_est()
@@ -154,7 +158,7 @@ class UavRlRen(UavSim):
         ).mean()
 
         # return uav_tg_error
-        return uav_tg_error / mean_tg_error
+        return uav_tg_error / (1e-6 + mean_tg_error)
 
         # cum_tg_error = abs(mean_tg_error - uav.get_t_go_est())
         # return cum_tg_error / mean_tg_error
