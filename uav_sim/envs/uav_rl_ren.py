@@ -153,8 +153,8 @@ class UavRlRen(UavSim):
             ]
         ).mean()
 
-        return uav_tg_error
-        # return uav_tg_error / mean_tg_error
+        # return uav_tg_error
+        return uav_tg_error / mean_tg_error
 
         # cum_tg_error = abs(mean_tg_error - uav.get_t_go_est())
         # return cum_tg_error / mean_tg_error
