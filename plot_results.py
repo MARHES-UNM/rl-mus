@@ -390,11 +390,12 @@ def main():
         skip_legend=args.skip_legend,
     )
 
-    obs_group = df.groupby(["seed", "num_obs", "name", "target_v", "tf"])
+    obs_group = df.groupby(["seed", "num_uavs", "num_obs", "name", "target_v", "tf"])
     obs_group.groups.keys()
 
     target_v = exp_config["env_config"]["target_v"]
     time_final = exp_config["env_config"]["time_final"]
+    num_uavs = exp_config["env_config"]["num_uavs"]
     max_num_obstacles = exp_config["env_config"]["max_num_obstacles"]
     seeds = exp_config["exp_config"]["seeds"]
     names = [label[1] for label in exp_config["labels"]]
@@ -403,6 +404,9 @@ def main():
         itertools.product(
             [
                 seeds[0],
+            ],
+            [
+                num_uavs[0]
             ],
             [
                 max_num_obstacles[0],
@@ -453,9 +457,10 @@ def main():
         results["episode_data"] = data
         plt_prefix = {
             "seed": group_to_plot[0],
-            "obs": group_to_plot[1],
-            "sa": group_to_plot[2].lower().replace("-", "_"),
-            "tgt_v": group_to_plot[3],
+            "uavs": group_to_plot[1],
+            "obs": group_to_plot[2],
+            "sa": group_to_plot[3].lower().replace("-", "_"),
+            "tgt_v": group_to_plot[4],
         }
 
         plt_prefix = "_".join([f"{k}_{str(v)}" for k, v in plt_prefix.items()])

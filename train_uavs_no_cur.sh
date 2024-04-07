@@ -1,6 +1,6 @@
 #!/bin/bash
 
-python run_experiment.py --name done_time_report --run PPO \
+python run_experiment.py --name stp_pen_comp --run PPO \
     train \
     --cpu 8 \
     --gpu 0.5 \

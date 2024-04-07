@@ -307,9 +307,9 @@
             },
             "args": [
                 "--exp_config",
-                "configs/exp_basic_cfg_ren.json",
+                "configs/exp_long_cfg_rl_ren.json",
                 "--exp_folder",
-                "/home/prime/Documents/workspace/rl_multi_uav_sim/results/test_results/basic_ren/exp_2024-04-05-23-54_9fa8a96",
+                "/home/prime/Documents/workspace/rl_multi_uav_sim/results/test_results/ppo_ren_comp/exp_2024-04-07-08-41_01ceaee",
                 "--skip_legend"
             ],
         },
