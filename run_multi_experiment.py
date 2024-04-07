@@ -28,8 +28,8 @@ PATH = Path(__file__).parent.absolute().resolve()
 
 def run_experiment(exp_config, log_dir, max_num_episodes):
     logger.debug(f"exp_config:{exp_config}")
-    default_config = f"{PATH}/configs/sim_config.json"
-    with open(default_config, "rt") as f:
+    base_config = exp_config["base_config"]
+    with open(base_config, "rt") as f:
         config = json.load(f)
 
     config["exp_config"].update(exp_config["exp_config"])
@@ -94,6 +94,8 @@ if __name__ == "__main__":
     with open(args.exp_config, "rt") as f:
         exp_config = json.load(f)
 
+    base_config = exp_config.setdefault("base_config", f"{PATH}/configs/sim_config.json")
+
     exp_name = exp_config["exp_name"]
     if not args.log_dir:
         branch_hash = get_git_hash()
@@ -136,6 +138,7 @@ if __name__ == "__main__":
         num_uav = exp_item[5]
 
         exp_config = {}
+        exp_config["base_config"] = base_config
         exp_config["exp_config"] = {
             "name": runs[run_num]["name"],
             "run": runs[run_num]["run"],
