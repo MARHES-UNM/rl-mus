@@ -1,0 +1,143 @@
+{
+    "exp_name": "ppo_ren_comp",
+    "env_config": {
+        "target_v": [
+            0.0
+        ],
+        "num_uavs": [
+            4,
+            1,
+            2
+        ],
+        "max_num_obstacles": [
+            4,
+            0,
+            6
+        ],
+        "time_final": [
+            6
+        ]
+    },
+    "exp_config": {
+        "max_num_episodes": 200,
+        "runs": [
+            {
+                "name": "ren",
+                "run": "ren",
+                "checkpoint": null,
+                "safe_action_type": null,
+                "label": "REN"
+            },
+            {
+                "name": "ren-ca",
+                "run": "ren",
+                "checkpoint": null,
+                "safe_action_type": "sca",
+                "label": "REN-CA"
+            },
+            {
+                "name": "ppo_no_ren",
+                "run": "PPO",
+                "checkpoint": "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2024-04-07-09-20_d97cb5c_4u_4o/stp_pen_comp/stp_pen_comp/PPO_multi-uav-ren-v0_92321_00000_0_beta=0.0360,stp_penalty=0.0000,uav_type=UavBase,use_safe_action=False_2024-04-07_09-20-15/checkpoint_000305/policies/shared_policy",
+                "safe_action_type": null,
+                "label": "POETIC_NO_REN"
+            },
+            {
+                "name": "ppo",
+                "run": "PPO",
+                "checkpoint": "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2024-04-07-09-20_d97cb5c_4u_4o/stp_pen_comp/stp_pen_comp/PPO_multi-uav-ren-v0_92321_00001_1_beta=0.0360,stp_penalty=0.5890,uav_type=UavBase,use_safe_action=False_2024-04-07_09-20-15/checkpoint_000305/policies/shared_policy",
+                "safe_action_type": null,
+                "label": "POETIC"
+            }
+        ],
+        "seeds": [
+            100
+        ]
+    },
+    "safety_layer_cfg": {
+        "checkpoint_dir": null
+    },
+    "items_to_plot": {
+        "uav_collision": "Total UAV Collisions",
+        "obs_collision": "Total NCFO Collision",
+        "uav_done_dt": "Mean UAV Time Arrival Error (s)",
+        "uav_done": "Total UAV Landed",
+        "time_total_s": "Total Experiment Runtime (s)",
+        "uav_done_time_std": "Done Time std"
+    },
+    "groups_to_plot": [
+        {
+            "group": [
+                "target_v"
+            ],
+            "group_x": "name",
+            "group_key": [
+                0.0
+            ],
+            "group_title": "overall",
+            "x_label": ""
+        },
+        {
+            "group": [
+                "num_obs",
+                "target_v",
+                "tf",
+                "num_uavs"
+            ],
+            "group_x": "name",
+            "group_key": [
+                4.0,
+                0.0,
+                6.0,
+                4.0
+            ],
+            "group_title": "baseline",
+            "x_label": ""
+        },
+        {
+            "group": [
+                "target_v",
+                "tf",
+                "num_obs"
+            ],
+            "group_x": "num_uavs",
+            "group_key": [
+                0.0,
+                6.0,
+                4.0
+            ],
+            "group_title": "vary_num_uavs_tgt_v_0",
+            "x_label": "Number of UAVs"
+        },
+        {
+            "group": [
+                "target_v",
+                "tf",
+                "num_uavs"
+            ],
+            "group_x": "num_obs",
+            "group_key": [
+                0.0,
+                6.0,
+                4.0
+            ],
+            "group_title": "vary_num_obs_tgt_v_0",
+            "x_label": "Number of NCFOs"
+        },
+        {
+            "group": [
+                "num_obs",
+                "target_v",
+                "num_uavs"
+            ],
+            "group_x": "tf",
+            "group_key": [
+                4,
+                0.0,
+                4
+            ],
+            "group_title": "vary_tf_v_num_obs",
+            "x_label": "Expected Time of Arrival, $t^f$ (s)"
+        }
+    ]
+}
