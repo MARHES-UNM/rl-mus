@@ -30,3 +30,6 @@ Reduce state to just pos and velocity and compare performance.
 [] have target sampled from uniform sphere using this equation:
 https://stackoverflow.com/questions/5837572/generate-a-random-point-within-a-circle-uniformly
 https://karthikkaranth.me/blog/generating-random-points-in-a-sphere/
+
+
+$$ 1 / n \sum_j^n \text{abs} (t_{\text{go},i} - t_{\text{go},j})$$
