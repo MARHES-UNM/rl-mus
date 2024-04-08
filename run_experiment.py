@@ -176,8 +176,8 @@ def train(args):
     args.config["env_config"]["tgt_reward"] = 10
     # args.config["env_config"]["beta"] = tune.loguniform(0.001, 0.3)
     # args.config["env_config"]["stp_penalty"] = tune.loguniform(0.5, 3.0)
-    args.config["env_config"]["stp_penalty"] = tune.grid_search([0.0, 0.589])
-    args.config["env_config"]["beta"] = tune.grid_search([0.036])
+    args.config["env_config"]["stp_penalty"] = tune.grid_search([0.0, 0.589, 1.0])
+    args.config["env_config"]["beta"] = tune.grid_search([0.3])
     # custom_model = tune.grid_search(
     #     [
     #         "torch_fix_model",
