@@ -178,9 +178,9 @@ class UavRlRen(UavSim):
             uav.done = True
             uav.landed = True
 
-            # reward += self._tgt_reward
+            reward += self._tgt_reward
 
-            reward += -self._tgt_reward * self._stp_penalty * abs(uav_dt_go_error)
+            # reward += -self._tgt_reward * self._stp_penalty * abs(uav_dt_go_error)
 
             return reward
 

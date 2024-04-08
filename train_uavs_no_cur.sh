@@ -1,6 +1,6 @@
 #!/bin/bash
 
-python run_experiment.py --name beta_0_3 --run PPO \
+python run_experiment.py --name no_final_stp_pen --run PPO \
     train \
     --cpu 8 \
     --gpu 0.5 \
