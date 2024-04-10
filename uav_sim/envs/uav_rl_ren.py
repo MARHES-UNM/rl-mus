@@ -190,12 +190,12 @@ class UavRlRen(UavSim):
             uav.crashed = True
             reward += -self._crash_penalty
         else:
-            reward -= self._beta * (
-                rel_dist
-                / np.linalg.norm(
-                    [2 * self.env_max_l, 2 * self.env_max_w, self.env_max_h]
-                )
-            )
+            reward += self._beta * np.sign(uav.last_rel_dist - rel_dist)
+
+            uav.last_rel_dist = rel_dist
+            # reward -= self._beta * (
+            # rel_dist / self.max_rel_dist
+            # )
 
         # give small penalty for having large relative velocity
         reward += -self._beta_vel * rel_vel

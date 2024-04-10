@@ -55,7 +55,7 @@ class UavSim(MultiAgentEnv):
         self._tgt_reward = env_config.setdefault("tgt_reward", 0.0)
         self._crash_penalty = env_config.setdefault("crash_penalty", 10.0)
         self._dt_go_penalty = env_config.setdefault("dt_go_penalty", 10.0)
-        self._stp_penalty = env_config.setdefault("stp_penalty", 100.0)
+        self._stp_penalty = env_config.setdefault("stp_penalty", 0.0)
         self._dt_reward = env_config.setdefault("dt_reward", 0.0)
         self._dt_weight = env_config.setdefault("dt_weight", 0.0)
 
@@ -67,6 +67,10 @@ class UavSim(MultiAgentEnv):
         self.env_max_w = env_config.setdefault("env_max_w", 1.25)
         self.env_max_l = env_config.setdefault("env_max_l", 1.25)
         self.env_max_h = env_config.setdefault("env_max_h", 1.75)
+        self.max_rel_dist = np.linalg.norm(
+            [2 * self.env_max_w, 2 * self.env_max_h, self.env_max_h]
+        )
+
         self._z_high = env_config.setdefault("z_high", self.env_max_h)
         self._z_high = min(self.env_max_h, self._z_high)
         self._z_low = env_config.setdefault("z_low", 0.2)
@@ -262,22 +266,25 @@ class UavSim(MultiAgentEnv):
         Returns:
             _type_: _description_
         """
-        mean_tg_error = np.array(
-            [
-                # x.get_t_go_est() - (self.time_final - self.time_elapsed)
-                x.get_t_go_est()  # - (self.time_final - self.time_elapsed)
-                for x in self.uavs.values()
-                if x.id != uav.id
-            ]
-        ).mean()
+
         if self.num_uavs > 1:
+            mean_tg_error = np.array(
+                [
+                    # x.get_t_go_est() - (self.time_final - self.time_elapsed)
+                    x.get_t_go_est()  # - (self.time_final - self.time_elapsed)
+                    for x in self.uavs.values()
+                    if x.id != uav.id
+                ]
+            ).mean()
+
             cum_tg_error = (self.num_uavs / (self.num_uavs - 1)) * (
                 # mean_tg_error - (uav.get_t_go_est() - (self.time_final - self.time_elapsed))
                 mean_tg_error
                 - (uav.get_t_go_est())  # - (self.time_final - self.time_elapsed)
             )
-        else:
-            cum_tg_error = mean_tg_error - uav.get_t_go_est()
+
+        # else:
+        # cum_tg_error = mean_tg_error - uav.get_t_go_est()
         # cum_tg_error = 0
 
         # for other_uav in self.uavs.values():
@@ -315,16 +322,18 @@ class UavSim(MultiAgentEnv):
         # action +=  3 * np.linalg.norm([pos_er[0], pos_er[1], pos_er[2]]) * cum_tg_error
         # action += 2 * (1 - 2 * np.linalg.norm(pos_er[:3])*cum_tg_error)
         # action +=  2* cum_tg_error
-        # action += 3 * np.array([pos_er[3], pos_er[4], pos_er[5]])
 
         # action += 2 * cum_tg_error * np.array([pos_er[3], pos_er[4], pos_er[5]])
 
         # K = 1 * (1 - 1 * np.linalg.norm(pos_er[:3]) * cum_tg_error)
         # action += 1 * ( 0.3 * np.linalg.norm(pos_er[:3]) * cum_tg_error)
         # K = 1
+        # action += .2 * np.array(
         action += 3 * np.array(
             [pos_er[0], pos_er[1], pos_er[2]]
         )  # * (-0.3 * cum_tg_error)
+
+        # action += 3 * np.array([pos_er[3], pos_er[4], pos_er[5]])
 
         return action
 
@@ -646,9 +655,10 @@ class UavSim(MultiAgentEnv):
         else:
             reward -= self._beta * (
                 rel_dist
-                / np.linalg.norm(
-                    [2 * self.env_max_l, 2 * self.env_max_w, self.env_max_h]
-                )
+                / self.max_rel_dist
+                # / np.linalg.norm(
+                # [2 * self.env_max_l, 2 * self.env_max_w, self.env_max_h]
+                # )
             )
 
         # give small penalty for having large relative velocity
@@ -842,6 +852,7 @@ class UavSim(MultiAgentEnv):
                 )
                 in_collision = is_in_collision(uav)
 
+            uav.last_rel_dist = np.linalg.norm([x, y, z])
             self.uavs[agent_id] = uav
 
         obs = {uav.id: self._get_obs(uav) for uav in self.uavs.values()}

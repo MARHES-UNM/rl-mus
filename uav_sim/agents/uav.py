@@ -291,6 +291,7 @@ class UavBase(Entity):
         self.done_dt = 0
         self.done_time = None
         self.d_thresh = d_thresh
+        self.last_rel_dist = 0
 
     def rk4(self, state, action):
         """Based on: https://github.com/mahaitongdae/Safety_Index_Synthesis/blob/master/envs_and_models/collision_avoidance_env.py#L194
