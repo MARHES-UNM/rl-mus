@@ -1,6 +1,6 @@
 #!/bin/bash
 
-python run_experiment.py --name complex_rew --run PPO \
+python run_experiment.py --name small_stp_penalty --run PPO \
     train \
     --cpu 8 \
     --gpu 0.5 \

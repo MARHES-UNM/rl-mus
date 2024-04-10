@@ -171,7 +171,7 @@ class UavRlRen(UavSim):
         uav.obs_collision = 0.0
 
         if self._time_elapsed >= self.max_time:
-            reward -= self._stp_penalty
+            reward -= self._max_time_penalty
             uav.done_time = self.max_time
             return reward
 
