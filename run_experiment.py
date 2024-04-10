@@ -175,7 +175,7 @@ def train(args):
     args.config["env_config"]["crash_penalty"] = 10
     # args.config["env_config"]["beta"] = tune.loguniform(0.001, 0.3)
     # args.config["env_config"]["stp_penalty"] = tune.loguniform(0.5, 3.0)
-    args.config["env_config"]["stp_penalty"] = tune.grid_search([0.5, 1.0, 0.0, 2.0])
+    args.config["env_config"]["stp_penalty"] = tune.grid_search([0.0, 0.5, 1.0, 2.0])
     args.config["env_config"]["tgt_reward"] = tune.grid_search([10])
     args.config["env_config"]["beta"] = tune.grid_search([0.1])
     args.config["env_config"]["beta_vel"] = tune.grid_search([0.1])

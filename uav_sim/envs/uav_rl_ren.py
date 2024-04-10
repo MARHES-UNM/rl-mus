@@ -175,9 +175,9 @@ class UavRlRen(UavSim):
             uav.done_time = self.max_time
             return reward
 
-        # if uav.done or uav.landed:
-        #     # UAV most have finished last time_step, return 0 for reward
-        #     return reward
+        if uav.done:
+            # UAV most have finished last time_step, return 0 for reward
+            return reward
 
         is_reached, rel_dist, rel_vel = uav.check_dest_reached()
 
@@ -189,7 +189,7 @@ class UavRlRen(UavSim):
         uav.done_dt = uav_dt_go_error
 
         if is_reached:
-            # uav.done = True
+            uav.done = True
             uav.landed = True
 
             if uav.done_time == 0:
