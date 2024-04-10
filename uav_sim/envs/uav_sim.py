@@ -494,10 +494,17 @@ class UavSim(MultiAgentEnv):
             reward[uav_id] = self._get_reward(self.uavs[uav_id])
             info[uav_id] = self._get_info(self.uavs[uav_id])
 
+        # get global reward
+        glob_reward = self._get_global_reward()
+        reward = {k: v + glob_reward for k, v in reward.items()}
+
+        all_landed = all([uav.landed for uav in self.uavs.values()])
         # calculate done for each agent
         done = {
-            self.uavs[uav_id].id: self.uavs[uav_id].done for uav_id in self.alive_agents
+            self.uavs[uav_id].id: self.uavs[uav_id].done or all_landed
+            for uav_id in self.alive_agents
         }
+
         done["__all__"] = (
             all(v for v in done.values()) or self.time_elapsed >= self.max_time
         )
@@ -591,6 +598,9 @@ class UavSim(MultiAgentEnv):
         }
 
         return obs_dict
+
+    def _get_global_reward(self):
+        return 0
 
     def _get_reward(self, uav):
         # reward_info = {
@@ -857,6 +867,10 @@ class UavSim(MultiAgentEnv):
 
         obs = {uav.id: self._get_obs(uav) for uav in self.uavs.values()}
         reward = {uav.id: self._get_reward(uav) for uav in self.uavs.values()}
+
+        # get global reward
+        glob_reward = self._get_global_reward()
+        reward = {k: v + glob_reward for k, v in reward.items()}
         info = {uav.id: self._get_info(uav) for uav in self.uavs.values()}
 
         return obs, info

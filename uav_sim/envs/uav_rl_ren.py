@@ -72,7 +72,7 @@ class UavRlRen(UavSim):
             "uav_rel_dist": rel_dist,
             "uav_rel_vel": rel_vel,
             "uav_collision": uav.uav_collision,
-            "uav_landed": 1.0 if uav.done else 0.0,
+            "uav_landed": 1.0 if uav.landed else 0.0,
             "uav_done_dt": uav.done_dt,
             "uav_crashed": 1.0 if uav.crashed else 0.0,
             "uav_dt_go": uav.dt_go,
@@ -153,6 +153,16 @@ class UavRlRen(UavSim):
 
         return uav_tg_error / mean_tg_error
 
+    def _get_global_reward(self):
+        all_landed = all([uav.landed for uav in self.uavs.values()])
+
+        if all_landed:
+            done_time = np.array([uav.done_time for uav in self.uavs.values()]).std()
+            if done_time <= 0.1:
+                return self._tgt_reward
+
+        return 0.0
+
     def _get_reward(self, uav):
 
         reward = 0.0
@@ -160,9 +170,13 @@ class UavRlRen(UavSim):
         uav.uav_collision = 0.0
         uav.obs_collision = 0.0
 
-        if uav.done:
-            # UAV most have finished last time_step, return 0 for reward
+        if self._time_elapsed >= self.max_time:
+            reward -= self._stp_penalty
             return reward
+
+        # if uav.done or uav.landed:
+        #     # UAV most have finished last time_step, return 0 for reward
+        #     return reward
 
         is_reached, rel_dist, rel_vel = uav.check_dest_reached()
 
@@ -172,11 +186,13 @@ class UavRlRen(UavSim):
 
         # uav.done_dt = t_remaining
         uav.done_dt = uav_dt_go_error
-        uav.done_time = self.time_elapsed
 
         if is_reached:
-            uav.done = True
+            # uav.done = True
             uav.landed = True
+
+            if uav.done_time is None:
+                uav.done_time = self._time_elapsed
 
             reward += self._tgt_reward
 
@@ -200,7 +216,9 @@ class UavRlRen(UavSim):
         # give small penalty for having large relative velocity
         reward += -self._beta_vel * rel_vel
 
-        reward += -self._stp_penalty * abs(uav_dt_go_error)
+        # reward += -self._stp_penalty * abs(uav_dt_go_error)
+
+        reward += max(0, self._stp_penalty - abs(uav_dt_go_error))
 
         # neg reward if uav collides with other uavs
         for other_uav in self.uavs.values():
