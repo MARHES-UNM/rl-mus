@@ -172,6 +172,7 @@ class UavRlRen(UavSim):
 
         if self._time_elapsed >= self.max_time:
             reward -= self._stp_penalty
+            uav.done_time = self.max_time
             return reward
 
         # if uav.done or uav.landed:
@@ -191,7 +192,7 @@ class UavRlRen(UavSim):
             # uav.done = True
             uav.landed = True
 
-            if uav.done_time is None:
+            if uav.done_time == 0:
                 uav.done_time = self._time_elapsed
 
             reward += self._tgt_reward
