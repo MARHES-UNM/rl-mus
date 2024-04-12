@@ -160,6 +160,10 @@ class UavRlRen(UavSim):
             _type_: _description_
         """
 
+        t_remaining = self.time_final - self.time_elapsed
+
+        return t_remaining - uav.get_t_go_est()
+
         if self.num_uavs == 1:
             return 0
 
@@ -197,36 +201,42 @@ class UavRlRen(UavSim):
 
         action += 5 * np.array(pos_er[3:])
 
-        uav_tg_error = self.get_uav_tg_error(uav)
+        # uav_tg_error = self.get_uav_tg_error(uav)
+        #
+        uav_tg_error = (self.time_final - self._time_elapsed) - uav.get_t_go_est()
 
         # action *= (1 -  2 * uav_tg_error / ( uav.get_t_go_est()))
-        action *= (1 - 1 * np.abs(uav_tg_error) ** (0.5) * np.sign(uav_tg_error))
+        action *= 1 - 1 * np.abs(uav_tg_error) ** (0.5) * np.sign(uav_tg_error)
 
         return action
 
     def _get_reward(self, uav):
 
         reward = 0.0
+        t_remaining = self.time_final - self._time_elapsed
         uav.uav_collision = 0.0
         uav.obs_collision = 0.0
-
-        if self._time_elapsed >= self.max_time:
-            reward -= self._max_time_penalty
-            uav.done_time = self.max_time
-            return reward
 
         if uav.done:
             # UAV most have finished last time_step, return 0 for reward
             return reward
 
+        # give penaly for reaching the time limit
+        elif self._time_elapsed >= self.max_time:
+            reward -= self._max_time_penalty
+            uav.done_time = self.max_time
+            return reward
+
         is_reached, rel_dist, rel_vel = uav.check_dest_reached()
 
+        # uav.dt_go = uav.get_t_go_est()
         uav.dt_go = uav.get_t_go_est()
 
         uav_dt_go_error = self.get_cum_dt_go_error(uav)
+        # uav_dt_go_error = t_remaining - uav.dt_go
 
-        # uav.done_dt = t_remaining
-        uav.done_dt = uav_dt_go_error
+        uav.done_dt = t_remaining
+        # uav.done_dt = uav_dt_go_error
 
         if is_reached:
             uav.done = True

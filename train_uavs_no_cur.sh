@@ -1,6 +1,6 @@
 #!/bin/bash
 
-python run_experiment.py --name dt_go_state --run PPO \
+python run_experiment.py --name sim_tf --run PPO \
     train \
     --cpu 8 \
     --gpu 0.5 \
