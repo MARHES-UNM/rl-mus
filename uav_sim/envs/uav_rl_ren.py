@@ -195,7 +195,7 @@ class UavRlRen(UavSim):
             if uav.done_time == 0:
                 uav.done_time = self._time_elapsed
 
-            reward += self._tgt_reward
+            reward += 0.1 * self._tgt_reward
 
             # reward += -self._tgt_reward * self._stp_penalty * abs(uav_dt_go_error)
 

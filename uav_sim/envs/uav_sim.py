@@ -87,8 +87,8 @@ class UavSim(MultiAgentEnv):
         self.norm_action_high = np.ones(3)
         self.norm_action_low = np.ones(3) * -1
 
-        self.action_high = np.ones(3) * 5
-        self.action_low = np.ones(3) * -5
+        self.action_high = np.ones(3) * 1.0
+        self.action_low = np.ones(3) * -1.0
 
         self.gui = None
         self._time_elapsed = 0.0
@@ -330,7 +330,7 @@ class UavSim(MultiAgentEnv):
         # action += 1 * ( 0.3 * np.linalg.norm(pos_er[:3]) * cum_tg_error)
         # K = 1
         # action += .2 * np.array(
-        action += 3 * np.array(
+        action += 1 * np.array(
             [pos_er[0], pos_er[1], pos_er[2]]
         )  # * (-0.3 * cum_tg_error)
 

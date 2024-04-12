@@ -292,6 +292,8 @@ class UavBase(Entity):
         self.done_time = 0
         self.d_thresh = d_thresh
         self.last_rel_dist = 0
+        self.max_v = 0.2
+        self.min_v = -self.max_v
 
     def rk4(self, state, action):
         """Based on: https://github.com/mahaitongdae/Safety_Index_Synthesis/blob/master/envs_and_models/collision_avoidance_env.py#L194
@@ -343,6 +345,7 @@ class UavBase(Entity):
         dot_state = self.rk4(self._state, action)
         self._state = self._state + dot_state * self.dt
 
+        self._state[3:6] = np.clip(self._state[3:6], self.min_v, self.max_v)
         self._state[2] = max(0, self._state[2])
 
     def check_dest_reached(self, pad=None):
