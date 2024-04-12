@@ -124,7 +124,28 @@ class UavRlRen(UavSim):
 
         return obs_dict
 
+    def get_mean_tg_error(self):
+        if self.num_uavs == 1:
+            return 0
+
+        mean_tg_error = np.array([x.get_t_go_est() for x in self.uavs.values()]).mean()
+
+        return mean_tg_error
+
+    def get_uav_tg_error(self, uav):
+        uav_tg_error = np.array(
+            [
+                other_uav.get_t_go_est() - uav.get_t_go_est()
+                for other_uav in self.uavs.values()
+                if other_uav.id != uav.id
+            ]
+        ).sum()
+
+        return uav_tg_error
+
     def get_cum_dt_go_error(self, uav):
+        # TODO: fix this so we use sum instead of mean
+        # TODO: use max instead of min here
         """calculates cumulative t_go error between agents
         https://onlinelibrary.wiley.com/doi/abs/10.1002/asjc.2685
 
@@ -146,7 +167,7 @@ class UavRlRen(UavSim):
                 for other_uav in self.uavs.values()
                 if other_uav.id != uav.id
             ]
-        ).mean()
+        ).sum()
 
         if mean_tg_error < 1e-3:
             return 0.0
