@@ -184,6 +184,19 @@ class UavRlRen(UavSim):
 
         return 0.0
 
+    def get_tc_controller(self, uav):
+        pos_er = uav.pad.state[0:6] - uav.state[0:6]
+
+        action = np.zeros(3)
+
+        action += 5 * np.array(pos_er[:3])
+
+        action += 10 * np.array(pos_er[3:])
+
+        action *= (1 - self.get_uav_tg_error(uav) / (1 * uav.get_t_go_est()))
+
+        return action
+
     def _get_reward(self, uav):
 
         reward = 0.0

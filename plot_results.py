@@ -252,7 +252,7 @@ def plot_uav_states(
             color=uav_c,
         )
         ax5.add_patch(uav_pad)
-        art3d.patch_2d_to_3d(uav_pad, z=0, zdir="z")
+        art3d.patch_2d_to_3d(uav_pad, z=rel_pad_state[idx, 0, 2], zdir="z")
     radius = obstacle_radius
     u, v = np.mgrid[0 : 2 * np.pi : 20j, 0 : np.pi : 10j]
 
@@ -261,7 +261,7 @@ def plot_uav_states(
         (target_state[0, 0], target_state[0, 1]), target_r, fill=False, color=target_c
     )
     ax5.add_patch(tareget_circle)
-    art3d.patch_2d_to_3d(tareget_circle, z=0, zdir="z")
+    art3d.patch_2d_to_3d(tareget_circle, z=target_state[0, 2], zdir="z")
 
     for obs_id in range(num_obstacles):
         center = obstacle_state[obs_id, 0, 0:3]
