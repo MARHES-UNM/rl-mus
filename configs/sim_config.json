@@ -11,7 +11,7 @@
         "seed": 123,
         "start_level": 1,
         "stp_penalty": 5,
-        "t_go_max": 0.0,
+        "t_go_max": 1.0,
         "t_go_n": 0.1,
         "time_final": 8.0,
         "uav_collision_weight": 0.1,

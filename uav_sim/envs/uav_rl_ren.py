@@ -160,9 +160,9 @@ class UavRlRen(UavSim):
             _type_: _description_
         """
 
-        t_remaining = self.time_final - self.time_elapsed
+        # t_remaining = self.time_final - self.time_elapsed
 
-        return t_remaining - uav.get_t_go_est()
+        # return t_remaining - uav.get_t_go_est()
 
         if self.num_uavs == 1:
             return 0
@@ -177,7 +177,7 @@ class UavRlRen(UavSim):
             ]
         ).sum()
 
-        if mean_tg_error < 1e-3:
+        if mean_tg_error < 1e-4:
             return 0.0
 
         return uav_tg_error / mean_tg_error
@@ -201,9 +201,9 @@ class UavRlRen(UavSim):
 
         action += 5 * np.array(pos_er[3:])
 
-        # uav_tg_error = self.get_uav_tg_error(uav)
+        uav_tg_error = self.get_uav_tg_error(uav)
         #
-        uav_tg_error = (self.time_final - self._time_elapsed) - uav.get_t_go_est()
+        # uav_tg_error = (self.time_final - self._time_elapsed) - uav.get_t_go_est()
 
         # action *= (1 -  2 * uav_tg_error / ( uav.get_t_go_est()))
         action *= 1 - 1 * np.abs(uav_tg_error) ** (0.5) * np.sign(uav_tg_error)
@@ -229,14 +229,12 @@ class UavRlRen(UavSim):
 
         is_reached, rel_dist, rel_vel = uav.check_dest_reached()
 
-        # uav.dt_go = uav.get_t_go_est()
         uav.dt_go = uav.get_t_go_est()
 
         uav_dt_go_error = self.get_cum_dt_go_error(uav)
-        # uav_dt_go_error = t_remaining - uav.dt_go
 
-        uav.done_dt = t_remaining
-        # uav.done_dt = uav_dt_go_error
+        # uav.done_dt = t_remaining
+        uav.done_dt = uav_dt_go_error
 
         if is_reached:
             uav.done = True
@@ -246,8 +244,6 @@ class UavRlRen(UavSim):
                 uav.done_time = self._time_elapsed
 
             reward += self._tgt_reward
-
-            # reward += -self._tgt_reward * self._stp_penalty * abs(uav_dt_go_error)
 
             return reward
 
@@ -260,14 +256,9 @@ class UavRlRen(UavSim):
             reward += self._beta * np.sign(uav.last_rel_dist - rel_dist)
 
             uav.last_rel_dist = rel_dist
-            # reward -= self._beta * (
-            # rel_dist / self.max_rel_dist
-            # )
 
         # give small penalty for having large relative velocity
         reward += -self._beta_vel * rel_vel
-
-        # reward += -self._stp_penalty * abs(uav_dt_go_error)
 
         reward += max(0, self._stp_penalty - abs(uav_dt_go_error))
 
