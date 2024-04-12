@@ -292,7 +292,7 @@ class UavBase(Entity):
         self.done_time = 0
         self.d_thresh = d_thresh
         self.last_rel_dist = 0
-        self.max_v = 0.2
+        self.max_v = 0.25
         self.min_v = -self.max_v
 
     def rk4(self, state, action):

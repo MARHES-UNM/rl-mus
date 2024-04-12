@@ -88,8 +88,8 @@ class UavSim(MultiAgentEnv):
         self.norm_action_high = np.ones(3)
         self.norm_action_low = np.ones(3) * -1
 
-        self.action_high = np.ones(3) * 1.0
-        self.action_low = np.ones(3) * -1.0
+        self.action_high = np.ones(3) * 5.0
+        self.action_low = -self.action_high
 
         self.gui = None
         self._time_elapsed = 0.0

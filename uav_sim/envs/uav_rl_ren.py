@@ -189,11 +189,14 @@ class UavRlRen(UavSim):
 
         action = np.zeros(3)
 
-        action += 5 * np.array(pos_er[:3])
+        action += 20 * np.array(pos_er[:3])
 
-        action += 10 * np.array(pos_er[3:])
+        action += 5 * np.array(pos_er[3:])
 
-        action *= (1 - self.get_uav_tg_error(uav) / (1 * uav.get_t_go_est()))
+        uav_tg_error = self.get_uav_tg_error(uav)
+
+        # action *= (1 -  2 * uav_tg_error / ( uav.get_t_go_est()))
+        action *= (1 - 1 * np.abs(uav_tg_error) ** (0.5) * np.sign(uav_tg_error))
 
         return action
 
