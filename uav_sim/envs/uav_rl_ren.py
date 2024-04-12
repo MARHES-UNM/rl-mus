@@ -25,6 +25,9 @@ class UavRlRen(UavSim):
                             shape=(num_state_shape,),
                             dtype=np.float32,
                         ),
+                        "dt_go": spaces.Box(
+                            low=-np.inf, high=np.inf, shape=(1,), dtype=np.float32
+                        ),
                         "dt_go_error": spaces.Box(
                             low=-np.inf, high=np.inf, shape=(1,), dtype=np.float32
                         ),
@@ -116,6 +119,7 @@ class UavRlRen(UavSim):
 
         obs_dict = {
             "state": uav.state[0:6].astype(np.float32),
+            "dt_go": np.array([uav.get_t_go_est()], dtype=np.float32),
             "dt_go_error": np.array([self.get_cum_dt_go_error(uav)], dtype=np.float32),
             "rel_pad": (uav.state[0:6] - uav.pad.state[0:6]).astype(np.float32),
             "other_uav_obs": other_uav_states.astype(np.float32),
@@ -203,7 +207,6 @@ class UavRlRen(UavSim):
     def _get_reward(self, uav):
 
         reward = 0.0
-        t_remaining = self.time_final - self.time_elapsed
         uav.uav_collision = 0.0
         uav.obs_collision = 0.0
 
