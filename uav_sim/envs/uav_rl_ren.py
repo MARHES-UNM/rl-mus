@@ -120,7 +120,7 @@ class UavRlRen(UavSim):
         obs_dict = {
             "state": uav.state[0:6].astype(np.float32),
             # "dt_go": np.array([uav.get_t_go_est()], dtype=np.float32),
-            "dt_go_error": np.array([self.get_cum_dt_go_error(uav)], dtype=np.float32),
+            "dt_go_error": np.array([self.get_uav_tg_error(uav)], dtype=np.float32),
             "rel_pad": (uav.state[0:6] - uav.pad.state[0:6]).astype(np.float32),
             "other_uav_obs": other_uav_states.astype(np.float32),
             "obstacles": obstacles_to_add.astype(np.float32),
@@ -231,7 +231,8 @@ class UavRlRen(UavSim):
 
         uav.dt_go = uav.get_t_go_est()
 
-        uav_dt_go_error = self.get_cum_dt_go_error(uav)
+        # uav_dt_go_error = self.get_cum_dt_go_error(uav)
+        uav_dt_go_error = self.get_uav_tg_error(uav)
 
         # uav.done_dt = t_remaining
         uav.done_dt = uav_dt_go_error
