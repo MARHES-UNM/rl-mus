@@ -16,6 +16,7 @@
         "time_final": 8.0,
         "uav_collision_weight": 0.1,
         "uav_type": "UavBase",
+        "use_virtual_leader": false,
         "use_safe_action": false
     },
     "exp_config": {

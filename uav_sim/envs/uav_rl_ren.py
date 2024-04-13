@@ -137,6 +137,10 @@ class UavRlRen(UavSim):
         return mean_tg_error
 
     def get_uav_tg_error(self, uav):
+
+        if self._use_virtual_leader:
+            return (self.time_final - self._time_elapsed) - uav.get_t_go_est()
+
         uav_tg_error = np.array(
             [
                 other_uav.get_t_go_est() - uav.get_t_go_est()
