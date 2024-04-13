@@ -36,25 +36,25 @@
                 "label": "REN-CA"
             },
             {
-                "name": "ppo_no_ren",
-                "run": "PPO",
-                "checkpoint": "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2024-04-10-05-27_d77f2c2_4u_4o/done_complex_rew/done_complex_rew/PPO_multi-uav-ren-v0_95881_00000_0_beta=0.1000,beta_vel=0.1000,stp_penalty=0.0000,tgt_reward=10,uav_type=UavBase,use_safe_action=F_2024-04-10_05-27-43/checkpoint_000305/policies/shared_policy",
-                "safe_action_type": null,
-                "label": "POETIC_NO_REN"
+                "name": "ttc",
+                "run": "cc",
+                "checkpoint": null,
+                "safe_action_type": "sca",
+                "label": "TTC"
             },
             {
                 "name": "ppo",
                 "run": "PPO",
-                "checkpoint": "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2024-04-11-06-17_c60c0b2_4u_4o/lrg_tgt/lrg_tgt/PPO_multi-uav-ren-v0_ac239_00001_1_stp_penalty=0.5000,tgt_reward=100,uav_type=UavBase,use_safe_action=False_2024-04-11_06-17-16/checkpoint_000305/policies/shared_policy",
+                "checkpoint": "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2024-04-12-19-42_15a8f1d_4u_4o/raw_tg_go/raw_tg_go/PPO_multi-uav-ren-v0_5ea04_00003_3_stp_penalty=0.8500,tgt_reward=50,uav_type=UavBase,use_safe_action=False_2024-04-12_19-42-48/checkpoint_000305/policies/shared_policy",
                 "safe_action_type": null,
                 "label": "POETIC"
             },
             {
-                "name": "ppo_2",
+                "name": "ppo_cbf",
                 "run": "PPO",
-                "checkpoint": "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2024-04-11-06-17_c60c0b2_4u_4o/lrg_tgt/lrg_tgt/PPO_multi-uav-ren-v0_ac239_00000_0_stp_penalty=0.3000,tgt_reward=100,uav_type=UavBase,use_safe_action=False_2024-04-11_06-17-16/checkpoint_000305/policies/shared_policy",
-                "safe_action_type": null,
-                "label": "POETIC2"
+                "checkpoint": "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2024-04-12-19-42_15a8f1d_4u_4o/raw_tg_go/raw_tg_go/PPO_multi-uav-ren-v0_5ea04_00003_3_stp_penalty=0.8500,tgt_reward=50,uav_type=UavBase,use_safe_action=False_2024-04-12_19-42-48/checkpoint_000305/policies/shared_policy",
+                "safe_action_type": "cbf",
+                "label": "POETIC-CBF"
             }
         ],
         "seeds": [
