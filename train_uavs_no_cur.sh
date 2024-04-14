@@ -1,6 +1,6 @@
 #!/bin/bash
 
-python run_experiment.py --name ren_vary_tgt_rew --run PPO \
+python run_experiment.py --name ren_vary_tgt_rew_75 --run PPO \
     train \
     --cpu 8 \
     --gpu 0.5 \

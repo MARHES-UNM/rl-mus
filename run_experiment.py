@@ -438,7 +438,10 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
                 actions[idx] = env.get_tc_controller(env.uavs[idx])
             elif algo_to_run == "PPO":
                 if use_policy:
-                    actions[idx] = algo.compute_single_action(prep.transform(obs[idx]))[
+                    # https://docs.ray.io/en/latest/rllib/rllib-training.html#rllib-config-exploration
+                    # https://discuss.ray.io/t/inconsistent-actions-from-algorithm-compute-single-action/11027/3
+                    # trying to get deterministic results
+                    actions[idx] = algo.compute_single_action(prep.transform(obs[idx]), explore=False)[
                         0
                     ]
                 else:
