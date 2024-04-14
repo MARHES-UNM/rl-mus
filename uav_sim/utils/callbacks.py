@@ -30,11 +30,7 @@ class TrainCallback(DefaultCallbacks):
         episode.user_data["obstacle_collisions"] = []
         episode.user_data["uav_collisions"] = []
         episode.user_data["uav_dt_go"] = []
-        # episode.user_data["num_uav_landed"] = []
-        # episode.user_data["uav_done_dt"] = []
-        # episode.user_data["uav_rel_dist"] = []
-
-        # episode.user_data["uav_dt_go"] = []
+        episode.user_data["uav_t_go"] = []
 
     def on_episode_step(
         self,
@@ -55,6 +51,7 @@ class TrainCallback(DefaultCallbacks):
         cum_uav_collisions = 0
         cum_obstacle_collisions = 0
         cum_uav_dt_go = 0
+        cum_uav_t_go = 0
 
         for agent_id in agent_ids:
             # last_info = episode.last_info_for(agent_id)
@@ -62,10 +59,12 @@ class TrainCallback(DefaultCallbacks):
             cum_uav_collisions += last_info["uav_collision"]
             cum_obstacle_collisions += last_info["obstacle_collision"]
             cum_uav_dt_go += last_info["uav_dt_go"]
+            cum_uav_t_go += last_info["uav_t_go"]
 
         episode.user_data["uav_collisions"].append(cum_uav_collisions)
         episode.user_data["obstacle_collisions"].append(cum_obstacle_collisions)
         episode.user_data["uav_dt_go"].append(cum_uav_dt_go)
+        episode.user_data["uav_t_go"].append(cum_uav_t_go)
 
     def on_episode_end(
         self,
@@ -114,6 +113,9 @@ class TrainCallback(DefaultCallbacks):
 
         uav_dt_go = np.mean(episode.user_data["uav_dt_go"]) / num_agents
         episode.custom_metrics["uav_dt_go"] = uav_dt_go
+
+        uav_t_go = np.mean(episode.user_data["uav_t_go"]) / num_agents
+        episode.custom_metrics["uav_t_go"] = uav_t_go
 
         # TODO: use np.mean here instead
         uav_landed = cum_uav_landed / num_agents
