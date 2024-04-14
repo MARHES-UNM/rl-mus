@@ -1,6 +1,7 @@
 {
     "exp_name": "ppo_ren_comp",
     "env_config": {
+        "use_virtual_leader": true, 
         "target_v": [
             0.0
         ],
@@ -15,7 +16,7 @@
             6
         ],
         "time_final": [
-            6
+            8
         ]
     },
     "exp_config": {
@@ -102,7 +103,7 @@
             "group_key": [
                 4.0,
                 0.0,
-                6.0,
+                8.0,
                 4.0
             ],
             "group_title": "baseline",
@@ -117,7 +118,7 @@
             "group_x": "num_uavs",
             "group_key": [
                 0.0,
-                6.0,
+                8.0,
                 4.0
             ],
             "group_title": "vary_num_uavs_tgt_v_0",
@@ -132,7 +133,7 @@
             "group_x": "num_obs",
             "group_key": [
                 0.0,
-                6.0,
+                8.0,
                 4.0
             ],
             "group_title": "vary_num_obs_tgt_v_0",

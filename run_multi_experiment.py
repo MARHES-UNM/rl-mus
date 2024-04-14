@@ -94,7 +94,9 @@ if __name__ == "__main__":
     with open(args.exp_config, "rt") as f:
         exp_config = json.load(f)
 
-    base_config = exp_config.setdefault("base_config", f"{PATH}/configs/sim_config.json")
+    base_config = exp_config.setdefault(
+        "base_config", f"{PATH}/configs/sim_config.json"
+    )
 
     exp_name = exp_config["exp_name"]
     if not args.log_dir:
@@ -120,13 +122,16 @@ if __name__ == "__main__":
     seeds = exp_config["exp_config"]["seeds"]
     time_final = exp_config["env_config"]["time_final"]
     runs = exp_config["exp_config"]["runs"]
+    use_vl = exp_config["env_config"]["use_virtual_leader"]
     run_nums = [i for i in range(len(runs))]
 
     exp_configs = []
     experiment_num = 0
 
     exp_items = list(
-        itertools.product(seeds, target_v, run_nums, max_num_obstacles, time_final, num_uavs)
+        itertools.product(
+            seeds, target_v, run_nums, max_num_obstacles, time_final, num_uavs
+        )
     )
 
     for exp_item in exp_items:
@@ -157,8 +162,10 @@ if __name__ == "__main__":
             "max_num_obstacles": num_obstacle,
             "seed": seed,
             "time_final": t_final,
-            "num_uavs": num_uav
+            "num_uavs": num_uav,
         }
+
+        exp_config["env_config"].setdefault("use_virtual_leader", use_vl)
 
         file_prefix = {
             "tgt_v": target,
