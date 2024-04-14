@@ -1,6 +1,6 @@
 #!/bin/bash
 
-python run_experiment.py --name safe_no_ren --run PPO \
+python run_experiment.py --name safe_vary_beta --run PPO \
     train \
     --cpu 8 \
     --gpu 0.5 \

@@ -59,7 +59,7 @@
                 "--run",
                 "ren",
                 "test",
-                "--render",
+                // "--render",
                 "--plot_results",
                 "--seed", "None"
             ]
@@ -80,10 +80,10 @@
                 "--run",
                 "PPO",
                 "test",
-                // "--checkpoint", 
-                // "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-sim-curriculum-v0_2024-04-02-00-23_ca1e39f_4u_4o/uav_base_cur/uav_base_cur/PPO_multi-uav-sim-curriculum-v0_bab31_00002_2_stp_penalty=5.0000,t_go_max=2.0000,time_final=20.0000,uav_type=UavBase,use_safe_acti_2024-04-02_00-23-17/checkpoint_000304/policies/shared_policy",
+                "--checkpoint", 
+                "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2024-04-12-19-42_15a8f1d_4u_4o/raw_tg_go/raw_tg_go/PPO_multi-uav-ren-v0_5ea04_00003_3_stp_penalty=0.8500,tgt_reward=50,uav_type=UavBase,use_safe_action=False_2024-04-12_19-42-48/checkpoint_000305/policies/shared_policy",
                 "--render",
-                "--seed", "5",
+                "--seed", "None",
                 "--plot_results"
             ]
         },

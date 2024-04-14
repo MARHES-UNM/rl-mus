@@ -25,9 +25,6 @@ class UavRlRen(UavSim):
                             shape=(num_state_shape,),
                             dtype=np.float32,
                         ),
-                        # "dt_go": spaces.Box(
-                        #     low=-np.inf, high=np.inf, shape=(1,), dtype=np.float32
-                        # ),
                         "dt_go_error": spaces.Box(
                             low=-np.inf, high=np.inf, shape=(1,), dtype=np.float32
                         ),
@@ -79,6 +76,7 @@ class UavRlRen(UavSim):
             "uav_done_dt": uav.done_dt,
             "uav_crashed": 1.0 if uav.crashed else 0.0,
             "uav_dt_go": uav.dt_go,
+            "uav_t_go": uav.t_go,
             "uav_done_time": uav.done_time,
         }
 
@@ -119,7 +117,6 @@ class UavRlRen(UavSim):
 
         obs_dict = {
             "state": uav.state[0:6].astype(np.float32),
-            # "dt_go": np.array([uav.get_t_go_est()], dtype=np.float32),
             "dt_go_error": np.array([self.get_uav_tg_error(uav)], dtype=np.float32),
             "rel_pad": (uav.state[0:6] - uav.pad.state[0:6]).astype(np.float32),
             "other_uav_obs": other_uav_states.astype(np.float32),
@@ -233,13 +230,12 @@ class UavRlRen(UavSim):
 
         is_reached, rel_dist, rel_vel = uav.check_dest_reached()
 
-        uav.dt_go = uav.get_t_go_est()
+        uav.t_go = uav.get_t_go_est()
 
-        # uav_dt_go_error = self.get_cum_dt_go_error(uav)
         uav_dt_go_error = self.get_uav_tg_error(uav)
 
-        # uav.done_dt = t_remaining
-        uav.done_dt = uav_dt_go_error
+        uav.dt_go = uav_dt_go_error
+        uav.done_dt = t_remaining
 
         if is_reached:
             uav.done = True

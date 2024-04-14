@@ -384,6 +384,7 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
     uav_done_dt_list = [[] for idx in range(env.num_uavs)]
     uav_done_time_list = [[] for idx in range(env.num_uavs)]
     uav_dt_go_list = [[] for idx in range(env.num_uavs)]
+    uav_t_go_list = [[] for idx in range(env.num_uavs)]
     rel_pad_dist = [[] for idx in range(env.num_uavs)]
     rel_pad_vel = [[] for idx in range(env.num_uavs)]
     uav_state = [[] for idx in range(env.num_uavs)]
@@ -407,6 +408,7 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
             "uav_done_list": [],
             "uav_done_dt_list": [],
             "uav_dt_go_list": [],
+            "uav_t_go_list": [],
             "rel_pad_dist": [],
             "rel_pad_vel": [],
             "uav_state": [],
@@ -468,6 +470,7 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
                 uav_done_dt_list[k].append(v["uav_done_dt"])
                 uav_done_time_list[k].append(v["uav_done_time"])
                 uav_dt_go_list[k].append(v["uav_dt_go"])
+                uav_t_go_list[k].append(v["uav_t_go"])
                 rel_pad_dist[k].append(v["uav_rel_dist"])
                 rel_pad_vel[k].append(v["uav_rel_vel"])
                 uav_reward[k].append(rew[k])
@@ -503,6 +506,7 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
                 results["episode_data"]["uav_done_list"].append(uav_done_list)
                 results["episode_data"]["uav_done_dt_list"].append(uav_done_dt_list)
                 results["episode_data"]["uav_dt_go_list"].append(uav_dt_go_list)
+                results["episode_data"]["uav_t_go_list"].append(uav_t_go_list)
                 results["episode_data"]["rel_pad_dist"].append(rel_pad_dist)
                 results["episode_data"]["rel_pad_vel"].append(rel_pad_vel)
                 results["episode_data"]["uav_state"].append(uav_state)
@@ -513,9 +517,6 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
 
             if render:
                 im = env.render(mode="rgb_array", done=True)
-                # fig, ax = plt.subplots()
-                # im = ax.imshow(im)
-                # plt.show()
             if plot_results:
                 plot_uav_states(results, env_config, num_episodes - 1)
 
@@ -536,6 +537,7 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
             uav_done_dt_list = [[] for idx in range(env.num_uavs)]
             uav_done_time_list = [[] for idx in range(env.num_uavs)]
             uav_dt_go_list = [[] for idx in range(env.num_uavs)]
+            uav_t_go_list = [[] for idx in range(env.num_uavs)]
             rel_pad_dist = [[] for idx in range(env.num_uavs)]
             rel_pad_vel = [[] for idx in range(env.num_uavs)]
             uav_state = [[] for idx in range(env.num_uavs)]

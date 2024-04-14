@@ -174,6 +174,7 @@ def plot_uav_states(
     uav_done_list = results["episode_data"]["uav_done_list"][num_episode]
     uav_done_dt_list = results["episode_data"]["uav_done_dt_list"][num_episode]
     uav_dt_go_list = results["episode_data"]["uav_dt_go_list"][num_episode]
+    uav_t_go_list = results["episode_data"]["uav_t_go_list"][num_episode]
     rel_pad_dist = results["episode_data"]["rel_pad_dist"][num_episode]
     rel_pad_vel = results["episode_data"]["rel_pad_vel"][num_episode]
     uav_reward = results["episode_data"]["uav_reward"][num_episode]
@@ -189,20 +190,22 @@ def plot_uav_states(
     all_axes = []
     all_figs = []
 
-    # fig = plt.figure(figsize=(10, 7))
     fig = plt.figure()
     all_figs.append(fig)
-    ax21 = fig.add_subplot(411)
-    ax22 = fig.add_subplot(412)
-    ax23 = fig.add_subplot(413)
-    ax24 = fig.add_subplot(414)
+    ax_leg = fig.add_subplot(611) # legend
+    ax21 = fig.add_subplot(612)
+    ax22 = fig.add_subplot(613)
+    ax23 = fig.add_subplot(614)
+    ax231 = fig.add_subplot(615)
+    ax24 = fig.add_subplot(616)
 
     fig = plt.figure()
     all_figs.append(fig)
-    ax = fig.add_subplot(411)  # uav collision
-    ax1 = fig.add_subplot(412)  # ncfo collision
-    ax3 = fig.add_subplot(413)  # delta_r
-    ax31 = fig.add_subplot(414)  # delta_v
+    ax_1_leg = fig.add_subplot(511)  # legend
+    ax = fig.add_subplot(512)  # uav collision
+    ax1 = fig.add_subplot(513)  # ncfo collision
+    ax3 = fig.add_subplot(514)  # delta_r
+    ax31 = fig.add_subplot(515)  # delta_v
 
     fig = plt.figure()
     all_figs.append(fig)
@@ -216,13 +219,18 @@ def plot_uav_states(
         c_idx += 1
 
         ax21.plot(time_step_list, uav_done_list[idx], label=f"uav_{idx}")
-        ax21.set_ylabel("UAV done")
+        ax21.set_ylabel("Done")
         ax22.plot(time_step_list, uav_done_dt_list[idx], label=f"uav_{idx}")
-        ax22.set_ylabel("uav Done $\Delta t$")
+        ax22.set_ylabel("Done $\Delta t$")
         ax23.plot(time_step_list, uav_dt_go_list[idx], label=f"uav_{idx}")
-        ax23.set_ylabel("UAV Done $\Delta t\_go$")
+        ax23.set_ylabel("$\Delta t\_go$")
+        ax231.plot(time_step_list, uav_t_go_list[idx], label=f"uav_{idx}")
+        ax231.set_ylabel("$t\_go$")
         ax24.plot(time_step_list, uav_reward[idx], label=f"uav_{idx}")
-        ax24.set_ylabel("UAV Reward")
+        ax24.set_ylabel("Reward")
+        handles, labels  = ax21.get_legend_handles_labels()
+        ax_leg.legend(handles, labels, loc="center", ncol=len(labels))
+        ax_leg.axis("off")
 
         ax.plot(time_step_list, uav_collision_list[idx], label=f"uav_{idx}")
         ax.set_ylabel("UAV_col")
@@ -232,6 +240,9 @@ def plot_uav_states(
         ax3.set_ylabel("$\parallel \Delta \mathbf{r} \parallel$")
         ax31.plot(time_step_list, rel_pad_vel[idx], label=f"uav_{idx}")
         ax31.set_ylabel("$\parallel \Delta \mathbf{v} \parallel$")
+        handles, labels  = ax.get_legend_handles_labels()
+        ax_1_leg.legend(handles, labels, loc="center", ncol=len(labels))
+        ax_1_leg.axis("off")
 
         ax5.plot(
             uav_state[idx, :, 0],
@@ -274,16 +285,18 @@ def plot_uav_states(
     ax5.set_xlabel("X (m)")
     ax5.set_ylabel("Y (m)")
     ax5.set_zlabel("Z (m)")
+    # ax5.legend()
 
     for ax_ in all_axes:
         ax_.set_xlabel("t (s)")
 
         ax_.label_outer()
 
-        if skip_legend:
-            ax_.legend().remove()
-        else:
-            ax_.legend()
+        ax_.legend().remove()
+        # if skip_legend:
+            # ax_.legend().remove()
+        # else:
+            # ax_.legend()
 
     if save_figs:
         suffixes = [
