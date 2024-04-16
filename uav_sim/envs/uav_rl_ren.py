@@ -184,7 +184,7 @@ class UavRlRen(UavSim):
         if all_landed:
             done_time = np.array([uav.done_time for uav in self.uavs.values()]).std()
             if done_time <= self.max_dt_std:
-                return self._tgt_reward
+                return self._sa_reward
 
         return 0.0
 

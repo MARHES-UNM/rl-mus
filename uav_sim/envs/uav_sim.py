@@ -54,6 +54,8 @@ class UavSim(MultiAgentEnv):
         self._beta_vel = env_config.setdefault("beta_vel", 0.00)
         self._d_thresh = env_config.setdefault("d_thresh", 0.01)  # uav.rad + pad.rad
         self._tgt_reward = env_config.setdefault("tgt_reward", 0.0)
+        # TODO: set to 0 
+        self._sa_reward = env_config.setdefault("sa_reward", self._tgt_reward)
         self._crash_penalty = env_config.setdefault("crash_penalty", 10.0)
         self._dt_go_penalty = env_config.setdefault("dt_go_penalty", 10.0)
         self._stp_penalty = env_config.setdefault("stp_penalty", 0.0)
