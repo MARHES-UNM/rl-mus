@@ -186,6 +186,21 @@ class TestUav(unittest.TestCase):
         uav.state[0:3] = np.array([1, 1, 0.9])
         self.assertTrue(uav.in_collision(obs))
 
+    def test_closest_entities(self):
+        uav = Uav(0, 1, 0, 0)
+
+        uav1 = Uav(1, 0, 2, 0)
+        uav2 = Uav(2, 0, 0, 3)
+
+        obs_list = [Obstacle(0, 1, 1, 1), Obstacle(1, 2, 1, 1)]
+
+        closest_entity = uav.get_closest_entities(obs_list, num_to_return=1)
+        self.assertEqual(len(closest_entity), 1)
+        self.assertEqual(closest_entity[0].id, 0)
+
+        closest_uav = uav.get_closest_entities([uav2, uav1])
+        self.assertEqual(len(closest_uav), 2)
+        self.assertEqual(closest_uav[0].id, 1)
 
 if __name__ == "__main__":
     unittest.main()

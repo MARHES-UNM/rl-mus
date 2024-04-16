@@ -182,7 +182,7 @@ class TestUavSim(unittest.TestCase):
                 # # )
 
                 actions[idx] = self.env.get_time_coord_action(self.env.uavs[idx])
-            obs, rew, done, _,  info = self.env.step(actions)
+            obs, rew, done, _, info = self.env.step(actions)
             for k, v in info.items():
                 time_step_list[k].append(v["time_step"])
                 uav_collision_list[k].append(v["uav_collision"])
@@ -427,7 +427,7 @@ class TestUavSim(unittest.TestCase):
                 des_pos[0:6] = self.env.uavs[idx].pad.state[0:6]
                 actions[idx] = self.env.uavs[idx].calc_des_action(des_pos)
 
-            obs, rew, done, _,  info = self.env.step(actions)
+            obs, rew, done, _, info = self.env.step(actions)
             for k, v in info.items():
                 uav_collision_list[k].append(v["uav_collision"])
                 obstacle_collision_list[k].append(v["obstacle_collision"])

@@ -259,16 +259,33 @@ class UavRlRen(UavSim):
         reward += max(0, self._stp_penalty - abs(uav_dt_go_error))
 
         # neg reward if uav collides with other uavs
+        other_uav_list = []
+
         for other_uav in self.uavs.values():
             if uav.id != other_uav.id:
+                other_uav_list.append(other_uav)
                 if uav.in_collision(other_uav):
-                    reward -= self.uav_collision_weight
+                    # reward -= self.uav_collision_weight
                     uav.uav_collision += 1
+
+        closest_uavs = uav.get_closest_entities(other_uav_list, num_to_return=1)
+
+        if closest_uavs:
+            dist_to_uav = uav.rel_distance(closest_uavs[0])
+            if dist_to_uav <= (uav.r + 0.15):
+                reward += -np.exp(-dist_to_uav / 0.1)
 
         # neg reward if uav collides with obstacles
         for obstacle in self.obstacles:
             if uav.in_collision(obstacle):
-                reward -= self.obstacle_collision_weight
+                # reward -= self.obstacle_collision_weight
                 uav.obs_collision += 1
+
+        closest_obstacles = uav.get_closest_entities(self.obstacles, num_to_return=1)
+
+        if closest_obstacles:
+            dist_to_obstacle = uav.rel_distance(closest_obstacles[0])
+            if dist_to_obstacle <= (obstacle.r + 0.25):
+                reward += -np.exp(-dist_to_obstacle / 0.1)
 
         return reward

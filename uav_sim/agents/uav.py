@@ -73,6 +73,25 @@ class Entity:
         bearing = (bearing + np.pi) % (2 * np.pi) - np.pi
         return bearing
 
+    def get_closest_entities(self, entity_list, num_to_return=None):
+        num_entities = len(entity_list)
+
+        # return empty list if list is empty
+        if num_entities == 0:
+            return []
+
+        if num_to_return is None:
+            num_to_return = num_entities
+        else:
+            max(0, min(num_entities, num_to_return))
+
+        entity_states = np.array([entity.state for entity in entity_list])
+
+        dist = np.linalg.norm(entity_states[:, :3] - self._state[:3][None, :], axis=1)
+        argsort = np.argsort(dist)[:num_to_return]
+        closest_entities = [entity_list[idx] for idx in argsort]
+
+        return closest_entities
 
 class Obstacle(Entity):
     def __init__(self, _id, x=0, y=0, z=0, r=0.1, dt=0.1, _type=ObsType.S):

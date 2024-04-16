@@ -46,7 +46,7 @@ class UavSim(MultiAgentEnv):
         )
         self.uav_collision_weight = env_config.setdefault("uav_collision_weight", 0.1)
         self._use_safe_action = env_config.setdefault("use_safe_action", False)
-        self._use_virtual_leader  = env_config.setdefault("use_virtual_leader", False)
+        self._use_virtual_leader = env_config.setdefault("use_virtual_leader", False)
         self.time_final = env_config.setdefault("time_final", 8.0)
         self.t_go_max = env_config.setdefault("t_go_max", 2.0)
         self.t_go_n = env_config.setdefault("t_go_n", 1.0)
