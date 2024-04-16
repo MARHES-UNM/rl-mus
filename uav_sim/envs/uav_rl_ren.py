@@ -83,18 +83,13 @@ class UavRlRen(UavSim):
         return info
 
     def _get_obs(self, uav):
+        # TODO: handle case with more than the number of nominal uavs
         other_uav_state_list = []
         for other_uav in self.uavs.values():
             if uav.id != other_uav.id:
                 temp_list = other_uav.state[:6].tolist()
-                temp_list.append(self.get_cum_dt_go_error(other_uav))
+                temp_list.append(self.get_uav_t_go_error(other_uav))
                 other_uav_state_list.append(temp_list)
-
-        # other_uav_state_list = [
-        #     other_uav.state[0:6].tolist()
-        #     for other_uav in self.uavs.values()
-        #     if uav.id != other_uav.id
-        # ]
 
         num_active_other_agents = len(other_uav_state_list)
         if num_active_other_agents < self.nom_num_uavs - 1:
@@ -117,7 +112,7 @@ class UavRlRen(UavSim):
 
         obs_dict = {
             "state": uav.state[0:6].astype(np.float32),
-            "dt_go_error": np.array([self.get_uav_tg_error(uav)], dtype=np.float32),
+            "dt_go_error": np.array([self.get_uav_t_go_error(uav)], dtype=np.float32),
             "rel_pad": (uav.state[0:6] - uav.pad.state[0:6]).astype(np.float32),
             "other_uav_obs": other_uav_states.astype(np.float32),
             "obstacles": obstacles_to_add.astype(np.float32),
@@ -133,7 +128,7 @@ class UavRlRen(UavSim):
 
         return mean_tg_error
 
-    def get_uav_tg_error(self, uav):
+    def get_uav_t_go_error(self, uav):
 
         if self._use_virtual_leader:
             return (self.time_final - self._time_elapsed) - uav.get_t_go_est()
@@ -202,7 +197,7 @@ class UavRlRen(UavSim):
 
         action += 5 * np.array(pos_er[3:])
 
-        uav_tg_error = self.get_uav_tg_error(uav)
+        uav_tg_error = self.get_uav_t_go_error(uav)
         #
         # uav_tg_error = (self.time_final - self._time_elapsed) - uav.get_t_go_est()
 
@@ -232,7 +227,7 @@ class UavRlRen(UavSim):
 
         uav.t_go = uav.get_t_go_est()
 
-        uav_dt_go_error = self.get_uav_tg_error(uav)
+        uav_dt_go_error = self.get_uav_t_go_error(uav)
 
         uav.dt_go = uav_dt_go_error
         uav.done_dt = t_remaining
