@@ -175,8 +175,10 @@ def train(args):
     args.config["env_config"]["crash_penalty"] = 10
     # args.config["env_config"]["beta"] = tune.loguniform(0.001, 0.3)
     # args.config["env_config"]["stp_penalty"] = tune.loguniform(0.05, 0.1, 0.2, 0.3)
-    args.config["env_config"]["stp_penalty"] = tune.grid_search([0.1, 0.25, 0.5, 0.75])
-    args.config["env_config"]["max_dt_std"] = tune.grid_search([0.2])
+    args.config["env_config"]["stp_penalty"] = tune.grid_search(
+        [0.80, 0.85, 0.90, 0.95, 1, 1.05]
+    )
+    args.config["env_config"]["max_dt_std"] = tune.grid_search([0.1])
     args.config["env_config"]["tgt_reward"] = tune.grid_search([50])
     args.config["env_config"]["sa_reward"] = tune.grid_search([50])
     args.config["env_config"]["beta"] = tune.grid_search([0.10])
@@ -442,9 +444,9 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
                     # https://docs.ray.io/en/latest/rllib/rllib-training.html#rllib-config-exploration
                     # https://discuss.ray.io/t/inconsistent-actions-from-algorithm-compute-single-action/11027/3
                     # trying to get deterministic results
-                    actions[idx] = algo.compute_single_action(prep.transform(obs[idx]), explore=False)[
-                        0
-                    ]
+                    actions[idx] = algo.compute_single_action(
+                        prep.transform(obs[idx]), explore=False
+                    )[0]
                 else:
                     actions[idx] = algo.compute_single_action(
                         obs[idx], policy_id="shared_policy"
