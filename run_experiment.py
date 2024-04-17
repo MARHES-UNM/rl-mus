@@ -176,11 +176,11 @@ def train(args):
     # args.config["env_config"]["beta"] = tune.loguniform(0.001, 0.3)
     # args.config["env_config"]["stp_penalty"] = tune.loguniform(0.05, 0.1, 0.2, 0.3)
     args.config["env_config"]["stp_penalty"] = tune.grid_search(
-        [0.80]
+        [0.1, .8, 1.0, 1.5, 0.5, 2.0]
     )
     args.config["env_config"]["max_dt_std"] = 0.1
     args.config["env_config"]["tgt_reward"] = tune.grid_search([50])
-    args.config["env_config"]["sa_reward"] = tune.grid_search([50, 100, 65, 85])
+    args.config["env_config"]["sa_reward"] = tune.grid_search([50])
     args.config["env_config"]["beta"] = tune.grid_search([0.10])
     args.config["env_config"]["beta_vel"] = 0.1
     # custom_model = tune.grid_search(

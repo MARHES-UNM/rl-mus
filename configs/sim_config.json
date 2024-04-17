@@ -8,7 +8,7 @@
         "obstacle_radius": 0.25,
         "max_dt_std": 0.1,
         "render": false,
-        "sa_reward": 100, 
+        "sa_reward": 0, 
         "seed": 123,
         "start_level": 1,
         "stp_penalty": 0.5,

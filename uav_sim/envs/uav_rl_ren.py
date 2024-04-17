@@ -37,7 +37,7 @@ class UavRlRen(UavSim):
                         "other_uav_obs": spaces.Box(
                             low=-np.inf,
                             high=np.inf,
-                            shape=(self.nom_num_uavs - 1, num_state_shape + 1),
+                            shape=(self.nom_num_uavs - 1, num_state_shape),
                             dtype=np.float32,
                         ),
                         "obstacles": spaces.Box(
@@ -88,12 +88,12 @@ class UavRlRen(UavSim):
         for other_uav in self.uavs.values():
             if uav.id != other_uav.id:
                 temp_list = other_uav.state[:6].tolist()
-                temp_list.append(self.get_uav_t_go_error(other_uav))
+                # temp_list.append(self.get_uav_t_go_error(other_uav))
                 other_uav_state_list.append(temp_list)
 
         num_active_other_agents = len(other_uav_state_list)
         if num_active_other_agents < self.nom_num_uavs - 1:
-            fake_uav = [0.0] * 7
+            fake_uav = [0.0] * 6
             for _ in range(self.nom_num_uavs - 1 - num_active_other_agents):
                 other_uav_state_list.append(fake_uav.copy())
 
@@ -257,7 +257,9 @@ class UavRlRen(UavSim):
         # give small penalty for having large relative velocity
         reward += -self._beta_vel * rel_vel
 
-        reward += max(0, self._stp_penalty - abs(uav_dt_go_error))
+        # reward += max(0, self._stp_penalty - abs(uav_dt_go_error))
+        if abs(uav_dt_go_error) <= 0.2:
+            reward += self._stp_penalty
 
         # neg reward if uav collides with other uavs
         other_uav_list = []
