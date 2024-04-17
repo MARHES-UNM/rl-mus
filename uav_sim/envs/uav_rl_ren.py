@@ -198,6 +198,7 @@ class UavRlRen(UavSim):
         action += 5 * np.array(pos_er[3:])
 
         uav_tg_error = self.get_uav_t_go_error(uav)
+        # uav_tg_error = self.get_cum_dt_go_error(uav)
         #
         # uav_tg_error = (self.time_final - self._time_elapsed) - uav.get_t_go_est()
 
@@ -272,8 +273,10 @@ class UavRlRen(UavSim):
 
         if closest_uavs:
             dist_to_uav = uav.rel_distance(closest_uavs[0])
-            if dist_to_uav <= (uav.r + 0.15):
-                reward += -np.exp(-dist_to_uav / 0.1)
+            if uav.in_collision(closest_uavs[0]):
+                reward -= self.uav_collision_weight
+            elif dist_to_uav <= (uav.r + 0.15):
+                reward += -np.exp(-dist_to_uav / 0.1) 
 
         # neg reward if uav collides with obstacles
         for obstacle in self.obstacles:
@@ -285,7 +288,9 @@ class UavRlRen(UavSim):
 
         if closest_obstacles:
             dist_to_obstacle = uav.rel_distance(closest_obstacles[0])
-            if dist_to_obstacle <= (obstacle.r + 0.25):
-                reward += -np.exp(-dist_to_obstacle / 0.1)
+            if uav.in_collision(closest_obstacles[0]):
+                reward -= self.obstacle_collision_weight
+            elif dist_to_obstacle <= (obstacle.r + 0.25):
+                reward += -np.exp(-dist_to_obstacle / 0.1) 
 
         return reward
