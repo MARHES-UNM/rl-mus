@@ -169,14 +169,14 @@ def train(args):
     # Vary treatments here
     args.config["env_config"]["num_uavs"] = 4
     args.config["env_config"]["uav_type"] = tune.grid_search(["UavBase"])
-    args.config["env_config"]["use_safe_action"] = tune.grid_search([False])
+    args.config["env_config"]["use_safe_action"] = tune.grid_search([False, True])
     args.config["env_config"]["obstacle_collision_weight"] = tune.grid_search([1.0])
     args.config["env_config"]["uav_collision_weight"] = tune.grid_search([1.0])
     args.config["env_config"]["crash_penalty"] = 10
     # args.config["env_config"]["beta"] = tune.loguniform(0.001, 0.3)
     # args.config["env_config"]["stp_penalty"] = tune.loguniform(0.05, 0.1, 0.2, 0.3)
     args.config["env_config"]["stp_penalty"] = tune.grid_search(
-        [0.1, .8, 1.0, 1.5, 0.5, 2.0]
+        [1.5, 1.55, 1.6, 1.75, 1.8]
     )
     args.config["env_config"]["max_dt_std"] = 0.1
     args.config["env_config"]["tgt_reward"] = tune.grid_search([50])
