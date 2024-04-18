@@ -176,7 +176,7 @@ def train(args):
     # args.config["env_config"]["beta"] = tune.loguniform(0.001, 0.3)
     # args.config["env_config"]["stp_penalty"] = tune.loguniform(0.05, 0.1, 0.2, 0.3)
     args.config["env_config"]["stp_penalty"] = tune.grid_search(
-        [1.5, 1.55, 1.6, 1.75, 1.8]
+        [1.5]
     )
     args.config["env_config"]["max_dt_std"] = 0.1
     args.config["env_config"]["tgt_reward"] = tune.grid_search([50])
@@ -232,7 +232,7 @@ def train(args):
         # See for more on PPO hyperparameters: https://medium.com/aureliantactics/ppo-hyperparameters-and-ranges-6fc2d29bccbe
         .training(
             # https://docs.ray.io/en/latest/rllib/rllib-models.html
-            # model={"fcnet_hiddens": [512, 512, 512]},
+            model={"fcnet_hiddens": [512, 512]},
             # model={
             #     "custom_model": custom_model,
             #     # Extra kwargs to be passed to your custorm model.
