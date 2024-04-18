@@ -174,10 +174,11 @@ def train(args):
     args.config["env_config"]["uav_collision_weight"] = tune.grid_search([1.0])
     args.config["env_config"]["crash_penalty"] = 10
     # args.config["env_config"]["beta"] = tune.loguniform(0.001, 0.3)
-    args.config["env_config"]["stp_penalty"] = tune.loguniform(1.1, 1.9)
-    # args.config["env_config"]["stp_penalty"] = tune.grid_search(
-        # [1.5, 0.0, 1.25, 1.75]
-    # )
+    # args.config["env_config"]["stp_penalty"] = tune.loguniform(1.1, 1.9)
+    args.config["env_config"]["max_time_penalty"] = tune.grid_search([25, 50])
+    args.config["env_config"]["stp_penalty"] = tune.grid_search(
+        [1.5, 1.25, 1.15, 1.35, 0.0, 1.0]
+    )
     args.config["env_config"]["max_dt_std"] = 0.1
     args.config["env_config"]["tgt_reward"] = tune.grid_search([50])
     args.config["env_config"]["sa_reward"] = tune.grid_search([50])
@@ -281,7 +282,7 @@ def train(args):
         # args.run,
         # trainable_with_cpu_gpu,
         param_space=train_config.to_dict(),
-        tune_config=tune.TuneConfig(num_samples=10),
+        # tune_config=tune.TuneConfig(num_samples=10),
         run_config=air.RunConfig(
             stop=stop,
             local_dir=args.log_dir,
