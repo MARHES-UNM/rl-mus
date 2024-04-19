@@ -177,7 +177,7 @@ def train(args):
     # args.config["env_config"]["stp_penalty"] = tune.loguniform(1.1, 1.9)
     # args.config["env_config"]["max_time_penalty"] = tune.grid_search([25, 50])
     args.config["env_config"]["stp_penalty"] = tune.grid_search(
-        [1.5, 0.0, 1.25, 1.1]
+        [2.0, 3.0, 5.0, 7.0]
     )
     args.config["env_config"]["max_dt_std"] = 0.1
     args.config["env_config"]["tgt_reward"] = tune.grid_search([50])
