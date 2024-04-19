@@ -59,7 +59,7 @@
                 "--run",
                 "ren",
                 "test",
-                // "--render",
+                "--render",
                 "--plot_results",
                 "--seed", "None"
             ]

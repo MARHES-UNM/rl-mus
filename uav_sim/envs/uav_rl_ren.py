@@ -75,8 +75,8 @@ class UavRlRen(UavSim):
             "uav_landed": 1.0 if uav.landed else 0.0,
             "uav_done_dt": uav.done_dt,
             "uav_crashed": 1.0 if uav.crashed else 0.0,
-            "uav_dt_go": uav.dt_go,
-            "uav_t_go": uav.t_go,
+            "uav_dt_go": self.get_uav_t_go_error(uav),
+            "uav_t_go": uav.get_t_go_est(),
             "uav_done_time": uav.done_time,
         }
 
@@ -243,12 +243,20 @@ class UavRlRen(UavSim):
             reward += self._tgt_reward
 
             return reward
-
-        elif rel_dist >= np.linalg.norm(
-            [2 * self.env_max_l, 2 * self.env_max_w, self.env_max_h]
+        elif (
+            uav.state[0] < -self.env_max_w
+            or uav.state[0] > self.env_max_w
+            or uav.state[1] < -self.env_max_l
+            or uav.state[1] > self.env_max_l
+            or uav.state[2] > self.env_max_h
         ):
             uav.crashed = True
             reward += -self._crash_penalty
+        # elif rel_dist >= np.linalg.norm(
+        #     [2 * self.env_max_l, 2 * self.env_max_w, self.env_max_h]
+        # ):
+        #     uav.crashed = True
+        #     reward += -self._crash_penalty
         else:
             reward += self._beta * np.sign(uav.last_rel_dist - rel_dist)
 
@@ -258,7 +266,7 @@ class UavRlRen(UavSim):
         reward += -self._beta_vel * rel_vel
 
         # reward += max(0, self._stp_penalty - abs(uav_dt_go_error))
-        if abs(uav_dt_go_error) <= 0.2:
+        if abs(uav_dt_go_error) <= 0.1:
             reward += self._stp_penalty
 
         # neg reward if uav collides with other uavs
@@ -278,7 +286,7 @@ class UavRlRen(UavSim):
             if uav.in_collision(closest_uavs[0]):
                 reward -= self.uav_collision_weight
             elif dist_to_uav <= (uav.r + 0.15):
-                reward += -np.exp(-dist_to_uav / 0.1) 
+                reward += -np.exp(-dist_to_uav / 0.1)
 
         # neg reward if uav collides with obstacles
         for obstacle in self.obstacles:
@@ -293,6 +301,6 @@ class UavRlRen(UavSim):
             if uav.in_collision(closest_obstacles[0]):
                 reward -= self.obstacle_collision_weight
             elif dist_to_obstacle <= (obstacle.r + 0.25):
-                reward += -np.exp(-dist_to_obstacle / 0.1) 
+                reward += -np.exp(-dist_to_obstacle / 0.1)
 
         return reward

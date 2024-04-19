@@ -93,6 +93,7 @@ class Entity:
 
         return closest_entities
 
+
 class Obstacle(Entity):
     def __init__(self, _id, x=0, y=0, z=0, r=0.1, dt=0.1, _type=ObsType.S):
         super().__init__(_id, x, y, z, r, _type=_type)
@@ -377,6 +378,8 @@ class UavBase(Entity):
         return rel_dist <= (self.r), rel_dist, rel_vel
 
     def get_t_go_est(self, rel_vel=None):
+        if self.done:
+            return 0.0
 
         _, rel_dist, _rel_vel = self.check_dest_reached()
 
