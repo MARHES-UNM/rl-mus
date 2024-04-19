@@ -78,6 +78,7 @@ class UavRlRen(UavSim):
             "uav_dt_go": self.get_uav_t_go_error(uav),
             "uav_t_go": uav.get_t_go_est(),
             "uav_done_time": uav.done_time,
+            "sa_sat": uav.sa_sat
         }
 
         return info
@@ -184,6 +185,8 @@ class UavRlRen(UavSim):
         if all_landed:
             done_time = np.array([uav.done_time for uav in self.uavs.values()]).std()
             if done_time <= self.max_dt_std:
+                for uav in self.uavs.values():
+                    uav.sa_sat = True
                 return self._sa_reward
 
         return 0.0
