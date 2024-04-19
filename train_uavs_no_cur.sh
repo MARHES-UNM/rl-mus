@@ -1,6 +1,6 @@
 #!/bin/bash
 
-python run_experiment.py --name t_go_done_zero --run PPO \
+python run_experiment.py --name crash_penalty --run PPO \
     train \
     --cpu 8 \
     --gpu 0.5 \

@@ -243,20 +243,20 @@ class UavRlRen(UavSim):
             reward += self._tgt_reward
 
             return reward
-        elif (
-            uav.state[0] < -self.env_max_w
-            or uav.state[0] > self.env_max_w
-            or uav.state[1] < -self.env_max_l
-            or uav.state[1] > self.env_max_l
-            or uav.state[2] > self.env_max_h
-        ):
-            uav.crashed = True
-            reward += -self._crash_penalty
-        # elif rel_dist >= np.linalg.norm(
-        #     [2 * self.env_max_l, 2 * self.env_max_w, self.env_max_h]
+        # elif (
+        #     uav.state[0] < -self.env_max_w
+        #     or uav.state[0] > self.env_max_w
+        #     or uav.state[1] < -self.env_max_l
+        #     or uav.state[1] > self.env_max_l
+        #     or uav.state[2] > self.env_max_h
         # ):
         #     uav.crashed = True
         #     reward += -self._crash_penalty
+        elif rel_dist >= np.linalg.norm(
+            [self.env_max_l, self.env_max_w, self.env_max_h]
+        ):
+            uav.crashed = True
+            reward += -self._crash_penalty
         else:
             reward += self._beta * np.sign(uav.last_rel_dist - rel_dist)
 
@@ -265,9 +265,9 @@ class UavRlRen(UavSim):
         # give small penalty for having large relative velocity
         reward += -self._beta_vel * rel_vel
 
-        # reward += max(0, self._stp_penalty - abs(uav_dt_go_error))
-        if abs(uav_dt_go_error) <= 0.1:
-            reward += self._stp_penalty
+        reward += max(0, self._stp_penalty - abs(uav_dt_go_error))
+        # if abs(uav_dt_go_error) <= 0.1:
+        #     reward += self._stp_penalty
 
         # neg reward if uav collides with other uavs
         other_uav_list = []
