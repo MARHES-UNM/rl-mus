@@ -179,7 +179,7 @@ def train(args):
     args.config["env_config"]["stp_penalty"] = tune.grid_search(
         [10, 15, 3, 5]
     )
-    args.config["env_config"]["t_go_error_func"] = tune.grid_search(["mean"])
+    args.config["env_config"]["t_go_error_func"] = tune.grid_search(["sum"])
     args.config["env_config"]["max_dt_std"] = tune.grid_search([0.25])
     args.config["env_config"]["tgt_reward"] = 50
     args.config["env_config"]["sa_reward"] = 50
