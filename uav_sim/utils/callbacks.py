@@ -107,17 +107,21 @@ class TrainCallback(DefaultCallbacks):
             cum_uav_sa_sat += last_info["uav_sa_sat"]
             uav_done_times.append(last_info["uav_done_time"])
 
+        # sum here to get total collissions per uav per episode
         obstacle_collisions = (
             np.sum(episode.user_data["obstacle_collisions"]) / num_agents
         )
         episode.custom_metrics["obstacle_collisions"] = obstacle_collisions
 
+        # sum here to get total collissions per uav per episode
         uav_collisions = np.sum(episode.user_data["uav_collisions"]) / num_agents
         episode.custom_metrics["uav_collisions"] = uav_collisions
 
+        # sum here to get total collissions per uav per episode
         uav_crashed = np.sum(episode.user_data["uav_crashed"]) / num_agents
         episode.custom_metrics["num_uav_crashed"] = uav_crashed
 
+        # mean here to get stat per timestep per uav
         uav_dt_go = np.mean(episode.user_data["uav_dt_go"]) / num_agents
         episode.custom_metrics["uav_dt_go"] = uav_dt_go
 

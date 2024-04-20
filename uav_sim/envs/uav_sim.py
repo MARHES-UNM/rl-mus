@@ -85,6 +85,7 @@ class UavSim(MultiAgentEnv):
         self.target_r = env_config.setdefault("target_r", 0.50)
         self.max_time = self.time_final + self.t_go_max
         self.max_dt_std = env_config.setdefault("max_dt_std", 0.2)
+        self._t_go_error_func = env_config.setdefault("t_go_error_func", "mean")
         env_config["max_time"] = self.max_time
 
         self._env_config = env_config

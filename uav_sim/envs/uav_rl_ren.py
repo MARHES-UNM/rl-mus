@@ -78,7 +78,7 @@ class UavRlRen(UavSim):
             "uav_dt_go": self.get_uav_t_go_error(uav),
             "uav_t_go": uav.get_t_go_est(),
             "uav_done_time": uav.done_time,
-            "uav_sa_sat": 1.0 if uav.sa_sat else 0.0
+            "uav_sa_sat": 1.0 if uav.sa_sat else 0.0,
         }
 
         return info
@@ -140,7 +140,12 @@ class UavRlRen(UavSim):
                 for other_uav in self.uavs.values()
                 if other_uav.id != uav.id
             ]
-        ).mean()
+        )
+
+        if self._t_go_error_func == "mean":
+            uav_tg_error = uav_tg_error.mean()
+        else:
+            uav_tg_error = uav_tg_error.sum()
 
         return uav_tg_error
 

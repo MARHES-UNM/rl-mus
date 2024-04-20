@@ -1,6 +1,6 @@
 #!/bin/bash
 
-python run_experiment.py --name sampling_stp_penalty --run PPO \
+python run_experiment.py --name mean_t_g_error --run PPO \
     train \
     --cpu 8 \
     --gpu 0.5 \
