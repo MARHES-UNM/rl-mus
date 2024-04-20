@@ -108,21 +108,21 @@ class TrainCallback(DefaultCallbacks):
             uav_done_times.append(last_info["uav_done_time"])
 
         obstacle_collisions = (
-            np.mean(episode.user_data["obstacle_collisions"]) / num_agents
+            np.sum(episode.user_data["obstacle_collisions"]) / num_agents
         )
         episode.custom_metrics["obstacle_collisions"] = obstacle_collisions
 
-        uav_collisions = np.mean(episode.user_data["uav_collisions"]) / num_agents
+        uav_collisions = np.sum(episode.user_data["uav_collisions"]) / num_agents
         episode.custom_metrics["uav_collisions"] = uav_collisions
+
+        uav_crashed = np.sum(episode.user_data["uav_crashed"]) / num_agents
+        episode.custom_metrics["num_uav_crashed"] = uav_crashed
 
         uav_dt_go = np.mean(episode.user_data["uav_dt_go"]) / num_agents
         episode.custom_metrics["uav_dt_go"] = uav_dt_go
 
         uav_t_go = np.mean(episode.user_data["uav_t_go"]) / num_agents
         episode.custom_metrics["uav_t_go"] = uav_t_go
-
-        uav_crashed = np.mean(episode.user_data["uav_crashed"]) / num_agents
-        episode.custom_metrics["num_uav_crashed"] = uav_crashed
 
         # TODO: use np.mean here instead
         uav_landed = cum_uav_landed / num_agents

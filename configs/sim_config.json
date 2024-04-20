@@ -6,7 +6,7 @@
         "num_uavs": 4,
         "obstacle_collision_weight": 1,
         "obstacle_radius": 0.25,
-        "max_dt_std": 0.1,
+        "max_dt_std": 0.2,
         "render": false,
         "sa_reward": 0, 
         "seed": 123,
