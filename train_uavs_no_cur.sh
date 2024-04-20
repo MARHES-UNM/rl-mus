@@ -1,6 +1,6 @@
 #!/bin/bash
 
-python run_experiment.py --name stp_pen_mean --run PPO \
+python run_experiment.py --name stp_pen_mean_high --run PPO \
     train \
     --cpu 8 \
     --gpu 0.5 \
