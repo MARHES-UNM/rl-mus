@@ -75,10 +75,10 @@ class UavRlRen(UavSim):
             "uav_landed": 1.0 if uav.landed else 0.0,
             "uav_done_dt": uav.done_dt,
             "uav_crashed": 1.0 if uav.crashed else 0.0,
-            "uav_dt_go": self.get_uav_t_go_error(uav),
+            "uav_dt_go": abs(self.get_uav_t_go_error(uav)),
             "uav_t_go": uav.get_t_go_est(),
             "uav_done_time": uav.done_time,
-            "sa_sat": uav.sa_sat
+            "uav_sa_sat": 1.0 if uav.sa_sat else 0.0
         }
 
         return info

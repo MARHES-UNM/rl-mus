@@ -1,7 +1,7 @@
 #!/bin/bash
 
-python run_experiment.py --name high_dt_go_reward --run PPO \
+python run_experiment.py --name sampling_stp_penalty --run PPO \
     train \
     --cpu 8 \
     --gpu 0.5 \
-    --stop_timesteps 30000000
+    --stop_timesteps 20000000

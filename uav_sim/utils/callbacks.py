@@ -95,7 +95,7 @@ class TrainCallback(DefaultCallbacks):
         cum_uav_landed = 0.0
         cum_uav_done_dt = 0.0
         cum_uav_rel_dist = 0.0
-        cum_sa_sat = 0.0
+        cum_uav_sa_sat = 0.0
         uav_done_times = []
 
         for agent_id in agent_ids:
@@ -104,7 +104,7 @@ class TrainCallback(DefaultCallbacks):
             cum_uav_rel_dist += last_info["uav_rel_dist"]
             cum_uav_landed += last_info["uav_landed"]
             cum_uav_done_dt += last_info["uav_done_dt"]
-            cum_sa_sat += last_info["sa_sat"]
+            cum_uav_sa_sat += last_info["uav_sa_sat"]
             uav_done_times.append(last_info["uav_done_time"])
 
         obstacle_collisions = (
@@ -128,8 +128,8 @@ class TrainCallback(DefaultCallbacks):
         uav_landed = cum_uav_landed / num_agents
         episode.custom_metrics["num_uav_landed"] = uav_landed
 
-        sa_sat = cum_sa_sat / num_agents
-        episode.custom_metrics["uav_sa_sat"] = uav_landed
+        uav_sa_sat = cum_uav_sa_sat / num_agents
+        episode.custom_metrics["uav_sa_sat"] = uav_sa_sat
 
         uav_done_dt = cum_uav_done_dt / num_agents
         episode.custom_metrics["uav_done_dt"] = uav_done_dt

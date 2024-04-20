@@ -174,10 +174,10 @@ def train(args):
     args.config["env_config"]["uav_collision_weight"] = tune.grid_search([1.0])
     args.config["env_config"]["crash_penalty"] = 10
     # args.config["env_config"]["beta"] = tune.loguniform(0.001, 0.3)
-    # args.config["env_config"]["stp_penalty"] = tune.loguniform(1.1, 1.9)
     # args.config["env_config"]["max_time_penalty"] = tune.grid_search([25, 50])
+    # args.config["env_config"]["stp_penalty"] = tune.qloguniform(0.4, 10, 0.05)
     args.config["env_config"]["stp_penalty"] = tune.grid_search(
-        [.85, 1.5, 1.0, 0.0]
+        [2.0, 3.0, 4.0, 5.0]
     )
     args.config["env_config"]["max_dt_std"] = 0.1
     args.config["env_config"]["tgt_reward"] = tune.grid_search([50])
