@@ -177,10 +177,10 @@ def train(args):
     # args.config["env_config"]["max_time_penalty"] = tune.grid_search([25, 50])
     # args.config["env_config"]["stp_penalty"] = tune.qloguniform(0.4, 10, 0.05)
     args.config["env_config"]["stp_penalty"] = tune.grid_search(
-        [0.85, 1.5, 5.0, 3.5]
+        [0.1, 0.5, 1.0, 2.0]
     )
-    args.config["env_config"]["t_go_error_func"] = tune.grid_search(["mean", "sum"])
-    args.config["env_config"]["max_dt_std"] = tune.grid_search([0.2])
+    args.config["env_config"]["t_go_error_func"] = tune.grid_search(["sum"])
+    args.config["env_config"]["max_dt_std"] = tune.grid_search([0.25])
     args.config["env_config"]["tgt_reward"] = 50
     args.config["env_config"]["sa_reward"] = 50
     args.config["env_config"]["beta"] = 0.10
