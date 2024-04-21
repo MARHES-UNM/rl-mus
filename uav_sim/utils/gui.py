@@ -7,6 +7,7 @@ from matplotlib.patches import Circle
 import numpy as np
 import mpl_toolkits.mplot3d.art3d as art3d
 
+
 class Sprite:
     def __init__(self, ax, t_lim=30):
         self.t_lim = t_lim
@@ -15,7 +16,7 @@ class Sprite:
     def update(self, t, done=False):
         raise NotImplemented
 
-    def get_sphere(self, center, radius, color='r', alpha=0.1):
+    def get_sphere(self, center, radius, color="r", alpha=0.1):
         u, v = np.mgrid[0 : 2 * np.pi : 20j, 0 : np.pi : 10j]
         x = center[0] + radius * np.cos(u) * np.sin(v)
         y = center[1] + radius * np.sin(u) * np.sin(v)
@@ -48,13 +49,12 @@ class Sprite:
 
 
 class SphereSprite(Sprite):
-    def __init__(self, ax, color='r', alpha=0.1, t_lim=30):
+    def __init__(self, ax, color="r", alpha=0.1, t_lim=30):
         self.color = color
         self.alpha = alpha
         self.body = None
 
         super().__init__(ax, t_lim)
-
 
     def update(self, t, done=False):
         if self.body:
@@ -69,13 +69,14 @@ class SphereSprite(Sprite):
 
         self.body = self.get_sphere(center, radius)
 
-    def get_sphere(self, center, radius, color='r', alpha=0.1):
+    def get_sphere(self, center, radius, color="r", alpha=0.1):
         u, v = np.mgrid[0 : 2 * np.pi : 20j, 0 : np.pi : 10j]
         x = center[0] + radius * np.cos(u) * np.sin(v)
         y = center[1] + radius * np.sin(u) * np.sin(v)
         z = center[2] + radius * np.cos(v)
         return self.ax["ax_3d"].plot_wireframe(x, y, z, color=color, alpha=alpha)
-    
+
+
 class ObstacleSprite(Sprite):
     def __init__(self, ax, obstacle, t_lim=30):
         super().__init__(ax, t_lim)
@@ -128,7 +129,7 @@ class TargetSprite:
     https://stackoverflow.com/questions/73892040/moving-circle-animation-3d-plot
     """
 
-    def __init__(self, ax, target=None, num_targets=1, t_lim=30, color="g"):
+    def __init__(self, ax, target=None, num_targets=1, t_lim=10, color="g"):
         self.ax = ax
         self.target = target
         self.t_lim = t_lim
@@ -211,8 +212,9 @@ class TargetSprite:
 
 
 class UavSprite:
-    def __init__(self, ax, uav=None, color=None):
+    def __init__(self, ax, uav=None, color=None, t_lim=10):
         self.ax = ax
+        self.t_lim = t_lim
         self.uav = uav
         self.pad_sprite = None
         self.color = color
@@ -262,8 +264,6 @@ class UavSprite:
                 [0, l, 0],
             ]
         ).T
-
-        self.t_lim = 30
 
     def update(self, t, done=False):
         R = self.uav.rotation_matrix()

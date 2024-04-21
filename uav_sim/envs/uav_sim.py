@@ -54,7 +54,6 @@ class UavSim(MultiAgentEnv):
         self._beta_vel = env_config.setdefault("beta_vel", 0.00)
         self._d_thresh = env_config.setdefault("d_thresh", 0.01)  # uav.rad + pad.rad
         self._tgt_reward = env_config.setdefault("tgt_reward", 0.0)
-        # TODO: set to 0 
         self._sa_reward = env_config.setdefault("sa_reward", self._tgt_reward)
         self._crash_penalty = env_config.setdefault("crash_penalty", 10.0)
         self._dt_go_penalty = env_config.setdefault("dt_go_penalty", 10.0)
@@ -494,16 +493,29 @@ class UavSim(MultiAgentEnv):
         for obstacle in self.obstacles:
             obstacle.step(np.array([self.target.vx, self.target.vy]))
 
-        obs, reward, info = {}, {}, {}
-        for uav_id in self.alive_agents:
-            obs[uav_id] = self._get_obs(self.uavs[uav_id])
-            reward[uav_id] = self._get_reward(self.uavs[uav_id])
-            info[uav_id] = self._get_info(self.uavs[uav_id])
+        obs = {
+            uav.id: self._get_obs(uav)
+            for uav in self.uavs.values()
+            if uav.id in self.alive_agents
+        }
+        reward = {
+            uav.id: self._get_reward(uav)
+            for uav in self.uavs.values()
+            if uav.id in self.alive_agents
+        }
 
         # get global reward
         glob_reward = self._get_global_reward()
         reward = {k: v + glob_reward for k, v in reward.items()}
 
+        # IMPORTANT: this must be called after _get_reward or get_global_reward. Not before.
+        info = {
+            uav.id: self._get_info(uav)
+            for uav in self.uavs.values()
+            if uav.id in self.alive_agents
+        }
+
+        # TODO: delete later
         all_landed = all([uav.landed for uav in self.uavs.values()])
         # calculate done for each agent
         done = {

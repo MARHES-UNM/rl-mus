@@ -278,7 +278,7 @@ class UavRlRen(UavSim):
             # reward += -self._stp_penalty
 
         if abs(uav_dt_go_error) > self.max_dt_std:
-            reward += -self._stp_penalty
+            reward += self._stp_penalty
 
         # neg reward if uav collides with other uavs
         other_uav_list = []
