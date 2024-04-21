@@ -1,6 +1,6 @@
 #!/bin/bash
 
-python run_experiment.py --name stp_pen_sum_high --run PPO \
+python run_experiment.py --name baseline_1_5_stp_reward --run PPO \
     train \
     --cpu 8 \
     --gpu 0.5 \
