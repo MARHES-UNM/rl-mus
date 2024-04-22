@@ -177,10 +177,11 @@ def train(args):
     # args.config["env_config"]["max_time_penalty"] = tune.grid_search([25, 50])
     # args.config["env_config"]["stp_penalty"] = tune.qloguniform(0.4, 10, 0.05)
     args.config["env_config"]["stp_penalty"] = tune.grid_search(
-        [3.7, 4.0, 4.3, 4.5 ]
+        [1.5, 1.25, 3.7, 4.0]
     )
     args.config["env_config"]["t_go_error_func"] = tune.grid_search(["sum"])
-    args.config["env_config"]["max_dt_std"] = tune.grid_search([0.10])
+    args.config["env_config"]["max_dt_std"] = tune.grid_search([0.1, 0.05])
+    args.config["env_config"]["max_dt_go_error"] = tune.grid_search([0.2, 0.1])
     args.config["env_config"]["tgt_reward"] = 50
     args.config["env_config"]["sa_reward"] = 50
     args.config["env_config"]["beta"] = 0.10
@@ -402,9 +403,12 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
         "num_episodes": 0.0,
         "uav_collision": 0.0,
         "obs_collision": 0.0,
+        "uav_crashed": 0.0,
+        "uav_reward": 0.0,
         "uav_done": [[] for idx in range(env.num_uavs)],
         "uav_done_dt": [[] for idx in range(env.num_uavs)],
         "uav_done_time": [[] for idx in range(env.num_uavs)],
+        "uav_sa_sat": [[] for idx in range(env.num_uavs)],
         "episode_time": [],
         "episode_data": {
             "time_step_list": [],
@@ -468,6 +472,10 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
         for k, v in info.items():
             results["uav_collision"] += v["uav_collision"]
             results["obs_collision"] += v["obstacle_collision"]
+            results["uav_crashed"] += v["uav_crashed"]
+
+        for k, v in rew.items():
+            results["uav_reward"] += v
 
         # only get for 1st episode
         if num_episodes == 0:
@@ -502,6 +510,7 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
                 results["uav_done"][k].append(v["uav_landed"])
                 results["uav_done_dt"][k].append(v["uav_done_dt"])
                 results["uav_done_time"][k].append(v["uav_done_time"])
+                results["uav_sa_sat"][k].append(v["uav_sa_sat"])
             results["num_episodes"] = num_episodes
             results["episode_time"].append(env.time_elapsed)
 
