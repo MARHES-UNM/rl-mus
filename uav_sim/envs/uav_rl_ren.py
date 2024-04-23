@@ -251,20 +251,20 @@ class UavRlRen(UavSim):
             reward += self._tgt_reward
 
             return reward
-        # elif (
-        #     uav.state[0] < -self.env_max_w
-        #     or uav.state[0] > self.env_max_w
-        #     or uav.state[1] < -self.env_max_l
-        #     or uav.state[1] > self.env_max_l
-        #     or uav.state[2] > self.env_max_h
-        # ):
-        #     uav.crashed = True
-        #     reward += -self._crash_penalty
-        elif rel_dist >= np.linalg.norm(
-            [self.env_max_l, self.env_max_w, self.env_max_h]
+        elif (
+            uav.state[0] < -self.env_max_w
+            or uav.state[0] > self.env_max_w
+            or uav.state[1] < -self.env_max_l
+            or uav.state[1] > self.env_max_l
+            or uav.state[2] > self.env_max_h
         ):
             uav.crashed = True
             reward += -self._crash_penalty
+        # elif rel_dist >= np.linalg.norm(
+        #     [self.env_max_l, self.env_max_w, self.env_max_h]
+        # ):
+        #     uav.crashed = True
+        #     reward += -self._crash_penalty
         else:
             reward += self._beta * np.sign(uav.last_rel_dist - rel_dist)
 
