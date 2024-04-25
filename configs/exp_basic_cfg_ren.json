@@ -62,7 +62,7 @@
             }
         ],
         "seeds": [
-            100, 2000
+            100
         ]
     },
     "safety_layer_cfg": {

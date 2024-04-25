@@ -56,9 +56,9 @@ def get_data(all_progress):
             data["uav_done"] = np.sum(data["uav_done"], axis=0).mean()
             data["uav_sa_sat"] = np.mean(data["uav_sa_sat"], axis=0).mean()
             data["uav_done_dt"] = np.mean(np.abs(data["uav_done_dt"]))
-            # data["uav_done_time_std"] = np.std(data["uav_done_time"], axis=0).mean()
+            data["uav_done_time_std"] = np.std(data["uav_done_time"], axis=0).mean()
             # using mean absolute difference here to better show dispersion
-            data["uav_done_time_std"] = np_mad(data["uav_done_time"], axis=0).mean()
+            # data["uav_done_time_std"] = np_mad(data["uav_done_time"], axis=0).mean()
 
             # data["uav_done_dt"] = np.mean(data["uav_done_dt"])
             # uav_done_time = np.nan_to_num(
