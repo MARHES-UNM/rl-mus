@@ -27,8 +27,14 @@ from pathlib import Path
 
 PATH = Path(__file__).parent.absolute().resolve()
 
+
 def np_mad(data, axis=None):
     return np.median(np.abs(data - np.median(data, axis)), axis)
+
+
+def max_abs_diff(data, axis=None):
+    return np.max(data, axis=axis) - np.min(data, axis)
+
 
 def get_data(all_progress):
     # data_dict = {parameter: [] for parameter in parameter_list}
@@ -57,6 +63,9 @@ def get_data(all_progress):
             data["uav_sa_sat"] = np.mean(data["uav_sa_sat"], axis=0).mean()
             data["uav_done_dt"] = np.mean(np.abs(data["uav_done_dt"]))
             data["uav_done_time_std"] = np.std(data["uav_done_time"], axis=0).mean()
+            data["uav_done_time_max"] = max_abs_diff(
+                data["uav_done_time"], axis=0
+            ).mean()
             # using mean absolute difference here to better show dispersion
             # data["uav_done_time_std"] = np_mad(data["uav_done_time"], axis=0).mean()
 
@@ -197,7 +206,7 @@ def plot_uav_states(
 
     fig = plt.figure()
     all_figs.append(fig)
-    ax_leg = fig.add_subplot(611) # legend
+    ax_leg = fig.add_subplot(611)  # legend
     ax21 = fig.add_subplot(612)
     ax22 = fig.add_subplot(613)
     ax23 = fig.add_subplot(614)
@@ -233,7 +242,7 @@ def plot_uav_states(
         ax231.set_ylabel("$t\_go$")
         ax24.plot(time_step_list, uav_reward[idx], label=f"uav_{idx}")
         ax24.set_ylabel("Reward")
-        handles, labels  = ax21.get_legend_handles_labels()
+        handles, labels = ax21.get_legend_handles_labels()
         ax_leg.legend(handles, labels, loc="center", ncol=len(labels))
         ax_leg.axis("off")
 
@@ -245,7 +254,7 @@ def plot_uav_states(
         ax3.set_ylabel("$\parallel \Delta \mathbf{r} \parallel$")
         ax31.plot(time_step_list, rel_pad_vel[idx], label=f"uav_{idx}")
         ax31.set_ylabel("$\parallel \Delta \mathbf{v} \parallel$")
-        handles, labels  = ax.get_legend_handles_labels()
+        handles, labels = ax.get_legend_handles_labels()
         ax_1_leg.legend(handles, labels, loc="center", ncol=len(labels))
         ax_1_leg.axis("off")
 
@@ -299,9 +308,9 @@ def plot_uav_states(
 
         ax_.legend().remove()
         # if skip_legend:
-            # ax_.legend().remove()
+        # ax_.legend().remove()
         # else:
-            # ax_.legend()
+        # ax_.legend()
 
     if save_figs:
         suffixes = [
@@ -316,7 +325,7 @@ def plot_uav_states(
             fig_.savefig(file_name)
             plt.close(fig_)
 
-        figsize = (18,2)
+        figsize = (18, 2)
         fig_leg = plt.figure(figsize=figsize)
         ax_leg = fig_leg.add_subplot(111)
         # add the legend from the previous axes
@@ -423,9 +432,7 @@ def main():
             [
                 seeds[0],
             ],
-            [
-                num_uavs[0]
-            ],
+            [num_uavs[0]],
             [
                 max_num_obstacles[0],
             ],

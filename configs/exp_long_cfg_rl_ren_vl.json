@@ -1,0 +1,178 @@
+{
+    "exp_name": "ppo_ren_comp_vl",
+    "env_config": {
+        "use_virtual_leader": true,
+        "target_v": [
+            0.0
+        ],
+        "num_uavs": [
+            4,
+            1,
+            2
+        ],
+        "max_num_obstacles": [
+            4,
+            0,
+            8
+        ],
+        "time_final": [
+            8,
+            4,
+            12
+        ]
+    },
+    "exp_config": {
+        "max_num_episodes": 200,
+        "runs": [
+            {
+                "name": "ren",
+                "run": "ren",
+                "checkpoint": null,
+                "safe_action_type": null,
+                "label": "REN"
+            },
+            {
+                "name": "ren_ca",
+                "run": "ren",
+                "checkpoint": null,
+                "safe_action_type": "sca",
+                "label": "REN_CA"
+            },
+            {
+                "name": "ttc",
+                "run": "cc",
+                "checkpoint": null,
+                "safe_action_type": null,
+                "label": "TTC"
+            },
+            {
+                "name": "ttc_ca",
+                "run": "cc",
+                "checkpoint": null,
+                "safe_action_type": "sca",
+                "label": "TTC_CA"
+            },
+            {
+                "name": "ppo_no_ren",
+                "run": "PPO",
+                "checkpoint": "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2024-04-18-06-00_66c4c18_4u_4o_keep/dt_go_fix_rew_long/dt_go_fix_rew_long/PPO_multi-uav-ren-v0_7d314_00001_1_beta=0.1000,obstacle_collision_weight=1.0000,sa_reward=50,stp_penalty=0.0000,tgt_reward=50,uav__2024-04-18_06-00-30/checkpoint_000457/policies/shared_policy",
+                "safe_action_type": null,
+                "label": "PPO_NO_REN"
+            },
+            {
+                "name": "ppo",
+                "run": "PPO",
+                "checkpoint": "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2024-04-22-02-14_dc8b9b2_4u_4o/replicate_66c4c18/replicate_66c4c18/PPO_multi-uav-ren-v0_9ca6c_00002_2_max_dt_go_error=0.2000,max_dt_std=0.0500,stp_penalty=1.5000,t_go_error_func=sum,uav_type=UavBas_2024-04-22_02-14-44/checkpoint_000305/policies/shared_policy",
+                "safe_action_type": null,
+                "label": "POETIC"
+            },
+            {
+                "name": "ppo_cbf",
+                "run": "PPO",
+                "checkpoint": "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2024-04-22-02-14_dc8b9b2_4u_4o/replicate_66c4c18/replicate_66c4c18/PPO_multi-uav-ren-v0_9ca6c_00002_2_max_dt_go_error=0.2000,max_dt_std=0.0500,stp_penalty=1.5000,t_go_error_func=sum,uav_type=UavBas_2024-04-22_02-14-44/checkpoint_000305/policies/shared_policy",
+                "safe_action_type": "cbf",
+                "label": "POETIC-CBF"
+            },
+            {
+                "name": "ppo_ca",
+                "run": "PPO",
+                "checkpoint": "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2024-04-22-02-14_dc8b9b2_4u_4o/replicate_66c4c18/replicate_66c4c18/PPO_multi-uav-ren-v0_9ca6c_00002_2_max_dt_go_error=0.2000,max_dt_std=0.0500,stp_penalty=1.5000,t_go_error_func=sum,uav_type=UavBas_2024-04-22_02-14-44/checkpoint_000305/policies/shared_policy",
+                "safe_action_type": "sca",
+                "label": "POETIC_CA"
+            }
+        ],
+        "seeds": [
+            100
+        ]
+    },
+    "safety_layer_cfg": {
+        "checkpoint_dir": null
+    },
+    "items_to_plot": {
+        "uav_collision": "Total UAV Collisions",
+        "obs_collision": "Total NCFO Collision",
+        "uav_crashed": "Total Arena Collision",
+        "uav_reward": "Total Reward",
+        "uav_done_dt": "Mean UAV Time Arrival Error (s)",
+        "uav_done": "Total UAV Landed",
+        "time_total_s": "Total Experiment Runtime (s)",
+        "uav_done_time_std": "Done Time std",
+        "uav_done_time_max": "Done Time max diff",
+        "uav_sa_sat": "Percent SA sat"
+    },
+    "groups_to_plot": [
+        {
+            "group": [
+                "target_v"
+            ],
+            "group_x": "name",
+            "group_key": [
+                0.0
+            ],
+            "group_title": "overall",
+            "x_label": ""
+        },
+        {
+            "group": [
+                "num_obs",
+                "target_v",
+                "tf",
+                "num_uavs"
+            ],
+            "group_x": "name",
+            "group_key": [
+                4.0,
+                0.0,
+                8.0,
+                4.0
+            ],
+            "group_title": "baseline",
+            "x_label": ""
+        },
+        {
+            "group": [
+                "target_v",
+                "tf",
+                "num_obs"
+            ],
+            "group_x": "num_uavs",
+            "group_key": [
+                0.0,
+                8.0,
+                4.0
+            ],
+            "group_title": "vary_num_uavs_tgt_v_0",
+            "x_label": "Number of UAVs"
+        },
+        {
+            "group": [
+                "target_v",
+                "tf",
+                "num_uavs"
+            ],
+            "group_x": "num_obs",
+            "group_key": [
+                0.0,
+                8.0,
+                4.0
+            ],
+            "group_title": "vary_num_obs_tgt_v_0",
+            "x_label": "Number of NCFOs"
+        },
+        {
+            "group": [
+                "num_obs",
+                "target_v",
+                "num_uavs"
+            ],
+            "group_x": "tf",
+            "group_key": [
+                4,
+                0.0,
+                4
+            ],
+            "group_title": "vary_tf_v_num_obs",
+            "x_label": "Expected Time of Arrival, $t^f$ (s)"
+        }
+    ]
+}
