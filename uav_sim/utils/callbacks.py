@@ -5,6 +5,7 @@ from ray.rllib.algorithms.callbacks import DefaultCallbacks
 from ray.rllib.env import BaseEnv
 from ray.rllib.evaluation import Episode, RolloutWorker
 from ray.rllib.policy import Policy
+from uav_sim.utils.utils import max_abs_diff
 
 
 class TrainCallback(DefaultCallbacks):
@@ -140,6 +141,9 @@ class TrainCallback(DefaultCallbacks):
 
         uav_done_time_std = np.std(uav_done_times)
         episode.custom_metrics["uav_done_time_std"] = uav_done_time_std
+
+        uav_done_time_max = max_abs_diff(uav_done_times)
+        episode.custom_metrics["uav_done_time_max"] = uav_done_time_max
 
         uav_rel_dist = cum_uav_rel_dist / num_agents
         episode.custom_metrics["uav_rel_dist"] = uav_rel_dist

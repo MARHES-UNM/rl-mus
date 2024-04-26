@@ -2,6 +2,7 @@ from gymnasium import spaces
 import numpy as np
 from uav_sim.envs.uav_sim import UavSim
 import logging
+from uav_sim.utils.utils import max_abs_diff
 
 
 logger = logging.getLogger(__name__)
@@ -192,7 +193,8 @@ class UavRlRen(UavSim):
         all_landed = all([uav.landed for uav in self.uavs.values()])
 
         if all_landed:
-            done_time = np.array([uav.done_time for uav in self.uavs.values()]).std()
+            # done_time = np.array([uav.done_time for uav in self.uavs.values()]).std()
+            done_time = max_abs_diff([uav.done_time for uav in self.uavs.values()])
             if done_time <= self.max_dt_std:
                 for uav in self.uavs.values():
                     uav.sa_sat = True
@@ -255,22 +257,25 @@ class UavRlRen(UavSim):
             reward += self._tgt_reward
 
             return reward
-        elif (
-            uav.state[0] < -self.env_max_w
-            or uav.state[0] > self.env_max_w
-            or uav.state[1] < -self.env_max_l
-            or uav.state[1] > self.env_max_l
-            or uav.state[2] > self.env_max_h
+        # elif (
+        #     uav.state[0] < -self.env_max_w
+        #     or uav.state[0] > self.env_max_w
+        #     or uav.state[1] < -self.env_max_l
+        #     or uav.state[1] > self.env_max_l
+        #     or uav.state[2] > self.env_max_h
+        # ):
+        #     uav.crashed = True
+        #     if self._early_done:
+        #         uav.done = True
+        #     reward += -self._crash_penalty
+
+        elif uav.rel_distance() > np.linalg.norm(
+            [self.env_max_l, self.env_max_w, self.env_max_h]
         ):
             uav.crashed = True
             if self._early_done:
                 uav.done = True
             reward += -self._crash_penalty
-        # elif rel_dist >= np.linalg.norm(
-        #     [self.env_max_l, self.env_max_w, self.env_max_h]
-        # ):
-        #     uav.crashed = True
-        #     reward += -self._crash_penalty
         else:
             reward += self._beta * np.sign(uav.last_rel_dist - rel_dist)
 

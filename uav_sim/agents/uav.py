@@ -51,13 +51,17 @@ class Entity:
     def wrap_angle(self, val):
         return (val + np.pi) % (2 * np.pi) - np.pi
 
-    def rel_distance(self, entity):
-        dist = np.linalg.norm(self._state[0:3] - entity.state[0:3])
-        return dist
+    def rel_distance(self, entity=None):
+        if entity is None:
+            return np.linalg.norm(self._state[0:3])
 
-    def rel_vel(self, entity):
-        vel = np.linalg.norm(self._state[3:6] - entity.state[3:6])
-        return vel
+        return np.linalg.norm(self._state[0:3] - entity.state[0:3])
+
+    def rel_vel(self, entity=None):
+        if entity is None:
+            return np.linalg.norm(self._state[3:6])
+
+        return np.linalg.norm(self._state[3:6] - entity.state[3:6])
 
     def rel_bearing_error(self, entity):
         """[summary]
