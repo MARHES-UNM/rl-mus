@@ -170,19 +170,20 @@ def train(args):
     args.config["env_config"]["num_uavs"] = 4
     args.config["env_config"]["uav_type"] = tune.grid_search(["UavBase"])
     args.config["env_config"]["use_safe_action"] = tune.grid_search([False])
-    args.config["env_config"]["obstacle_collision_weight"] = 1.0
-    args.config["env_config"]["uav_collision_weight"] = 1.0
+    args.config["env_config"]["obstacle_collision_weight"] = 10
+    args.config["env_config"]["uav_collision_weight"] = 10
     args.config["env_config"]["crash_penalty"] = 10
     # args.config["env_config"]["beta"] = tune.loguniform(0.001, 0.3)
     # args.config["env_config"]["max_time_penalty"] = tune.grid_search([25, 50])
     # args.config["env_config"]["stp_penalty"] = tune.qloguniform(0.4, 10, 0.05)
-    args.config["env_config"]["stp_penalty"] = tune.grid_search([1.50, 0.85])
+    args.config["env_config"]["stp_penalty"] = tune.grid_search([1.85])
     args.config["env_config"]["t_go_error_func"] = tune.grid_search(["sum"])
     args.config["env_config"]["max_dt_std"] = tune.grid_search([0.05])
     args.config["env_config"]["max_dt_go_error"] = tune.grid_search([0.2])
     args.config["env_config"]["tgt_reward"] = 50
     args.config["env_config"]["sa_reward"] = 50
     args.config["env_config"]["beta"] = 0.10
+    args.config["env_config"]["early_done"] = [True, False]
     args.config["env_config"]["beta_vel"] = 0.1
     # custom_model = tune.grid_search(
     #     [

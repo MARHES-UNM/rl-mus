@@ -113,7 +113,10 @@ class UavRlRen(UavSim):
 
         obs_dict = {
             "state": uav.state[0:6].astype(np.float32),
-            "dt_go_error": np.array([self.get_uav_t_go_error(uav) / self.get_mean_tg_error()], dtype=np.float32),
+            "dt_go_error": np.array(
+                [self.get_uav_t_go_error(uav) / self.get_mean_tg_error()],
+                dtype=np.float32,
+            ),
             "rel_pad": (uav.state[0:6] - uav.pad.state[0:6]).astype(np.float32),
             "other_uav_obs": other_uav_states.astype(np.float32),
             "obstacles": obstacles_to_add.astype(np.float32),
@@ -127,7 +130,7 @@ class UavRlRen(UavSim):
 
         mean_tg_error = np.array([x.get_t_go_est() for x in self.uavs.values()]).mean()
 
-        return mean_tg_error
+        return mean_tg_error + 1e-6
 
     def get_uav_t_go_error(self, uav):
 
@@ -259,6 +262,8 @@ class UavRlRen(UavSim):
             or uav.state[2] > self.env_max_h
         ):
             uav.crashed = True
+            if self._early_done:
+                uav.done = True
             reward += -self._crash_penalty
         # elif rel_dist >= np.linalg.norm(
         #     [self.env_max_l, self.env_max_w, self.env_max_h]
@@ -288,6 +293,8 @@ class UavRlRen(UavSim):
                 other_uav_list.append(other_uav)
                 if uav.in_collision(other_uav):
                     # reward -= self.uav_collision_weight
+                    if self._early_done:
+                        uav.done = True
                     uav.uav_collision += 1
 
         closest_uavs = uav.get_closest_entities(other_uav_list, num_to_return=1)
@@ -303,6 +310,8 @@ class UavRlRen(UavSim):
         for obstacle in self.obstacles:
             if uav.in_collision(obstacle):
                 # reward -= self.obstacle_collision_weight
+                if self._early_done:
+                    uav.done = True
                 uav.obs_collision += 1
 
         closest_obstacles = uav.get_closest_entities(self.obstacles, num_to_return=1)
