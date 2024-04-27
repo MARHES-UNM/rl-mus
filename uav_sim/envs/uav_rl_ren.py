@@ -193,8 +193,8 @@ class UavRlRen(UavSim):
         all_landed = all([uav.landed for uav in self.uavs.values()])
 
         if all_landed:
-            # done_time = np.array([uav.done_time for uav in self.uavs.values()]).std()
-            done_time = max_abs_diff([uav.done_time for uav in self.uavs.values()])
+            done_time = np.array([uav.done_time for uav in self.uavs.values()]).std()
+            # done_time = max_abs_diff([uav.done_time for uav in self.uavs.values()])
             if done_time <= self.max_dt_std:
                 for uav in self.uavs.values():
                     uav.sa_sat = True

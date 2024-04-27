@@ -176,9 +176,9 @@ def train(args):
     # args.config["env_config"]["beta"] = tune.loguniform(0.001, 0.3)
     # args.config["env_config"]["max_time_penalty"] = tune.grid_search([25, 50])
     # args.config["env_config"]["stp_penalty"] = tune.qloguniform(0.4, 10, 0.05)
-    args.config["env_config"]["stp_penalty"] = tune.grid_search([1.5])
+    args.config["env_config"]["stp_penalty"] = tune.grid_search([1.5, 0.0])
     args.config["env_config"]["t_go_error_func"] = tune.grid_search(["sum"])
-    args.config["env_config"]["max_dt_std"] = tune.grid_search([0.5, 0.1])
+    args.config["env_config"]["max_dt_std"] = tune.grid_search([0.05, 0.025])
     args.config["env_config"]["max_dt_go_error"] = tune.grid_search([0.2])
     args.config["env_config"]["tgt_reward"] = 50
     args.config["env_config"]["sa_reward"] = 50
