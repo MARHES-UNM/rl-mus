@@ -1,0 +1,83 @@
+{
+    "exp_name": "ppo_ren_comp_no_vl",
+    "env_config": {
+        "use_virtual_leader": false,
+        "target_v": [
+            0.0
+        ],
+        "num_uavs": [
+            4,
+            1,
+            2
+        ],
+        "max_num_obstacles": [
+            4,
+            0,
+            8
+        ],
+        "time_final": [
+            8
+        ]
+    },
+    "exp_config": {
+        "max_num_episodes": 50,
+        "runs": [
+            {
+                "name": "ppo_no_ren",
+                "run": "PPO",
+                "checkpoint": "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2024-04-27-08-59_47fb018_4u_4o/replicate_dc8b9b2_02_05/replicate_dc8b9b2_02_05/PPO_multi-uav-ren-v0_0cf50_00002_2_early_done=False,max_dt_go_error=0.2000,max_dt_std=0.0500,stp_penalty=0.0000,t_go_error_func=su_2024-04-27_08-59-58/checkpoint_000457/policies/shared_policy",
+                "safe_action_type": null,
+                "label": "PPO_NO_REN"
+            },
+            {
+                "name": "ppo",
+                "run": "PPO",
+                "checkpoint": "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2024-04-27-08-59_47fb018_4u_4o/replicate_dc8b9b2_02_05/replicate_dc8b9b2_02_05/PPO_multi-uav-ren-v0_0cf50_00000_0_early_done=False,max_dt_go_error=0.2000,max_dt_std=0.0500,stp_penalty=1.5000,t_go_error_func=su_2024-04-27_08-59-58/checkpoint_000457/policies/shared_policy",
+                "safe_action_type": null,
+                "label": "POETIC"
+            }
+        ],
+        "seeds": [
+            8000, 2000, 3000, 59
+        ]
+    },
+    "safety_layer_cfg": {
+        "checkpoint_dir": null
+    },
+    "items_to_plot": {
+        "uav_collision": "Total UAV Collisions",
+        "uav_collision_eps": "UAV Collisions per episodes",
+        "obs_collision": "Total NCFO Collision",
+        "obs_collision_eps": "NCFO Collisions per Episodes",
+        "uav_crashed": "Total Arena Collision",
+        "uav_crashed_eps": "Total Arena Collision per Episodes",
+        "uav_reward": "Total Reward",
+        "uav_reward_eps": "Total Reward Per Episode",
+        "uav_done_dt": "Mean UAV Time Arrival Error (s)",
+        "uav_done": "Total UAV Landed",
+        "time_total_s": "Total Experiment Runtime (s)",
+        "uav_done_time_std": "Done Time std",
+        "uav_done_time_max": "Done Time max diff",
+        "uav_sa_sat": "Percent SA sat Raw",
+        "uav_sa_sat_cal": "Percent SA sat"
+    },
+    "groups_to_plot": [
+        {
+            "group": [
+                "num_obs",
+                "target_v",
+                "tf",
+                "num_uavs"
+            ],
+            "group_x": "name",
+            "group_key": [
+                4.0,
+                0.0,
+                8.0,
+                4.0
+            ],
+            "group_title": "baseline",
+            "x_label": ""
+        }
+    ]
+}
