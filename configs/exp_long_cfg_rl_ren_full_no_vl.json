@@ -67,15 +67,19 @@
     },
     "items_to_plot": {
         "uav_collision": "Total UAV Collisions",
+        "uav_collision_eps": "UAV Collisions per episodes",
         "obs_collision": "Total NCFO Collision",
+        "obs_collision_eps": "NCFO Collisions per Episodes",
         "uav_crashed": "Total Arena Collision",
         "uav_reward": "Total Reward",
+        "uav_reward_eps": "Total Reward Per Episode",
         "uav_done_dt": "Mean UAV Time Arrival Error (s)",
         "uav_done": "Total UAV Landed",
         "time_total_s": "Total Experiment Runtime (s)",
         "uav_done_time_std": "Done Time std",
         "uav_done_time_max": "Done Time max diff",
-        "uav_sa_sat": "Percent SA sat"
+        "uav_sa_sat": "Percent SA sat Raw",
+        "uav_sa_sat_cal": "Percent SA sat"
     },
     "groups_to_plot": [
         {

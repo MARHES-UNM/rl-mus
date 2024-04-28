@@ -24,17 +24,9 @@ import numpy as np
 
 from matplotlib.patches import Circle
 from pathlib import Path
+from uav_sim.utils.utils import np_mad, max_abs_diff
 
 PATH = Path(__file__).parent.absolute().resolve()
-
-
-def np_mad(data, axis=None):
-    return np.median(np.abs(data - np.median(data, axis)), axis)
-
-
-def max_abs_diff(data, axis=None):
-    return np.max(data, axis=axis) - np.min(data, axis)
-
 
 def get_data(all_progress):
     # data_dict = {parameter: [] for parameter in parameter_list}
@@ -57,9 +49,10 @@ def get_data(all_progress):
             data["seed"] = data["env_config"]["seed"]
             data["tf"] = data["env_config"]["time_final"]
             data["max_dt"] = data["env_config"]["t_go_max"]
+            data["max_dt"] = data["env_config"]["t_go_max"]
             # data["uav_done"] = np.mean(data["uav_done"], axis=1).sum()
             # sum up to to the number of uavs in the mean and gives the average across episodes
-            data["uav_done"] = np.sum(data["uav_done"], axis=0).mean()
+            data["uav_done"] = np.mean(data["uav_done"], axis=0).mean()
             data["uav_sa_sat"] = np.mean(data["uav_sa_sat"], axis=0).mean()
             data["uav_done_dt"] = np.mean(np.abs(data["uav_done_dt"]))
             data["uav_done_time_std"] = np.std(data["uav_done_time"], axis=0).mean()
