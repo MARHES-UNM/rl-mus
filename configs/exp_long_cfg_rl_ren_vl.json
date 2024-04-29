@@ -6,14 +6,10 @@
             0.0
         ],
         "num_uavs": [
-            4,
-            1,
-            2
+            4
         ],
         "max_num_obstacles": [
-            4,
-            0,
-            8
+            4
         ],
         "time_final": [
             8,
