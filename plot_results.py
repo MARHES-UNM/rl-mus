@@ -28,6 +28,23 @@ from uav_sim.utils.utils import np_mad, max_abs_diff
 
 PATH = Path(__file__).parent.absolute().resolve()
 
+
+def get_sa_sat(data, max_dt_std=0.1):
+    sa_sat = []
+    data_done = np.array(data["uav_done"])
+    data_done_time = np.array(data["uav_done_time"])
+    for num_epsisode in range(data["num_episodes"]):
+        output = 0
+        if (
+            all(data_done[:, num_epsisode])
+            and np.std(data_done_time[:, num_epsisode]) <= max_dt_std
+        ):
+            output = 1
+        sa_sat.append(output)
+
+    return np.array(sa_sat).mean()
+
+
 def get_data(all_progress):
     # data_dict = {parameter: [] for parameter in parameter_list}
     data_dict = {}
@@ -49,9 +66,23 @@ def get_data(all_progress):
             data["seed"] = data["env_config"]["seed"]
             data["tf"] = data["env_config"]["time_final"]
             data["max_dt"] = data["env_config"]["t_go_max"]
-            data["max_dt"] = data["env_config"]["t_go_max"]
+            data["max_dt_std"] = data["env_config"]["max_dt_std"]
+            data["max_dt_std"] = 0.5
+            data["uav_collision_eps"] = (
+                data["uav_collision"] / data["num_uavs"] / data["num_episodes"]
+            )
+            data["obs_collision_eps"] = (
+                data["obs_collision"] / data["num_uavs"] / data["num_episodes"]
+            )
+            data["uav_reward_eps"] = (
+                data["uav_reward"] / data["num_uavs"] / data["num_episodes"]
+            )
+            data["uav_crashed_eps"] = (
+                data["uav_crashed"] / data["num_uavs"] / data["num_episodes"]
+            )
             # data["uav_done"] = np.mean(data["uav_done"], axis=1).sum()
             # sum up to to the number of uavs in the mean and gives the average across episodes
+            data["uav_sa_sat_cal"] = get_sa_sat(data, data["max_dt_std"])
             data["uav_done"] = np.mean(data["uav_done"], axis=0).mean()
             data["uav_sa_sat"] = np.mean(data["uav_sa_sat"], axis=0).mean()
             data["uav_done_dt"] = np.mean(np.abs(data["uav_done_dt"]))
@@ -114,12 +145,17 @@ def plot_groups(groups, items, output_folder, plot_type="box", skip_legend=False
                 y=key,
                 ax=ax,
             )
+            if key == "uav_done_time_std":
+                ax.axhline(y=group_to_plot.max_dt_std.mean(), color="k")
+
+            if key == "uav_done_time_max":
+                ax.axhline(y=group_to_plot.max_dt_std.mean() * 2, color="k")
 
             if key == "uav_done_dt":
                 ax.axhline(y=group_to_plot.max_dt.mean(), color="k")
 
-            if key == "uav_done":
-                ax.axhline(y=group_to_plot.num_uavs.mean(), color="k")
+            if key in ["uav_done", "uav_sa_sat", "uav_sa_sat_cal"]:
+                ax.axhline(y=1.0, color="k")
 
             ax.set_ylabel(value)
             ax.set_xlabel(group["x_label"])
