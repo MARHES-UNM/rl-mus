@@ -38,6 +38,7 @@ def get_sa_sat(data, max_dt_std=0.1):
         if (
             all(data_done[:, num_epsisode])
             and np.std(data_done_time[:, num_epsisode]) <= max_dt_std
+            # and max_abs_diff(data_done_time[:, num_epsisode]) <= max_dt_std * 2
         ):
             output = 1
         sa_sat.append(output)
@@ -373,6 +374,7 @@ def plot_uav_states(
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument("--exp_folder", help="Path to experiments")
+    parser.add_argument("--out_folder", help="Path to experiments")
     parser.add_argument("--img_folder", help="Folder to output plots")
     parser.add_argument(
         "--exp_config",
@@ -403,8 +405,13 @@ def main():
     basedir_path = Path(args.exp_folder)
     basedir_list = list(basedir_path.glob("**/result.json"))
 
+    if args.out_folder is None:
+        out_folder = basedir_path
+    else:
+        out_folder = Path(args.out_folder)
+
     if args.img_folder is not None:
-        image_folder = basedir_path / args.img_folder
+        image_folder = out_folder / args.img_folder
     else:
         image_folder = basedir_path / "images"
 

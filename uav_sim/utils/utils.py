@@ -17,7 +17,7 @@ def max_abs_diff(data, axis=None):
     # if len(data) == 1:
     #     return data[0]
 
-    return np.max(data, axis=axis) - np.min(data, axis)
+    return np.max(data, axis=axis) - np.min(data, axis=axis)
 
 
 def cir_traj(t, e=0.5, r=1, x_c=0, y_c=0):
