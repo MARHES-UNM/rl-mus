@@ -1,6 +1,6 @@
 #!/bin/bash
 
-python run_experiment.py --name test_max_std_dt --run PPO \
+python run_experiment.py --name get_other_uav_td_er --run PPO \
     train \
     --cpu 8 \
     --gpu 0.5 \
