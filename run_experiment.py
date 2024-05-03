@@ -234,7 +234,7 @@ def train(args):
         # See for more on PPO hyperparameters: https://medium.com/aureliantactics/ppo-hyperparameters-and-ranges-6fc2d29bccbe
         .training(
             # https://docs.ray.io/en/latest/rllib/rllib-models.html
-            # model={"fcnet_hiddens": [64, 64]},
+            model={"fcnet_hiddens": [64, 64]},
             # model={
             #     "custom_model": custom_model,
             #     # Extra kwargs to be passed to your custorm model.
