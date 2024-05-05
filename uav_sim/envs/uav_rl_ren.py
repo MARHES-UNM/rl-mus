@@ -32,14 +32,15 @@ class UavRlRen(UavSim):
                         "rel_pad": spaces.Box(
                             low=-np.inf,
                             high=np.inf,
-                            shape=(num_state_shape,),
+                            # shape=(num_state_shape,),
+                            shape=(self.num_state_shape,),
                             dtype=np.float32,
                         ),
                         "other_uav_obs": spaces.Box(
                             low=-np.inf,
                             high=np.inf,
                             # shape=(self.nom_num_uavs - 1, num_state_shape + 1),
-                            shape=(self.nom_num_uavs - 1, num_state_shape),
+                            shape=(self.nom_num_uavs - 1, self.num_state_shape),
                             dtype=np.float32,
                         ),
                         "obstacles": spaces.Box(
@@ -47,7 +48,7 @@ class UavRlRen(UavSim):
                             high=np.inf,
                             shape=(
                                 self.nom_num_obstacles,
-                                num_state_shape,
+                                self.num_state_shape,
                             ),
                             dtype=np.float32,
                         ),
@@ -90,14 +91,17 @@ class UavRlRen(UavSim):
         other_uav_state_list = []
         for other_uav in self.uavs.values():
             if uav.id != other_uav.id:
-                temp_list = other_uav.state[:6].tolist()
+                temp_list  = []
+                temp_list.append(uav.rel_distance(other_uav))
+                temp_list.append(uav.rel_vel(other_uav))
+                # temp_list = other_uav.state[:6].tolist()
                 # temp_list.append(self.get_uav_t_go_error(other_uav))
                 other_uav_state_list.append(temp_list)
 
         num_active_other_agents = len(other_uav_state_list)
         if num_active_other_agents < self.nom_num_uavs - 1:
             # fake_uav = [0.0] * 7
-            fake_uav = [0.0] * 6
+            fake_uav = [0.0] * self.num_state_shape
             for _ in range(self.nom_num_uavs - 1 - num_active_other_agents):
                 other_uav_state_list.append(fake_uav.copy())
 
@@ -105,14 +109,25 @@ class UavRlRen(UavSim):
 
         closest_obstacles = self._get_closest_obstacles(uav)
 
-        obstacle_state_list = [obs.state[0:6] for obs in closest_obstacles]
+        # obstacle_state_list = [obs.state[0:6] for obs in closest_obstacles]
+        obstacle_state_list = []
+        for obs in closest_obstacles:
+            temp_obs_list = []
+            temp_obs_list.append(uav.rel_distance(obs))
+            temp_obs_list.append(uav.rel_vel(obs))
+            obstacle_state_list.append(temp_obs_list)
+
         num_active_obstacles = len(obstacle_state_list)
         if num_active_obstacles < self.nom_num_obstacles:
-            fake_obs = [0.0] * 6
+            fake_obs = [0.0] * self.num_state_shape
             for _ in range(self.nom_num_obstacles - num_active_obstacles):
                 obstacle_state_list.append(fake_obs)
 
         obstacles_to_add = np.array(obstacle_state_list, dtype=np.float32)
+
+        _, rel_dist, rel_vel = uav.check_dest_reached()
+        rel_pad = np.array([rel_dist, rel_vel])
+        # "rel_pad": (uav.state[0:6] - uav.pad.state[0:6]).astype(np.float32),
 
         obs_dict = {
             "state": uav.state[0:6].astype(np.float32),
@@ -121,7 +136,7 @@ class UavRlRen(UavSim):
                 [self.get_uav_t_go_error(uav)],
                 dtype=np.float32,
             ),
-            "rel_pad": (uav.state[0:6] - uav.pad.state[0:6]).astype(np.float32),
+            "rel_pad": rel_pad.astype(np.float32),
             "other_uav_obs": other_uav_states.astype(np.float32),
             "obstacles": obstacles_to_add.astype(np.float32),
         }
