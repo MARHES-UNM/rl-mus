@@ -133,10 +133,10 @@ class UavRlRen(UavSim):
                 dtype=np.float32,
             ),
             "rel_pad": (uav.state[0:6] - uav.pad.state[0:6]).astype(np.float32),
-            # "other_uav_obs": (other_uav_states).astype(np.float32),
-            "other_uav_obs": (uav.state[0:6] - other_uav_states).astype(np.float32),
-            # "obstacles": (obstacles_to_add).astype(np.float32),
-            "obstacles": (uav.state[0:6] - obstacles_to_add).astype(np.float32),
+            "other_uav_obs": (other_uav_states).astype(np.float32),
+            # "other_uav_obs": (uav.state[0:6] - other_uav_states).astype(np.float32),
+            "obstacles": (obstacles_to_add).astype(np.float32),
+            # "obstacles": (uav.state[0:6] - obstacles_to_add).astype(np.float32),
         }
 
         return obs_dict
