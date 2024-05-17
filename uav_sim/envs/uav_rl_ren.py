@@ -154,13 +154,17 @@ class UavRlRen(UavSim):
         if self._use_virtual_leader:
             return (self.time_final - self._time_elapsed) - uav.get_t_go_est()
 
-        uav_tg_error = np.array(
-            [
+        uav_tg_error = [
                 other_uav.get_t_go_est() - uav.get_t_go_est()
                 for other_uav in self.uavs.values()
                 if other_uav.id != uav.id
             ]
-        )
+
+        # TODO: virtual leader should be added to the overall sum 
+        # if self._use_virtual_leader:
+            # uav_tg_error.append((self.time_final - self._time_elapsed) - uav.get_t_go_est())
+
+        uav_tg_error = np.array([uav_tg_error])
 
         if self._t_go_error_func == "mean":
             uav_tg_error = uav_tg_error.mean()
