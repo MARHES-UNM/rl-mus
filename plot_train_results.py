@@ -21,7 +21,6 @@ import re
 import os
 
 import pathlib
-%matplotlib inline
 
 # %% [markdown]
 # ## Helper functions
@@ -45,10 +44,6 @@ def parse_key(reg_exp, str_to_parse):
     return result
     
     
-pattern = re.compile('seed=\d+')
-parse_key(pattern, 'isthiswhatuplookingforD:\OneDrive - University of New Mexico\PhD\Dissertation\Papers\2_journal_article\results\variance_test\cuas_4v1o5_2022-12-24-10-16_a6d1d18\variance_long\MyTrainer_cuas_multi_agent-v1_4v1o5_f763f_00000_0_custom_model=TorchFixModel,seed=123_2022-12-24_10-16-40\progress.csv')
-    
-
 # %%
 # Get 
 def get_progress(basedir, string_pattern, filter_list):
@@ -87,8 +82,14 @@ def get_progress(basedir, string_pattern, filter_list):
 # %%
 # CONSTANTS
 image_output_folder = (
-    r"/home/prime/Documents/workspace/rl_multi_uav_sim/results/temp_output"
+    r"paper_figs/train_results"
 )
+
+if not os.path.exists(image_output_folder):
+    os.makedirs(image_output_folder, exist_ok=True)
+
+
+
 filter_list = [
     "training_iteration",
     "time_total_s",
@@ -108,13 +109,13 @@ labels_to_plot = [
 ]
 
 # %%
-basedir = r'/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-11-07-08-16_80188c6/low_stp/PPO_multi-uav-sim-v0_d51c0_00000_0_beta=0.3000,d_thresh=0.0100,obstacle_collision_weight=0.1000,stp_penalty=5,t_go_max=2.0000,tgt__2023-11-07_08-16-16/'
+basedir = r'/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2024-04-27-08-59_47fb018_4u_4o/replicate_dc8b9b2_02_05/replicate_dc8b9b2_02_05/PPO_multi-uav-ren-v0_0cf50_00000_0_early_done=False,max_dt_go_error=0.2000,max_dt_std=0.0500,stp_penalty=1.5000,t_go_error_func=su_2024-04-27_08-59-58'
 df_ppo_no_cur= get_progress(basedir, r"stp_penalty=.*\d+", filter_list)
 df_ppo_no_cur.head
 
 
 # %%
-basedir = r'/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-11-06-23-23_e7633c3/cur_col_01/PPO_multi-uav-sim-v0_6dfd0_00001_1_obstacle_collision_weight=0.1000,stp_penalty=5,uav_collision_weight=0.1000,use_safe_action=Fals_2023-11-06_23-23-40'
+basedir = r'/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2024-04-27-08-59_47fb018_4u_4o/replicate_dc8b9b2_02_05/replicate_dc8b9b2_02_05/PPO_multi-uav-ren-v0_0cf50_00002_2_early_done=False,max_dt_go_error=0.2000,max_dt_std=0.0500,stp_penalty=0.0000,t_go_error_func=su_2024-04-27_08-59-58'
 df_ppo_cur= get_progress(basedir, r"stp_penalty=.*\d+", filter_list)
 df_ppo_cur.head
 
@@ -127,8 +128,8 @@ print(keys)
 
 # %%
 labels_keys = {
-    # 'POETIC': 'stp_penalty_5,uav_collision_weight_0.1000,use_safe_action_Fals_2023-11-06_23-23-40',
-    'POETIC_NO_CUR': 'stp_penalty_5,t_go_max_2.0000,tgt__2023-11-07_08-16-16',
+    'POETIC': 'stp_penalty_1.5000,t_go_error_func_su_2024-04-27_08-59-58',
+    'POETIC_NO_REN': 'stp_penalty_0.0000,t_go_error_func_su_2024-04-27_08-59-58',
 }
 
 # %%
@@ -211,17 +212,4 @@ for label, key in labels_keys.items():
     print(f'h:m:s: \t{h:.0f}:{m:.0f}:{s:.2f}')
     # print(f"total time (m): {time_total_m}")
     # print(f"total time (h): {time_total_h}")
-
-# %%
-
-
-# %%
-
-
-# %%
-
-
-# %%
-
-
 
