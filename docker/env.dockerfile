@@ -137,10 +137,10 @@ RUN wget --quiet "https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x8
     && sudo rm -rf /var/lib/apt/lists/* \
     && sudo apt-get clean
 
-# RUN ${CONDA_DIR}/bin/pip --no-cache-dir install --upgrade pip \
-#     && ${CONDA_DIR}/bin/pip --no-cache-dir install -r /home/${USERNAME}/requirements.txt \
-#     && if [ $(python -c 'import sys; print(sys.version_info.minor)') != "6" ]; then \
-#     ${CONDA_DIR}/bin/pip uninstall dataclasses typing -y; fi 
+RUN ${CONDA_DIR}/bin/pip --no-cache-dir install --upgrade pip \
+    && ${CONDA_DIR}/bin/pip --no-cache-dir install -r /home/${USERNAME}/requirements.txt \
+    && if [ $(python -c 'import sys; print(sys.version_info.minor)') != "6" ]; then \
+    ${CONDA_DIR}/bin/pip uninstall dataclasses typing -y; fi 
 
 # set up lightweight display, -E,-preserve-env ensures we get environment variables when using sudo
 RUN sudo apt-get update -y \
