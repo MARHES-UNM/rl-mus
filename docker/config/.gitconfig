@@ -1,0 +1,48 @@
+#https://gist.github.com/pksunkara/988716
+[user]
+	name = Jean-Elie Pierre
+	email = gno320@gmail.com
+
+[color]
+	ui = auto
+
+[core]
+	editor = code --wait
+	autocrlf = input
+
+[color "branch"]
+	current = yellow bold
+	local = green bold
+	remote = cyan bold
+
+[color "diff"]
+	meta = yellow bold
+	frag = magenta bold
+	old = red bold
+	new = green bold
+	whitespace = red reverse
+
+[color "status"]
+	added = green bold
+	changed = yellow bold
+	untracked = red bold
+[diff]
+	tool = vscode
+
+[difftool "vscode"]
+	cmd = code --wait --diff $LOCAL $REMOTE
+	prompt = false
+
+[merge]
+	tool = vscode
+
+[mergetool "vscode"]
+	cmd = code --wait $MERGED
+
+[alias]
+	df = difftool
+	visual = !gitk
+	st = status
+	gba = branch -a
+	lg = log --oneline --graph
+

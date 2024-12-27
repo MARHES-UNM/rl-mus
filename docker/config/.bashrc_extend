@@ -1,0 +1,35 @@
+
+parse_git_branch() {
+    git branch 2>/dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/ (\1)/'
+}
+
+PS1="[$(echo -e "\xF0\x9F\x92\xB0")\[$(tput setaf 1)\]\u\[$(tput setaf 3)\]@\[$(tput setaf 2)\]\h\[$(tput sgr0)\]:\[$(tput setaf 6)\]\w\[$(tput setaf 3)\]\$(parse_git_branch)\[$(tput sgr0)\]]\\$ \[$(tput sgr0)\]"
+
+set -o vi
+# export LIBGL_ALWAYS_INDIRECT=1
+# export DISPALY=192.168.1.8:0.0
+export DISPLAY=:0.0
+
+mp4togif() {
+    fullname=$1
+    echo $fullname
+    filename="${fullname%.*}"
+    ffmpeg -i $1 -vf "fps=10" ${filename}.gif
+}
+
+find_empty() {
+    find . -empty -type d
+}
+
+delete_folder() {
+    file_name=$1
+
+    cat $file_name | while read line; do
+        folder="$line"
+        # echo "folder is $folder"
+        if [[ -d $folder ]]; then
+            echo "folder exist. Deleting"
+            rm -rf $folder
+        fi
+    done
+}
