@@ -7,7 +7,7 @@
 	},
 	// 1. Use 'forwardPorts' to make a list of ports inside the container available locally.
 	"forwardPorts": [
-		// 5900
+		5900
 		// 8000
 	],
 	// 2. Use 'mounts' to make a list of local directories available inside the container. More info: https://code.visualstudio.com/remote/advancedcontainers/add-local-file-mount
@@ -37,7 +37,8 @@
 		"vscode": {
 			// Set *default* container specific settings.json values on container create.
 			"settings": {
-				"python.defaultInterpreterPath": "/usr/bin/python""vim.insertModeKeyBindings": [
+				"python.defaultInterpreterPath": "/usr/bin/python",
+				"vim.insertModeKeyBindings": [
 					{
 						"before": [
 							"j",
