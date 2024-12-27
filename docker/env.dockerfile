@@ -33,7 +33,7 @@ ARG CONDA_DIR=/home/$USERNAME/conda
 ENV TZ=America/New_York
 
 # adds anaconda to path
-ENV PATH "/home/${USERNAME}/anaconda3/bin:$PATH"
+ENV PATH "${CONDA_DIR}/bin:$PATH"
 
 # Create the user
 RUN apt-get update -y \
@@ -93,54 +93,54 @@ RUN sudo apt-get update --fix-missing -y \
     && sudo apt-get clean \
     && sudo rm -rf /var/lib/apt/lists/*
 
-# RUN wget --quiet "https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh" \
-#     -O ~/miniconda.sh \
-#     && /bin/bash ~/miniconda.sh -b -u -p ${CONDA_DIR} \
-#     && ${CONDA_DIR}/bin/conda init \ 
-#     && echo 'export PATH=$HOME/anaconda3/bin:$PATH' >> /home/${USERNAME}/.bashrc \
-#     && rm ~/miniconda.sh && \
-#     && ${CONDA_DIR}/bin/conda install -y \
-#     libgcc python=${PYTHON_VERSION} \
-#     # conda cleaning option
-#     # -t or --tarballs
-#     # -i or --index-cache
-#     # -p or --packages
-#     # -s or ... eh that was not documented, it probably relates to --source-cache and this issue
-#     # -y or --yes
-#     && ${CONDA_DIR}/bin/conda clean -tipsy --all \
-#     && ln -s ${CONDA_DIR}/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
-#     echo ". ${CONDA_DIR}/etc/profile.d/conda.sh" >> /home/${USERNAME}/.bashrc && \
-#     echo "conda activate base" >> /home/${USERNAME}/.bashrc \
-#     && $HOME/anaconda3/bin/pip install --no-cache-dir \
-#     flatbuffers \
-#     cython==0.29.26 \
-#     # Necessary for Dataset to work properly.
-#     numpy\>=1.20 \
-#     psutil \
-#     # To avoid the following error on Jenkins:
-#     # AttributeError: 'numpy.ufunc' object has no attribute '__module__'
-#     && $HOME/anaconda3/bin/pip uninstall -y dask \ 
-#     # We install cmake temporarily to get psutil
-#     && sudo apt-get autoremove -y cmake zlib1g-dev \
-#     # We keep g++ on GPU images, because uninstalling removes CUDA Devel tooling
-#     $(if [ "$BASE_IMAGE" = "ubuntu:focal" ]; then echo \
-#     g++; fi) \
-#     # Either install kubectl or remove wget 
-#     && (if [ "$AUTOSCALER" = "autoscaler" ]; \
-#     then wget -O - -q https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add - \
-#     && sudo touch /etc/apt/sources.list.d/kubernetes.list \
-#     && echo "deb http://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list \
-#     && sudo apt-get update \
-#     && sudo apt-get install kubectl; \
-#     else sudo apt-get autoremove -y wget; \
-#     fi;) \
-#     && sudo rm -rf /var/lib/apt/lists/* \
-#     && sudo apt-get clean
+RUN wget --quiet "https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh" \
+    -O ${HOME}/miniconda.sh \
+    && /bin/bash ${HOME}/miniconda.sh -b -u -p ${CONDA_DIR} \
+    && ${CONDA_DIR}/bin/conda init \ 
+    && echo "export PATH=${CONDA_DIR}/bin:$PATH" >> /home/${USERNAME}/.bashrc \
+    && rm ${HOME}/miniconda.sh \
+    && ${CONDA_DIR}/bin/conda install -y \
+    libgcc python=${PYTHON_VERSION} \
+    # conda cleaning option
+    # -t or --tarballs
+    # -i or --index-cache
+    # -p or --packages
+    # -s or ... eh that was not documented, it probably relates to --source-cache and this issue
+    # -y or --yes
+    && ${CONDA_DIR}/bin/conda clean -tip -y --all \
+    && sudo ln -s ${CONDA_DIR}/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
+    echo ". ${CONDA_DIR}/etc/profile.d/conda.sh" >> /home/${USERNAME}/.bashrc && \
+    echo "conda activate base" >> /home/${USERNAME}/.bashrc \
+    && ${CONDA_DIR}/bin/pip install --no-cache-dir \
+    flatbuffers \
+    cython==0.29.26 \
+    # Necessary for Dataset to work properly.
+    numpy\>=1.20 \
+    psutil \
+    # To avoid the following error on Jenkins:
+    # AttributeError: 'numpy.ufunc' object has no attribute '__module__'
+    && ${CONDA_DIR}/bin/pip uninstall -y dask \ 
+    # We install cmake temporarily to get psutil
+    && sudo apt-get autoremove -y cmake zlib1g-dev \
+    # We keep g++ on GPU images, because uninstalling removes CUDA Devel tooling
+    $(if [ "$BASE_IMAGE" = "ubuntu:focal" ]; then echo \
+    g++; fi) \
+    # Either install kubectl or remove wget 
+    && (if [ "$AUTOSCALER" = "autoscaler" ]; \
+    then wget -O - -q https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add - \
+    && sudo touch /etc/apt/sources.list.d/kubernetes.list \
+    && echo "deb http://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list \
+    && sudo apt-get update \
+    && sudo apt-get install kubectl; \
+    else sudo apt-get autoremove -y wget; \
+    fi;) \
+    && sudo rm -rf /var/lib/apt/lists/* \
+    && sudo apt-get clean
 
 # RUN ${CONDA_DIR}/bin/pip --no-cache-dir install --upgrade pip \
 #     && ${CONDA_DIR}/bin/pip --no-cache-dir install -r /home/${USERNAME}/requirements.txt \
 #     && if [ $(python -c 'import sys; print(sys.version_info.minor)') != "6" ]; then \
-#     $HOME/anaconda3/bin/pip uninstall dataclasses typing -y; fi 
+#     ${CONDA_DIR}/bin/pip uninstall dataclasses typing -y; fi 
 
 # set up lightweight display, -E,-preserve-env ensures we get environment variables when using sudo
 RUN sudo apt-get update -y \
