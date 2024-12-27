@@ -23,7 +23,7 @@
 	// 4. Features to add to the Dev Container. More info: https://containers.dev/implementors/features.
 	"features": {
 		"ghcr.io/devcontainers-contrib/features/pylint:1": {},
-		"ghcr.io/devcontainers-contrib/features/black:1": {},
+		"ghcr.io/devcontainers-contrib/features/black:1": {}
 		// ZSH without OMZ
 		// "ghcr.io/devcontainers/features/common-utils:2": {},
 		// Python with uv, Ruff, Mypy, MonkeyType and Bandit, installed using pipx
@@ -81,7 +81,9 @@
 				"ms-toolsai.jupyter-renderers",
 				"ms-toolsai.vscode-jupyter-slideshow",
 				"ms-toolsai.tensorboard",
-				"charliermarsh.ruff"
+				"charliermarsh.ruff",
+				"ms-azuretools.vscode-docker",
+				"eamodio.gitlens"
 			]
 		}
 	},
