@@ -51,7 +51,6 @@ RUN apt-get update -y \
 COPY docker/config/.vimrc /home/${USERNAME}/.
 COPY docker/config/.bashrc_extend /home/${USERNAME}/.bashrc_extend
 COPY docker/config/.gitconfig /home/${USERNAME}/.
-COPY ../requirements.txt /home/${USERNAME}/.
 
 # Appends custom functions to bashrc
 RUN cat /home/${USERNAME}/.bashrc_extend >> /home/${USERNAME}/.bashrc \
@@ -136,6 +135,8 @@ RUN wget --quiet "https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x8
     fi;) \
     && sudo rm -rf /var/lib/apt/lists/* \
     && sudo apt-get clean
+
+COPY ../requirements.txt /home/${USERNAME}/.
 
 RUN ${CONDA_DIR}/bin/pip --no-cache-dir install --upgrade pip \
     && ${CONDA_DIR}/bin/pip --no-cache-dir install -r /home/${USERNAME}/requirements.txt \
