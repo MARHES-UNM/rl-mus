@@ -5,15 +5,106 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "unittest: test_uav_sim_uav_base",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "unittest",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}",
+            "args": [
+                "-v",
+                "${cwd}/tests/test_uav_sim_uav_base.py"
+            ]
+        },
+        {
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
             "justMyCode": true,
+            "env": {}
+        },
+        {
+            "name": "run_experiment-train-cur",
+            "type": "python",
+            "request": "launch",
+            "program": "${cwd}/run_experiment.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}",
             "env": {
-                "DISPLAY": "192.168.1.18:0.0"
-            }
+                // 
+            },
+            "args": [
+                "--env_name",
+                "multi-uav-sim-curriculum-v0",
+                "train",
+                // "--gpu", "0.5", "--cpu", "8"
+            ]
+        },
+        {
+            "name": "run_experiment-test_ren",
+            "type": "python",
+            "request": "launch",
+            "program": "${cwd}/run_experiment.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}",
+            "env": {
+                // 
+            },
+            "args": [
+                "--run",
+                "ren",
+                "test",
+                "--render",
+                "--plot_results",
+                "--seed", "None"
+            ]
+        },
+        {
+            "name": "run_experiment-test",
+            "type": "python",
+            "request": "launch",
+            "program": "${cwd}/run_experiment.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}",
+            "env": {
+                // 
+            },
+            "args": [
+                // "--tf", "10",
+                "--run",
+                "PPO",
+                "test",
+                "--checkpoint", 
+                // "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2024-04-14-08-19_8f46de9_4u_4o/rebaseline_85/rebaseline_85/PPO_multi-uav-ren-v0_330d5_00000_0_beta=0.1000,stp_penalty=0.8500,tgt_reward=50,uav_type=UavBase,use_safe_action=False_2024-04-14_08-19-11/checkpoint_000457/policies/shared_policy",
+                // "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2024-04-18-06-00_66c4c18_4u_4o/dt_go_fix_rew_long/dt_go_fix_rew_long/PPO_multi-uav-ren-v0_7d314_00000_0_beta=0.1000,obstacle_collision_weight=1.0000,sa_reward=50,stp_penalty=1.5000,tgt_reward=50,uav__2024-04-18_06-00-30/checkpoint_000457/policies/shared_policy",
+                // "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2024-04-19-21-20_4ebe1b4_4u_4o/sampling_stp_penalty/sampling_stp_penalty/PPO_multi-uav-ren-v0_36485_00003_3_beta=0.1000,obstacle_collision_weight=1.0000,sa_reward=50,stp_penalty=5.0000,tgt_reward=50,uav__2024-04-19_21-20-45/checkpoint_000165/policies/shared_policy",
+                // "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2024-04-18-06-00_66c4c18_4u_4o_keep/dt_go_fix_rew_long/dt_go_fix_rew_long/PPO_multi-uav-ren-v0_7d314_00000_0_beta=0.1000,obstacle_collision_weight=1.0000,sa_reward=50,stp_penalty=1.5000,tgt_reward=50,uav__2024-04-18_06-00-30/checkpoint_000457/policies/shared_policy",
+                // "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2024-04-20-16-33_3270356_4u_4o/stp_pen_mean_high/stp_pen_mean_high/PPO_multi-uav-ren-v0_49c9b_00002_2_max_dt_std=0.2500,stp_penalty=3,t_go_error_func=mean,uav_type=UavBase,use_safe_action=False_2024-04-20_16-33-47/checkpoint_000295/policies/shared_policy",
+                // "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2024-04-20-17-37_fe2cf0d_4u_4o/stp_pen_sum_high/stp_pen_sum_high/PPO_multi-uav-ren-v0_33283_00001_1_max_dt_std=0.2500,stp_penalty=5,t_go_error_func=sum,uav_type=UavBase,use_safe_action=False_2024-04-20_17-37-34/checkpoint_000075/policies/shared_policy",
+                // "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2024-04-20-17-37_fe2cf0d_4u_4o/stp_pen_sum_high/stp_pen_sum_high/PPO_multi-uav-ren-v0_33283_00001_1_max_dt_std=0.2500,stp_penalty=5,t_go_error_func=sum,uav_type=UavBase,use_safe_action=False_2024-04-20_17-37-34/checkpoint_000305/policies/shared_policy",
+                // "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2024-04-19-02-07_0e63b50_4u_4o/high_dt_go_rew/high_dt_go_rew/PPO_multi-uav-ren-v0_1a092_00001_1_beta=0.1000,obstacle_collision_weight=1.0000,sa_reward=50,stp_penalty=3.0000,tgt_reward=50,uav__2024-04-19_02-07-29/checkpoint_000350/policies/shared_policy",
+                // "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2024-04-21-02-38_eed9f45_4u_4o/baseline_dt_1_0_stp_reward/baseline_dt_1_0_stp_reward/PPO_multi-uav-ren-v0_c1e9b_00003_3_max_dt_std=0.1000,stp_penalty=6.0000,t_go_error_func=sum,uav_type=UavBase,use_safe_action=False_2024-04-21_02-38-26/checkpoint_000070/policies/shared_policy",
+                // "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2024-04-21-02-38_eed9f45_4u_4o/baseline_dt_1_0_stp_reward/baseline_dt_1_0_stp_reward/PPO_multi-uav-ren-v0_c1e9b_00003_3_max_dt_std=0.1000,stp_penalty=6.0000,t_go_error_func=sum,uav_type=UavBase,use_safe_action=False_2024-04-21_02-38-26/checkpoint_000175/policies/shared_policy",
+                // "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2024-04-22-02-14_dc8b9b2_4u_4o/replicate_66c4c18/replicate_66c4c18/PPO_multi-uav-ren-v0_9ca6c_00015_15_max_dt_go_error=0.1000,max_dt_std=0.0500,stp_penalty=4.0000,t_go_error_func=sum,uav_type=UavBa_2024-04-22_02-14-44/checkpoint_000270/policies/shared_policy",
+                // "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2024-04-22-02-14_dc8b9b2_4u_4o/replicate_66c4c18/replicate_66c4c18/PPO_multi-uav-ren-v0_9ca6c_00002_2_max_dt_go_error=0.2000,max_dt_std=0.0500,stp_penalty=1.5000,t_go_error_func=sum,uav_type=UavBas_2024-04-22_02-14-44/checkpoint_000305/policies/shared_policy",
+                // "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2024-04-23-00-32_78ab3bc_4u_4o/replicate_66c4c18_train_bounds/replicate_66c4c18_train_bounds/PPO_multi-uav-ren-v0_8aa7c_00023_23_max_dt_go_error=0.1000,max_dt_std=0.0500,stp_penalty=4.0000,t_go_error_func=sum,uav_type=UavBa_2024-04-23_00-33-05/checkpoint_000533/policies/shared_policy",
+                // "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2024-04-25-21-36_39e9a0e_4u_4o/early_done/early_done/PPO_multi-uav-ren-v0_5ce76_00001_1_early_done=True,max_dt_go_error=0.2000,max_dt_std=0.0500,stp_penalty=4,t_go_error_func=sum,uav__2024-04-25_21-36-11/checkpoint_000140/policies/shared_policy",
+                // "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2024-04-26-12-19_7b31fae_4u_4o/max_time_diff/max_time_diff/PPO_multi-uav-ren-v0_bf070_00000_0_early_done=False,max_dt_go_error=0.2000,max_dt_std=0.5000,stp_penalty=1.5000,t_go_error_func=su_2024-04-26_12-19-24/checkpoint_000305/policies/shared_policy",
+                // "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2024-04-26-12-19_7b31fae_4u_4o/max_time_diff/max_time_diff/PPO_multi-uav-ren-v0_bf070_00001_1_early_done=False,max_dt_go_error=0.2000,max_dt_std=0.1000,stp_penalty=1.5000,t_go_error_func=su_2024-04-26_12-19-24/checkpoint_000305/policies/shared_policy",
+                // "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2024-05-03-18-09_d007652_4u_4o/no_other_uav_td_er_64/no_other_uav_td_er_64/PPO_multi-uav-ren-v0_cbb47_00001_1_early_done=False,max_dt_go_error=0.2000,max_dt_std=0.0500,stp_penalty=1.5000,t_go_error_func=me_2024-05-03_18-09-22/checkpoint_000315/policies/shared_policy",
+                // "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2024-05-03-18-09_d007652_4u_4o/no_other_uav_td_er_64/no_other_uav_td_er_64/PPO_multi-uav-ren-v0_cbb47_00000_0_early_done=False,max_dt_go_error=0.2000,max_dt_std=0.0500,stp_penalty=1.5000,t_go_error_func=su_2024-05-03_18-09-22/checkpoint_000405/policies/shared_policy",
+                "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2024-04-27-08-59_47fb018_4u_4o_keep/replicate_dc8b9b2_02_05/replicate_dc8b9b2_02_05/PPO_multi-uav-ren-v0_0cf50_00000_0_early_done=False,max_dt_go_error=0.2000,max_dt_std=0.0500,stp_penalty=1.5000,t_go_error_func=su_2024-04-27_08-59-58/checkpoint_000457/policies/shared_policy",
+                // "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2024-05-04-21-02_b3e1835_4u_4o/train_rel_state/train_rel_state/PPO_multi-uav-ren-v0_1c28f_00000_0_early_done=False,max_dt_go_error=0.2000,max_dt_std=0.0500,stp_penalty=1.5000,t_go_error_func=su_2024-05-04_21-02-14/checkpoint_000140/policies/shared_policy",
+                "--render",
+                "--seed", "None",
+                "--plot_results"
+            ]
         },
         {
             "name": "train_agent",
@@ -24,7 +115,7 @@
             "justMyCode": false,
             "cwd": "${workspaceFolder}",
             "env": {
-                // "DISPLAY": "192.168.1.18:0.0"
+                // 
             },
             "args": [
                 // "--gpu",
@@ -40,7 +131,7 @@
             "justMyCode": false,
             "cwd": "${workspaceFolder}",
             "env": {
-                // "DISPLAY": "192.168.1.18:0.0"
+                // 
             },
             "args": [
                 // "--gpu",
@@ -56,7 +147,7 @@
             "justMyCode": true,
             "cwd": "${workspaceFolder}",
             "env": {
-                // "DISPLAY": "192.168.1.18:0.0"
+                // 
             },
             "args": [
                 "--num_eps",
@@ -74,7 +165,7 @@
             "justMyCode": true,
             "cwd": "${workspaceFolder}",
             "env": {
-                // "DISPLAY": "192.168.1.18:0.0"
+                // 
             },
             "args": [
                 "test",
@@ -90,9 +181,7 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "cwd": "${workspaceFolder}",
-            "env": {
-                "DISPLAY": "192.168.1.18:0.0"
-            },
+            "env": {},
             "args": [
                 "-v",
                 "${cwd}/tests/test_gui.py"
@@ -107,13 +196,10 @@
             "justMyCode": true,
             "cwd": "${workspaceFolder}",
             "env": {
-                // "DISPLAY": "192.168.1.17:0.0"
+                // 
             },
             "args": [
-                // "--load_config",
-                // "/home/prime/Documents/workspace/rl_multi_uav_sim/configs/exp_sim_config.cfg",
                 "--plot_results",
-                // "--render"
             ]
         },
         {
@@ -122,10 +208,7 @@
             "request": "launch",
             "module": "unittest",
             "justMyCode": true,
-            "env": {
-                "DISPLAY": "192.168.1.11:0.0"
-                // "DISPLAY": "192.168.243.10:0.0"
-            },
+            "env": {},
             "args": [
                 "-v"
             ]
@@ -139,7 +222,7 @@
             "justMyCode": true,
             "cwd": "${workspaceFolder}",
             "env": {
-                // "DISPLAY": "192.168.1.18:0.0"
+                // 
             },
             "args": [
                 "-v",
@@ -154,28 +237,24 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "cwd": "${workspaceFolder}",
-            "env": {
-                "DISPLAY": "192.168.1.18:0.0"
-            },
+            "env": {},
             "args": [
                 "-v",
                 "${cwd}/tests/test_target.py"
             ]
         },
         {
-            "name": "unittest_quad_2d",
+            "name": "unittest: uav_base",
             "type": "python",
             "request": "launch",
             "module": "unittest",
             "console": "integratedTerminal",
             "justMyCode": true,
             "cwd": "${workspaceFolder}",
-            "env": {
-                "DISPLAY": "192.168.1.11:0.0"
-            },
+            "env": {},
             "args": [
                 "-v",
-                "tests.test_quad_2d.TestQuad2D.test_f_dot_torch",
+                "tests.test_uav_base",
                 "--failfast"
             ]
         },
@@ -188,10 +267,7 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "cwd": "${workspaceFolder}",
-            "env": {
-                "DISPLAY": "192.168.1.18:0.0"
-                // "DISPLAY": "192.168.243.10:0.0"
-            },
+            "env": {},
             "args": [
                 "-v",
                 "${cwd}/tests/test_uav.py",
@@ -205,17 +281,15 @@
             "name": "unittest_uav_sim",
             "type": "python",
             "request": "launch",
-            "module": "unittest",
-            // "program": "${cwd}/uav_sim/tests/test_uav_sim.py",
+            // "module": "unittest",
+            "program": "${cwd}/uav_sim/tests/test_uav_sim.py",
             "console": "integratedTerminal",
             "justMyCode": true,
             "cwd": "${workspaceFolder}",
-            "env": {
-                "DISPLAY": "192.168.1.18:0.0"
-            },
+            "env": {},
             "args": [
                 "-v",
-                "tests.test_uav_sim.TestUavSim.test_constraints",
+                // "tests.test_uav_sim.TestUavSim.test_constraints",
                 // "tests.test_uav_sim.TestUavSim.test_time_coordinated_control_mat",
                 // "tests.test_uav_sim.TestUavSim.test_lqr_landing_cbf",
                 // "tests.test_uav_sim.TestUavSim.test_time_coordinated_control_mat",
@@ -232,9 +306,7 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "cwd": "${workspaceFolder}",
-            "env": {
-                "DISPLAY": "192.168.1.18:0.0"
-            },
+            "env": {},
             "args": [
                 "-v",
                 "tests.test_replay_buffer",
@@ -245,18 +317,18 @@
             "name": "plot_results",
             "type": "python",
             "request": "launch",
-            "program": "${cwd}/plot_results.py",
+            "program": "${cwd}/plot_results_dirty.py",
             "console": "integratedTerminal",
             "justMyCode": true,
             "cwd": "${workspaceFolder}",
             "env": {
-                // "DISPLAY": "192.168.1.18:0.0"
+                // 
             },
             "args": [
                 "--exp_config",
-                "configs/exp_long_cfg_ppo.json",
+                "configs/exp_long_cfg_rl_ren_full_no_vl.json",
                 "--exp_folder",
-                "/home/prime/Documents/workspace/rl_multi_uav_sim/results/test_results/exp_2023-11-21-11-15_0f2a08c",
+                "results/test_results/ppo_ren_comp_no_vl/exp_2024-04-27-20-44_9fab435_vl_0",
                 "--skip_legend"
             ],
         },
@@ -269,11 +341,10 @@
             "justMyCode": true,
             "cwd": "${workspaceFolder}",
             "env": {
-                // "DISPLAY": "192.168.1.18:0.0"
+                // 
             },
             "args": [
                 "-v",
-                // "tests.test_safety_layer.TestSafetyLayer.test_get_mask",
                 "tests.test_safety_layer",
                 "--failfast"
             ]
@@ -286,9 +357,7 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "cwd": "${workspaceFolder}",
-            "env": {
-                "DISPLAY": "192.168.1.18:0.0"
-            },
+            "env": {},
             "args": [
                 "-v",
                 "tests.test_utils",

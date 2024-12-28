@@ -1,0 +1,91 @@
+absl-py @ file:///home/conda/feedstock_root/build_artifacts/absl-py_1705494584803/work
+aiosignal==1.3.1
+attrs==23.2.0
+certifi @ file:///home/conda/feedstock_root/build_artifacts/certifi_1707022139797/work/certifi
+chardet==5.2.0
+charset-normalizer==3.3.2
+click==8.1.7
+cloudpickle==3.0.0
+contourpy==1.2.0
+cycler==0.12.1
+dm-tree==0.1.8
+filelock==3.13.3
+fonttools==4.50.0
+frozenlist==1.4.1
+fsspec==2023.4.0
+GPUtil==1.4.0
+grpcio==1.62.1
+gym==0.26.2
+gym-notices==0.0.8
+Gymnasium==0.26.3
+gymnasium-notices==0.0.1
+idna==3.6
+imageio==2.34.0
+importlib_metadata @ file:///home/conda/feedstock_root/build_artifacts/importlib-metadata_1710971335535/work
+Jinja2==3.1.2
+jsonschema==4.21.1
+jsonschema-specifications==2023.12.1
+kiwisolver==1.4.5
+lazy_loader==0.3
+lz4==4.3.3
+Markdown @ file:///home/conda/feedstock_root/build_artifacts/markdown_1710435156458/work
+markdown-it-py==3.0.0
+MarkupSafe==2.1.3
+matplotlib==3.8.3
+mdurl==0.1.2
+mpmath==1.3.0
+msgpack==1.0.8
+networkx==3.2.1
+numpy==1.26.4
+nvidia-cublas-cu11==11.11.3.6
+nvidia-cuda-cupti-cu11==11.8.87
+nvidia-cuda-nvrtc-cu11==11.8.89
+nvidia-cuda-runtime-cu11==11.8.89
+nvidia-cudnn-cu11==8.7.0.84
+nvidia-cufft-cu11==10.9.0.58
+nvidia-curand-cu11==10.3.0.86
+nvidia-cusolver-cu11==11.4.1.48
+nvidia-cusparse-cu11==11.7.5.86
+nvidia-nccl-cu11==2.19.3
+nvidia-nvtx-cu11==11.8.86
+packaging==24.0
+pandas==2.2.1
+pillow==10.2.0
+protobuf==3.20.3
+pyarrow==15.0.2
+pybullet==3.2.6
+Pygments==2.17.2
+pyparsing==3.1.2
+python-dateutil==2.9.0.post0
+pytz==2024.1
+PyYAML==6.0.1
+qpsolvers==4.3.2
+quadprog==0.1.12
+ray==2.6.3
+referencing==0.34.0
+requests==2.31.0
+rich==13.7.1
+rpds-py==0.18.0
+scikit-image==0.22.0
+scipy==1.12.0
+seaborn==0.13.2
+shellingham==1.5.4
+six==1.16.0
+sympy==1.12
+tensorboard @ file:///home/conda/feedstock_root/build_artifacts/tensorboard_1708285739699/work/tensorboard-2.16.2-py3-none-any.whl#sha256=9f2b4e7dad86667615c0e5cd072f1ea8403fc032a299f0072d6f74855775cc45
+tensorboard-data-server @ file:///croot/tensorboard-data-server_1681498183723/work/tensorboard_data_server-0.7.0-py3-none-manylinux2014_x86_64.whl
+tensorboardX==2.6.2.2
+tifffile==2024.2.12
+torch==2.2.2+cu118
+torch-tb-profiler==0.4.3
+torchaudio==2.2.2+cu118
+torchvision==0.17.2+cu118
+triton==2.2.0
+typer==0.12.0
+typer-cli==0.12.0
+typer-slim==0.12.0
+typing_extensions==4.10.0
+tzdata==2024.1
+urllib3==2.2.1
+Werkzeug @ file:///home/conda/feedstock_root/build_artifacts/werkzeug_1651670883478/work
+zipp @ file:///home/conda/feedstock_root/build_artifacts/zipp_1695255097490/work

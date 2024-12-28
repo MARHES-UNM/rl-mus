@@ -9,11 +9,18 @@ from uav_sim.utils.trajectory_generator import (
     calculate_position,
     calculate_velocity,
 )
+from ray.rllib.utils import check_env
 
 
 class TestUavSim(unittest.TestCase):
     def setUp(self):
         self.env = UavSim()
+
+    def test_check_env_single_agent(self):
+        check_env(UavSim({"num_uavs": 1}))
+
+    def test_check_env(self):
+        check_env(UavSim({}))
 
     def test_observation_space(self):
         env = UavSim({"num_uavs": 1, "num_obstacles": 0})
@@ -46,7 +53,7 @@ class TestUavSim(unittest.TestCase):
         for i in range(100):
             actions = self.env.action_space.sample()
 
-            obs, reward, done, info = self.env.step(actions)
+            obs, reward, done, _, info = self.env.step(actions)
             self.env.render()
 
     def test_time_coordinated_control_mat(self):
@@ -58,7 +65,8 @@ class TestUavSim(unittest.TestCase):
                 "target_v": 0.0,
                 "num_uavs": 4,
                 "use_safe_action": True,
-                "num_obstacles": 30,
+                "num_obstacles": 25,
+                "max_num_obstacles": 25,
                 "max_time": 30.0,
                 "seed": 0,
             }
@@ -174,7 +182,7 @@ class TestUavSim(unittest.TestCase):
                 # # )
 
                 actions[idx] = self.env.get_time_coord_action(self.env.uavs[idx])
-            obs, rew, done, info = self.env.step(actions)
+            obs, rew, done, _, info = self.env.step(actions)
             for k, v in info.items():
                 time_step_list[k].append(v["time_step"])
                 uav_collision_list[k].append(v["uav_collision"])
@@ -419,7 +427,7 @@ class TestUavSim(unittest.TestCase):
                 des_pos[0:6] = self.env.uavs[idx].pad.state[0:6]
                 actions[idx] = self.env.uavs[idx].calc_des_action(des_pos)
 
-            obs, rew, done, info = self.env.step(actions)
+            obs, rew, done, _, info = self.env.step(actions)
             for k, v in info.items():
                 uav_collision_list[k].append(v["uav_collision"])
                 obstacle_collision_list[k].append(v["obstacle_collision"])
@@ -492,7 +500,7 @@ class TestUavSim(unittest.TestCase):
             for idx in range(self.env.num_uavs):
                 actions[idx] = self.env.uavs[idx].calc_torque(des_pos[idx])
 
-            obs, rew, done, info = self.env.step(actions)
+            obs, rew, done, _, info = self.env.step(actions)
             for k, v in info.items():
                 uav_collision_list[k].append(v["uav_collision"])
                 obstacle_collision_list[k].append(v["obstacle_collision"])
@@ -785,7 +793,7 @@ class TestUavSim(unittest.TestCase):
 
         actions = {i: np.zeros(3) for i in range(env.num_uavs)}
 
-        obs, _, done, info = env.step(actions)
+        obs, _, done, _, info = env.step(actions)
 
         all_constraints = np.array([ob["constraint"] for ob in obs.values()])
         self.assertTrue((all_constraints > 0).all())
@@ -799,7 +807,7 @@ class TestUavSim(unittest.TestCase):
         self.assertTrue((uav_collisions == 0).all())
         self.assertTrue((obstacle_collisions == 0).all())
         env.uavs[0]._state[:3] = np.array([1.5, 1.5, 4])
-        obs, _, done, info = env.step(actions)
+        obs, _, done, _, info = env.step(actions)
         all_constraints = np.array([ob["constraint"] for ob in obs.values()])
         self.assertFalse((all_constraints > 0).all())
         uav_collisions = np.array(
@@ -813,7 +821,7 @@ class TestUavSim(unittest.TestCase):
         self.assertTrue((obstacle_collisions[0] > 0))
 
         env.uavs[0]._state[:3] = np.array([3.9, 3.9, 4])
-        obs, _, done, info = env.step(actions)
+        obs, _, done, _, info = env.step(actions)
         all_constraints = np.array([ob["constraint"] for ob in obs.values()])
         self.assertFalse((all_constraints > 0).all())
         uav_collisions = np.array(

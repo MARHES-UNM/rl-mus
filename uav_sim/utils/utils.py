@@ -6,6 +6,20 @@ from matplotlib import pyplot as plt
 from math import sqrt, atan2
 
 
+def np_mad(data, axis=None):
+    return np.median(np.abs(data - np.median(data, axis)), axis)
+
+
+def max_abs_diff(data, axis=None):
+    # if not data: 
+    #     return 0
+    
+    # if len(data) == 1:
+    #     return data[0]
+
+    return np.max(data, axis=axis) - np.min(data, axis=axis)
+
+
 def cir_traj(t, e=0.5, r=1, x_c=0, y_c=0):
     # https://web2.qatar.cmu.edu/~gdicaro/16311-Fall17/slides/control-theory-for-robotics.pdf
     """Generate circular trajectory

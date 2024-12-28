@@ -15,12 +15,12 @@ class Sprite:
     def update(self, t, done=False):
         raise NotImplemented
 
-    def get_sphere(self, center, radius):
+    def get_sphere(self, center, radius, color="r", alpha=0.1):
         u, v = np.mgrid[0 : 2 * np.pi : 20j, 0 : np.pi : 10j]
         x = center[0] + radius * np.cos(u) * np.sin(v)
         y = center[1] + radius * np.sin(u) * np.sin(v)
         z = center[2] + radius * np.cos(v)
-        return self.ax["ax_3d"].plot_wireframe(x, y, z, color="r", alpha=0.1)
+        return self.ax["ax_3d"].plot_wireframe(x, y, z, color=color, alpha=alpha)
 
     def get_cube(self, vertex, l=1, w=1, h=1, alpha=0.1, color="r"):
         x1, y1, z1 = vertex[0], vertex[1], vertex[2]
@@ -45,6 +45,35 @@ class Sprite:
         body.append(ax.plot_wireframe(xs * x1, ys, zs, alpha=alpha, color=color))
         body.append(ax.plot_wireframe(xs * x2, ys, zs, alpha=alpha, color=color))
         return body
+
+
+class SphereSprite(Sprite):
+    def __init__(self, ax, color="r", alpha=0.1, t_lim=30):
+        self.color = color
+        self.alpha = alpha
+        self.body = None
+
+        super().__init__(ax, t_lim)
+
+    def update(self, t, done=False):
+        if self.body:
+            if isinstance(self.body, list):
+                for body in self.body:
+                    body.remove()
+            else:
+                self.body.remove()
+
+        center = self.obstacle._state[0:3]
+        radius = self.obstacle.r
+
+        self.body = self.get_sphere(center, radius)
+
+    def get_sphere(self, center, radius, color="r", alpha=0.1):
+        u, v = np.mgrid[0 : 2 * np.pi : 20j, 0 : np.pi : 10j]
+        x = center[0] + radius * np.cos(u) * np.sin(v)
+        y = center[1] + radius * np.sin(u) * np.sin(v)
+        z = center[2] + radius * np.cos(v)
+        return self.ax["ax_3d"].plot_wireframe(x, y, z, color=color, alpha=alpha)
 
 
 class ObstacleSprite(Sprite):
@@ -99,7 +128,7 @@ class TargetSprite:
     https://stackoverflow.com/questions/73892040/moving-circle-animation-3d-plot
     """
 
-    def __init__(self, ax, target=None, num_targets=1, t_lim=30, color="g"):
+    def __init__(self, ax, target=None, num_targets=1, t_lim=10, color="g"):
         self.ax = ax
         self.target = target
         self.t_lim = t_lim
@@ -142,7 +171,7 @@ class TargetSprite:
             color=self.color,
         )
         self.ax["ax_3d"].add_patch(self.body)
-        art3d.pathpatch_2d_to_3d(self.body, z=0, zdir="z")
+        art3d.pathpatch_2d_to_3d(self.body, z=self.target.state[2], zdir="z")
 
         self.trajectory["t"].append(t)
         self.trajectory["x"].append(self.target._state[0])
@@ -182,8 +211,9 @@ class TargetSprite:
 
 
 class UavSprite:
-    def __init__(self, ax, uav=None, color=None):
+    def __init__(self, ax, uav=None, color=None, t_lim=10):
         self.ax = ax
+        self.t_lim = t_lim
         self.uav = uav
         self.pad_sprite = None
         self.color = color
@@ -234,8 +264,6 @@ class UavSprite:
             ]
         ).T
 
-        self.t_lim = 30
-
     def update(self, t, done=False):
         R = self.uav.rotation_matrix()
 
@@ -261,7 +289,7 @@ class UavSprite:
             color=self.color,
         )
         self.ax["ax_3d"].add_patch(self.pad_sprite)
-        art3d.pathpatch_2d_to_3d(self.pad_sprite, z=0, zdir="z")
+        art3d.pathpatch_2d_to_3d(self.pad_sprite, z=self.uav.pad.z, zdir="z")
 
         self.trajectory["t"].append(t)
         self.trajectory["x"].append(self.uav._state[0])
@@ -312,10 +340,10 @@ class Gui:
             self.ax = {}
             self.ax["ax_3d"] = self.fig.add_subplot(gs00[0], projection="3d")
             self.ax["ax_error_x"] = self.fig.add_subplot(gs01[0])
-            self.ax["ax_error_x"].set_ylim([0, max_x])
+            self.ax["ax_error_x"].set_ylim([-max_x, max_x])
             self.ax["ax_error_x"].set_ylabel("x (m)")
             self.ax["ax_error_y"] = self.fig.add_subplot(gs01[1])
-            self.ax["ax_error_y"].set_ylim([0, max_y])
+            self.ax["ax_error_y"].set_ylim([-max_y, max_y])
             self.ax["ax_error_y"].set_ylabel("y (m)")
             self.ax["ax_error_z"] = self.fig.add_subplot(gs01[2])
             self.ax["ax_error_z"].set_ylim([0, max_z])
@@ -324,8 +352,8 @@ class Gui:
             self.ax["ax_error_psi"].set_ylim([-np.pi, np.pi])
             self.ax["ax_error_psi"].set_ylabel(r"$\psi$ (m)")
 
-        self.ax["ax_3d"].set_xlim3d([0, self.max_x])
-        self.ax["ax_3d"].set_ylim3d([0, self.max_y])
+        self.ax["ax_3d"].set_xlim3d([-self.max_x, self.max_x])
+        self.ax["ax_3d"].set_ylim3d([-self.max_y, self.max_y])
         self.ax["ax_3d"].set_zlim3d([0, self.max_z])
 
         self.ax["ax_3d"].set_xlabel("X (m)")

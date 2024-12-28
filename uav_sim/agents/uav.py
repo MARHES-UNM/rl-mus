@@ -30,7 +30,7 @@ class Entity:
         self.r = r
 
         # x, y, z, x_dot, y_dot, z_dot
-        self._state = np.array([self.x, self.y, self.z, 0, 0, 0])
+        self._state = np.array([self.x, self.y, self.z, 0.0, 0.0, 0.0])
 
     @property
     def state(self):
@@ -51,13 +51,17 @@ class Entity:
     def wrap_angle(self, val):
         return (val + np.pi) % (2 * np.pi) - np.pi
 
-    def rel_distance(self, entity):
-        dist = np.linalg.norm(self._state[0:3] - entity.state[0:3])
-        return dist
+    def rel_distance(self, entity=None):
+        if entity is None:
+            return np.linalg.norm(self._state[0:3])
 
-    def rel_vel(self, entity):
-        vel = np.linalg.norm(self._state[3:6] - entity.state[3:6])
-        return vel
+        return np.linalg.norm(self._state[0:3] - entity.state[0:3])
+
+    def rel_vel(self, entity=None):
+        if entity is None:
+            return np.linalg.norm(self._state[3:6])
+
+        return np.linalg.norm(self._state[3:6] - entity.state[3:6])
 
     def rel_bearing_error(self, entity):
         """[summary]
@@ -72,6 +76,26 @@ class Entity:
         # TODO: verify this from Deep RL for Swarms
         bearing = (bearing + np.pi) % (2 * np.pi) - np.pi
         return bearing
+
+    def get_closest_entities(self, entity_list, num_to_return=None):
+        num_entities = len(entity_list)
+
+        # return empty list if list is empty
+        if num_entities == 0:
+            return []
+
+        if num_to_return is None:
+            num_to_return = num_entities
+        else:
+            max(0, min(num_entities, num_to_return))
+
+        entity_states = np.array([entity.state for entity in entity_list])
+
+        dist = np.linalg.norm(entity_states[:, :3] - self._state[:3][None, :], axis=1)
+        argsort = np.argsort(dist)[:num_to_return]
+        closest_entities = [entity_list[idx] for idx in argsort]
+
+        return closest_entities
 
 
 class Obstacle(Entity):
@@ -105,16 +129,17 @@ class Target(Entity):
         _id,
         x=0,
         y=0,
+        z=0,
         psi=0,
         v=0,
         w=0,
         dt=0.1,
-        r=1,
+        r=0.5,
         num_landing_pads=1,
-        pad_offset=0.5,
+        pad_offset=0.4,
         pad_r=0.1,
     ):
-        super().__init__(_id=_id, x=x, y=y, z=0, r=r, _type=AgentType.T)
+        super().__init__(_id=_id, x=x, y=y, z=z, r=r, _type=AgentType.T)
         self.id = _id
         self.dt = dt
         self.psi = psi
@@ -123,7 +148,6 @@ class Target(Entity):
         self.pad_r = pad_r
         self.pad_offset = pad_offset  # m
 
-        # x, y, z, x_dot, y_dot, z_dot, psi, psi_dot
         self.v = v
         self.w = w
         self.vx = self.v * cos(self.psi)
@@ -132,27 +156,42 @@ class Target(Entity):
         # verifies psi
         if not v == 0:
             np.testing.assert_almost_equal(self.psi, np.arctan2(self.vy, self.vx))
-        self._state = np.array([x, y, 0, self.vx, self.vy, 0, psi, self.w])
+        # x, y, z, x_dot, y_dot, z_dot, psi, psi_dot
+        self._state = np.array([x, y, z, self.vx, self.vy, 0, psi, self.w])
+
         self.pads = [
             Pad(_id, pad_loc[0], pad_loc[1], r=self.pad_r)
             for _id, pad_loc in enumerate(self.get_pad_offsets())
         ]
         self.update_pads_state()
 
+    def get_random_pos(self):
+        """generate random points around a sphere
+        https://karthikkaranth.me/blog/generating-random-points-in-a-sphere/
+
+        """
+        r = self.r * np.sqrt(np.random.random())
+        t = np.random.random() * 2 * np.pi
+
+        x = self._state[0] + r * cos(t)
+        y = self._state[1] + r * sin(t)
+        z = self._state
+
     def get_pad_offsets(self):
         x = self._state[0]
         y = self._state[1]
+        z = self._state[2]
         return [
-            (x - self.pad_offset, y),
-            (x + self.pad_offset, y),
-            (x, y - self.pad_offset),
-            (x, y + self.pad_offset),
+            (x - self.pad_offset, y, z),
+            (x + self.pad_offset, y, z),
+            (x, y - self.pad_offset, z),
+            (x, y + self.pad_offset, z),
         ]
 
     def update_pads_state(self):
         pad_offsets = self.get_pad_offsets()
         for pad, offset in zip(self.pads, pad_offsets):
-            pad.x, pad.y = offset
+            pad.x, pad.y, pad.z = offset
 
             pad._state = np.array(
                 [
@@ -260,15 +299,27 @@ class UavBase(Entity):
         # lenght of arms
         self.l = l  # m
 
+        if pad is None:
+            self.pad = Pad(0, 0, 0)
+        else:
+            self.pad = pad
+
         self._state = np.zeros(12)
         self._state[0] = x
         self._state[1] = y
         self._state[2] = z
         self.done = False
         self.landed = False
-        self.pad = pad
-        self.done_time = None
+        self.crashed = False
+        self.dt_go = 0
+        self.t_go = 0
+        self.done_dt = 0
+        self.done_time = 0
+        self.sa_sat = False
         self.d_thresh = d_thresh
+        self.last_rel_dist = 0
+        self.max_v = 0.25
+        self.min_v = -self.max_v
 
     def rk4(self, state, action):
         """Based on: https://github.com/mahaitongdae/Safety_Index_Synthesis/blob/master/envs_and_models/collision_avoidance_env.py#L194
@@ -290,9 +341,6 @@ class UavBase(Entity):
         return dot_s
 
     def f_dot(self, state, action):
-        # copies action so we don't corrupt it.
-        temp_action = action.copy()
-        temp_action[2] = 1 / self.m * temp_action[2] - self.g
 
         A = np.zeros((12, 12), dtype=np.float32)
         A[0, 3] = 1.0
@@ -304,7 +352,7 @@ class UavBase(Entity):
         B[4, 1] = 1.0
         B[5, 2] = 1.0
 
-        dxdt = A.dot(state) + B.dot(temp_action)
+        dxdt = A.dot(state) + B.dot(action)
 
         return dxdt
 
@@ -319,39 +367,31 @@ class UavBase(Entity):
             state:
             x, y, z, x_dot, y_dot, z_dot, phi, theta, psi, phi_dot, theta_dot, psi_dot
         """
-        # keep uav hovering
-        action[2] = self.m * (self.g + action[2])
 
         dot_state = self.rk4(self._state, action)
         self._state = self._state + dot_state * self.dt
 
+        self._state[3:6] = np.clip(self._state[3:6], self.min_v, self.max_v)
         self._state[2] = max(0, self._state[2])
 
-    # # TODO: Combine the functions below into one
-    # def get_landed(self, pad):
-    #     dist = np.linalg.norm(self._state[0:3] - pad._state[0:3])
-    #     return dist <= 0.01
-
-    # TODO: combine into one.
     def check_dest_reached(self, pad=None):
         if pad is None:
             pad = self.pad
 
         rel_dist = np.linalg.norm(self._state[0:3] - pad.state[0:3])
         rel_vel = np.linalg.norm(self._state[3:6] - pad.state[3:6])
-        # return rel_dist <= (self.r + pad.r), rel_dist, rel_vel
-        # TODO: set this to be a small number to make it more challenging
-        return rel_dist <= self.d_thresh, rel_dist, rel_vel
+        return rel_dist <= (self.r), rel_dist, rel_vel
 
-    # TODO: combine with equations above
-    def get_rel_pad_dist(self):
-        return np.linalg.norm(self._state[:3] - self.pad._state[:3])
+    def get_t_go_est(self, rel_vel=None):
+        if self.done:
+            return 0.0
 
-    def get_rel_pad_vel(self):
-        return np.linalg.norm(self._state[3:6] - self.pad._state[3:6])
+        _, rel_dist, _rel_vel = self.check_dest_reached()
 
-    def get_t_go_est(self):
-        return self.get_rel_pad_dist() / (1e-6 + self.get_rel_pad_vel())
+        if rel_vel is None:
+            rel_vel = _rel_vel
+
+        return rel_dist / (1e-6 + rel_vel)
 
 
 class Uav(UavBase):

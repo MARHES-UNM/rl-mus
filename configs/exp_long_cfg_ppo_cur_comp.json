@@ -1,4 +1,5 @@
 {
+    "exp_name": "ppo_cur_vs_no_cur",
     "env_config": {
         "target_v": [
             0.0
@@ -15,19 +16,19 @@
         ]
     },
     "exp_config": {
-        "max_num_episodes": 100,
+        "max_num_episodes": 50,
         "runs": [
             {
                 "name": "ppo_no_cur",
                 "run": "PPO",
-                "checkpoint": "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-11-07-08-16_80188c6/low_stp/PPO_multi-uav-sim-v0_d51c0_00000_0_beta=0.3000,d_thresh=0.0100,obstacle_collision_weight=0.1000,stp_penalty=5,t_go_max=2.0000,tgt__2023-11-07_08-16-16/checkpoint_000301/policies/shared_policy",
+                "checkpoint": "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-sim-v0_2024-03-29-15-17_c32edbf_4u_4o/uav_base_no_cur/uav_base_no_cur/PPO_multi-uav-sim-v0_06011_00001_1_t_go_max=2.0000,time_final=20.0000,uav_type=UavBase,use_safe_action=False_2024-03-29_15-17-45/checkpoint_000303/policies/shared_policy",
                 "safe_action_type": null,
                 "label": "POETIC_NO_CUR"
             },
             {
                 "name": "ppo",
                 "run": "PPO",
-                "checkpoint": "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-11-06-23-23_e7633c3/cur_col_01/PPO_multi-uav-sim-v0_6dfd0_00001_1_obstacle_collision_weight=0.1000,stp_penalty=5,uav_collision_weight=0.1000,use_safe_action=Fals_2023-11-06_23-23-40/checkpoint_000301/policies/shared_policy",
+                "checkpoint": "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-sim-curriculum-v0_2024-03-29-18-56_2f2229b_4u_4o/uav_base_cur/uav_base_cur/PPO_multi-uav-sim-curriculum-v0_a3782_00001_1_t_go_max=2.0000,time_final=20.0000,uav_type=UavBase,use_safe_action=False_2024-03-29_18-56-54/checkpoint_000303/policies/shared_policy",
                 "safe_action_type": null,
                 "label": "POETIC"
             }

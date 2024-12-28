@@ -1,9 +1,18 @@
 from ray.rllib.models.torch.torch_modelv2 import TorchModelV2
 from torch import nn
+from ray.rllib.models.modelv2 import ModelV2
+from ray.rllib.utils.annotations import override
+import gymnasium as gym
+
 
 
 class BaseModel(TorchModelV2, nn.Module):
-    """"""
+    """_summary_
+
+    Args:
+        TorchModelV2 (_type_): _description_
+        nn (_type_): _description_
+    """
 
     def __init__(
         self, obs_space, act_space, num_outputs, model_config, name, *args, **kwargs
@@ -13,20 +22,19 @@ class BaseModel(TorchModelV2, nn.Module):
         )
         nn.Module.__init__(self)
 
-        self.conv0 = nn.Conv1d(n_state, 64, 1)
-        self.conv1 = nn.Conv1d(64, 128, 1)
-        self.conv2 = nn.Conv1d(128, 128, 1)
-        self.fc0 = nn.Linear(128 + m_control + n_state, 128)
-        self.fc1 = nn.Linear(128, 64)
-        self.fc2 = nn.Linear(64, m_control)
-        self.activation = nn.ReLU()
-        self.output_activation = nn.Tanh()
+        self.orig_space = getattr(obs_space, "original_space", obs_space)
+        assert (
+            isinstance(self.orig_space, gym.spaces.Dict)
+            and "state" in self.orig_space.spaces
+            and "rel_pad" in self.orig_space.spaces
+            and "other_uav_obs" in self.orig_space.spaces
+            and "obstacles" in self.orig_space.spaces
+        )
 
-        self.policy_fn = nn.Linear(64, num_outputs)
-        self.value_fn = nn.Linear(64, 1)
-
+    @override(ModelV2)
     def forward(self, input_dict, state, seq_lens):
         raise NotImplementedError
 
+    @override(ModelV2)
     def value_function(self):
         raise NotImplementedError
