@@ -107,9 +107,9 @@ RUN wget --quiet "https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x8
     # -s or ... eh that was not documented, it probably relates to --source-cache and this issue
     # -y or --yes
     && ${CONDA_DIR}/bin/conda clean -tip -y --all \
-    && sudo ln -s ${CONDA_DIR}/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
-    echo ". ${CONDA_DIR}/etc/profile.d/conda.sh" >> /home/${USERNAME}/.bashrc && \
-    echo "conda activate base" >> /home/${USERNAME}/.bashrc \
+    # && sudo ln -s ${CONDA_DIR}/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
+    # echo ". ${CONDA_DIR}/etc/profile.d/conda.sh" >> /home/${USERNAME}/.bashrc && \
+    # echo "conda activate base" >> /home/${USERNAME}/.bashrc \
     && ${CONDA_DIR}/bin/pip install --no-cache-dir \
     flatbuffers \
     cython==0.29.26 \
