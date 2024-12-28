@@ -29,7 +29,7 @@ from uav_sim.utils.utils import get_git_hash
 
 
 PATH = Path(__file__).parent.absolute().resolve()
-RESULTS_DIR = Path.home() / "ray_results"
+RESULTS_DIR = PATH / "ray_results"
 logger = logging.getLogger(__name__)
 
 

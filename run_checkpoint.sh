@@ -26,6 +26,7 @@ CHECKPOINT="/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/P
 # CHECKPOINT="/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2024-04-20-16-33_3270356_4u_4o/stp_pen_mean_high/stp_pen_mean_high/PPO_multi-uav-ren-v0_49c9b_00002_2_max_dt_std=0.2500,stp_penalty=3,t_go_error_func=mean,uav_type=UavBase,use_safe_action=False_2024-04-20_16-33-47/checkpoint_000035/policies/shared_policy"
 # CHECKPOINT="/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2024-04-20-17-37_fe2cf0d_4u_4o/stp_pen_sum_high/stp_pen_sum_high/PPO_multi-uav-ren-v0_33283_00000_0_max_dt_std=0.2500,stp_penalty=3,t_go_error_func=sum,uav_type=UavBase,use_safe_action=False_2024-04-20_17-37-34/checkpoint_000305/policies/shared_policy"
 CHECKPOINT="/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2024-04-20-16-33_3270356_4u_4o/stp_pen_mean_high/stp_pen_mean_high/PPO_multi-uav-ren-v0_49c9b_00002_2_max_dt_std=0.2500,stp_penalty=3,t_go_error_func=mean,uav_type=UavBase,use_safe_action=False_2024-04-20_16-33-47/checkpoint_000105/policies/shared_policy"
+CHECKPOINT="/workspaces/multi-uav-sim/checkpoints/uav_same_time/policies/shared_policy"
 
 python run_experiment.py --run PPO --tf 8 test \
     --checkpoint $CHECKPOINT \
