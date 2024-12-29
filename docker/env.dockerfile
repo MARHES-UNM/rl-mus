@@ -96,7 +96,7 @@ RUN wget --quiet "https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x8
     -O ${HOME}/miniconda.sh \
     && /bin/bash ${HOME}/miniconda.sh -b -u -p ${CONDA_DIR} \
     && ${CONDA_DIR}/bin/conda init \ 
-    && echo "export PATH=${CONDA_DIR}/bin:$PATH" >> /home/${USERNAME}/.bashrc \
+    # && echo "export PATH=${CONDA_DIR}/bin:$PATH" >> /home/${USERNAME}/.bashrc \
     && rm ${HOME}/miniconda.sh \
     && ${CONDA_DIR}/bin/conda install -y \
     libgcc python=${PYTHON_VERSION} \

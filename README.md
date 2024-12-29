@@ -351,3 +351,14 @@ $$ 1 / n \sum_j^n \text{abs} (t_{\text{go},i} - t_{\text{go},j})$$
 capture screen
 https://trac.ffmpeg.org/wiki/Capture/Desktop
 ffmpeg -video_size 1360x768 -framerate 25 -f x11grab -i :0.0 output.mp4
+
+
+```
+conda env export > environment.yml
+```
+or 
+```
+conda list -e > conda_requirements.txt
+``
+
+conda env create -f environment.yml
