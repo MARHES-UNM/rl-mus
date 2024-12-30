@@ -142,7 +142,7 @@ COPY ../environment.yml /home/${USERNAME}/.
 RUN ${CONDA_DIR}/bin/pip --no-cache-dir install --upgrade pip \
     # && ${CONDA_DIR}/bin/pip --no-cache-dir install -r /home/${USERNAME}/requirements.txt \
     && ${CONDA_DIR}/bin/conda env create --name ${CONDA_ENV} --file /home/${USERNAME}/environment.yml \
-    && "conda activate ${CONDA_ENV}" >> /home/${USERNAME}/.bashrc \
+    # && echo "conda activate ${CONDA_ENV}" >> /home/${USERNAME}/.bashrc \
     && if [ $(python -c 'import sys; print(sys.version_info.minor)') != "6" ]; then \
     ${CONDA_DIR}/bin/pip uninstall dataclasses typing -y; fi 
 
