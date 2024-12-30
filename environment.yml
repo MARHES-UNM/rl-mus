@@ -1,4 +1,4 @@
-name: base
+name: py39_gpu
 channels:
   - defaults
   - https://repo.anaconda.com/pkgs/main
@@ -206,4 +206,4 @@ dependencies:
       - win-inet-pton==1.1.0
       - yarl==1.18.3
       - zipp==3.17.0
-prefix: /home/dev/conda
+# prefix: /home/dev/conda/envs/py39_gpu

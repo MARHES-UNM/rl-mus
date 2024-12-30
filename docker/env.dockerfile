@@ -6,6 +6,7 @@ FROM ${BASE_IMAGE}
 
 # set python version to use
 ENV PYTHON_VERSION=3.9
+ARG CONDA_ENV=py39_gpu
 
 # FROM directive resets ARG
 ARG BASE_IMAGE
@@ -136,10 +137,12 @@ RUN wget --quiet "https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x8
     && sudo rm -rf /var/lib/apt/lists/* \
     && sudo apt-get clean
 
-COPY ../requirements.txt /home/${USERNAME}/.
+COPY ../environment.yml /home/${USERNAME}/.
 
 RUN ${CONDA_DIR}/bin/pip --no-cache-dir install --upgrade pip \
-    && ${CONDA_DIR}/bin/pip --no-cache-dir install -r /home/${USERNAME}/requirements.txt \
+    # && ${CONDA_DIR}/bin/pip --no-cache-dir install -r /home/${USERNAME}/requirements.txt \
+    && ${CONDA_DIR}/bin/conda env create --name ${CONDA_ENV} --file /home/${USERNAME}/environment.yml \
+    && "conda activate ${CONDA_ENV}" >> /home/${USERNAME}/.bashrc \
     && if [ $(python -c 'import sys; print(sys.version_info.minor)') != "6" ]; then \
     ${CONDA_DIR}/bin/pip uninstall dataclasses typing -y; fi 
 
