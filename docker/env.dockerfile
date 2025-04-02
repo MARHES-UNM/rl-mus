@@ -101,6 +101,7 @@ RUN sudo apt update && \
     sudo add-apt-repository ppa:deadsnakes/ppa && \ 
     sudo apt install -y \ 
     python3.9 \
+    python3.9-dev \
     python3.9-distutils \
     python3.9-venv \
     python3.9-tk && \

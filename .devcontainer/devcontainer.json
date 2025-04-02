@@ -12,7 +12,7 @@
 	],
 	// 2. Use 'mounts' to make a list of local directories available inside the container. More info: https://code.visualstudio.com/remote/advancedcontainers/add-local-file-mount
 	"mounts": [
-		"source=${localEnv:userprofile}/.ssh,target=/home/dev/.ssh,type=bind"
+		"source=${localEnv:userprofile}/.ssh,target=/home/dev/.ssh,type=bind,readonly"
 	],
 	// 3. Use 'runArgs' to pass arguments to the container. 
 	// run the container with all GPUs
