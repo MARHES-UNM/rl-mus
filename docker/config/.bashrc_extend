@@ -6,6 +6,7 @@ parse_git_branch() {
 PS1="[$(echo -e "\xF0\x9F\x92\xB0")\[$(tput setaf 1)\]\u\[$(tput setaf 3)\]@\[$(tput setaf 2)\]\h\[$(tput sgr0)\]:\[$(tput setaf 6)\]\w\[$(tput setaf 3)\]\$(parse_git_branch)\[$(tput sgr0)\]]\\$ \[$(tput sgr0)\]"
 
 set -o vi
+umask 002
 # export LIBGL_ALWAYS_INDIRECT=1
 # export DISPALY=192.168.1.8:0.0
 export DISPLAY=:0.0

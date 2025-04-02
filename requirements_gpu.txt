@@ -1,7 +1,7 @@
-absl-py @ file:///home/conda/feedstock_root/build_artifacts/absl-py_1705494584803/work
+absl-py
 aiosignal==1.3.1
 attrs==23.2.0
-certifi @ file:///home/conda/feedstock_root/build_artifacts/certifi_1707022139797/work/certifi
+certifi
 chardet==5.2.0
 charset-normalizer==3.3.2
 click==8.1.7
@@ -21,14 +21,14 @@ Gymnasium==0.26.3
 gymnasium-notices==0.0.1
 idna==3.6
 imageio==2.34.0
-importlib_metadata @ file:///home/conda/feedstock_root/build_artifacts/importlib-metadata_1710971335535/work
+importlib_metadata
 Jinja2==3.1.2
 jsonschema==4.21.1
 jsonschema-specifications==2023.12.1
 kiwisolver==1.4.5
 lazy_loader==0.3
 lz4==4.3.3
-Markdown @ file:///home/conda/feedstock_root/build_artifacts/markdown_1710435156458/work
+Markdown 
 markdown-it-py==3.0.0
 MarkupSafe==2.1.3
 matplotlib==3.8.3
@@ -72,14 +72,14 @@ seaborn==0.13.2
 shellingham==1.5.4
 six==1.16.0
 sympy==1.12
-tensorboard @ file:///home/conda/feedstock_root/build_artifacts/tensorboard_1708285739699/work/tensorboard-2.16.2-py3-none-any.whl#sha256=9f2b4e7dad86667615c0e5cd072f1ea8403fc032a299f0072d6f74855775cc45
-tensorboard-data-server @ file:///croot/tensorboard-data-server_1681498183723/work/tensorboard_data_server-0.7.0-py3-none-manylinux2014_x86_64.whl
+tensorboard
+tensorboard-data-server
 tensorboardX==2.6.2.2
 tifffile==2024.2.12
-torch==2.2.2+cu118
+torch==2.2.2
 torch-tb-profiler==0.4.3
-torchaudio==2.2.2+cu118
-torchvision==0.17.2+cu118
+torchaudio==2.2.2
+torchvision==0.17.2
 triton==2.2.0
 typer==0.12.0
 typer-cli==0.12.0
@@ -87,5 +87,5 @@ typer-slim==0.12.0
 typing_extensions==4.10.0
 tzdata==2024.1
 urllib3==2.2.1
-Werkzeug @ file:///home/conda/feedstock_root/build_artifacts/werkzeug_1651670883478/work
-zipp @ file:///home/conda/feedstock_root/build_artifacts/zipp_1695255097490/work
+Werkzeug 
+zipp 
