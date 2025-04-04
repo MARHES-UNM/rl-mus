@@ -2,6 +2,7 @@ import unittest
 import numpy as np
 from uav_sim.utils import utils
 
+
 class TestUtils(unittest.TestCase):
     def setUp(self):
         pass

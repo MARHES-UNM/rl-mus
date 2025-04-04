@@ -7,13 +7,14 @@ from matplotlib.patches import Circle
 import numpy as np
 import mpl_toolkits.mplot3d.art3d as art3d
 
+
 class Sprite:
     def __init__(self, ax, t_lim=30):
         self.t_lim = t_lim
         self.ax = ax
 
     def update(self, t, done=False):
-        raise NotImplemented
+        raise NotImplementedError("update method not implemented")
 
     def get_sphere(self, center, radius, color="r", alpha=0.1):
         u, v = np.mgrid[0 : 2 * np.pi : 20j, 0 : np.pi : 10j]
