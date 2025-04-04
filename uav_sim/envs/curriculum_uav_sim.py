@@ -1,5 +1,3 @@
-from logging import config
-import gymnasium as gym
 import random
 
 from ray.rllib.env.env_context import EnvContext

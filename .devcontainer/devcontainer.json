@@ -12,7 +12,7 @@
 	],
 	// 2. Use 'mounts' to make a list of local directories available inside the container. More info: https://code.visualstudio.com/remote/advancedcontainers/add-local-file-mount
 	"mounts": [
-		"source=${localEnv:userprofile}/.ssh,target=/home/dev/.ssh,type=bind,readonly"
+		"source=${localEnv:userprofile}/.ssh,target=/home/dev/.ssh,type=bind"
 	],
 	// 3. Use 'runArgs' to pass arguments to the container. 
 	// run the container with all GPUs
@@ -71,13 +71,14 @@
 			},
 			// installs useful extensions
 			"extensions": [
-				"Tyriar.sort-lines",
+				"charliermarsh.ruff",
 				"davidanson.vscode-markdownlint",
 				"dbaeumer.vscode-eslint",
-				"esbenp.prettier-vscode",
-				"charliermarsh.ruff",
 				"eamodio.gitlens",
+				"esbenp.prettier-vscode",
+				"gitlab.gitlab-workflow",
 				"ms-azuretools.vscode-docker",
+				"ms-python.black-formatter",
 				"ms-python.debugpy",
 				"ms-python.isort",
 				"ms-python.python",
@@ -88,8 +89,12 @@
 				"ms-toolsai.tensorboard",
 				"ms-toolsai.vscode-jupyter-cell-tags",
 				"ms-toolsai.vscode-jupyter-slideshow",
+				"ms-vscode.cpptools",
 				"njpwerner.autodocstring",
+				"redhat.vscode-yaml",
 				"timonwong.shellcheck",
+				"twxs.cmake",
+				"Tyriar.sort-lines",
 				"vscodevim.vim"
 			]
 		}
