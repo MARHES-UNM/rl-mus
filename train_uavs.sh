@@ -35,8 +35,8 @@
 #     --gpu 0.5 \
 #     --stop_timesteps 30000000 
 
-python run_experiment.py --name uav_ren_low_max_start --run PPO \
+python run_experiment.py --name uav_ren_stp_eval --run PPO \
     train \
     --cpu 8 \
     --gpu 0.5 \
-    --stop_timesteps 30000000 
+    --stop_timesteps 25000000 
