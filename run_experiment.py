@@ -180,8 +180,8 @@ def train(args):
     args.config["env_config"]["t_go_error_func"] = tune.grid_search(["mean"])
     args.config["env_config"]["max_dt_std"] = tune.grid_search([0.05])
     args.config["env_config"]["max_dt_go_error"] = tune.grid_search([0.2])
-    args.config["env_config"]["tgt_reward"] = 50
-    args.config["env_config"]["sa_reward"] = 50
+    args.config["env_config"]["tgt_reward"] = 200
+    args.config["env_config"]["sa_reward"] = 200
     args.config["env_config"]["beta"] = 0.10
     args.config["env_config"]["early_done"] = tune.grid_search([False])
     args.config["env_config"]["beta_vel"] = 0.1
