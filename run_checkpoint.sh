@@ -28,7 +28,7 @@ CHECKPOINT="/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/P
 CHECKPOINT="/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2024-04-20-16-33_3270356_4u_4o/stp_pen_mean_high/stp_pen_mean_high/PPO_multi-uav-ren-v0_49c9b_00002_2_max_dt_std=0.2500,stp_penalty=3,t_go_error_func=mean,uav_type=UavBase,use_safe_action=False_2024-04-20_16-33-47/checkpoint_000105/policies/shared_policy"
 CHECKPOINT="/workspaces/multi-uav-sim/checkpoints/uav_same_time/policies/shared_policy"
 CHECKPOINT="/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-curriculum-v0_2025-04-05-15-18_effc14f_4u_4o/uav_ren_cur/uav_ren_cur/PPO_multi-uav-ren-curriculum-v0_b8aa0_00000_0_early_done=False,max_dt_go_error=0.2000,max_dt_std=0.0500,stp_penalty=1.5000,t_go_er_2025-04-05_15-18-14/checkpoint_000457/policies/shared_policy"
-CHECKPOINT="/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2025-04-05-20-47_84a6a08_4u_4o/uav_ren_no_cur/uav_ren_no_cur/PPO_multi-uav-ren-v0_aa44c_00000_0_early_done=False,max_dt_go_error=0.2000,max_dt_std=0.0500,stp_penalty=1.5000,t_go_error_func=su_2025-04-05_20-47-07/checkpoint_000400/policies/shared_policy"
+# CHECKPOINT="/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2025-04-05-20-47_84a6a08_4u_4o/uav_ren_no_cur/uav_ren_no_cur/PPO_multi-uav-ren-v0_aa44c_00000_0_early_done=False,max_dt_go_error=0.2000,max_dt_std=0.0500,stp_penalty=1.5000,t_go_error_func=su_2025-04-05_20-47-07/checkpoint_000400/policies/shared_policy"
 
 # python run_experiment.py --run PPO --tf 8 test \
 #     --checkpoint $CHECKPOINT \
