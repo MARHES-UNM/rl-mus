@@ -23,7 +23,7 @@
         "uav_type": "UavBase",
         "use_virtual_leader": false,
         "use_safe_action": false,
-        "t_go_error_func": "sum"
+        "t_go_error_func": "mean"
     },
     "exp_config": {
         "run": "PPO",
