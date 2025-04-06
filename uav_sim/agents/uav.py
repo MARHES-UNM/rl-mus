@@ -318,7 +318,7 @@ class UavBase(Entity):
         self.sa_sat = False
         self.d_thresh = d_thresh
         self.last_rel_dist = 0
-        self.max_v = 0.25
+        self.max_v = 0.25 # m/s
         self.min_v = -self.max_v
 
     def rk4(self, state, action):

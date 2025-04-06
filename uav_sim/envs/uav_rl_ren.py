@@ -155,14 +155,14 @@ class UavRlRen(UavSim):
             return (self.time_final - self._time_elapsed) - uav.get_t_go_est()
 
         uav_tg_error = [
-                other_uav.get_t_go_est() - uav.get_t_go_est()
-                for other_uav in self.uavs.values()
-                if other_uav.id != uav.id
-            ]
+            other_uav.get_t_go_est() - uav.get_t_go_est()
+            for other_uav in self.uavs.values()
+            if other_uav.id != uav.id
+        ]
 
-        # TODO: virtual leader should be added to the overall sum 
+        # TODO: virtual leader should be added to the overall sum
         # if self._use_virtual_leader:
-            # uav_tg_error.append((self.time_final - self._time_elapsed) - uav.get_t_go_est())
+        # uav_tg_error.append((self.time_final - self._time_elapsed) - uav.get_t_go_est())
 
         uav_tg_error = np.array([uav_tg_error])
 
@@ -322,6 +322,7 @@ class UavRlRen(UavSim):
                         uav.done = True
                     uav.uav_collision += 1
 
+        # TODO: the code below should not affect on performance. Need to tweak later. Leaving there for now.
         closest_uavs = uav.get_closest_entities(other_uav_list, num_to_return=1)
 
         if closest_uavs:
@@ -339,6 +340,7 @@ class UavRlRen(UavSim):
                     uav.done = True
                 uav.obs_collision += 1
 
+        # TODO: the code below should not affect on performance. Need to tweak later. Leaving there for now.
         closest_obstacles = uav.get_closest_entities(self.obstacles, num_to_return=1)
 
         if closest_obstacles:
