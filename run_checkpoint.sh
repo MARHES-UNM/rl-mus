@@ -29,6 +29,7 @@ CHECKPOINT="/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/P
 CHECKPOINT="/workspaces/multi-uav-sim/checkpoints/uav_same_time/policies/shared_policy"
 CHECKPOINT="/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-curriculum-v0_2025-04-05-15-18_effc14f_4u_4o/uav_ren_cur/uav_ren_cur/PPO_multi-uav-ren-curriculum-v0_b8aa0_00000_0_early_done=False,max_dt_go_error=0.2000,max_dt_std=0.0500,stp_penalty=1.5000,t_go_er_2025-04-05_15-18-14/checkpoint_000457/policies/shared_policy"
 # CHECKPOINT="/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2025-04-05-20-47_84a6a08_4u_4o/uav_ren_no_cur/uav_ren_no_cur/PPO_multi-uav-ren-v0_aa44c_00000_0_early_done=False,max_dt_go_error=0.2000,max_dt_std=0.0500,stp_penalty=1.5000,t_go_error_func=su_2025-04-05_20-47-07/checkpoint_000400/policies/shared_policy"
+CHECKPOINT="/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2025-04-07-00-24_6860ea0_4u_4o/uav_ren_mean_error_tunning/uav_ren_mean_error_tunning/PPO_multi-uav-ren-v0_3b47e_00001_1_early_done=False,max_dt_go_error=0.1000,max_dt_std=0.0500,stp_penalty=8,t_go_error_func=mean,ua_2025-04-07_00-24-44/checkpoint_000080/policies/shared_policy"
 
 # python run_experiment.py --run PPO --tf 8 test \
 #     --checkpoint $CHECKPOINT \
@@ -41,5 +42,5 @@ python run_experiment.py --run PPO --tf 8 test \
     --checkpoint $CHECKPOINT \
     --render \
     --seed None \
-    --max_num_episodes 20
-    # --plot_results 
+    --max_num_episodes 1 \
+    --plot_results 
