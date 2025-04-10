@@ -183,7 +183,7 @@ def train(args):
     args.config["env_config"]["tgt_reward"] = 200
     args.config["env_config"]["sa_reward"] = 300
     args.config["env_config"]["beta"] = 0.10
-    args.config["env_config"]["early_done"] = tune.grid_search([False])
+    args.config["env_config"]["early_done"] = tune.grid_search([False, True])
     args.config["env_config"]["beta_vel"] = 0.1
     # custom_model = tune.grid_search(
     #     [
