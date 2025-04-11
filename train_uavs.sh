@@ -35,9 +35,9 @@
 #     --gpu 0.5 \
 #     --stop_timesteps 30000000 
 
-python run_experiment.py --name uav_ren_mean_error_1b_early_done --run PPO \
+python run_experiment.py --name uav_ren_mean_error_revert --run PPO \
     train \
     --cpu 8 \
     --gpu 0.5 \
-    --stop_timesteps 1000000000 \
-    --stop_iters 16000
+    --stop_timesteps 30000000
+    # --stop_iters 16000
