@@ -176,15 +176,16 @@ def train(args):
     # args.config["env_config"]["beta"] = tune.loguniform(0.001, 0.3)
     # args.config["env_config"]["max_time_penalty"] = tune.grid_search([25, 50])
     # args.config["env_config"]["stp_penalty"] = tune.qloguniform(0.4, 10, 0.05)
+    # args.config["env_config"]["stp_penalty"] = tune.grid_search([0, 1.5])
     args.config["env_config"]["stp_penalty"] = tune.grid_search([8])
     args.config["env_config"]["t_go_error_func"] = tune.grid_search(["mean"])
     args.config["env_config"]["max_dt_std"] = tune.grid_search([0.05])
     args.config["env_config"]["max_dt_go_error"] = tune.grid_search([0.1])
-    args.config["env_config"]["tgt_reward"] = 200
+    args.config["env_config"]["tgt_reward"] = 150
     args.config["env_config"]["sa_reward"] = 300
     args.config["env_config"]["beta"] = 0.10
     args.config["env_config"]["early_done"] = tune.grid_search([False, True])
-    args.config["env_config"]["beta_vel"] = 0.1
+    args.config["env_config"]["beta_vel"] = 0.10
     # custom_model = tune.grid_search(
     #     [
     #         "torch_fix_model",
