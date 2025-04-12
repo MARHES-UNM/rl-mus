@@ -35,9 +35,9 @@
 #     --gpu 0.5 \
 #     --stop_timesteps 30000000 
 
-python run_experiment.py --name uav_ren_mean_on_sa_rew --run PPO \
+python run_experiment.py --name uav_ren_mean_baselining --run PPO \
     train \
     --cpu 8 \
     --gpu 0.5 \
-    --stop_timesteps 35000000
+    --stop_timesteps 30000000
     # --stop_iters 16000

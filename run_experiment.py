@@ -167,20 +167,20 @@ def train(args):
     env_obs_space, env_action_space = get_obs_act_space(args.config)
 
     # Vary treatments here
-    args.config["env_config"]["beta_vel"] = 0.0
-    args.config["env_config"]["beta"] = 0.0
-    args.config["env_config"]["crash_penalty"] = 1
+    args.config["env_config"]["beta_vel"] = 0.10
+    args.config["env_config"]["beta"] = 0.10
+    args.config["env_config"]["crash_penalty"] = 100.0
     args.config["env_config"]["early_done"] = tune.grid_search([False, True])
     args.config["env_config"]["max_dt_go_error"] = tune.grid_search([0.1])
     args.config["env_config"]["max_dt_std"] = tune.grid_search([0.05])
-    args.config["env_config"]["max_time_penalty"] = 1
+    args.config["env_config"]["max_time_penalty"] = 100
     args.config["env_config"]["num_uavs"] = 4
-    args.config["env_config"]["obstacle_collision_weight"] = 1
-    args.config["env_config"]["sa_reward"] = 100
-    args.config["env_config"]["stp_penalty"] = tune.grid_search([0])
+    args.config["env_config"]["obstacle_collision_weight"] = 100.0
+    args.config["env_config"]["sa_reward"] = 300
+    args.config["env_config"]["stp_penalty"] = tune.grid_search([10, 0])
     args.config["env_config"]["t_go_error_func"] = tune.grid_search(["mean"])
-    args.config["env_config"]["tgt_reward"] = tune.grid_search([0, 100])
-    args.config["env_config"]["uav_collision_weight"] = 1
+    args.config["env_config"]["tgt_reward"] = tune.grid_search([200])
+    args.config["env_config"]["uav_collision_weight"] = 100
     args.config["env_config"]["uav_type"] = "UavBase"
     args.config["env_config"]["use_safe_action"] = False
     # custom_model = tune.grid_search(
