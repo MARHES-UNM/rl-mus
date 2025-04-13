@@ -6,8 +6,13 @@ from uav_sim.utils.gui import Gui
 
 class TestGui(unittest.TestCase):
     def setUp(self):
-        uavs = {0: Uav(0, 1, 1, 1), 1:Uav(1, 1, 2, 2), 2:Uav(2, 3, 1, 1), 3:Uav(4, 1, 1)}
         target = Target(_id=0, x=2, y=2, num_landing_pads=4)
+        uavs = {
+            0: Uav(0, 1, 1, 1, pad=target.pads[0]),
+            1: Uav(1, 1, 2, 2, pad=target.pads[1]),
+            2: Uav(2, 3, 1, 1, pad=target.pads[2]),
+            3: Uav(4, 1, 1, pad=target.pads[3]),
+        }
         self.obstacles = [Obstacle(0, 2, 2, 4)]
         self.gui = Gui(
             uavs,

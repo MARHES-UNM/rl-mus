@@ -336,10 +336,10 @@ class Gui:
         if self.fig is None:
             self.fig = plt.figure(figsize=(12, 6), constrained_layout=True)
             gs0 = self.fig.add_gridspec(1, 2)
-            gs00 = gs0[0].subgridspec(8,1)
-            gs01 = gs0[1].subgridspec(12, 1)
+            gs00 = gs0[0].subgridspec(8, 1)
+            gs01 = gs0[1].subgridspec(9, 1)
             self.ax = {}
-            self.ax['legend'] = self.fig.add_subplot(gs00[0, :])
+            self.ax["legend"] = self.fig.add_subplot(gs00[0, :])
             self.ax["ax_3d"] = self.fig.add_subplot(gs00[1:, :], projection="3d")
             self.ax["ax_error_x"] = self.fig.add_subplot(gs01[0])
             self.ax["ax_error_x"].set_ylim([-max_x, max_x])
@@ -353,6 +353,22 @@ class Gui:
             self.ax["ax_error_psi"] = self.fig.add_subplot(gs01[3])
             self.ax["ax_error_psi"].set_ylim([-np.pi, np.pi])
             self.ax["ax_error_psi"].set_ylabel(r"$\psi$ (m)")
+            # self.ax["done"] = self.fig.add_subplot(gs01[4])
+            # self.ax["done"].set_ylabel("Done")
+            # self.ax['done_delta_t'] = self.fig.add_subplot(gs01[5])
+            # self.ax['delta_t_go'] = self.fig.add_subplot(gs01[6])
+            # self.ax['t_go'] = self.fig.add_subplot(gs01[7])
+            # self.ax['t_go'].set_ylabel("$t\_go$ (s)")
+            # self.ax['reward'] = self.fig.add_subplot(gs01[8])
+            # self.ax['reward'].set_ylabel("Reward")
+            # self.ax['uav_col'] = self.fig.add_subplot(gs01[9])
+            # self.ax['uav_col'].set_ylabel("UAV_col")
+            # self.ax['obs_col'] = self.fig.add_subplot(gs01[10])
+            # self.ax['obs_col'].set_ylabel("NCFO_col")
+            # self.ax['delta_r'] = self.fig.add_subplot(gs01[11])
+            # self.ax['delta_r'].set_ylabel("$\parallel \Delta \mathbf{r} \parallel$")
+            # self.ax['delta_v'] = self.fig.add_subplot(gs01[12])
+            # self.ax['delta_r'].set_ylabel("$\parallel \Delta \mathbf{v} \parallel$")
 
         self.ax["ax_3d"].set_xlim3d([-self.max_x, self.max_x])
         self.ax["ax_3d"].set_ylim3d([-self.max_y, self.max_y])
@@ -416,7 +432,15 @@ class Gui:
     # TODO: update this to use blit
     # https://matplotlib.org/stable/api/animation_api.html
     # https://stackoverflow.com/questions/11874767/how-do-i-plot-in-real-time-in-a-while-loop-using-matplotlib
-    def update(self, time_elapsed, done=False, obs=None, rew=None, info=None):
+    def update(
+        self,
+        time_elapsed,
+        done=False,
+        obs=None,
+        rew=None,
+        info=None,
+        plot_results=False,
+    ):
         self.fig.canvas.restore_region(self.background)
         self.time_display.set_text(f"Sim time = {time_elapsed:.2f} s")
 
@@ -426,7 +450,6 @@ class Gui:
         #     self.ax.draw_artist(uav_sprite.cm)
         self.fig.canvas.blit(self.fig.bbox)
 
-        
         # # only plot legends if uav or target
         # for key, ax in self.ax.items():
         #     if key == "ax_3d":
@@ -436,10 +459,12 @@ class Gui:
         #     if labels:
         #         ax.legend()
 
-        handles, labels = self.ax['ax_error_x'].get_legend_handles_labels()
-        self.ax['legend'].legend(handles, labels, loc="center", ncol=5)
-        self.ax['legend'].axis('off')
+        handles, labels = self.ax["ax_error_x"].get_legend_handles_labels()
+        self.ax["legend"].legend(handles, labels, loc="center", ncol=len(labels))
+        self.ax["legend"].axis("off")
         plt.pause(0.0000000000001)
+        # if plot_results:
+        # plt.show()
         # TODO: pass figure as rgba image instead
         return self.fig
 

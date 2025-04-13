@@ -531,9 +531,10 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
                 results["episode_data"]["obstacle_state"].append(obstacle_state)
 
             if render:
-                im = env.render(mode="rgb_array", done=True)
-            if plot_results:
-                plot_uav_states(results, env_config, num_episodes - 1)
+                im = env.render(mode="rgb_array", done=True, plot_results=plot_results)
+            # if plot_results:
+                # plt.show()
+                # plot_uav_states(results, env_config, num_episodes - 1)
 
             if num_episodes == max_num_episodes:
                 end_time = time() - start_time
