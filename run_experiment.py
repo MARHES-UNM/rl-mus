@@ -170,13 +170,13 @@ def train(args):
     args.config["env_config"]["beta_vel"] = 0.1
     args.config["env_config"]["beta"] = tune.grid_search([0.1])
     args.config["env_config"]["crash_penalty"] = 0.0
-    args.config["env_config"]["early_done"] = tune.grid_search([False, True])
+    args.config["env_config"]["early_done"] = tune.grid_search([False])
     args.config["env_config"]["max_dt_go_error"] = tune.grid_search([0.1])
     args.config["env_config"]["max_dt_std"] = tune.grid_search([0.05])
     args.config["env_config"]["max_time_penalty"] = 5
     args.config["env_config"]["num_uavs"] = 4
     args.config["env_config"]["obstacle_collision_weight"] = 0.0
-    args.config["env_config"]["sa_reward"] = tune.grid_search([1000, 1500])
+    args.config["env_config"]["sa_reward"] = tune.grid_search([1500])
     args.config["env_config"]["stp_penalty"] = tune.grid_search([3.0])
     args.config["env_config"]["t_go_error_func"] = tune.grid_search(["mean"])
     args.config["env_config"]["tgt_reward"] = tune.grid_search([100])
@@ -245,7 +245,7 @@ def train(args):
             lambda_=0.95,
             train_batch_size=65536,
             # train_batch_size=131072,
-            gamma=0.995,
+            gamma=tune.grid_search([0.8, 0.95]),
             num_sgd_iter=30,
             sgd_minibatch_size=8192,
             vf_clip_param=10.0,
