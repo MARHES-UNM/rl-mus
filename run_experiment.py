@@ -245,7 +245,7 @@ def train(args):
             lambda_=0.95,
             # train_batch_size=65536,
             train_batch_size=131072,
-            gamma=0.995,
+            gamma=0.80,
             num_sgd_iter=30,
             sgd_minibatch_size=8192,
             vf_clip_param=10.0,
