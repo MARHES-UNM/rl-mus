@@ -167,8 +167,8 @@ def train(args):
     env_obs_space, env_action_space = get_obs_act_space(args.config)
 
     # Vary treatments here
-    args.config["env_config"]["beta_vel"] = 0.1
-    args.config["env_config"]["beta"] = 0.1
+    args.config["env_config"]["beta_vel"] = 0.01
+    args.config["env_config"]["beta"] = 0.05
     args.config["env_config"]["crash_penalty"] = 0.0
     args.config["env_config"]["early_done"] = tune.grid_search([False, True])
     args.config["env_config"]["max_dt_go_error"] = tune.grid_search([0.1])
@@ -475,6 +475,9 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
         for k, v in rew.items():
             results["uav_reward"] += v
 
+        if render:
+            env.render()
+
         # only get for 1st episode
         if num_episodes == 0:
             for k, v in info.items():
@@ -498,9 +501,6 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
 
             for obs_idx in range(env.max_num_obstacles):
                 obstacle_state[obs_idx].append(env.obstacles[obs_idx].state.tolist())
-
-        if render:
-            env.render()
 
         if done["__all__"]:
             num_episodes += 1

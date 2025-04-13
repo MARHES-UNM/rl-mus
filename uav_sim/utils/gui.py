@@ -334,12 +334,13 @@ class Gui:
         self.cmap = plt.get_cmap("tab10")
 
         if self.fig is None:
-            self.fig = plt.figure(figsize=(12, 6))
+            self.fig = plt.figure(figsize=(12, 6), constrained_layout=True)
             gs0 = self.fig.add_gridspec(1, 2)
-            gs00 = gs0[0].subgridspec(1, 1)
-            gs01 = gs0[1].subgridspec(4, 1)
+            gs00 = gs0[0].subgridspec(8,1)
+            gs01 = gs0[1].subgridspec(12, 1)
             self.ax = {}
-            self.ax["ax_3d"] = self.fig.add_subplot(gs00[0], projection="3d")
+            self.ax['legend'] = self.fig.add_subplot(gs00[0, :])
+            self.ax["ax_3d"] = self.fig.add_subplot(gs00[1:, :], projection="3d")
             self.ax["ax_error_x"] = self.fig.add_subplot(gs01[0])
             self.ax["ax_error_x"].set_ylim([-max_x, max_x])
             self.ax["ax_error_x"].set_ylabel("x (m)")
@@ -415,7 +416,7 @@ class Gui:
     # TODO: update this to use blit
     # https://matplotlib.org/stable/api/animation_api.html
     # https://stackoverflow.com/questions/11874767/how-do-i-plot-in-real-time-in-a-while-loop-using-matplotlib
-    def update(self, time_elapsed, done=False):
+    def update(self, time_elapsed, done=False, obs=None, rew=None, info=None):
         self.fig.canvas.restore_region(self.background)
         self.time_display.set_text(f"Sim time = {time_elapsed:.2f} s")
 
@@ -424,15 +425,20 @@ class Gui:
 
         #     self.ax.draw_artist(uav_sprite.cm)
         self.fig.canvas.blit(self.fig.bbox)
-        # only plot legends if uav or target
-        for key, ax in self.ax.items():
-            if key == "ax_3d":
-                continue
 
-            handles, labels = ax.get_legend_handles_labels()
-            if labels:
-                ax.legend()
+        
+        # # only plot legends if uav or target
+        # for key, ax in self.ax.items():
+        #     if key == "ax_3d":
+        #         continue
 
+        #     handles, labels = ax.get_legend_handles_labels()
+        #     if labels:
+        #         ax.legend()
+
+        handles, labels = self.ax['ax_error_x'].get_legend_handles_labels()
+        self.ax['legend'].legend(handles, labels, loc="center", ncol=5)
+        self.ax['legend'].axis('off')
         plt.pause(0.0000000000001)
         # TODO: pass figure as rgba image instead
         return self.fig

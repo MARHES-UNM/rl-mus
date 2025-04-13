@@ -954,7 +954,7 @@ class UavSim(MultiAgentEnv):
 
         return action
 
-    def render(self, mode="human", done=False):
+    def render(self, mode="human", done=False, obs=None, rew=None, info=None, ):
         """
         See this example for converting python figs to images:
         https://stackoverflow.com/questions/7821518/save-plot-to-numpy-array
@@ -977,10 +977,10 @@ class UavSim(MultiAgentEnv):
             )
 
         if mode == "human":
-            self.gui.update(self._time_elapsed, done)
+            self.gui.update(self._time_elapsed, done, obs, rew, info)
 
         elif mode == "rgb_array":
-            fig = self.gui.update(self._time_elapsed, done)
+            fig = self.gui.update(self._time_elapsed, done, obs, rew, info)
 
             with io.BytesIO() as buff:
                 fig.savefig(buff, format="raw")
