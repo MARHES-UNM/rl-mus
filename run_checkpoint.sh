@@ -37,6 +37,8 @@ CHECKPOINT="/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/P
 CHECKPOINT="/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2025-04-12-07-21_a85cbb1_4u_4o/uav_ren_mean_baselining/uav_ren_mean_baselining/PPO_multi-uav-ren-v0_3b243_00001_1_early_done=True,max_dt_go_error=0.1000,max_dt_std=0.0500,stp_penalty=10,t_go_error_func=mean,tg_2025-04-12_07-21-08/checkpoint_000185/policies/shared_policy"
 CHECKPOINT="/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2025-04-12-07-21_a85cbb1_4u_4o/uav_ren_mean_baselining/uav_ren_mean_baselining/PPO_multi-uav-ren-v0_3b243_00000_0_early_done=False,max_dt_go_error=0.1000,max_dt_std=0.0500,stp_penalty=10,t_go_error_func=mean,t_2025-04-12_07-21-08/checkpoint_000160/policies/shared_policy"
 CHECKPOINT="/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2025-04-12-07-21_a85cbb1_4u_4o/uav_ren_mean_baselining/uav_ren_mean_baselining/PPO_multi-uav-ren-v0_3b243_00001_1_early_done=True,max_dt_go_error=0.1000,max_dt_std=0.0500,stp_penalty=10,t_go_error_func=mean,tg_2025-04-12_07-21-08/checkpoint_000457/policies/shared_policy"
+CHECKPOINT="/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2025-04-12-22-20_bfc53bc_4u_4o/uav_ren_mean_baselining/uav_ren_mean_baselining/PPO_multi-uav-ren-v0_e4c09_00000_0_early_done=False,max_dt_go_error=0.1000,max_dt_std=0.0500,stp_penalty=1.5000,t_go_error_func=me_2025-04-12_22-20-40/checkpoint_000065/policies/shared_policy"
+CHECKPOINT="/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2025-04-12-22-20_bfc53bc_4u_4o/uav_ren_mean_baselining/uav_ren_mean_baselining/PPO_multi-uav-ren-v0_e4c09_00001_1_early_done=True,max_dt_go_error=0.1000,max_dt_std=0.0500,stp_penalty=1.5000,t_go_error_func=mea_2025-04-12_22-20-40/checkpoint_000100/policies/shared_policy"
 
 # python run_experiment.py --run PPO --tf 8 test \
 #     --checkpoint $CHECKPOINT \
@@ -49,5 +51,5 @@ python run_experiment.py --run PPO --tf 8 test \
     --checkpoint $CHECKPOINT \
     --render \
     --seed None \
-    --max_num_episodes 1 \
-    --plot_results 
+    --max_num_episodes 10 
+    # --plot_results 
