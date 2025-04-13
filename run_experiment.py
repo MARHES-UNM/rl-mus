@@ -177,7 +177,7 @@ def train(args):
     args.config["env_config"]["num_uavs"] = 4
     args.config["env_config"]["obstacle_collision_weight"] = 0.0
     args.config["env_config"]["sa_reward"] = 100
-    args.config["env_config"]["stp_penalty"] = tune.grid_search([2.0, 2.5])
+    args.config["env_config"]["stp_penalty"] = tune.grid_search([2.5, 3.0, 4.0, 4.5])
     args.config["env_config"]["t_go_error_func"] = tune.grid_search(["mean"])
     args.config["env_config"]["tgt_reward"] = tune.grid_search([100])
     args.config["env_config"]["uav_collision_weight"] = 0
@@ -532,9 +532,8 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
 
             if render:
                 im = env.render(mode="rgb_array", done=True, plot_results=plot_results)
-            # if plot_results:
-                # plt.show()
-                # plot_uav_states(results, env_config, num_episodes - 1)
+            if plot_results:
+                plot_uav_states(results, env_config, num_episodes - 1)
 
             if num_episodes == max_num_episodes:
                 end_time = time() - start_time

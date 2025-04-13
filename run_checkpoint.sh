@@ -52,5 +52,5 @@ python run_experiment.py --run PPO --tf 8 test \
     --checkpoint $CHECKPOINT \
     --render \
     --seed None \
-    --max_num_episodes 10 
-    # --plot_results 
+    --max_num_episodes 1 \
+    --plot_results 

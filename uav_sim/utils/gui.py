@@ -337,7 +337,7 @@ class Gui:
             self.fig = plt.figure(figsize=(12, 6), constrained_layout=True)
             gs0 = self.fig.add_gridspec(1, 2)
             gs00 = gs0[0].subgridspec(8, 1)
-            gs01 = gs0[1].subgridspec(9, 1)
+            gs01 = gs0[1].subgridspec(4, 1)
             self.ax = {}
             self.ax["legend"] = self.fig.add_subplot(gs00[0, :])
             self.ax["ax_3d"] = self.fig.add_subplot(gs00[1:, :], projection="3d")
