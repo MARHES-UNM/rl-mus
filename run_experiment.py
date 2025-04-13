@@ -177,7 +177,7 @@ def train(args):
     args.config["env_config"]["num_uavs"] = 4
     args.config["env_config"]["obstacle_collision_weight"] = 0.0
     args.config["env_config"]["sa_reward"] = 100
-    args.config["env_config"]["stp_penalty"] = tune.grid_search([1.5, 8.0])
+    args.config["env_config"]["stp_penalty"] = tune.grid_search([1.5])
     args.config["env_config"]["t_go_error_func"] = tune.grid_search(["mean"])
     args.config["env_config"]["tgt_reward"] = tune.grid_search([100])
     args.config["env_config"]["uav_collision_weight"] = 0
@@ -243,11 +243,11 @@ def train(args):
             use_gae=True,
             use_critic=True,
             lambda_=0.95,
-            train_batch_size=65536,
+            train_batch_size=4096,
             # train_batch_size=131072,
-            gamma=0.99,
-            num_sgd_iter=16,
-            sgd_minibatch_size=8192,
+            gamma=0.995,
+            num_sgd_iter=30,
+            sgd_minibatch_size=128,
             vf_clip_param=10.0,
             vf_loss_coeff=0.5,
             clip_param=0.2,
