@@ -168,7 +168,7 @@ def train(args):
 
     # Vary treatments here
     args.config["env_config"]["beta_vel"] = 0.01
-    args.config["env_config"]["beta"] = 0.05
+    args.config["env_config"]["beta"] = tune.grid_search([0.01])
     args.config["env_config"]["crash_penalty"] = 0.0
     args.config["env_config"]["early_done"] = tune.grid_search([False, True])
     args.config["env_config"]["max_dt_go_error"] = tune.grid_search([0.1])
