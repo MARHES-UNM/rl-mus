@@ -181,6 +181,9 @@ class UavRlRen(UavSim):
         # if self._use_virtual_leader:
         # uav_tg_error.append((self.time_final - self._time_elapsed) - uav.get_t_go_est())
 
+        if not uav_tg_error:
+            return 0.0
+
         uav_tg_error = np.array([uav_tg_error])
 
         if self._t_go_error_func == "mean":
@@ -226,10 +229,18 @@ class UavRlRen(UavSim):
         return uav_tg_error / mean_tg_error
 
     def _get_global_reward(self):
-        all_landed = all([uav.landed for uav in self.uavs.values() if uav.id in self.alive_agents])
+        all_landed = all(
+            [uav.landed for uav in self.uavs.values() if uav.id in self.alive_agents]
+        )
 
         if all_landed:
-            done_time = np.array([uav.done_time for uav in self.uavs.values() if uav.id in self.alive_agents]).std()
+            done_time = np.array(
+                [
+                    uav.done_time
+                    for uav in self.uavs.values()
+                    if uav.id in self.alive_agents
+                ]
+            ).std()
             # done_time = max_abs_diff([uav.done_time for uav in self.uavs.values()])
             if done_time <= self.max_dt_std:
                 for uav in self.uavs.values():

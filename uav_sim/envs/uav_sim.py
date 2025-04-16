@@ -912,6 +912,7 @@ class UavSim(MultiAgentEnv):
             uav.last_rel_dist = np.linalg.norm([x, y, z])
             self.uavs[agent_id] = uav
 
+        self.alive_agents = set([uav.id for uav in self.uavs.values()])
         obs = {uav.id: self._get_obs(uav) for uav in self.uavs.values()}
         reward = {uav.id: self._get_reward(uav) for uav in self.uavs.values()}
 
