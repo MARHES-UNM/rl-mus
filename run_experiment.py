@@ -246,7 +246,7 @@ def train(args):
             train_batch_size=65536,
             # train_batch_size=131072,
             gamma=tune.grid_search([0.9997]),
-            num_sgd_iter=30,
+            num_sgd_iter=32,
             sgd_minibatch_size=8192,
             vf_clip_param=10.0,
             vf_loss_coeff=0.5,
