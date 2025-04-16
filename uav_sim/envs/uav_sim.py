@@ -114,6 +114,7 @@ class UavSim(MultiAgentEnv):
         self.action_low = -self.action_high
 
         self.gui = None
+        self.alive_agents = set()
         self._time_elapsed = 0.0
         self.seed(self._seed)
         self.reset()

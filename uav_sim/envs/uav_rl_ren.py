@@ -174,7 +174,7 @@ class UavRlRen(UavSim):
         uav_tg_error = [
             other_uav.get_t_go_est() - uav.get_t_go_est()
             for other_uav in self.uavs.values()
-            if other_uav.id != uav.id and other_uav.id in self.alive_agents()
+            if other_uav.id != uav.id and other_uav.id in self.alive_agents
         ]
 
         # TODO: virtual leader should be added to the overall sum
@@ -338,7 +338,7 @@ class UavRlRen(UavSim):
         # neg reward if uav collides with other uavs
         other_uav_list = []
         for other_uav in self.uavs.values():
-            if uav.id != other_uav.id and other_uav.id in self.alive_agents():
+            if uav.id != other_uav.id and other_uav.id in self.alive_agents:
                 other_uav_list.append(other_uav)
                 if uav.in_collision(other_uav):
                     uav.uav_collision += 1
