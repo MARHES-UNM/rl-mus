@@ -26,8 +26,20 @@ class UavRlRen(UavSim):
                             shape=(num_state_shape,),
                             dtype=np.float32,
                         ),
+                        # https://farama.org/Gymnasium-Terminated-Truncated-Step-API
+                        # time is part of the observation
+                        "done_dt": spaces.Box(
+                            low=-np.inf,
+                            high=np.inf,
+                            shape=(1,),
+                            dtype=np.float32,
+                        ),
+                        # test
                         "dt_go_error": spaces.Box(
-                            low=-np.inf, high=np.inf, shape=(1,), dtype=np.float32
+                            low=-np.inf,
+                            high=np.inf,
+                            shape=(1,),
+                            dtype=np.float32,
                         ),
                         "rel_pad": spaces.Box(
                             low=-np.inf,
@@ -128,6 +140,11 @@ class UavRlRen(UavSim):
 
         obs_dict = {
             "state": uav.state[0:6].astype(np.float32),
+            # https://farama.org/Gymnasium-Terminated-Truncated-Step-API
+            # time is part of the observation so it must be included here
+            "done_dt": np.array(
+                [self.time_final - self._time_elapsed], dtype=np.float32
+            ),
             "dt_go_error": np.array(
                 [self.get_uav_t_go_error(uav)],
                 dtype=np.float32,
@@ -157,7 +174,7 @@ class UavRlRen(UavSim):
         uav_tg_error = [
             other_uav.get_t_go_est() - uav.get_t_go_est()
             for other_uav in self.uavs.values()
-            if other_uav.id != uav.id
+            if other_uav.id != uav.id and other_uav.id in self.alive_agents()
         ]
 
         # TODO: virtual leader should be added to the overall sum
@@ -209,10 +226,10 @@ class UavRlRen(UavSim):
         return uav_tg_error / mean_tg_error
 
     def _get_global_reward(self):
-        all_landed = all([uav.landed for uav in self.uavs.values()])
+        all_landed = all([uav.landed for uav in self.uavs.values() if uav.id in self.alive_agents])
 
         if all_landed:
-            done_time = np.array([uav.done_time for uav in self.uavs.values()]).std()
+            done_time = np.array([uav.done_time for uav in self.uavs.values() if uav.id in self.alive_agents]).std()
             # done_time = max_abs_diff([uav.done_time for uav in self.uavs.values()])
             if done_time <= self.max_dt_std:
                 for uav in self.uavs.values():
@@ -247,14 +264,20 @@ class UavRlRen(UavSim):
         uav.uav_collision = 0.0
         uav.obs_collision = 0.0
 
-        if uav.done:
-            # UAV most have finished last time_step, return 0 for reward
+        # give penaly for reaching the time limit
+        if self._time_elapsed >= self.max_time:
+            reward -= self._max_time_penalty
+            uav.done = True
+            uav.done_time = self.max_time
             return reward
 
-        # give penaly for reaching the time limit
-        elif self._time_elapsed >= self.max_time:
-            reward -= self._max_time_penalty
-            uav.done_time = self.max_time
+        if uav.landed:
+            return reward
+
+        # this is not needed in RLLib as done agents are removed from the env
+        elif uav.done:
+            # UAV most have finished last time_step but didn't reach it's destination
+            reward -= 1.0
             return reward
 
         is_reached, rel_dist, rel_vel = uav.check_dest_reached()
@@ -267,7 +290,7 @@ class UavRlRen(UavSim):
         uav.done_dt = t_remaining
 
         if is_reached:
-            uav.done = True
+            # uav.done = True
             uav.landed = True
 
             if uav.done_time == 0:
@@ -315,14 +338,14 @@ class UavRlRen(UavSim):
         # neg reward if uav collides with other uavs
         other_uav_list = []
         for other_uav in self.uavs.values():
-            if uav.id != other_uav.id:
+            if uav.id != other_uav.id and other_uav.id in self.alive_agents():
                 other_uav_list.append(other_uav)
                 if uav.in_collision(other_uav):
                     uav.uav_collision += 1
                     # reward -= self.uav_collision_weight
                     # if self._early_done:
-                        # uav.done = True
-                        # return reward
+                    # uav.done = True
+                    # return reward
 
         # # TODO: the code below should not affect on performance. Need to tweak later. Leaving there for now.
         closest_uavs = uav.get_closest_entities(other_uav_list, num_to_return=1)

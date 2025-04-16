@@ -318,7 +318,7 @@ class UavBase(Entity):
         self.sa_sat = False
         self.d_thresh = d_thresh
         self.last_rel_dist = 0
-        self.max_v = 0.25 # m/s
+        self.max_v = 0.25  # m/s
         self.min_v = -self.max_v
 
     def rk4(self, state, action):
@@ -386,7 +386,10 @@ class UavBase(Entity):
         if self.done:
             return 0.0
 
-        _, rel_dist, _rel_vel = self.check_dest_reached()
+        is_reached, rel_dist, _rel_vel = self.check_dest_reached()
+
+        if is_reached:
+            return 0.0
 
         if rel_vel is None:
             rel_vel = _rel_vel

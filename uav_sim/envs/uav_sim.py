@@ -491,7 +491,7 @@ class UavSim(MultiAgentEnv):
         for i, action in actions.items():
             self.alive_agents.add(i)
             # Done uavs don't move
-            if self.uavs[i].done:
+            if self.uavs[i].done or self.uavs[i].landed:
                 continue
 
             if self._use_safe_action:
@@ -534,8 +534,9 @@ class UavSim(MultiAgentEnv):
             if uav.id in self.alive_agents
         }
 
-        # TODO: delete later
+        # Done only if all landed
         all_landed = all([uav.landed for uav in self.uavs.values()])
+
         # calculate done for each agent
         done = {
             self.uavs[uav_id].id: self.uavs[uav_id].done or all_landed
@@ -621,6 +622,8 @@ class UavSim(MultiAgentEnv):
         obs_dict = {
             "state": uav.state[0:6].astype(np.float32),
             # "target": self.target.state.astype(np.float32),
+            # https://farama.org/Gymnasium-Terminated-Truncated-Step-API
+            # time is part of the observation
             "done_dt": np.array(
                 [self.time_final - self._time_elapsed], dtype=np.float32
             ),
@@ -954,7 +957,15 @@ class UavSim(MultiAgentEnv):
 
         return action
 
-    def render(self, mode="human", done=False, obs=None, rew=None, info=None, plot_results=False):
+    def render(
+        self,
+        mode="human",
+        done=False,
+        obs=None,
+        rew=None,
+        info=None,
+        plot_results=False,
+    ):
         """
         See this example for converting python figs to images:
         https://stackoverflow.com/questions/7821518/save-plot-to-numpy-array
@@ -980,7 +991,9 @@ class UavSim(MultiAgentEnv):
             self.gui.update(self._time_elapsed, done, obs, rew, info, plot_results)
 
         elif mode == "rgb_array":
-            fig = self.gui.update(self._time_elapsed, done, obs, rew, info, plot_results)
+            fig = self.gui.update(
+                self._time_elapsed, done, obs, rew, info, plot_results
+            )
 
             with io.BytesIO() as buff:
                 fig.savefig(buff, format="raw")
