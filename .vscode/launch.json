@@ -105,11 +105,11 @@
                 // "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2025-04-16-00-46_644fb24_4u_4o/uav_ren_landed_fix/uav_ren_landed_fix/PPO_multi-uav-ren-v0_cfeb7_00000_0_beta=0.1000,early_done=False,max_dt_go_error=0.1000,max_dt_std=0.0500,sa_reward=1000,stp_penalt_2025-04-16_00-46-51/checkpoint_000035/policies/shared_policy",
                 // "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2025-04-16-00-46_644fb24_4u_4o/uav_ren_landed_fix/uav_ren_landed_fix/PPO_multi-uav-ren-v0_cfeb7_00001_1_beta=0.1000,early_done=True,max_dt_go_error=0.1000,max_dt_std=0.0500,sa_reward=1000,stp_penalty_2025-04-16_00-46-51/checkpoint_000055/policies/shared_policy",
                 // "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2025-04-16-01-54_d46eb83_4u_4o/uav_ren_landed_fix/uav_ren_landed_fix/PPO_multi-uav-ren-v0_5267d_00001_1_beta=0.1000,early_done=True,max_dt_go_error=0.1000,max_dt_std=0.0500,obstacle_collision_weight=_2025-04-16_01-54-55/checkpoint_000304/policies/shared_policy",
-                "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2025-04-16-01-54_d46eb83_4u_4o/uav_ren_landed_fix/uav_ren_landed_fix/PPO_multi-uav-ren-v0_5267d_00000_0_beta=0.1000,early_done=False,max_dt_go_error=0.1000,max_dt_std=0.0500,obstacle_collision_weight_2025-04-16_01-54-55/checkpoint_000304/policies/shared_policy",
+                "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-curriculum-v0_2025-04-16-22-36_18cdd4f_4u_4o/uav_ren_cur/uav_ren_cur/PPO_multi-uav-ren-curriculum-v0_bb7d4_00000_0_beta=0.1000,early_done=False,max_dt_go_error=0.1000,max_dt_std=0.0500,obstacle_colli_2025-04-16_22-36-14/checkpoint_000457/policies/shared_policy",
                 "--render",
                 "--seed", "None",
                 "--max_num_episodes", "10",
-                "--plot_results"
+                // "--plot_results"
             ]
         },
         {

@@ -38,7 +38,7 @@ def run_experiment(exp_config, log_dir, max_num_episodes):
     config["env_config"].update(exp_config["env_config"])
 
     output_folder = os.path.join(log_dir, exp_config["exp_name"])
-    exp_file_config = os.path.join(output_folder, "exp_sim_config.cfg")
+    exp_file_config = os.path.join(output_folder, "exp_sim_config.json")
     fname = os.path.join(output_folder, "result.json")
 
     config["fname"] = fname
