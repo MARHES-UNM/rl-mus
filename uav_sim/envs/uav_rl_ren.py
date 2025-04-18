@@ -332,9 +332,10 @@ class UavRlRen(UavSim):
                 uav.done = True
                 return reward
 
-        reward += self._beta * np.sign(uav.last_rel_dist - rel_dist)
+        else:
+            reward += self._beta * np.sign(uav.last_rel_dist - rel_dist)
 
-        uav.last_rel_dist = rel_dist
+            uav.last_rel_dist = rel_dist
 
         # give small penalty for having large relative velocity
         reward += -self._beta_vel * rel_vel
