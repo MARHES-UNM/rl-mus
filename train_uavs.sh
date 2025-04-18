@@ -29,16 +29,18 @@
 #     --render \
 #     --max_num_episodes 3
 
-python run_experiment.py --name uav_ren_cur --run PPO \
+python run_experiment.py --name replicate_dc8b9b2_no_cur --run PPO \
+    train \
+    --cpu 8 \
+    --gpu 0.5 \
+    --stop_timesteps 30000000
+    
+python run_experiment.py --name replicate_dc8b9b2_cur --run PPO \
     --env_name "multi-uav-ren-curriculum-v0" \
     train \
     --cpu 8 \
     --gpu 0.5 \
     --stop_timesteps 30000000 
 
-python run_experiment.py --name uav_ren_no_cur --run PPO \
-    train \
-    --cpu 8 \
-    --gpu 0.5 \
-    --stop_timesteps 30000000
+
     # --stop_iters 16000
