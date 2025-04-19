@@ -229,11 +229,11 @@ class UavRlRen(UavSim):
         return uav_tg_error / mean_tg_error
 
     def _get_global_reward(self):
-        all_landed = all(
+        all_landed = (
             [uav.landed for uav in self.uavs.values() if uav.id in self.alive_agents]
         )
 
-        if all_landed and len(all_landed) >= 2:
+        if all(all_landed) and len(all_landed) >= 2:
             done_time = np.array(
                 [
                     uav.done_time
