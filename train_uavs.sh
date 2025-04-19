@@ -33,14 +33,14 @@ python run_experiment.py --name sparse_rew --run PPO \
     train \
     --cpu 8 \
     --gpu 0.5 \
-    --stop_timesteps 20000000
+    --stop_timesteps 30000000
     
-# python run_experiment.py --name replicate_dc8b9b2_cur --run PPO \
-#     --env_name "multi-uav-ren-curriculum-v0" \
-#     train \
-#     --cpu 8 \
-#     --gpu 0.5 \
-#     --stop_timesteps 30000000 
+python run_experiment.py --name sparse_rew_cur --run PPO \
+    --env_name "multi-uav-ren-curriculum-v0" \
+    train \
+    --cpu 8 \
+    --gpu 0.5 \
+    --stop_timesteps 30000000 
 
 
     # --stop_iters 16000

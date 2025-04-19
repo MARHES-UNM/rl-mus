@@ -176,7 +176,7 @@ def train(args):
     args.config["env_config"]["max_time_penalty"] = 5
     args.config["env_config"]["num_uavs"] = 4
     args.config["env_config"]["obstacle_collision_weight"] = 5
-    args.config["env_config"]["sa_reward"] = tune.grid_search([50, 100])
+    args.config["env_config"]["sa_reward"] = tune.grid_search([50])
     args.config["env_config"]["stp_penalty"] = tune.grid_search([0])
     args.config["env_config"]["t_go_error_func"] = tune.grid_search(["mean"])
     args.config["env_config"]["tgt_reward"] = tune.grid_search([50])
@@ -232,7 +232,7 @@ def train(args):
         # See for more on PPO hyperparameters: https://medium.com/aureliantactics/ppo-hyperparameters-and-ranges-6fc2d29bccbe
         .training(
             # https://docs.ray.io/en/latest/rllib/rllib-models.html
-            # model={"fcnet_hiddens": [64, 64]},
+            model={"fcnet_hiddens": [512, 512, 512]},
             # model={
             #     "custom_model": custom_model,
             #     # Extra kwargs to be passed to your custorm model.
