@@ -233,7 +233,7 @@ class UavRlRen(UavSim):
             [uav.landed for uav in self.uavs.values() if uav.id in self.alive_agents]
         )
 
-        if all_landed:
+        if all_landed and len(all_landed) >= 2:
             done_time = np.array(
                 [
                     uav.done_time
