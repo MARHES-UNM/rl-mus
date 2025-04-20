@@ -22,12 +22,9 @@ class CurriculumUavRlRen(MultiAgentEnv, TaskSettableEnv):
         MultiAgentEnv.__init__(self)
         self.config = config
         self.cur_level = self.config.get("start_level", 0)
-        self.task_array = [0.5, 1.5, 2.5, 3.9]
+        self.task_array = [0.5, 1.5, 3.9]
         self.env = None
 
-        # self.env_difficulty_config = self.config["difficulty_config"]
-        # self.num_tasks = len(self.env_difficulty_config)
-        # self.num_tasks = self.config["max_start_dist"]
         self.num_tasks = len(self.task_array)
         self._make_uav_sim()
         self.observation_space = self.env.observation_space
@@ -63,13 +60,6 @@ class CurriculumUavRlRen(MultiAgentEnv, TaskSettableEnv):
         self.switch_env = True
 
     def _make_uav_sim(self):
-        # level_config = self.env_difficulty_config[self.cur_level]
         env_config = self.config.copy()
         env_config["max_start_dist"] = self.task_array[self.cur_level]
         self.env = UavRlRen(env_config)
-        # self.num_uavs = self.env.num_uavs
-        # self.max_num_obstacles = self.env.max_num_obstacles
-        # self.uavs = self.env.uavs
-        # self.target = self.env.target
-
-        # self.time_elapsed = self.env.time_elapsed

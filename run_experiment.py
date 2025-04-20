@@ -145,9 +145,9 @@ def curriculum_fn(
     # Level 2: Expect rewards between 1.0 and 10.0, etc..
     # We will thus raise the level/task each time we hit a new power of 10.0
     time_steps = train_results.get("timesteps_total")
-    new_task = time_steps // 4000000
+    new_task = time_steps // 3000000
     # Clamp between valid values, just in case:
-    new_task = max(min(new_task, 3), 0)
+    new_task = max(min(new_task, 2), 0)
     print(
         f"Worker #{env_ctx.worker_index} vec-idx={env_ctx.vector_index}"
         f"\nR={train_results['episode_reward_mean']}"
@@ -170,13 +170,14 @@ def train(args):
     args.config["env_config"]["beta_vel"] = 0
     args.config["env_config"]["beta"] = 0
     args.config["env_config"]["crash_penalty"] = 1
-    args.config["env_config"]["early_done"] = tune.grid_search([False, True])
+    args.config["env_config"]["early_done"] = tune.grid_search([True])
     args.config["env_config"]["max_dt_go_error"] = tune.grid_search([0.1])
-    args.config["env_config"]["max_dt_std"] = tune.grid_search([0.05])
+    args.config["env_config"]["max_dt_std"] = tune.grid_search([0.1, 0.5])
     args.config["env_config"]["max_time_penalty"] = 1
     args.config["env_config"]["num_uavs"] = 4
     args.config["env_config"]["obstacle_collision_weight"] = 1
     args.config["env_config"]["sa_reward"] = tune.grid_search([1])
+    # args.config["env_config"]["start_level"] = tune.grid_search([2, 0])
     args.config["env_config"]["stp_penalty"] = tune.grid_search([0])
     args.config["env_config"]["t_go_error_func"] = tune.grid_search(["mean"])
     args.config["env_config"]["tgt_reward"] = tune.grid_search([1])

@@ -99,7 +99,8 @@ if __name__ == "__main__":
     )
 
     exp_name = exp_config["exp_name"]
-    use_vl = exp_config["env_config"]["use_virtual_leader"]
+    use_vl = exp_config["env_config"].get("use_virtual_leader", False)
+    early_done = exp_config["env_config"].get("early_done", False)
 
     if not args.log_dir:
         branch_hash = get_git_hash()
@@ -107,7 +108,7 @@ if __name__ == "__main__":
         dir_timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M")
 
         args.log_dir = Path(
-            f"./results/test_results/{exp_name}/exp_{dir_timestamp}_{branch_hash}_vl_{int(use_vl)}"
+            f"./results/test_results/{exp_name}/exp_{dir_timestamp}_{branch_hash}_vl_{int(use_vl)}_ed_{int(early_done)}"
         )
 
     if not args.log_dir.exists():
@@ -167,6 +168,7 @@ if __name__ == "__main__":
         }
 
         exp_config["env_config"].setdefault("use_virtual_leader", use_vl)
+        exp_config["env_config"].setdefault("early_done", early_done)
 
         file_prefix = {
             "tgt_v": target,

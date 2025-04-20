@@ -29,7 +29,7 @@
 #     --render \
 #     --max_num_episodes 3
 
-exp_name="fixing_metrics"
+exp_name="max_dt_std_01"
 python run_experiment.py --name ${exp_name} --run PPO \
     train \
     --cpu 8 \
