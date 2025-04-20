@@ -29,7 +29,7 @@
 #     --render \
 #     --max_num_episodes 3
 
-exp_name="train_rel_dist"
+exp_name="fixing_metrics"
 python run_experiment.py --name ${exp_name} --run PPO \
     train \
     --cpu 8 \

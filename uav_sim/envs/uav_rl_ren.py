@@ -355,44 +355,44 @@ class UavRlRen(UavSim):
                 other_uav_list.append(other_uav)
                 if uav.in_collision(other_uav):
                     uav.uav_collision += 1
-                    # reward -= self.uav_collision_weight
-                    # if self._early_done:
-                    # uav.done = True
-                    # return reward
+                    reward -= self.uav_collision_weight
+                    if self._early_done:
+                        uav.done = True
+                        return reward
 
-        # # TODO: the code below should not affect on performance. Need to tweak later. Leaving there for now.
-        closest_uavs = uav.get_closest_entities(other_uav_list, num_to_return=1)
+        # # # TODO: the code below should not affect on performance. Need to tweak later. Leaving there for now.
+        # closest_uavs = uav.get_closest_entities(other_uav_list, num_to_return=1)
 
-        if closest_uavs:
-            dist_to_uav = uav.rel_distance(closest_uavs[0])
-            if uav.in_collision(closest_uavs[0]):
-                reward -= self.uav_collision_weight
-                if self._early_done:
-                    uav.done = True
-                    return reward
-            elif dist_to_uav <= (uav.r + 0.15):
-                reward += -np.exp(-dist_to_uav / 0.1)
+        # if closest_uavs:
+        #     dist_to_uav = uav.rel_distance(closest_uavs[0])
+        #     if uav.in_collision(closest_uavs[0]):
+        #         reward -= self.uav_collision_weight
+        #         if self._early_done:
+        #             uav.done = True
+        #             return reward
+        #     elif dist_to_uav <= (uav.r + 0.15):
+        #         reward += -np.exp(-dist_to_uav / 0.1)
 
         # neg reward if uav collides with obstacles
         for obstacle in self.obstacles:
             if uav.in_collision(obstacle):
                 uav.obs_collision += 1
-                # reward -= self.obstacle_collision_weight
-                # if self._early_done:
-                #     uav.done = True
-                #     return reward
-
-        # TODO: the code below should not affect on performance. Need to tweak later. Leaving there for now.
-        closest_obstacles = uav.get_closest_entities(self.obstacles, num_to_return=1)
-
-        if closest_obstacles:
-            dist_to_obstacle = uav.rel_distance(closest_obstacles[0])
-            if uav.in_collision(closest_obstacles[0]):
                 reward -= self.obstacle_collision_weight
                 if self._early_done:
                     uav.done = True
                     return reward
-            elif dist_to_obstacle <= (obstacle.r + 0.25):
-                reward += -np.exp(-dist_to_obstacle / 0.1)
+
+        # # TODO: the code below should not affect on performance. Need to tweak later. Leaving there for now.
+        # closest_obstacles = uav.get_closest_entities(self.obstacles, num_to_return=1)
+
+        # if closest_obstacles:
+        #     dist_to_obstacle = uav.rel_distance(closest_obstacles[0])
+        #     if uav.in_collision(closest_obstacles[0]):
+        #         reward -= self.obstacle_collision_weight
+        #         if self._early_done:
+        #             uav.done = True
+        #             return reward
+        #     elif dist_to_obstacle <= (obstacle.r + 0.25):
+        #         reward += -np.exp(-dist_to_obstacle / 0.1)
 
         return reward
