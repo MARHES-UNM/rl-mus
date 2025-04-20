@@ -29,13 +29,14 @@
 #     --render \
 #     --max_num_episodes 3
 
-python run_experiment.py --name sparse_rew --run PPO \
+exp_name="train_rel_dist"
+python run_experiment.py --name ${exp_name} --run PPO \
     train \
     --cpu 8 \
     --gpu 0.5 \
     --stop_timesteps 30000000
     
-python run_experiment.py --name sparse_rew_cur --run PPO \
+python run_experiment.py --name "${exp_name}_cur" --run PPO \
     --env_name "multi-uav-ren-curriculum-v0" \
     train \
     --cpu 8 \

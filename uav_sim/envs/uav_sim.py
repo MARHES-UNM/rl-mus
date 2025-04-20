@@ -61,7 +61,7 @@ class UavSim(MultiAgentEnv):
         self._max_time_penalty = env_config.setdefault("max_time_penalty", 5.0)
         self._dt_reward = env_config.setdefault("dt_reward", 0.0)
         self._dt_weight = env_config.setdefault("dt_weight", 0.0)
-        self.num_state_shape = 6
+        self.num_state_shape = 2
 
         self._agent_ids = set(range(self.num_uavs))
         self._uav_type = getattr(
