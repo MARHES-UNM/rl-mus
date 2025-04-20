@@ -61,7 +61,7 @@ class UavSim(MultiAgentEnv):
         self._max_time_penalty = env_config.setdefault("max_time_penalty", 5.0)
         self._dt_reward = env_config.setdefault("dt_reward", 0.0)
         self._dt_weight = env_config.setdefault("dt_weight", 0.0)
-        self.num_state_shape = 2
+        self.num_state_shape = 6
 
         self._agent_ids = set(range(self.num_uavs))
         self._uav_type = getattr(
@@ -536,16 +536,24 @@ class UavSim(MultiAgentEnv):
         }
 
         # Done only if all landed
-        all_landed = all([uav.landed for uav in self.uavs.values()])
+        # all_landed = all([uav.landed for uav in self.uavs.values()])
+
+        landed = [uav.landed for uav in self.uavs.values()]
+        all_landed = all(landed)
 
         # calculate done for each agent
         done = {
-            self.uavs[uav_id].id: self.uavs[uav_id].done or all_landed
+            self.uavs[uav_id].id: self.uavs[uav_id].done  # or all_landed
             for uav_id in self.alive_agents
         }
 
+        done_all = []
+        for uav in self.uavs.values():
+            uav_done = uav.done or uav.landed
+            done_all.append(uav_done)
+
         done["__all__"] = (
-            all(v for v in done.values()) or self.time_elapsed >= self.max_time
+            all(done_all) or self.time_elapsed >= self.max_time or all_landed
         )
         self._time_elapsed += self.dt
 
@@ -705,7 +713,8 @@ class UavSim(MultiAgentEnv):
             reward += -self._crash_penalty
         else:
             reward -= self._beta * (
-                rel_dist / self.max_rel_dist
+                rel_dist
+                / self.max_rel_dist
                 # / np.linalg.norm(
                 # [2 * self.env_max_l, 2 * self.env_max_w, self.env_max_h]
                 # )

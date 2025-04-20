@@ -1,7 +1,7 @@
 {
     "env_config": {
         "beta": 0.1,
-        "early_done": false,
+        "early_done": true,
         "max_num_obstacles": 4,
         "num_obstacles": 4,
         "num_uavs": 4,

@@ -101,10 +101,10 @@ class UavRlRen(UavSim):
         other_uav_state_list = []
         for other_uav in self.uavs.values():
             if uav.id != other_uav.id:
-                temp_list  = []
-                temp_list.append(uav.rel_distance(other_uav))
-                temp_list.append(uav.rel_vel(other_uav))
-                # temp_list = other_uav.state[:6].tolist()
+                # temp_list  = []
+                # temp_list.append(uav.rel_distance(other_uav))
+                # temp_list.append(uav.rel_vel(other_uav))
+                temp_list = other_uav.state[:6].tolist()
                 # temp_list.append(self.get_uav_t_go_error(other_uav))
                 other_uav_state_list.append(temp_list)
 
@@ -118,13 +118,13 @@ class UavRlRen(UavSim):
 
         closest_obstacles = self._get_closest_obstacles(uav)
 
-        # obstacle_state_list = [obs.state[0:6] for obs in closest_obstacles]
-        obstacle_state_list = []
-        for obs in closest_obstacles:
-            temp_obs_list = []
-            temp_obs_list.append(uav.rel_distance(obs))
-            temp_obs_list.append(uav.rel_vel(obs))
-            obstacle_state_list.append(temp_obs_list)
+        obstacle_state_list = [obs.state[0:6] for obs in closest_obstacles]
+        # obstacle_state_list = []
+        # for obs in closest_obstacles:
+        #     temp_obs_list = []
+        #     temp_obs_list.append(uav.rel_distance(obs))
+        #     temp_obs_list.append(uav.rel_vel(obs))
+        #     obstacle_state_list.append(temp_obs_list)
 
         num_active_obstacles = len(obstacle_state_list)
         if num_active_obstacles < self.nom_num_obstacles:
@@ -149,12 +149,12 @@ class UavRlRen(UavSim):
                 [self.get_uav_t_go_error(uav)],
                 dtype=np.float32,
             ),
-            "rel_pad": rel_pad.astype(np.float32),
-            # "rel_pad": (uav.state[0:6] - uav.pad.state[0:6]).astype(np.float32),
-            "other_uav_obs": (other_uav_states).astype(np.float32),
-            # "other_uav_obs": (uav.state[0:6] - other_uav_states).astype(np.float32),
-            "obstacles": (obstacles_to_add).astype(np.float32),
-            # "obstacles": (uav.state[0:6] - obstacles_to_add).astype(np.float32),
+            # "rel_pad": rel_pad.astype(np.float32),
+            "rel_pad": (uav.state[0:6] - uav.pad.state[0:6]).astype(np.float32),
+            # "other_uav_obs": (other_uav_states).astype(np.float32),
+            "other_uav_obs": (uav.state[0:6] - other_uav_states).astype(np.float32),
+            # "obstacles": (obstacles_to_add).astype(np.float32),
+            "obstacles": (uav.state[0:6] - obstacles_to_add).astype(np.float32),
         }
 
         return obs_dict
