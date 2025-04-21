@@ -180,7 +180,7 @@ def train(args):
     # args.config["env_config"]["start_level"] = tune.grid_search([2, 0])
     args.config["env_config"]["stp_penalty"] = tune.grid_search([0])
     args.config["env_config"]["t_go_error_func"] = tune.grid_search(["mean"])
-    args.config["env_config"]["tgt_reward"] = tune.grid_search([0])
+    args.config["env_config"]["tgt_reward"] = tune.grid_search([1])
     args.config["env_config"]["uav_collision_weight"] = 2
     args.config["env_config"]["uav_type"] = "UavBase"
     args.config["env_config"]["use_safe_action"] = False
