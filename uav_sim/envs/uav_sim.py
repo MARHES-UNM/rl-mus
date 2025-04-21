@@ -524,8 +524,6 @@ class UavSim(MultiAgentEnv):
             if uav.id in self.alive_agents
         }
 
-
-
         # IMPORTANT: this must be called after _get_reward or get_global_reward. Not before.
         info = {
             uav.id: self._get_info(uav)
@@ -550,14 +548,14 @@ class UavSim(MultiAgentEnv):
             uav_done = uav.done or uav.landed
             done_all.append(uav_done)
 
-        done["__all__"] = (
-            all(done_all) or self.time_elapsed >= self.max_time or all_landed
-        )
-
-        if done["__all__"]:
+        if all(done_all):
             # get global reward
             glob_reward = self._get_global_reward()
             reward = {k: v + glob_reward for k, v in reward.items()}
+
+        done["__all__"] = (
+            all(done_all) or self.time_elapsed >= self.max_time or all_landed
+        )
 
         self._time_elapsed += self.dt
 
