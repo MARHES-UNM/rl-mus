@@ -248,7 +248,7 @@ class UavRlRen(UavSim):
                     uav.sa_sat = True
                 return self._sa_reward
 
-        return 0.0
+        return -self._sa_reward
 
     def get_tc_controller(self, uav):
         pos_er = uav.pad.state[0:6] - uav.state[0:6]
