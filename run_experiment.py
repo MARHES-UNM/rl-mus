@@ -240,7 +240,8 @@ def train(args):
             #     "custom_model_config": {"n_agent_state": 6, "max_action_val": 5},
             # },
             # _enable_learner_api=False,
-            lr=tune.grid_search([5e-4, 1e-3, 1e-5, 5e-3]),
+            # 5e-5
+            lr=tune.grid_search([5e-6, 1e-5]),
             use_gae=True,
             use_critic=True,
             lambda_=tune.grid_search([0.95]),
