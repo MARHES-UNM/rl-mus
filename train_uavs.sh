@@ -29,7 +29,7 @@
 #     --render \
 #     --max_num_episodes 3
 
-exp_name="train_lr"
+exp_name="b112350_train_lr"
 python run_experiment.py --name ${exp_name} --run PPO \
     train \
     --cpu 8 \
