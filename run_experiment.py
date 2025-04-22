@@ -170,7 +170,7 @@ def train(args):
     args.config["env_config"]["beta_vel"] = 0
     args.config["env_config"]["beta"] = 0
     args.config["env_config"]["crash_penalty"] = 2
-    args.config["env_config"]["early_done"] = tune.grid_search([False, True])
+    args.config["env_config"]["early_done"] = tune.grid_search([True])
     args.config["env_config"]["max_dt_go_error"] = tune.grid_search([0.1])
     args.config["env_config"]["max_dt_std"] = tune.grid_search([0.5])
     args.config["env_config"]["max_time_penalty"] = 1
@@ -240,7 +240,7 @@ def train(args):
             #     "custom_model_config": {"n_agent_state": 6, "max_action_val": 5},
             # },
             # _enable_learner_api=False,
-            lr=5e-5,
+            lr=tune.grid_search([1e-4, 1e-2, 1e-5, 3e-3]),
             use_gae=True,
             use_critic=True,
             lambda_=tune.grid_search([0.95]),
