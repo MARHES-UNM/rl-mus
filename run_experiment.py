@@ -172,7 +172,7 @@ def train(args):
     args.config["env_config"]["crash_penalty"] = 1
     args.config["env_config"]["early_done"] = tune.grid_search([True])
     args.config["env_config"]["max_dt_go_error"] = tune.grid_search([0.1])
-    args.config["env_config"]["max_dt_std"] = tune.grid_search([0.5])
+    args.config["env_config"]["max_dt_std"] = tune.grid_search([1.0, 2.0])
     args.config["env_config"]["max_time_penalty"] = 1
     args.config["env_config"]["num_uavs"] = 4
     args.config["env_config"]["obstacle_collision_weight"] = 1
@@ -241,7 +241,7 @@ def train(args):
             # },
             # _enable_learner_api=False,
             # 5e-5
-            lr=tune.grid_search([5e-6, 1e-5]),
+            lr=tune.grid_search([5e-5]),
             use_gae=True,
             use_critic=True,
             lambda_=tune.grid_search([0.95]),
