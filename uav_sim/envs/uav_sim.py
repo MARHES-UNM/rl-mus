@@ -548,15 +548,14 @@ class UavSim(MultiAgentEnv):
             uav_done = uav.done or uav.landed
             done_all.append(uav_done)
 
-        if all(done_all):
-            # get global reward
-            glob_reward = self._get_global_reward()
-            reward = {k: v + glob_reward for k, v in reward.items()}
+        # if all(done_all):
+        # get global reward
+        glob_reward = self._get_global_reward()
+        reward = {k: v + glob_reward for k, v in reward.items()}
 
         done["__all__"] = (
             all(done_all) or self.time_elapsed >= self.max_time or all_landed
         )
-
         self._time_elapsed += self.dt
 
         # newwer api gymnasium > 0.28
