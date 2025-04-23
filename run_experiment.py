@@ -178,12 +178,13 @@ def train(args):
     args.config["env_config"]["obstacle_collision_weight"] = 1
     args.config["env_config"]["sa_reward"] = tune.grid_search([1])
     # args.config["env_config"]["start_level"] = tune.grid_search([2, 0])
-    args.config["env_config"]["stp_penalty"] = tune.grid_search([0, 0.1])
-    args.config["env_config"]["t_go_error_func"] = tune.grid_search(["sum"])
+    args.config["env_config"]["stp_penalty"] = tune.grid_search([0])
+    args.config["env_config"]["t_go_error_func"] = tune.grid_search(["mean"])
     args.config["env_config"]["tgt_reward"] = tune.grid_search([1])
     args.config["env_config"]["uav_collision_weight"] = 1
     args.config["env_config"]["uav_type"] = "UavBase"
     args.config["env_config"]["use_safe_action"] = False
+    args.config["env_config"]["use_virtual_leader"] = tune.grid_search([False, True])
     # custom_model = tune.grid_search(
     #     [
     #         "torch_fix_model",
