@@ -172,14 +172,14 @@ def train(args):
     args.config["env_config"]["crash_penalty"] = 1
     args.config["env_config"]["early_done"] = tune.grid_search([True])
     args.config["env_config"]["max_dt_go_error"] = tune.grid_search([0.1])
-    args.config["env_config"]["max_dt_std"] = tune.grid_search([1.0, 2.0])
+    args.config["env_config"]["max_dt_std"] = tune.grid_search([0.05])
     args.config["env_config"]["max_time_penalty"] = 1
     args.config["env_config"]["num_uavs"] = 4
     args.config["env_config"]["obstacle_collision_weight"] = 1
     args.config["env_config"]["sa_reward"] = tune.grid_search([1])
     # args.config["env_config"]["start_level"] = tune.grid_search([2, 0])
-    args.config["env_config"]["stp_penalty"] = tune.grid_search([0])
-    args.config["env_config"]["t_go_error_func"] = tune.grid_search(["mean"])
+    args.config["env_config"]["stp_penalty"] = tune.grid_search([0, 0.1])
+    args.config["env_config"]["t_go_error_func"] = tune.grid_search(["sum"])
     args.config["env_config"]["tgt_reward"] = tune.grid_search([1])
     args.config["env_config"]["uav_collision_weight"] = 1
     args.config["env_config"]["uav_type"] = "UavBase"
@@ -441,7 +441,7 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
         actions = {}
         for idx in range(env.num_uavs):
             # if env._early_done and env.uavs[idx].done:
-                # continue
+            # continue
             # classic control
             if algo_to_run == "cc":
                 actions[idx] = env.get_time_coord_action(env.uavs[idx])
