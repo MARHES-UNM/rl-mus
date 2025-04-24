@@ -29,7 +29,7 @@
 #     --render \
 #     --max_num_episodes 3
 
-exp_name="using_virtual_leader"
+exp_name="vl_higher_penalty"
 python run_experiment.py --name ${exp_name} --run PPO \
     train \
     --cpu 8 \
