@@ -281,7 +281,7 @@ class UavRlRen(UavSim):
         if self._time_elapsed >= self.max_time:
             reward -= self._max_time_penalty
             uav.done = True
-            uav.done_time = self.max_time
+            uav.done_time = self._time_elapsed
             return reward
 
         if uav.landed:
@@ -290,7 +290,7 @@ class UavRlRen(UavSim):
         # this is not needed in RLLib as done agents are removed from the env
         elif uav.done:
             # UAV most have finished last time_step but didn't reach it's destination
-            reward -= 1.0
+            # reward -= 1.0
             return reward
 
         is_reached, rel_dist, rel_vel = uav.check_dest_reached()
@@ -333,6 +333,7 @@ class UavRlRen(UavSim):
             reward += -self._crash_penalty
             if self._early_done:
                 uav.done = True
+                uav.done_time = self._time_elapsed
                 return reward
 
         else:
@@ -360,6 +361,7 @@ class UavRlRen(UavSim):
                     reward -= self.uav_collision_weight
                     if self._early_done:
                         uav.done = True
+                        uav.done_time = self._time_elapsed
                         return reward
 
         # # # TODO: the code below should not affect on performance. Need to tweak later. Leaving there for now.
@@ -382,6 +384,7 @@ class UavRlRen(UavSim):
                 reward -= self.obstacle_collision_weight
                 if self._early_done:
                     uav.done = True
+                    uav.done_time = self._time_elapsed
                     return reward
 
         # # TODO: the code below should not affect on performance. Need to tweak later. Leaving there for now.

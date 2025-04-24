@@ -325,7 +325,7 @@
             "name": "plot_results",
             "type": "python",
             "request": "launch",
-            "program": "${cwd}/plot_results_dirty.py",
+            "program": "${cwd}/plot_results.py",
             "console": "integratedTerminal",
             "justMyCode": true,
             "cwd": "${workspaceFolder}",
@@ -334,9 +334,9 @@
             },
             "args": [
                 "--exp_config",
-                "configs/exp_long_cfg_rl_ren_full_no_vl.json",
+                "configs/exp_basic_ren_cc.json",
                 "--exp_folder",
-                "results/test_results/ppo_ren_comp_no_vl/exp_2024-04-27-20-44_9fab435_vl_0",
+                "results/test_results/exp_basic_ren_cc/exp_2025-04-23-21-26_161e9ff_vl_0_ed_1",
                 "--skip_legend"
             ],
         },
