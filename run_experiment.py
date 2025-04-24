@@ -145,7 +145,7 @@ def curriculum_fn(
     # Level 2: Expect rewards between 1.0 and 10.0, etc..
     # We will thus raise the level/task each time we hit a new power of 10.0
     time_steps = train_results.get("timesteps_total")
-    new_task = time_steps // 3000000
+    new_task = time_steps // 10000000
     # Clamp between valid values, just in case:
     new_task = max(min(new_task, 2), 0)
     print(
@@ -166,7 +166,7 @@ def train(args):
     # We get the spaces here before test vary the experiment treatments (factors)
     env_obs_space, env_action_space = get_obs_act_space(args.config)
 
-    neg_penalty = 2
+    neg_penalty = 1
     # Vary treatments here
     args.config["env_config"]["beta_vel"] = 0
     args.config["env_config"]["beta"] = 0
