@@ -118,6 +118,7 @@ class UavSim(MultiAgentEnv):
         self._time_elapsed = 0.0
 
         self.all_landed = []
+        self.first_landing_time = None
         self.seed(self._seed)
         self.reset()
         self.action_space = self._get_action_space()
@@ -927,6 +928,7 @@ class UavSim(MultiAgentEnv):
             self.uavs[agent_id] = uav
 
         self.all_landed = []
+        self.first_landing_time = None
         self.alive_agents = set([uav.id for uav in self.uavs.values()])
         obs = {uav.id: self._get_obs(uav) for uav in self.uavs.values()}
         reward = {uav.id: self._get_reward(uav) for uav in self.uavs.values()}

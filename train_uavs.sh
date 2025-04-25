@@ -29,7 +29,7 @@
 #     --render \
 #     --max_num_episodes 3
 
-exp_name="uav_dt_go_reward"
+exp_name="get_first_time"
 python run_experiment.py --name ${exp_name} --run PPO \
     train \
     --cpu 8 \
