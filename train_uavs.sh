@@ -29,21 +29,21 @@
 #     --render \
 #     --max_num_episodes 3
 
-exp_name="no_sa_reward"
+exp_name="uav_dt_go_reward"
 python run_experiment.py --name ${exp_name} --run PPO \
     train \
     --cpu 8 \
     --gpu 0.5 \
-    --stop_timesteps 20000000 &
+    --stop_timesteps 20000000 
     
 python run_experiment.py --name "${exp_name}_cur" --run PPO \
     --env_name "multi-uav-ren-curriculum-v0" \
     train \
     --cpu 8 \
     --gpu 0.5 \
-    --stop_timesteps 20000000 &
+    --stop_timesteps 20000000 
 
-wait
+# wait
 
 
     # --stop_iters 16000

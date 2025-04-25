@@ -230,12 +230,11 @@ class UavRlRen(UavSim):
         return uav_tg_error / mean_tg_error
 
     def _get_global_reward(self):
-        all_landed = (
-            [
-                uav.landed for uav in self.uavs.values() 
-                # if uav.id in self.alive_agents
-                ]
-        )
+        all_landed = [
+            uav.landed
+            for uav in self.uavs.values()
+            # if uav.id in self.alive_agents
+        ]
 
         if all(all_landed) and len(all_landed) >= 2:
             done_time = np.array(
@@ -306,22 +305,22 @@ class UavRlRen(UavSim):
         uav.done_dt = t_remaining
 
         if is_reached:
-            uav.done = True
+            # uav.done = True
             uav.landed = True
 
             if uav.done_time == 0:
                 uav.done_time = self._time_elapsed
 
             self.all_landed.append(uav.done_time)
-
-            if len(self.all_landed) < 2:
+            if abs(uav_dt_go_error) <= self.max_dt_go_error:
                 reward += self._tgt_reward
-                uav.sa_sat = True
-            else:
-                done_time = np.array(self.all_landed).std()
-                if done_time <= self.max_dt_std:
-                    reward += self._tgt_reward
-                    uav.sa_sat = True
+                # uav.sa_sat = True
+            # if len(self.all_landed) < 2:
+            # else:
+            # done_time = np.array(self.all_landed).std()
+            # if done_time <= self.max_dt_std:
+            # reward += self._tgt_reward
+            # uav.sa_sat = True
             # reward += (1 - (abs(self.time_final - self._time_elapsed) / self.time_final))
             # reward += self._tgt_reward
 

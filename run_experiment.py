@@ -177,7 +177,7 @@ def train(args):
     args.config["env_config"]["max_time_penalty"] = neg_penalty
     args.config["env_config"]["num_uavs"] = 4
     args.config["env_config"]["obstacle_collision_weight"] = neg_penalty
-    args.config["env_config"]["sa_reward"] = tune.grid_search([0])
+    args.config["env_config"]["sa_reward"] = tune.grid_search([0, 1])
     # args.config["env_config"]["start_level"] = tune.grid_search([2, 0])
     args.config["env_config"]["stp_penalty"] = tune.grid_search([0])
     args.config["env_config"]["t_go_error_func"] = tune.grid_search(["mean"])
