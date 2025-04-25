@@ -29,19 +29,19 @@
 #     --render \
 #     --max_num_episodes 3
 
-exp_name="long_training"
-python run_experiment.py --name ${exp_name} --run PPO \
-    train \
-    --cpu 8 \
-    --gpu 0.5 \
-    --stop_timesteps 50000000
+exp_name="all_must_land"
+# python run_experiment.py --name ${exp_name} --run PPO \
+#     train \
+#     --cpu 8 \
+#     --gpu 0.5 \
+#     --stop_timesteps 50000000
     
 python run_experiment.py --name "${exp_name}_cur" --run PPO \
     --env_name "multi-uav-ren-curriculum-v0" \
     train \
     --cpu 8 \
     --gpu 0.5 \
-    --stop_timesteps 50000000 
+    --stop_timesteps 20000000 
 
 
     # --stop_iters 16000

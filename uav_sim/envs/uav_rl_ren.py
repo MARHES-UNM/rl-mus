@@ -231,7 +231,10 @@ class UavRlRen(UavSim):
 
     def _get_global_reward(self):
         all_landed = (
-            [uav.landed for uav in self.uavs.values() if uav.id in self.alive_agents]
+            [
+                uav.landed for uav in self.uavs.values() 
+                # if uav.id in self.alive_agents
+                ]
         )
 
         if all(all_landed) and len(all_landed) >= 2:
@@ -239,7 +242,7 @@ class UavRlRen(UavSim):
                 [
                     uav.done_time
                     for uav in self.uavs.values()
-                    if uav.id in self.alive_agents
+                    # if uav.id in self.alive_agents
                 ]
             ).std()
             # done_time = max_abs_diff([uav.done_time for uav in self.uavs.values()])
