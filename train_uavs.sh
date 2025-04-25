@@ -29,7 +29,7 @@
 #     --render \
 #     --max_num_episodes 3
 
-exp_name="all_must_land"
+exp_name="no_sa_reward"
 python run_experiment.py --name ${exp_name} --run PPO \
     train \
     --cpu 8 \

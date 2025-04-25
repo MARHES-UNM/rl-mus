@@ -306,13 +306,23 @@ class UavRlRen(UavSim):
         uav.done_dt = t_remaining
 
         if is_reached:
-            # uav.done = True
+            uav.done = True
             uav.landed = True
 
             if uav.done_time == 0:
                 uav.done_time = self._time_elapsed
 
-            reward += (1 - (abs(self.time_final - self._time_elapsed) / self.time_final))
+            self.all_landed.append(uav.done_time)
+
+            if len(self.all_landed) < 2:
+                reward += self._tgt_reward
+                uav.sa_sat = True
+            else:
+                done_time = np.array(self.all_landed).std()
+                if done_time <= self.max_dt_std:
+                    reward += self._tgt_reward
+                    uav.sa_sat = True
+            # reward += (1 - (abs(self.time_final - self._time_elapsed) / self.time_final))
             # reward += self._tgt_reward
 
             return reward
