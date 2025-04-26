@@ -109,11 +109,11 @@
                 // "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2025-04-19-22-19_c610d5b_4u_4o/fixing_metrics/fixing_metrics/PPO_multi-uav-ren-v0_f0914_00001_1_early_done=True,max_dt_go_error=0.1000,max_dt_std=0.0500,sa_reward=50,stp_penalty=0,t_go_error__2025-04-19_22-19-51/checkpoint_000110/policies/shared_policy",
                 // "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2025-04-25-12-21_99c89ef_4u_4o/get_first_time/get_first_time/PPO_multi-uav-ren-v0_55e36_00000_0_early_done=True,max_dt_go_error=0.1000,max_dt_std=0.0500,sa_reward=0,stp_penalty=0,t_go_error_f_2025-04-25_12-21-26/checkpoint_000305/policies/shared_policy",
                 // "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-curriculum-v0_2025-04-26-03-53_b30eba7_4u_4o/uav_dt_go_reward_fix_cur/uav_dt_go_reward_fix_cur/PPO_multi-uav-ren-curriculum-v0_8da41_00000_0_early_done=True,max_dt_go_error=1.5000,max_dt_std=0.5000,sa_reward=1,stp_penalty=0,t_2025-04-26_03-53-34/checkpoint_000305/policies/shared_policy",
-                "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2025-04-26-10-50_ecf0d10_4u_4o/scaled_uav_t_go_error/scaled_uav_t_go_error/PPO_multi-uav-ren-v0_d5cec_00000_0_early_done=True,max_dt_go_error=0.1000,max_dt_std=0.0500,sa_reward=1,stp_penalty=0,t_go_error_f_2025-04-26_10-50-46/checkpoint_000100/policies/shared_policy",
+                "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2025-04-26-12-59_f46ad46_4u_4o/scaled_uav_t_go_error/scaled_uav_t_go_error/PPO_multi-uav-ren-v0_d027c_00000_0_early_done=True,max_dt_go_error=0.1000,max_dt_std=0.0500,sa_reward=1,stp_penalty=0,t_go_error_f_2025-04-26_12-59-27/checkpoint_000304/policies/shared_policy",
                 "--render",
-                "--seed", "1",
+                "--seed", "None",
                 "--max_num_episodes", "10",
-                "--plot_results"
+                // "--plot_results"
             ]
         },
         {
