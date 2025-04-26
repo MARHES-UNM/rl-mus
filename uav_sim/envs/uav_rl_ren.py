@@ -168,22 +168,30 @@ class UavRlRen(UavSim):
         return mean_tg_error + 1e-6
 
     def get_uav_t_go_error(self, uav):
+        """Based on the paper:
+            Cooperative Simultaneous Arrival of Unmanned Vehicles onto a 
+            Moving Target in GPS-denied Environment
+        Args:
+            uav (_type_): _description_
 
+        Returns:
+            _type_: _description_
+        """
         if self._use_virtual_leader:
             return (self.time_final - self._time_elapsed) - uav.get_t_go_est()
 
         uav_tg_error = [
             other_uav.get_t_go_est() - uav.get_t_go_est()
             for other_uav in self.uavs.values()
-            if other_uav.id != uav.id and other_uav.id in self.alive_agents
+            if other_uav.id != uav.id #and other_uav.id in self.alive_agents
         ]
 
         # TODO: virtual leader should be added to the overall sum
         # if self._use_virtual_leader:
         # uav_tg_error.append((self.time_final - self._time_elapsed) - uav.get_t_go_est())
 
-        if not uav_tg_error:
-            return 0.0
+        # if not uav_tg_error:
+        #     return 0.0
 
         uav_tg_error = np.array([uav_tg_error])
 
@@ -313,15 +321,15 @@ class UavRlRen(UavSim):
 
             self.all_landed.append(uav.done_time)
             
-            # if abs(uav_dt_go_error) <= self.max_dt_go_error:
-            #     reward += self._tgt_reward
-                # uav.sa_sat = True
-            if self.first_landing_time is None:
-                self.first_landing = self._time_elapsed
+            if abs(uav_dt_go_error) <= self.max_dt_go_error:
                 reward += self._tgt_reward
                 # uav.sa_sat = True
-            else:
-                reward += (1 - (abs(self.first_landing - self._time_elapsed) / self.first_landing))
+            # if self.first_landing_time is None:
+            #     self.first_landing = self._time_elapsed
+            #     reward += self._tgt_reward
+            #     # uav.sa_sat = True
+            # else:
+            #     reward += (1 - (abs(self.first_landing - self._time_elapsed) / self.first_landing))
 
 
                 # reward += self._tgt_reward

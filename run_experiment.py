@@ -193,8 +193,8 @@ def train(args):
     args.config["env_config"]["beta"] = 0
     args.config["env_config"]["crash_penalty"] = neg_penalty
     args.config["env_config"]["early_done"] = tune.grid_search([True])
-    args.config["env_config"]["max_dt_go_error"] = tune.grid_search([0.1])
-    args.config["env_config"]["max_dt_std"] = tune.grid_search([0.05])
+    args.config["env_config"]["max_dt_go_error"] = tune.grid_search([0.5])
+    args.config["env_config"]["max_dt_std"] = tune.grid_search([0.5, 1])
     args.config["env_config"]["max_time_penalty"] = neg_penalty
     args.config["env_config"]["num_uavs"] = 4
     args.config["env_config"]["obstacle_collision_weight"] = neg_penalty
