@@ -505,7 +505,7 @@ class UavSim(MultiAgentEnv):
 
         # normalize t_go_errors
         t_go_errors = np.array(t_go_errors)
-        t_go_errors = (t_go_errors - np.mean(t_go_errors)) / np.std(t_go_errors)
+        t_go_errors = (t_go_errors - np.mean(t_go_errors)) / (np.std(t_go_errors) + 1e-9)
 
         return t_go_errors
 
