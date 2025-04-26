@@ -119,6 +119,7 @@ class UavSim(MultiAgentEnv):
 
         self.all_landed = []
         self.first_landing_time = None
+        self._scaled_t_go_error = []
         self.seed(self._seed)
         self.reset()
         self.action_space = self._get_action_space()
@@ -489,6 +490,25 @@ class UavSim(MultiAgentEnv):
         # u_out[2] = uav.m * (uav.g + u_out[2])
         return u_out
 
+    def get_scaled_t_go_error(self):
+        # get all t_go_errors
+        t_go_errors = []
+        for uav in self.uavs.values():
+            t_go_error = np.array(
+                [
+                    other_uav.get_t_go_est() - uav.get_t_go_est()
+                    for other_uav in self.uavs.values()
+                    if other_uav.id != uav.id
+                ]
+            )
+            t_go_errors.append(t_go_error.sum())
+
+        # normalize t_go_errors
+        t_go_errors = np.array(t_go_errors)
+        t_go_errors = (t_go_errors - np.mean(t_go_errors)) / np.std(t_go_errors)
+
+        return t_go_errors
+
     def step(self, actions):
         # step uavs
         self.alive_agents = set()
@@ -515,6 +535,8 @@ class UavSim(MultiAgentEnv):
         # step obstacles
         for obstacle in self.obstacles:
             obstacle.step(np.array([self.target.vx, self.target.vy]))
+
+        self._scaled_t_go_error = self.get_scaled_t_go_error()
 
         obs = {
             uav.id: self._get_obs(uav)
@@ -930,6 +952,7 @@ class UavSim(MultiAgentEnv):
         self.all_landed = []
         self.first_landing_time = None
         self.alive_agents = set([uav.id for uav in self.uavs.values()])
+        self._scaled_t_go_error = self.get_scaled_t_go_error()
         obs = {uav.id: self._get_obs(uav) for uav in self.uavs.values()}
         reward = {uav.id: self._get_reward(uav) for uav in self.uavs.values()}
 

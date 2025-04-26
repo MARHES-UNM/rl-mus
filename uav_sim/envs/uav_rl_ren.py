@@ -88,7 +88,8 @@ class UavRlRen(UavSim):
             "uav_landed": 1.0 if uav.landed else 0.0,
             "uav_done_dt": uav.done_dt,
             "uav_crashed": 1.0 if uav.crashed else 0.0,
-            "uav_dt_go": self.get_uav_t_go_error(uav),
+            # "uav_dt_go": self.get_uav_t_go_error(uav),
+            "uav_dt_go": self._scaled_t_go_error[uav.id],
             "uav_t_go": uav.get_t_go_est(),
             "uav_done_time": uav.done_time,
             "uav_sa_sat": 1.0 if uav.sa_sat else 0.0,
@@ -146,9 +147,12 @@ class UavRlRen(UavSim):
                 [self.time_final - self._time_elapsed], dtype=np.float32
             ),
             "dt_go_error": np.array(
-                [self.get_uav_t_go_error(uav)],
-                dtype=np.float32,
+                [self._scaled_t_go_error[uav.id]], dtype=np.float32
             ),
+            # "dt_go_error": np.array(
+            #     [self.get_uav_t_go_error(uav)],
+            #     dtype=np.float32,
+            # ),
             # "rel_pad": rel_pad.astype(np.float32),
             "rel_pad": (uav.state[0:6] - uav.pad.state[0:6]).astype(np.float32),
             # "other_uav_obs": (other_uav_states).astype(np.float32),
@@ -169,7 +173,7 @@ class UavRlRen(UavSim):
 
     def get_uav_t_go_error(self, uav):
         """Based on the paper:
-            Cooperative Simultaneous Arrival of Unmanned Vehicles onto a 
+            Cooperative Simultaneous Arrival of Unmanned Vehicles onto a
             Moving Target in GPS-denied Environment
         Args:
             uav (_type_): _description_
@@ -183,7 +187,7 @@ class UavRlRen(UavSim):
         uav_tg_error = [
             other_uav.get_t_go_est() - uav.get_t_go_est()
             for other_uav in self.uavs.values()
-            if other_uav.id != uav.id #and other_uav.id in self.alive_agents
+            if other_uav.id != uav.id  # and other_uav.id in self.alive_agents
         ]
 
         # TODO: virtual leader should be added to the overall sum
@@ -197,8 +201,14 @@ class UavRlRen(UavSim):
 
         if self._t_go_error_func == "mean":
             uav_tg_error = uav_tg_error.mean()
-        else:
+        elif self._t_go_error_func == "sum":
             uav_tg_error = uav_tg_error.sum()
+
+        else:
+            raise ValueError(
+                f"Unknown t_go_error_func: {self._t_go_error_func}. "
+                "Use 'mean' or 'sum'."
+            )
 
         return uav_tg_error
 
@@ -320,10 +330,11 @@ class UavRlRen(UavSim):
                 uav.done_time = self._time_elapsed
 
             self.all_landed.append(uav.done_time)
-            
-            if abs(uav_dt_go_error) <= self.max_dt_go_error:
-                reward += self._tgt_reward
-                # uav.sa_sat = True
+
+            reward += max(1 - abs(self._scaled_t_go_error[uav.id]), 0)
+            # if abs(uav_dt_go_error) <= self.max_dt_go_error:
+            # reward += self._tgt_reward
+            # uav.sa_sat = True
             # if self.first_landing_time is None:
             #     self.first_landing = self._time_elapsed
             #     reward += self._tgt_reward
@@ -331,9 +342,8 @@ class UavRlRen(UavSim):
             # else:
             #     reward += (1 - (abs(self.first_landing - self._time_elapsed) / self.first_landing))
 
-
-                # reward += self._tgt_reward
-                # uav.sa_sat = True
+            # reward += self._tgt_reward
+            # uav.sa_sat = True
             # if len(self.all_landed) < 2:
             # else:
             # done_time = np.array(self.all_landed).std()
