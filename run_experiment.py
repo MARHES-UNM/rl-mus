@@ -145,7 +145,7 @@ def curriculum_fn(
     # Level 2: Expect rewards between 1.0 and 10.0, etc..
     # We will thus raise the level/task each time we hit a new power of 10.0
     time_steps = train_results.get("timesteps_total")
-    new_task = time_steps // 10000000
+    new_task = time_steps // 3000000
     # Clamp between valid values, just in case:
     new_task = max(min(new_task, 2), 0)
     print(
@@ -177,7 +177,7 @@ def train(args):
     args.config["env_config"]["max_time_penalty"] = neg_penalty
     args.config["env_config"]["num_uavs"] = 4
     args.config["env_config"]["obstacle_collision_weight"] = neg_penalty
-    args.config["env_config"]["sa_reward"] = tune.grid_search([0, 1])
+    args.config["env_config"]["sa_reward"] = tune.grid_search([1])
     # args.config["env_config"]["start_level"] = tune.grid_search([2, 0])
     args.config["env_config"]["stp_penalty"] = tune.grid_search([0])
     args.config["env_config"]["t_go_error_func"] = tune.grid_search(["mean"])

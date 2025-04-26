@@ -305,7 +305,7 @@ class UavRlRen(UavSim):
         uav.done_dt = t_remaining
 
         if is_reached:
-            uav.done = True
+            # uav.done = True
             uav.landed = True
 
             if uav.done_time == 0:
