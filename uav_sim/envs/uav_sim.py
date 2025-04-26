@@ -494,26 +494,27 @@ class UavSim(MultiAgentEnv):
     def get_scaled_t_go_error(self):
         # get all t_go_errors
         t_go_errors = []
-        # for uav in self.uavs.values():
-        #     t_go_error = np.array(
-        #         [
-        #             other_uav.get_t_go_est() - uav.get_t_go_est()
-        #             for other_uav in self.uavs.values()
-        #             if other_uav.id != uav.id
-        #         ]
-        #     )
-        #     t_go_errors.append(t_go_error.sum())
+        for uav in self.uavs.values():
+            t_go_error = np.array(
+                [
+                    other_uav.get_t_go_est() - uav.get_t_go_est()
+                    for other_uav in self.uavs.values()
+                    if other_uav.id != uav.id
+                ]
+            )
+            t_go_errors.append(t_go_error.sum())
 
-        t_go_errors = [
-            uav.get_t_go_est() for uav in self.uavs.values()
-        ]
+        # t_go_errors = [
+        #     uav.get_t_go_est() for uav in self.uavs.values()
+        # ]
 
         # self._all_t_go_errors.extend(t_go_errors)
 
         # running_t_go_errors = np.array(self._all_t_go_errors)
         # normalize t_go_errors
         t_go_errors = np.array(t_go_errors)
-        t_go_errors = (t_go_errors - np.mean(t_go_errors)) / (np.std(t_go_errors) + 1e-9)
+        # t_go_errors = (t_go_errors - np.mean(t_go_errors)) / (np.std(t_go_errors) + 1e-9)
+        t_go_errors = (t_go_errors) / (15 + 1e-9)
 
         # t_go_errors = (t_go_errors - np.mean(running_t_go_errors)) / (np.std(running_t_go_errors) + 1e-9)
 
