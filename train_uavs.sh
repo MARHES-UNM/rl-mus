@@ -29,7 +29,7 @@
 #     --render \
 #     --max_num_episodes 3
 
-exp_name="scaled_uav_t_go_error"
+exp_name="scaled_uav_t_go_error_early_done"
 python run_experiment.py --name ${exp_name} --run PPO \
     train \
     --cpu 8 \

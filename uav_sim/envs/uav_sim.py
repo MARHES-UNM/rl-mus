@@ -499,7 +499,7 @@ class UavSim(MultiAgentEnv):
                 [
                     other_uav.get_t_go_est() - uav.get_t_go_est()
                     for other_uav in self.uavs.values()
-                    if other_uav.id != uav.id and other_uav in self.alive_agents and not other_uav.done
+                    if other_uav.id != uav.id #and other_uav in self.alive_agents and not other_uav.done
                 ]
             )
             t_go_errors.append(t_go_error.sum())
