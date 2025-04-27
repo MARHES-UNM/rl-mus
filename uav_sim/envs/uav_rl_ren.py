@@ -331,7 +331,7 @@ class UavRlRen(UavSim):
 
             self.all_landed.append(uav.done_time)
 
-            reward += max(1 - abs(self._scaled_t_go_error[uav.id]), 0)
+            reward += max(1 - abs(self._scaled_t_go_error[uav.id]), 0) * self._tgt_reward
             # if abs(uav_dt_go_error) <= self.max_dt_go_error:
             # reward += self._tgt_reward
             # uav.sa_sat = True
