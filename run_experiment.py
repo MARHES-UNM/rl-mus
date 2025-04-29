@@ -29,7 +29,7 @@ from uav_sim.utils.utils import get_git_hash
 
 
 PATH = Path(__file__).parent.absolute().resolve()
-RESULTS_DIR = Path.home() / "ray_results"
+RESULTS_DIR = PATH / "ray_results"
 logger = logging.getLogger(__name__)
 
 
@@ -145,9 +145,9 @@ def curriculum_fn(
     # Level 2: Expect rewards between 1.0 and 10.0, etc..
     # We will thus raise the level/task each time we hit a new power of 10.0
     time_steps = train_results.get("timesteps_total")
-    new_task = time_steps // 4000000
+    new_task = time_steps // 3000000
     # Clamp between valid values, just in case:
-    new_task = max(min(new_task, 3), 0)
+    new_task = max(min(new_task, 2), 0)
     print(
         f"Worker #{env_ctx.worker_index} vec-idx={env_ctx.vector_index}"
         f"\nR={train_results['episode_reward_mean']}"
@@ -166,25 +166,47 @@ def train(args):
     # We get the spaces here before test vary the experiment treatments (factors)
     env_obs_space, env_action_space = get_obs_act_space(args.config)
 
+    # # This worked for ffcdea1
+    # # Vary treatments here
+    # args.config["env_config"]["num_uavs"] = 4
+    # args.config["env_config"]["uav_type"] = tune.grid_search(["UavBase"])
+    # args.config["env_config"]["use_safe_action"] = tune.grid_search([False])
+    # args.config["env_config"]["obstacle_collision_weight"] = 1.0
+    # args.config["env_config"]["uav_collision_weight"] = 1.0
+    # args.config["env_config"]["crash_penalty"] = 10
+    # # args.config["env_config"]["beta"] = tune.loguniform(0.001, 0.3)
+    # # args.config["env_config"]["max_time_penalty"] = tune.grid_search([25, 50])
+    # # args.config["env_config"]["stp_penalty"] = tune.qloguniform(0.4, 10, 0.05)
+    # args.config["env_config"]["stp_penalty"] = tune.grid_search([1.5, 0.0])
+    # args.config["env_config"]["t_go_error_func"] = tune.grid_search(["sum"])
+    # args.config["env_config"]["max_dt_std"] = tune.grid_search([0.05])
+    # args.config["env_config"]["max_dt_go_error"] = tune.grid_search([0.2])
+    # args.config["env_config"]["tgt_reward"] = 50
+    # args.config["env_config"]["sa_reward"] = 50
+    # args.config["env_config"]["beta"] = 0.10
+    # args.config["env_config"]["early_done"] = tune.grid_search([False])
+    # args.config["env_config"]["beta_vel"] = 0.1
+
+    neg_penalty = 1
     # Vary treatments here
-    args.config["env_config"]["num_uavs"] = 4
-    args.config["env_config"]["uav_type"] = tune.grid_search(["UavBase"])
-    args.config["env_config"]["use_safe_action"] = tune.grid_search([False])
-    args.config["env_config"]["obstacle_collision_weight"] = 1.0
-    args.config["env_config"]["uav_collision_weight"] = 1.0
-    args.config["env_config"]["crash_penalty"] = 10
-    # args.config["env_config"]["beta"] = tune.loguniform(0.001, 0.3)
-    # args.config["env_config"]["max_time_penalty"] = tune.grid_search([25, 50])
-    # args.config["env_config"]["stp_penalty"] = tune.qloguniform(0.4, 10, 0.05)
-    args.config["env_config"]["stp_penalty"] = tune.grid_search([1.5, 0.0])
-    args.config["env_config"]["t_go_error_func"] = tune.grid_search(["sum"])
-    args.config["env_config"]["max_dt_std"] = tune.grid_search([0.05])
-    args.config["env_config"]["max_dt_go_error"] = tune.grid_search([0.2])
-    args.config["env_config"]["tgt_reward"] = 50
-    args.config["env_config"]["sa_reward"] = 50
-    args.config["env_config"]["beta"] = 0.10
-    args.config["env_config"]["early_done"] = tune.grid_search([False])
     args.config["env_config"]["beta_vel"] = 0.1
+    args.config["env_config"]["beta"] = 0.1
+    args.config["env_config"]["crash_penalty"] = neg_penalty * 10
+    args.config["env_config"]["early_done"] = tune.grid_search([False, True])
+    args.config["env_config"]["max_dt_go_error"] = tune.grid_search([0.1])
+    args.config["env_config"]["max_dt_std"] = tune.grid_search([0.05])
+    args.config["env_config"]["max_time_penalty"] = neg_penalty * 5
+    args.config["env_config"]["num_uavs"] = 4
+    args.config["env_config"]["obstacle_collision_weight"] = neg_penalty
+    args.config["env_config"]["sa_reward"] = tune.grid_search([50])
+    # args.config["env_config"]["start_level"] = tune.grid_search([2, 0])
+    args.config["env_config"]["stp_penalty"] = tune.grid_search([0])
+    args.config["env_config"]["t_go_error_func"] = tune.grid_search(["mean"])
+    args.config["env_config"]["tgt_reward"] = tune.grid_search([50])
+    args.config["env_config"]["uav_collision_weight"] = neg_penalty
+    args.config["env_config"]["uav_type"] = "UavBase"
+    args.config["env_config"]["use_safe_action"] = False
+    args.config["env_config"]["use_virtual_leader"] = tune.grid_search([False])
     # custom_model = tune.grid_search(
     #     [
     #         "torch_fix_model",
@@ -234,21 +256,23 @@ def train(args):
         # See for more on PPO hyperparameters: https://medium.com/aureliantactics/ppo-hyperparameters-and-ranges-6fc2d29bccbe
         .training(
             # https://docs.ray.io/en/latest/rllib/rllib-models.html
-            # model={"fcnet_hiddens": [64, 64]},
+            model={"fcnet_hiddens": [32, 64, 128, 128, 64, 32]},
             # model={
             #     "custom_model": custom_model,
             #     # Extra kwargs to be passed to your custorm model.
             #     "custom_model_config": {"n_agent_state": 6, "max_action_val": 5},
             # },
             # _enable_learner_api=False,
-            lr=5e-5,
+            # 5e-5
+            lr=tune.grid_search([5e-5]),
             use_gae=True,
             use_critic=True,
-            lambda_=0.95,
+            lambda_=tune.grid_search([0.95]),
             train_batch_size=65536,
-            gamma=0.99,
+            # train_batch_size=131072,
+            gamma=tune.grid_search([0.9997]),
             num_sgd_iter=32,
-            sgd_minibatch_size=4096,
+            sgd_minibatch_size=8192,
             vf_clip_param=10.0,
             vf_loss_coeff=0.5,
             clip_param=0.2,
@@ -439,6 +463,8 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
     while num_episodes < max_num_episodes:
         actions = {}
         for idx in range(env.num_uavs):
+            # if env._early_done and env.uavs[idx].done:
+            # continue
             # classic control
             if algo_to_run == "cc":
                 actions[idx] = env.get_time_coord_action(env.uavs[idx])
@@ -476,6 +502,9 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
         for k, v in rew.items():
             results["uav_reward"] += v
 
+        if render:
+            env.render()
+
         # only get for 1st episode
         if num_episodes == 0:
             for k, v in info.items():
@@ -499,9 +528,6 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
 
             for obs_idx in range(env.max_num_obstacles):
                 obstacle_state[obs_idx].append(env.obstacles[obs_idx].state.tolist())
-
-        if render:
-            env.render()
 
         if done["__all__"]:
             num_episodes += 1
@@ -532,7 +558,8 @@ def experiment(exp_config={}, max_num_episodes=1, experiment_num=0):
                 results["episode_data"]["obstacle_state"].append(obstacle_state)
 
             if render:
-                im = env.render(mode="rgb_array", done=True)
+                env.render(mode="human", done=True, plot_results=plot_results)
+                # im = env.render(mode="rgb_array", done=True, plot_results=plot_results)
             if plot_results:
                 plot_uav_states(results, env_config, num_episodes - 1)
 

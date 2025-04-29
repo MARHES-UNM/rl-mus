@@ -10,10 +10,11 @@ def np_mad(data, axis=None):
     return np.median(np.abs(data - np.median(data, axis)), axis)
 
 
+# TODO: why did I comment out the lines below?
 def max_abs_diff(data, axis=None):
-    # if not data: 
+    # if not data:
     #     return 0
-    
+
     # if len(data) == 1:
     #     return data[0]
 

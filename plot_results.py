@@ -35,9 +35,11 @@ def get_sa_sat(data, max_dt_std=0.1):
     data_done_time = np.array(data["uav_done_time"])
     for num_epsisode in range(data["num_episodes"]):
         output = 0
+        uav_done = [done_stat for done_stat in data_done[:, num_epsisode] if done_stat]
+
         if (
-            all(data_done[:, num_epsisode])
-            and np.std(data_done_time[:, num_epsisode]) <= max_dt_std
+            all(uav_done) and len(uav_done) >= 2
+            and np.std(uav_done) <= max_dt_std
             # and max_abs_diff(data_done_time[:, num_epsisode]) <= max_dt_std * 2
         ):
             output = 1
@@ -68,7 +70,7 @@ def get_data(all_progress):
             data["tf"] = data["env_config"]["time_final"]
             data["max_dt"] = data["env_config"]["t_go_max"]
             data["max_dt_std"] = data["env_config"]["max_dt_std"]
-            data["max_dt_std"] = 0.5
+            # data["max_dt_std"] = 0.5
             data["uav_collision_eps"] = (
                 data["uav_collision"] / data["num_uavs"] / data["num_episodes"]
             )
@@ -84,10 +86,10 @@ def get_data(all_progress):
             # data["uav_done"] = np.mean(data["uav_done"], axis=1).sum()
             # sum up to to the number of uavs in the mean and gives the average across episodes
             data["uav_sa_sat_cal"] = get_sa_sat(data, data["max_dt_std"])
-            data["uav_done"] = np.mean(data["uav_done"], axis=0).mean()
-            data["uav_sa_sat"] = np.mean(data["uav_sa_sat"], axis=0).mean()
+            data["uav_done"] = np.mean(data["uav_done"])
+            data["uav_sa_sat"] = np.mean(data["uav_sa_sat"])
             data["uav_done_dt"] = np.mean(np.abs(data["uav_done_dt"]))
-            data["uav_done_time_std"] = np.std(data["uav_done_time"], axis=0).mean()
+            data["uav_done_time_std"] = np.std(data["uav_done_time"])
             data["uav_done_time_max"] = max_abs_diff(
                 data["uav_done_time"], axis=0
             ).mean()

@@ -6,10 +6,10 @@ from ray.rllib.env.apis.task_settable_env import TaskSettableEnv
 
 from ray.rllib.env.multi_agent_env import MultiAgentEnv
 
-from uav_sim.envs.uav_sim import UavSim
+from uav_sim.envs import UavRlRen
 
 
-class CurriculumEnv(MultiAgentEnv, TaskSettableEnv):
+class CurriculumUavRlRen(MultiAgentEnv, TaskSettableEnv):
     """
         https://github.com/ray-project/ray/blob/ray-2.6.3/rllib/examples/curriculum_learning.py
         https://www.oreilly.com/library/view/learning-ray/9781098117214/ch04.html
@@ -22,12 +22,10 @@ class CurriculumEnv(MultiAgentEnv, TaskSettableEnv):
         MultiAgentEnv.__init__(self)
         self.config = config
         self.cur_level = self.config.get("start_level", 0)
-        self.task_array = [0.5, 1.0, 1.5, 1.75]
+        self.task_array = [0.5, 1.5, 3.9]
         self.env = None
 
-        # self.env_difficulty_config = self.config["difficulty_config"]
-        # self.num_tasks = len(self.env_difficulty_config)
-        self.num_tasks = self.config["env_max_h"]
+        self.num_tasks = len(self.task_array)
         self._make_uav_sim()
         self.observation_space = self.env.observation_space
         self.action_space = self.env.action_space
@@ -62,7 +60,6 @@ class CurriculumEnv(MultiAgentEnv, TaskSettableEnv):
         self.switch_env = True
 
     def _make_uav_sim(self):
-        # level_config = self.env_difficulty_config[self.cur_level]
         env_config = self.config.copy()
-        env_config["z_high"] = self.task_array[self.cur_level]
-        self.env = UavSim(env_config)
+        env_config["max_start_dist"] = self.task_array[self.cur_level]
+        self.env = UavRlRen(env_config)

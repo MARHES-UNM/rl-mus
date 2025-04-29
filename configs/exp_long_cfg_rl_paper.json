@@ -1,5 +1,4 @@
 {
-    "exp_name": "ppo_cur_vs_no_cur",
     "env_config": {
         "target_v": [
             0.0
@@ -16,21 +15,28 @@
         ]
     },
     "exp_config": {
-        "max_num_episodes": 50,
+        "max_num_episodes": 100,
         "runs": [
             {
-                "name": "ppo_no_cur",
-                "run": "PPO",
-                "checkpoint": "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2025-04-17-02-47_18cdd4f_4u_4o/uav_ren_no_cur/uav_ren_no_cur/PPO_multi-uav-ren-v0_e4531_00000_0_beta=0.1000,early_done=False,max_dt_go_error=0.1000,max_dt_std=0.0500,obstacle_collision_weight_2025-04-17_02-47-55/checkpoint_000456/policies/shared_policy",
-                "safe_action_type": null,
-                "label": "POETIC_NO_CUR"
+                "name": "cc_sca",
+                "run": "cc",
+                "checkpoint": null,
+                "safe_action_type": "sca",
+                "label": "TTC-CA"
             },
             {
                 "name": "ppo",
                 "run": "PPO",
-                "checkpoint": "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-curriculum-v0_2025-04-16-22-36_18cdd4f_4u_4o/uav_ren_cur/uav_ren_cur/PPO_multi-uav-ren-curriculum-v0_bb7d4_00000_0_beta=0.1000,early_done=False,max_dt_go_error=0.1000,max_dt_std=0.0500,obstacle_colli_2025-04-16_22-36-14/checkpoint_000457/policies/shared_policy",
+                "checkpoint": "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-11-06-23-23_e7633c3/cur_col_01/PPO_multi-uav-sim-v0_6dfd0_00001_1_obstacle_collision_weight=0.1000,stp_penalty=5,uav_collision_weight=0.1000,use_safe_action=Fals_2023-11-06_23-23-40/checkpoint_000301/policies/shared_policy",
                 "safe_action_type": null,
                 "label": "POETIC"
+            },
+            {
+                "name": "ppo_cbf",
+                "run": "PPO",
+                "checkpoint": "/home/prime/Documents/workspace/rl_multi_uav_sim/results/PPO/multi-uav-sim-v0_2023-11-06-23-23_e7633c3/cur_col_01/PPO_multi-uav-sim-v0_6dfd0_00001_1_obstacle_collision_weight=0.1000,stp_penalty=5,uav_collision_weight=0.1000,use_safe_action=Fals_2023-11-06_23-23-40/checkpoint_000301/policies/shared_policy",
+                "safe_action_type": "cbf",
+                "label": "POETIC_CBF"
             }
         ],
         "seeds": [

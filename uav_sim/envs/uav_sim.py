@@ -72,14 +72,30 @@ class UavSim(MultiAgentEnv):
         self.env_max_l = env_config.setdefault("env_max_l", 1.25)
         self.env_max_h = env_config.setdefault("env_max_h", 1.75)
         self.max_rel_dist = np.linalg.norm(
-            [2 * self.env_max_w, 2 * self.env_max_h, self.env_max_h]
+            [2 * self.env_max_w, 2 * self.env_max_l, self.env_max_h]
         )
+        self.max_start_dist = env_config.setdefault("max_start_dist", self.max_rel_dist)
+
+        # check max start distance not outside environment
+        if self.max_start_dist > self.max_rel_dist:
+            logger.warning(
+                f"max_start_dist {self.max_start_dist} is greater than max_rel_dist {self.max_rel_dist}"
+            )
+            self.max_start_dist = self.max_rel_dist
 
         self._z_high = env_config.setdefault("z_high", self.env_max_h)
         self._z_high = min(self.env_max_h, self._z_high)
         self._z_low = env_config.setdefault("z_low", 0.2)
         self._z_low = max(0, self._z_low)
         self.pad_r = env_config.setdefault("pad_r", 0.1)
+
+        # check min start distance
+        if self.max_start_dist < 0.5:
+            logger.warning(
+                f"max_start_dist {self.max_start_dist} is less than min pad dist: {0.5}. Setting to {0.5}"
+            )
+            self.max_start_dist = 0.5
+
         self.target_v = env_config.setdefault("target_v", 0)
         self.target_w = env_config.setdefault("target_w", 0)
         self.target_r = env_config.setdefault("target_r", 0.50)
@@ -98,7 +114,13 @@ class UavSim(MultiAgentEnv):
         self.action_low = -self.action_high
 
         self.gui = None
+        self.alive_agents = set()
         self._time_elapsed = 0.0
+
+        self.all_landed = []
+        self.first_landing_time = None
+        self._scaled_t_go_error = []
+        self._all_t_go_errors = []
         self.seed(self._seed)
         self.reset()
         self.action_space = self._get_action_space()
@@ -469,13 +491,42 @@ class UavSim(MultiAgentEnv):
         # u_out[2] = uav.m * (uav.g + u_out[2])
         return u_out
 
+    def get_scaled_t_go_error(self):
+        # get all t_go_errors
+        t_go_errors = []
+        for uav in self.uavs.values():
+            t_go_error = np.array(
+                [
+                    other_uav.get_t_go_est() - uav.get_t_go_est()
+                    for other_uav in self.uavs.values()
+                    if other_uav.id != uav.id #and other_uav in self.alive_agents and not other_uav.done
+                ]
+            )
+            t_go_errors.append(t_go_error.sum())
+
+        # t_go_errors = [
+        #     uav.get_t_go_est() for uav in self.uavs.values()
+        # ]
+
+        # self._all_t_go_errors.extend(t_go_errors)
+
+        # running_t_go_errors = np.array(self._all_t_go_errors)
+        # normalize t_go_errors
+        t_go_errors = np.array(t_go_errors)
+        # t_go_errors = (t_go_errors - np.mean(t_go_errors)) / (np.std(t_go_errors) + 1e-9)
+        t_go_errors = (t_go_errors) / (15 + 1e-9)
+
+        # t_go_errors = (t_go_errors - np.mean(running_t_go_errors)) / (np.std(running_t_go_errors) + 1e-9)
+
+        return t_go_errors
+
     def step(self, actions):
         # step uavs
         self.alive_agents = set()
         for i, action in actions.items():
             self.alive_agents.add(i)
             # Done uavs don't move
-            if self.uavs[i].done:
+            if self.uavs[i].done or self.uavs[i].landed:
                 continue
 
             if self._use_safe_action:
@@ -495,6 +546,8 @@ class UavSim(MultiAgentEnv):
         # step obstacles
         for obstacle in self.obstacles:
             obstacle.step(np.array([self.target.vx, self.target.vy]))
+
+        self._scaled_t_go_error = self.get_scaled_t_go_error()
 
         obs = {
             uav.id: self._get_obs(uav)
@@ -518,16 +571,30 @@ class UavSim(MultiAgentEnv):
             if uav.id in self.alive_agents
         }
 
-        # TODO: delete later
-        all_landed = all([uav.landed for uav in self.uavs.values()])
+        # Done only if all landed
+        # all_landed = all([uav.landed for uav in self.uavs.values()])
+
+        landed = [uav.landed for uav in self.uavs.values()]
+        all_landed = all(landed)
+
         # calculate done for each agent
         done = {
-            self.uavs[uav_id].id: self.uavs[uav_id].done or all_landed
+            self.uavs[uav_id].id: self.uavs[uav_id].done  # or all_landed
             for uav_id in self.alive_agents
         }
 
+        done_all = []
+        for uav in self.uavs.values():
+            uav_done = uav.done or uav.landed
+            done_all.append(uav_done)
+
+        # # if all(done_all):
+        # # get global reward
+        # glob_reward = self._get_global_reward()
+        # reward = {k: v + glob_reward for k, v in reward.items()}
+
         done["__all__"] = (
-            all(v for v in done.values()) or self.time_elapsed >= self.max_time
+            all(done_all) or self.time_elapsed >= self.max_time or all_landed
         )
         self._time_elapsed += self.dt
 
@@ -605,6 +672,8 @@ class UavSim(MultiAgentEnv):
         obs_dict = {
             "state": uav.state[0:6].astype(np.float32),
             # "target": self.target.state.astype(np.float32),
+            # https://farama.org/Gymnasium-Terminated-Truncated-Step-API
+            # time is part of the observation
             "done_dt": np.array(
                 [self.time_final - self._time_elapsed], dtype=np.float32
             ),
@@ -664,7 +733,7 @@ class UavSim(MultiAgentEnv):
             uav.landed = True
             uav.done_time = self.time_elapsed
 
-            reward += -((abs(uav.done_dt) / self.time_final)) * self._stp_penalty
+            reward += -(abs(uav.done_dt) / self.time_final) * self._stp_penalty
             # get reward for reaching destination in time
             # if abs(uav.done_dt) < self.t_go_max:
             #     reward += self._tgt_reward
@@ -708,7 +777,6 @@ class UavSim(MultiAgentEnv):
         # neg reward if uav collides with other uavs
         for other_uav in self.uavs.values():
             if uav.id != other_uav.id:
-
                 if uav.in_collision(other_uav):
                     reward -= self.uav_collision_weight
                     uav.uav_collision += 1
@@ -818,10 +886,16 @@ class UavSim(MultiAgentEnv):
         )
 
         def is_in_collision(uav):
-            for pad in self.target.pads:
-                pad_landed, _, _ = uav.check_dest_reached(pad)
-                if pad_landed:
-                    return True
+            # for pad in self.target.pads:
+            #     pad_landed, _, _ = uav.check_dest_reached(pad)
+            #     if pad_landed:
+            #         return True
+
+            pad_landed, rel_dist, _ = uav.check_dest_reached()
+            if pad_landed:
+                return True
+            if rel_dist > self.max_start_dist:
+                return True
 
             for obstacle in self.obstacles:
                 if uav.in_collision(obstacle):
@@ -886,6 +960,11 @@ class UavSim(MultiAgentEnv):
             uav.last_rel_dist = np.linalg.norm([x, y, z])
             self.uavs[agent_id] = uav
 
+        self.all_landed = []
+        self.first_landing_time = None
+        self.alive_agents = set([uav.id for uav in self.uavs.values()])
+        self._all_t_go_errors = []
+        self._scaled_t_go_error = self.get_scaled_t_go_error()
         obs = {uav.id: self._get_obs(uav) for uav in self.uavs.values()}
         reward = {uav.id: self._get_reward(uav) for uav in self.uavs.values()}
 
@@ -932,7 +1011,15 @@ class UavSim(MultiAgentEnv):
 
         return action
 
-    def render(self, mode="human", done=False):
+    def render(
+        self,
+        mode="human",
+        done=False,
+        obs=None,
+        rew=None,
+        info=None,
+        plot_results=False,
+    ):
         """
         See this example for converting python figs to images:
         https://stackoverflow.com/questions/7821518/save-plot-to-numpy-array
@@ -955,10 +1042,12 @@ class UavSim(MultiAgentEnv):
             )
 
         if mode == "human":
-            self.gui.update(self._time_elapsed, done)
+            self.gui.update(self._time_elapsed, done, obs, rew, info, plot_results)
 
         elif mode == "rgb_array":
-            fig = self.gui.update(self._time_elapsed, done)
+            fig = self.gui.update(
+                self._time_elapsed, done, obs, rew, info, plot_results
+            )
 
             with io.BytesIO() as buff:
                 fig.savefig(buff, format="raw")

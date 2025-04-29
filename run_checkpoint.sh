@@ -26,11 +26,31 @@ CHECKPOINT="/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/P
 # CHECKPOINT="/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2024-04-20-16-33_3270356_4u_4o/stp_pen_mean_high/stp_pen_mean_high/PPO_multi-uav-ren-v0_49c9b_00002_2_max_dt_std=0.2500,stp_penalty=3,t_go_error_func=mean,uav_type=UavBase,use_safe_action=False_2024-04-20_16-33-47/checkpoint_000035/policies/shared_policy"
 # CHECKPOINT="/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2024-04-20-17-37_fe2cf0d_4u_4o/stp_pen_sum_high/stp_pen_sum_high/PPO_multi-uav-ren-v0_33283_00000_0_max_dt_std=0.2500,stp_penalty=3,t_go_error_func=sum,uav_type=UavBase,use_safe_action=False_2024-04-20_17-37-34/checkpoint_000305/policies/shared_policy"
 CHECKPOINT="/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2024-04-20-16-33_3270356_4u_4o/stp_pen_mean_high/stp_pen_mean_high/PPO_multi-uav-ren-v0_49c9b_00002_2_max_dt_std=0.2500,stp_penalty=3,t_go_error_func=mean,uav_type=UavBase,use_safe_action=False_2024-04-20_16-33-47/checkpoint_000105/policies/shared_policy"
+CHECKPOINT="/workspaces/multi-uav-sim/checkpoints/uav_same_time/policies/shared_policy"
+CHECKPOINT="/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-curriculum-v0_2025-04-05-15-18_effc14f_4u_4o/uav_ren_cur/uav_ren_cur/PPO_multi-uav-ren-curriculum-v0_b8aa0_00000_0_early_done=False,max_dt_go_error=0.2000,max_dt_std=0.0500,stp_penalty=1.5000,t_go_er_2025-04-05_15-18-14/checkpoint_000457/policies/shared_policy"
+# CHECKPOINT="/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2025-04-05-20-47_84a6a08_4u_4o/uav_ren_no_cur/uav_ren_no_cur/PPO_multi-uav-ren-v0_aa44c_00000_0_early_done=False,max_dt_go_error=0.2000,max_dt_std=0.0500,stp_penalty=1.5000,t_go_error_func=su_2025-04-05_20-47-07/checkpoint_000400/policies/shared_policy"
+CHECKPOINT="/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2025-04-07-00-24_6860ea0_4u_4o/uav_ren_mean_error_tunning/uav_ren_mean_error_tunning/PPO_multi-uav-ren-v0_3b47e_00001_1_early_done=False,max_dt_go_error=0.1000,max_dt_std=0.0500,stp_penalty=8,t_go_error_func=mean,ua_2025-04-07_00-24-44/checkpoint_000080/policies/shared_policy"
+CHECKPOINT="/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2025-04-10-19-07_4a6150c_4u_4o/uav_ren_sum_error_1b_early_done/uav_ren_sum_error_1b_early_done/PPO_multi-uav-ren-v0_92a58_00001_1_early_done=True,max_dt_go_error=0.1000,max_dt_std=0.0500,stp_penalty=1.5000,t_go_error_func=sum_2025-04-10_19-07-28/checkpoint_000365/policies/shared_policy"
+CHECKPOINT="/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2025-04-09-23-58_caed1af_4u_4o/uav_ren_mean_error_1b_early_done/uav_ren_mean_error_1b_early_done/PPO_multi-uav-ren-v0_167be_00001_1_early_done=True,max_dt_go_error=0.1000,max_dt_std=0.0500,stp_penalty=8,t_go_error_func=mean,uav_2025-04-09_23-58-40/checkpoint_001000/policies/shared_policy"
+CHECKPOINT="/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2025-04-10-22-39_8080240_4u_4o/uav_ren_mean_error_1b_early_done/uav_ren_mean_error_1b_early_done/PPO_multi-uav-ren-v0_2a309_00001_1_early_done=True,max_dt_go_error=0.1000,max_dt_std=0.0500,stp_penalty=8,t_go_error_func=mean,uav_2025-04-10_22-39-17/checkpoint_000360/policies/shared_policy"
+CHECKPOINT="/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2025-04-10-22-39_8080240_4u_4o/uav_ren_mean_error_1b_early_done/uav_ren_mean_error_1b_early_done/PPO_multi-uav-ren-v0_2a309_00000_0_early_done=False,max_dt_go_error=0.1000,max_dt_std=0.0500,stp_penalty=8,t_go_error_func=mean,ua_2025-04-10_22-39-17/checkpoint_000245/policies/shared_policy"
+CHECKPOINT="/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2025-04-12-07-21_a85cbb1_4u_4o/uav_ren_mean_baselining/uav_ren_mean_baselining/PPO_multi-uav-ren-v0_3b243_00001_1_early_done=True,max_dt_go_error=0.1000,max_dt_std=0.0500,stp_penalty=10,t_go_error_func=mean,tg_2025-04-12_07-21-08/checkpoint_000185/policies/shared_policy"
+CHECKPOINT="/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2025-04-12-07-21_a85cbb1_4u_4o/uav_ren_mean_baselining/uav_ren_mean_baselining/PPO_multi-uav-ren-v0_3b243_00000_0_early_done=False,max_dt_go_error=0.1000,max_dt_std=0.0500,stp_penalty=10,t_go_error_func=mean,t_2025-04-12_07-21-08/checkpoint_000160/policies/shared_policy"
+CHECKPOINT="/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2025-04-12-07-21_a85cbb1_4u_4o/uav_ren_mean_baselining/uav_ren_mean_baselining/PPO_multi-uav-ren-v0_3b243_00001_1_early_done=True,max_dt_go_error=0.1000,max_dt_std=0.0500,stp_penalty=10,t_go_error_func=mean,tg_2025-04-12_07-21-08/checkpoint_000457/policies/shared_policy"
+CHECKPOINT="/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2025-04-12-22-20_bfc53bc_4u_4o/uav_ren_mean_baselining/uav_ren_mean_baselining/PPO_multi-uav-ren-v0_e4c09_00000_0_early_done=False,max_dt_go_error=0.1000,max_dt_std=0.0500,stp_penalty=1.5000,t_go_error_func=me_2025-04-12_22-20-40/checkpoint_000065/policies/shared_policy"
+CHECKPOINT="/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2025-04-12-22-20_bfc53bc_4u_4o/uav_ren_mean_baselining/uav_ren_mean_baselining/PPO_multi-uav-ren-v0_e4c09_00001_1_early_done=True,max_dt_go_error=0.1000,max_dt_std=0.0500,stp_penalty=1.5000,t_go_error_func=mea_2025-04-12_22-20-40/checkpoint_000100/policies/shared_policy"
+CHECKPOINT="/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2025-04-13-01-39_8cf41a2_4u_4o/uav_ren_mean_baselining/uav_ren_mean_baselining/PPO_multi-uav-ren-v0_9ffaf_00000_0_beta=0.1000,early_done=False,max_dt_go_error=0.1000,max_dt_std=0.0500,stp_penalty=5.0000,t_go_e_2025-04-13_01-39-10/checkpoint_000025/policies/shared_policy"
 
+# python run_experiment.py --run PPO --tf 8 test \
+#     --checkpoint $CHECKPOINT \
+#     --render \
+#     --seed None \
+#     --max_num_episodes 1 \
+#     --plot_results 
+#     # --seed 118 \
 python run_experiment.py --run PPO --tf 8 test \
     --checkpoint $CHECKPOINT \
     --render \
     --seed None \
     --max_num_episodes 1 \
     --plot_results 
-    # --seed 118 \
