@@ -33,14 +33,14 @@
             {
                 "name": "ppo",
                 "run": "PPO",
-                "checkpoint": "/home/dev/workspace/multi-uav-sim/ray_results/train/PPO/multi-uav-ren-v0_2025-05-01-14-39_7972eb6_4u_4o/cont_dt_go_pen/cont_dt_go_pen/PPO_multi-uav-ren-v0_90e46_00000_0_early_done=False,max_dt_go_error=0.1000,max_dt_std=0.0500,sa_reward=50,stp_penalty=1,t_go_error_2025-05-01_14-39-08/checkpoint_000265/policies/shared_policy",
+                "checkpoint": "/workspaces/multi-uav-sim/ray_results/train/PPO/multi-uav-ren-v0_2025-05-03-13-31_cc94735_4u_4o/final_train/final_train/PPO_multi-uav-ren-v0_6b51f_00000_0_early_done=False,max_dt_go_error=0.1000,max_dt_std=0.0500,sa_reward=50,stp_penalty=1,t_go_error_2025-05-03_13-31-17/checkpoint_000275/policies/shared_policy",
                 "safe_action_type": null,
                 "label": "POETIC"
             },
             {
                 "name": "ppo_ca",
                 "run": "PPO",
-                "checkpoint": "/home/dev/workspace/multi-uav-sim/ray_results/train/PPO/multi-uav-ren-v0_2025-05-01-14-39_7972eb6_4u_4o/cont_dt_go_pen/cont_dt_go_pen/PPO_multi-uav-ren-v0_90e46_00000_0_early_done=False,max_dt_go_error=0.1000,max_dt_std=0.0500,sa_reward=50,stp_penalty=1,t_go_error_2025-05-01_14-39-08/checkpoint_000265/policies/shared_policy",
+                "checkpoint": "/workspaces/multi-uav-sim/ray_results/train/PPO/multi-uav-ren-v0_2025-05-03-13-31_cc94735_4u_4o/final_train/final_train/PPO_multi-uav-ren-v0_6b51f_00000_0_early_done=False,max_dt_go_error=0.1000,max_dt_std=0.0500,sa_reward=50,stp_penalty=1,t_go_error_2025-05-03_13-31-17/checkpoint_000275/policies/shared_policy",
                 "safe_action_type": "sca",
                 "label": "POETIC_CA"
             }

@@ -83,7 +83,7 @@ def get_progress(basedir, experiment_name, filter_list):
 
 # %%
 # CONSTANTS
-image_output_folder = r"paper_figs/train_results"
+image_output_folder = r"sim_results/train_results"
 
 if not os.path.exists(image_output_folder):
     os.makedirs(image_output_folder, exist_ok=True)
@@ -100,6 +100,7 @@ filter_list = [
     "custom_metrics/num_uav_landed_mean",
     "custom_metrics/uav_done_dt_mean",
     "custom_metrics/uav_rel_dist_mean",
+    "custom_metrics/uav_sa_sat_mean",
     "policy_reward_mean/shared_policy",
 ]
 labels_to_plot = [
@@ -108,8 +109,8 @@ labels_to_plot = [
 ]
 
 # %%
-basedir = r"checkpoints/uav_goal"
-df_ppo_no_cur = get_progress(basedir, "uav_goal", filter_list)
+basedir = r"checkpoints/uav_cur"
+df_ppo_no_cur = get_progress(basedir, "uav_cur", filter_list)
 print(df_ppo_no_cur.head)
 
 
@@ -128,7 +129,8 @@ print(keys)
 # %%
 labels_keys = {
     "POETIC": "uav_same_time",
-    "POETIC_NO_REN": "uav_goal",
+    # "POETIC_NO_REN": "uav_goal",
+    "POETIC_CUR": "uav_cur",
 }
 
 # %%
@@ -143,12 +145,13 @@ labels_keys = {
 # custom_metrics/uav_rel_dist_mean
 # policy_reward_mean/shared_policy
 parameter_keys = {
-    "Mean Reward ": "policy_reward_mean/shared_policy",
-    "Mean UAV Dest": "custom_metrics/num_uav_landed_mean",
-    "Mean UAV Collisions": "custom_metrics/uav_collisions_mean",
-    "Mean NCFO Collisions": "custom_metrics/obstacle_collisions_mean",
-    "Mean UAV $\Delta t$": "custom_metrics/uav_done_dt_mean",
-    "Mean UAV $\Delta t std$": "custom_metrics/uav_done_time_std_mean",
+    "Reward ": "policy_reward_mean/shared_policy",
+    "UAV Dest": "custom_metrics/num_uav_landed_mean",
+    "UAV Collisions": "custom_metrics/uav_collisions_mean",
+    "NCFO Collisions": "custom_metrics/obstacle_collisions_mean",
+    "UAV $\Delta t$": "custom_metrics/uav_done_dt_mean",
+    "UAV $\Delta t std$": "custom_metrics/uav_done_time_std_mean",
+    "UAV Sat": "custom_metrics/uav_sa_sat_mean",
 }
 
 # %%
