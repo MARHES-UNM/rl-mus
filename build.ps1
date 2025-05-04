@@ -1,1 +1,1 @@
-docker build -t uas_docker_env:1.0 -f docker\uas_docker_env.dockerfile .
+docker build --no-cache -t rl_mus_env:1.0 -f docker\env.dockerfile .

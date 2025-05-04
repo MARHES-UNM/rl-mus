@@ -38,8 +38,9 @@ def get_sa_sat(data, max_dt_std=0.1):
         uav_done = [done_stat for done_stat in data_done[:, num_epsisode] if done_stat]
 
         if (
-            all(uav_done) and len(uav_done) >= 2
-            and np.std(uav_done) <= max_dt_std
+            all(uav_done)
+            and len(uav_done) >= data["num_uavs"]
+            and np.std(data_done_time[:, num_epsisode]) <= max_dt_std
             # and max_abs_diff(data_done_time[:, num_epsisode]) <= max_dt_std * 2
         ):
             output = 1
@@ -48,8 +49,10 @@ def get_sa_sat(data, max_dt_std=0.1):
     return np.array(sa_sat).mean()
 
 
-def get_data(all_progress):
-    # data_dict = {parameter: [] for parameter in parameter_list}
+def get_data(all_progress, max_dt_std=0.1):
+    """
+    Get data from all progress files and return a dataframe
+    """
     data_dict = {}
 
     for progress in all_progress:
@@ -58,7 +61,6 @@ def get_data(all_progress):
                 data = json.loads(f.readlines()[-1])
             except Exception as e:
                 f.seek(0)
-                # data = json.loads(f.readlines()[-2])
                 print(f"error reading {progress.absolute()} skipping.")
                 continue
             data["target_v"] = data["env_config"]["target_v"]
@@ -70,7 +72,7 @@ def get_data(all_progress):
             data["tf"] = data["env_config"]["time_final"]
             data["max_dt"] = data["env_config"]["t_go_max"]
             data["max_dt_std"] = data["env_config"]["max_dt_std"]
-            # data["max_dt_std"] = 0.5
+            data["max_dt_std"] = max_dt_std
             data["uav_collision_eps"] = (
                 data["uav_collision"] / data["num_uavs"] / data["num_episodes"]
             )
@@ -86,10 +88,10 @@ def get_data(all_progress):
             # data["uav_done"] = np.mean(data["uav_done"], axis=1).sum()
             # sum up to to the number of uavs in the mean and gives the average across episodes
             data["uav_sa_sat_cal"] = get_sa_sat(data, data["max_dt_std"])
-            data["uav_done"] = np.mean(data["uav_done"])
-            data["uav_sa_sat"] = np.mean(data["uav_sa_sat"])
-            data["uav_done_dt"] = np.mean(np.abs(data["uav_done_dt"]))
-            data["uav_done_time_std"] = np.std(data["uav_done_time"])
+            data["uav_done"] = np.mean(data["uav_done"], axis=0).mean()
+            data["uav_sa_sat"] = np.mean(data["uav_sa_sat"], axis=0).mean()
+            data["uav_done_dt"] = np.mean(np.abs(data["uav_done_dt"]), axis=0).mean()
+            data["uav_done_time_std"] = np.std(data["uav_done_time"], axis=0).mean()
             data["uav_done_time_max"] = max_abs_diff(
                 data["uav_done_time"], axis=0
             ).mean()
@@ -378,6 +380,7 @@ def parse_arguments():
     parser.add_argument("--exp_folder", help="Path to experiments")
     parser.add_argument("--out_folder", help="Path to experiments")
     parser.add_argument("--img_folder", help="Folder to output plots")
+    parser.add_argument("--max_dt_std", default=0.1, help="Folder to output plots")
     parser.add_argument(
         "--exp_config",
         help="experiment config",
@@ -420,7 +423,7 @@ def main():
     if not image_folder.exists():
         image_folder.mkdir(parents=True, exist_ok=True)
 
-    df = get_data(basedir_list)
+    df = get_data(basedir_list, max_dt_std=args.max_dt_std)
 
     exp_config["labels"] = [
         (run["name"], run["label"]) for run in exp_config["exp_config"]["runs"]

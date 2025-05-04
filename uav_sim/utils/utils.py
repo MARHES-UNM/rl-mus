@@ -12,6 +12,10 @@ def np_mad(data, axis=None):
 
 # TODO: why did I comment out the lines below?
 def max_abs_diff(data, axis=None):
+    """
+    Returns the maximum absolute difference between the elements of a list.
+    
+    """
     # if not data:
     #     return 0
 

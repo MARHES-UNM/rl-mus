@@ -495,14 +495,22 @@ class UavSim(MultiAgentEnv):
         # get all t_go_errors
         t_go_errors = []
         for uav in self.uavs.values():
-            t_go_error = np.array(
-                [
-                    other_uav.get_t_go_est() - uav.get_t_go_est()
-                    for other_uav in self.uavs.values()
-                    if other_uav.id != uav.id #and other_uav in self.alive_agents and not other_uav.done
-                ]
-            )
-            t_go_errors.append(t_go_error.sum())
+            if self._use_virtual_leader:
+                (
+                    t_go_errors.append(
+                        (self.time_final - self._time_elapsed) - uav.get_t_go_est()
+                    )
+                )
+            else:
+                t_go_error = np.array(
+                    [
+                        other_uav.get_t_go_est() - uav.get_t_go_est()
+                        for other_uav in self.uavs.values()
+                        if other_uav.id
+                        != uav.id  # and other_uav in self.alive_agents and not other_uav.done
+                    ]
+                )
+                t_go_errors.append(t_go_error.sum())
 
         # t_go_errors = [
         #     uav.get_t_go_est() for uav in self.uavs.values()
@@ -513,6 +521,8 @@ class UavSim(MultiAgentEnv):
         # running_t_go_errors = np.array(self._all_t_go_errors)
         # normalize t_go_errors
         t_go_errors = np.array(t_go_errors)
+        # if self._use_virtual_leader:
+        #     return t_go_errors
         # t_go_errors = (t_go_errors - np.mean(t_go_errors)) / (np.std(t_go_errors) + 1e-9)
         t_go_errors = (t_go_errors) / (15 + 1e-9)
 

@@ -1,8 +1,6 @@
 import argparse
 from datetime import datetime
 from time import time
-from matplotlib import pyplot as plt
-import numpy as np
 import ray
 from ray import air, tune
 from uav_sim.envs.uav_rl_ren import UavRlRen
@@ -15,6 +13,7 @@ from ray.rllib.algorithms.callbacks import make_multi_callbacks
 from ray.rllib.env.apis.task_settable_env import TaskSettableEnv, TaskType
 from ray.rllib.env.env_context import EnvContext
 from ray.rllib.models import ModelCatalog
+from ray.air.integrations.wandb import WandbLoggerCallback
 
 import os
 import logging
@@ -192,15 +191,15 @@ def train(args):
     args.config["env_config"]["beta_vel"] = 0.1
     args.config["env_config"]["beta"] = 0.1
     args.config["env_config"]["crash_penalty"] = neg_penalty * 10
-    args.config["env_config"]["early_done"] = tune.grid_search([False, True])
+    args.config["env_config"]["early_done"] = tune.grid_search([False])
     args.config["env_config"]["max_dt_go_error"] = tune.grid_search([0.1])
     args.config["env_config"]["max_dt_std"] = tune.grid_search([0.05])
-    args.config["env_config"]["max_time_penalty"] = neg_penalty * 5
+    args.config["env_config"]["max_time_penalty"] = neg_penalty * 10
     args.config["env_config"]["num_uavs"] = 4
     args.config["env_config"]["obstacle_collision_weight"] = neg_penalty
     args.config["env_config"]["sa_reward"] = tune.grid_search([50])
     # args.config["env_config"]["start_level"] = tune.grid_search([2, 0])
-    args.config["env_config"]["stp_penalty"] = tune.grid_search([0])
+    args.config["env_config"]["stp_penalty"] = tune.grid_search([1])
     args.config["env_config"]["t_go_error_func"] = tune.grid_search(["mean"])
     args.config["env_config"]["tgt_reward"] = tune.grid_search([50])
     args.config["env_config"]["uav_collision_weight"] = neg_penalty
@@ -302,6 +301,7 @@ def train(args):
     # # # trainable_with_resources = tune.with_resources(args.run, {"cpu": 18, "gpu": 1.0})
     # # # If you have 4 CPUs and 1 GPU on your machine, this will run 1 trial at a time.
     # # trainable_with_cpu_gpu = tune.with_resources(algo, {"cpu": 2, "gpu": 1})
+    # testing out wandb: https://docs.ray.io/en/releases-2.6.3/tune/examples/tune-wandb.html
     tuner = tune.Tuner(
         args.config["exp_config"]["run"],
         # args.run,
@@ -309,6 +309,7 @@ def train(args):
         param_space=train_config.to_dict(),
         # tune_config=tune.TuneConfig(num_samples=10),
         run_config=air.RunConfig(
+            callbacks=[WandbLoggerCallback(project="multi_uav_sim")],
             stop=stop,
             local_dir=args.log_dir,
             name=args.name,
@@ -341,6 +342,12 @@ def test(args):
 
         if args.run:
             args.config["exp_config"]["run"] = args.run
+
+        if args.early_done:
+            args.config["env_config"]["early_done"] = args.early_done
+
+        if args.use_vl:
+            args.config["env_config"]["use_virtual_leader"] = args.use_vl
 
         max_num_episodes = args.max_num_episodes
         experiment_num = args.experiment_num
@@ -665,6 +672,9 @@ def parse_arguments():
     test_sub.add_argument("--write_exp", action="store_true", default=False)
     test_sub.add_argument("--plot_results", action="store_true", default=False)
     test_sub.add_argument("--tune_run", action="store_true", default=False)
+    test_sub.add_argument("--early_done", action="store_true", default=False)
+    test_sub.add_argument("--use_vl", action="store_true", default=False)
+
     test_sub.add_argument("--seed")
 
     test_sub.set_defaults(func=test)

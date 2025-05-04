@@ -5,8 +5,8 @@ ARG BASE_IMAGE=nvidia/cuda:11.8.0-cudnn8-runtime-ubuntu20.04
 FROM ${BASE_IMAGE}
 
 # set python version to use
-ENV PYTHON_VERSION=3.9
-ARG CONDA_ENV=py39_gpu
+ENV PYTHON_VERSION=python3.11
+# ARG CONDA_ENV=py39_gpu
 
 # FROM directive resets ARG
 ARG BASE_IMAGE
@@ -100,34 +100,35 @@ RUN sudo apt update && \
     sudo apt install -y software-properties-common && \
     sudo add-apt-repository ppa:deadsnakes/ppa && \ 
     sudo apt install -y \ 
-    python3.9 \
-    python3.9-dev \
-    python3.9-distutils \
-    python3.9-venv \
-    python3.9-tk && \
-    python3.9 --version && \
-    python3.9 -m ensurepip && \
+    ${PYTHON_VERSION} \
+    ${PYTHON_VERSION}-dev \
+    ${PYTHON_VERSION}-distutils \
+    ${PYTHON_VERSION}-venv \
+    ${PYTHON_VERSION}-tk && \
+    ${PYTHON_VERSION} --version && \
+    ${PYTHON_VERSION} -m ensurepip && \
     sudo update-alternatives --install /usr/bin/python python /usr/bin/python2 1 && \
     sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 2 && \
-    sudo update-alternatives --install /usr/bin/python python /usr/bin/python3.9 3 && \
-    sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 1 && \
-    # sudo update-alternatives --set python /usr/bin/python3.9 && \
+    sudo update-alternatives --install /usr/bin/python python /usr/bin/${PYTHON_VERSION} 3 && \
+    sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/${PYTHON_VERSION} 1 && \
+    # sudo update-alternatives --set python /usr/bin/${PYTHON_VERSION} && \
     sudo apt-get clean && \
     sudo rm -rf /var/lib/apt/lists/*
 
-COPY ../requirements_gpu.txt /home/${USERNAME}/.
+# COPY ../requirements_gpu.txt /home/${USERNAME}/.
+COPY ../clean_requirements.txt /home/${USERNAME}/.
 RUN sudo chown -R dev:dev /home/${USERNAME} \
-    && python3.9 -m pip install -r /home/${USERNAME}/requirements_gpu.txt
+    && ${PYTHON_VERSION} -m pip install -r /home/${USERNAME}/clean_requirements.txt --timeout=100
 
 # apt install -y \
 #         software-properties-common && \
 #     add-apt-repository -y ppa:deadsnakes/ppa && \
 #     apt install -y \
-#         python3.9 \
-#         python3.9-distutils \
-#         python3.9-venv && \
-#     python3.9 --version && \
-#     python3.9 -m ensurepip && \
+#         ${PYTHON_VERSION} \
+#         ${PYTHON_VERSION}-distutils \
+#         ${PYTHON_VERSION}-venv && \
+#     ${PYTHON_VERSION} --version && \
+#     ${PYTHON_VERSION} -m ensurepip && \
 #     pip3.9 --version
 
 

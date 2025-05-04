@@ -123,10 +123,10 @@ class TrainCallback(DefaultCallbacks):
         episode.custom_metrics["num_uav_crashed"] = uav_crashed
 
         # mean here to get stat per timestep per uav
-        uav_dt_go = np.mean(episode.user_data["uav_dt_go"]) / num_agents
+        uav_dt_go = np.mean(episode.user_data["uav_dt_go"])
         episode.custom_metrics["uav_dt_go"] = uav_dt_go
 
-        uav_t_go = np.mean(episode.user_data["uav_t_go"]) / num_agents
+        uav_t_go = np.mean(episode.user_data["uav_t_go"])
         episode.custom_metrics["uav_t_go"] = uav_t_go
 
         # TODO: use np.mean here instead

@@ -59,9 +59,10 @@
                 "--run",
                 "ren",
                 "test",
-                "--render",
+                // "--render",
                 "--plot_results",
-                "--seed", "None"
+                "--seed",
+                "None"
             ]
         },
         {
@@ -76,11 +77,12 @@
                 // 
             },
             "args": [
-                "--tf", "8",
+                "--tf",
+                "8",
                 "--run",
                 "PPO",
                 "test",
-                "--checkpoint", 
+                "--checkpoint",
                 // "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2024-04-14-08-19_8f46de9_4u_4o/rebaseline_85/rebaseline_85/PPO_multi-uav-ren-v0_330d5_00000_0_beta=0.1000,stp_penalty=0.8500,tgt_reward=50,uav_type=UavBase,use_safe_action=False_2024-04-14_08-19-11/checkpoint_000457/policies/shared_policy",
                 // "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2024-04-18-06-00_66c4c18_4u_4o/dt_go_fix_rew_long/dt_go_fix_rew_long/PPO_multi-uav-ren-v0_7d314_00000_0_beta=0.1000,obstacle_collision_weight=1.0000,sa_reward=50,stp_penalty=1.5000,tgt_reward=50,uav__2024-04-18_06-00-30/checkpoint_000457/policies/shared_policy",
                 // "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2024-04-19-21-20_4ebe1b4_4u_4o/sampling_stp_penalty/sampling_stp_penalty/PPO_multi-uav-ren-v0_36485_00003_3_beta=0.1000,obstacle_collision_weight=1.0000,sa_reward=50,stp_penalty=5.0000,tgt_reward=50,uav__2024-04-19_21-20-45/checkpoint_000165/policies/shared_policy",
@@ -109,11 +111,15 @@
                 // "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2025-04-19-22-19_c610d5b_4u_4o/fixing_metrics/fixing_metrics/PPO_multi-uav-ren-v0_f0914_00001_1_early_done=True,max_dt_go_error=0.1000,max_dt_std=0.0500,sa_reward=50,stp_penalty=0,t_go_error__2025-04-19_22-19-51/checkpoint_000110/policies/shared_policy",
                 // "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2025-04-25-12-21_99c89ef_4u_4o/get_first_time/get_first_time/PPO_multi-uav-ren-v0_55e36_00000_0_early_done=True,max_dt_go_error=0.1000,max_dt_std=0.0500,sa_reward=0,stp_penalty=0,t_go_error_f_2025-04-25_12-21-26/checkpoint_000305/policies/shared_policy",
                 // "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-curriculum-v0_2025-04-26-03-53_b30eba7_4u_4o/uav_dt_go_reward_fix_cur/uav_dt_go_reward_fix_cur/PPO_multi-uav-ren-curriculum-v0_8da41_00000_0_early_done=True,max_dt_go_error=1.5000,max_dt_std=0.5000,sa_reward=1,stp_penalty=0,t_2025-04-26_03-53-34/checkpoint_000305/policies/shared_policy",
-                "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2025-04-26-18-17_fd0174a_4u_4o/scaled_uav_t_go_error/scaled_uav_t_go_error/PPO_multi-uav-ren-v0_4a133_00000_0_early_done=True,max_dt_go_error=0.1000,max_dt_std=0.0500,sa_reward=1,stp_penalty=0,t_go_error_f_2025-04-26_18-17-49/checkpoint_000305/policies/shared_policy",
+                // "/home/dev/workspace/multi-uav-sim/ray_results/train/PPO/multi-uav-ren-v0_2025-05-01-08-08_a8bd3f4_4u_4o/scaled_uav_t_go_error_early_done/scaled_uav_t_go_error_early_done/PPO_multi-uav-ren-v0_05452_00000_0_early_done=False,max_dt_go_error=0.1000,max_dt_std=0.0500,sa_reward=100,stp_penalty=1,t_go_erro_2025-05-01_08-08-40/checkpoint_000160/policies/shared_policy",
+                // "/home/dev/workspace/multi-uav-sim/ray_results/train/PPO/multi-uav-ren-v0_2025-05-01-14-39_7972eb6_4u_4o/cont_dt_go_pen/cont_dt_go_pen/PPO_multi-uav-ren-v0_90e46_00000_0_early_done=False,max_dt_go_error=0.1000,max_dt_std=0.0500,sa_reward=50,stp_penalty=1,t_go_error_2025-05-01_14-39-08/checkpoint_000160/policies/shared_policy",
+                "/home/dev/workspace/multi-uav-sim/ray_results/train/PPO/multi-uav-ren-v0_2025-05-01-14-39_7972eb6_4u_4o/cont_dt_go_pen/cont_dt_go_pen/PPO_multi-uav-ren-v0_90e46_00000_0_early_done=False,max_dt_go_error=0.1000,max_dt_std=0.0500,sa_reward=50,stp_penalty=1,t_go_error_2025-05-01_14-39-08/checkpoint_000185/policies/shared_policy",
                 "--render",
-                "--seed", "None",
-                "--max_num_episodes", "10",
-                // "--plot_results"
+                "--seed",
+                "None",
+                "--max_num_episodes",
+                "10",
+                "--plot_results"
             ]
         },
         {
@@ -338,7 +344,8 @@
                 "--exp_config",
                 "configs/exp_basic_ren_cc.json",
                 "--exp_folder",
-                "results/test_results/exp_basic_ren_cc/exp_2025-04-23-21-26_161e9ff_vl_0_ed_1",
+                // "results/test_results/exp_basic_ren_cc/exp_2025-04-23-21-26_161e9ff_vl_0_ed_1",
+                "results/test_results/exp_basic_ren_cc/exp_2025-05-01-22-17_1b0d5b3_vl_0_ed_0",
                 "--skip_legend"
             ],
         },

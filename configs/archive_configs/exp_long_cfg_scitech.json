@@ -1,0 +1,133 @@
+{
+    "env_config": {
+        "target_v": [
+            0.0
+        ],
+        "max_num_obstacles": [
+            4,
+            5,
+            6
+        ],
+        "time_final": [
+            10,
+            20,
+            30
+        ]
+    },
+    "exp_config": {
+        "max_num_episodes": 200,
+        "runs": [
+            {
+                "name": "cc_none",
+                "run": "cc",
+                "checkpoint": null,
+                "safe_action_type": null,
+                "label": "TTC"
+            },
+            {
+                "name": "cc_sca",
+                "run": "cc",
+                "checkpoint": null,
+                "safe_action_type": "sca",
+                "label": "TTC-CA"
+            },
+            {
+                "name": "cc_cbf",
+                "run": "cc",
+                "checkpoint": null,
+                "safe_action_type": "cbf",
+                "label": "MORRIS"
+            },
+            {
+                "name": "cc_nn_cbf",
+                "run": "cc",
+                "checkpoint": null,
+                "safe_action_type": "nn_cbf",
+                "sa_checkpoint_dir": "/home/prime/Documents/workspace/rl_multi_uav_sim/results/safety_layer/safety_layer2023-11-19-04-48_462dc11/tgn_1/train_safety_layer_c7689_00000_0_t_go_n=1.0000,eps_action=0.0000,eps_dang=0.0010,loss_action_weight=1.0000,num_epochs=500,num_iter_2023-11-19_04-48-23/checkpoint_000494/checkpoint",
+                "label": "MORRIS-NN_CBF"
+            }
+        ],
+        "seeds": [
+            173,
+            0,
+            5001
+        ]
+    },
+    "safety_layer_cfg": {
+        "checkpoint_dir": null
+    },
+    "items_to_plot": {
+        "uav_collision": "Total UAV Collisions",
+        "obs_collision": "Total NCFO Collision",
+        "uav_done_dt": "Mean UAV Time Arrival Error (s)",
+        "uav_done": "Total UAV Landed",
+        "time_total_s": "Total Experiment Runtime (s)"
+    },
+    "groups_to_plot": [
+        {
+            "group": [
+                "target_v"
+            ],
+            "group_x": "name",
+            "group_key": [
+                0.0
+            ],
+            "group_title": "overall",
+            "x_label": ""
+        },
+        {
+            "group": [
+                "num_obs",
+                "target_v",
+                "tf"
+            ],
+            "group_x": "name",
+            "group_key": [
+                4.0,
+                0.0,
+                20.0
+            ],
+            "group_title": "baseline",
+            "x_label": ""
+        },
+        {
+            "group": [
+                "target_v",
+                "tf"
+            ],
+            "group_x": "num_obs",
+            "group_key": [
+                0.0,
+                20.0
+            ],
+            "group_title": "vary_num_obs_tgt_v_0",
+            "x_label": "Number of NCFOs"
+        },
+        {
+            "group": [
+                "num_obs",
+                "target_v"
+            ],
+            "group_x": "seed",
+            "group_key": [
+                4,
+                0.0
+            ],
+            "group_title": "vary_seed_v_num_obs",
+            "x_label": "Seed"
+        },
+        {
+            "group": [
+                "num_obs",
+                "target_v"
+            ],
+            "group_x": "tf",
+            "group_key": [
+                4,
+                0.0
+            ],
+            "group_title": "vary_tf_v_num_obs",
+            "x_label": "Expected Time of Arrival, $t^f$ (s)"
+        }
+    ]
+}

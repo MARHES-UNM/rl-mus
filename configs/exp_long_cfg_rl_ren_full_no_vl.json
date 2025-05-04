@@ -2,6 +2,7 @@
     "exp_name": "ppo_ren_comp_no_vl",
     "env_config": {
         "use_virtual_leader": false,
+        "early_done": false,
         "target_v": [
             0.0
         ],
@@ -37,29 +38,46 @@
                 "label": "REN_CA"
             },
             {
-                "name": "ppo_no_ren",
-                "run": "PPO",
-                "checkpoint": "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2024-04-27-08-59_47fb018_4u_4o/replicate_dc8b9b2_02_05/replicate_dc8b9b2_02_05/PPO_multi-uav-ren-v0_0cf50_00002_2_early_done=False,max_dt_go_error=0.2000,max_dt_std=0.0500,stp_penalty=0.0000,t_go_error_func=su_2024-04-27_08-59-58/checkpoint_000457/policies/shared_policy",
-                "safe_action_type": null,
-                "label": "PPO_NO_REN"
-            },
-            {
                 "name": "ppo",
                 "run": "PPO",
-                "checkpoint": "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2024-04-27-08-59_47fb018_4u_4o/replicate_dc8b9b2_02_05/replicate_dc8b9b2_02_05/PPO_multi-uav-ren-v0_0cf50_00000_0_early_done=False,max_dt_go_error=0.2000,max_dt_std=0.0500,stp_penalty=1.5000,t_go_error_func=su_2024-04-27_08-59-58/checkpoint_000457/policies/shared_policy",
+                "checkpoint": "/workspaces/multi-uav-sim/ray_results/train/PPO/multi-uav-ren-v0_2025-05-03-13-31_cc94735_4u_4o/final_train/final_train/PPO_multi-uav-ren-v0_6b51f_00000_0_early_done=False,max_dt_go_error=0.1000,max_dt_std=0.0500,sa_reward=50,stp_penalty=1,t_go_error_2025-05-03_13-31-17/checkpoint_000275/policies/shared_policy",
                 "safe_action_type": null,
                 "label": "POETIC"
             },
             {
                 "name": "ppo_ca",
                 "run": "PPO",
-                "checkpoint": "/home/prime/Documents/workspace/rl_multi_uav_sim/ray_results/train/PPO/multi-uav-ren-v0_2024-04-27-08-59_47fb018_4u_4o/replicate_dc8b9b2_02_05/replicate_dc8b9b2_02_05/PPO_multi-uav-ren-v0_0cf50_00000_0_early_done=False,max_dt_go_error=0.2000,max_dt_std=0.0500,stp_penalty=1.5000,t_go_error_func=su_2024-04-27_08-59-58/checkpoint_000457/policies/shared_policy",
+                "checkpoint": "/workspaces/multi-uav-sim/ray_results/train/PPO/multi-uav-ren-v0_2025-05-03-13-31_cc94735_4u_4o/final_train/final_train/PPO_multi-uav-ren-v0_6b51f_00000_0_early_done=False,max_dt_go_error=0.1000,max_dt_std=0.0500,sa_reward=50,stp_penalty=1,t_go_error_2025-05-03_13-31-17/checkpoint_000275/policies/shared_policy",
                 "safe_action_type": "sca",
                 "label": "POETIC_CA"
+            },
+            {
+                "name": "ppo_cbf",
+                "run": "PPO",
+                "checkpoint": "/workspaces/multi-uav-sim/ray_results/train/PPO/multi-uav-ren-v0_2025-05-03-13-31_cc94735_4u_4o/final_train/final_train/PPO_multi-uav-ren-v0_6b51f_00000_0_early_done=False,max_dt_go_error=0.1000,max_dt_std=0.0500,sa_reward=50,stp_penalty=1,t_go_error_2025-05-03_13-31-17/checkpoint_000275/policies/shared_policy",
+                "safe_action_type": "cbf",
+                "label": "POETIC_CBF"
+            },
+            {
+                "name": "ppo_cur",
+                "run": "PPO",
+                "checkpoint": "/workspaces/multi-uav-sim/ray_results/train/PPO/multi-uav-ren-curriculum-v0_2025-05-03-19-43_cc94735_4u_4o/final_train_cur/final_train_cur/PPO_multi-uav-ren-curriculum-v0_60238_00000_0_early_done=False,max_dt_go_error=0.1000,max_dt_std=0.0500,sa_reward=50,stp_penalty=1_2025-05-03_19-43-12/checkpoint_000305/policies/shared_policy",
+                "safe_action_type": null,
+                "label": "POETIC_CUR"
+            },
+            {
+                "name": "ppo_cur_ca",
+                "run": "PPO",
+                "checkpoint": "/workspaces/multi-uav-sim/ray_results/train/PPO/multi-uav-ren-curriculum-v0_2025-05-03-19-43_cc94735_4u_4o/final_train_cur/final_train_cur/PPO_multi-uav-ren-curriculum-v0_60238_00000_0_early_done=False,max_dt_go_error=0.1000,max_dt_std=0.0500,sa_reward=50,stp_penalty=1_2025-05-03_19-43-12/checkpoint_000305/policies/shared_policy",
+                "safe_action_type": "sca",
+                "label": "POETIC_CUR_CA"
             }
         ],
         "seeds": [
-            8000, 2000, 3000, 59
+            8000,
+            2000,
+            3000,
+            59
         ]
     },
     "safety_layer_cfg": {
@@ -70,16 +88,17 @@
         "uav_collision_eps": "UAV Collisions per episodes",
         "obs_collision": "Total NCFO Collision",
         "obs_collision_eps": "NCFO Collisions per Episodes",
+        "uav_crashed_eps": "Total Arena Collision per Episodes",
         "uav_crashed": "Total Arena Collision",
         "uav_reward": "Total Reward",
         "uav_reward_eps": "Total Reward Per Episode",
         "uav_done_dt": "Mean UAV Time Arrival Error (s)",
         "uav_done": "Total UAV Landed",
         "time_total_s": "Total Experiment Runtime (s)",
-        "uav_done_time_std": "Done Time std",
-        "uav_done_time_max": "Done Time max diff",
+        "uav_done_time_std": "Done Time std per episode",
+        "uav_done_time_max": "Done Time max diff per episode",
         "uav_sa_sat": "Percent SA sat Raw",
-        "uav_sa_sat_cal": "Percent SA sat"
+        "uav_sa_sat_cal": "Percent SA sat per episode"
     },
     "groups_to_plot": [
         {

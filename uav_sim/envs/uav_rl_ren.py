@@ -272,6 +272,22 @@ class UavRlRen(UavSim):
         return 0
 
     def get_tc_controller(self, uav):
+        """
+        Algorithm is based on the paper:
+
+        https://onlinelibrary.wiley.com/doi/abs/10.1002/asjc.2685
+        Recent progress on the study of multi-vehicle coordination in cooperative attack and defense: An overview
+
+        the algorithm is based on PN time to go algorithm 
+        we define t_go estimate as the sum of t_go differences:
+        t_go_est = \sum_{j=1}^N (t_go_j - t_go_i)
+        where N is the number of agents in the system
+        Args:
+            uav (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
         pos_er = uav.pad.state[0:6] - uav.state[0:6]
 
         action = np.zeros(3)
@@ -331,7 +347,10 @@ class UavRlRen(UavSim):
 
             self.all_landed.append(uav.done_time)
 
-            reward += max(1 - abs(self._scaled_t_go_error[uav.id]), 0) * self._tgt_reward
+            reward += (
+                max(1 - abs(self._scaled_t_go_error[uav.id]), 0) * self._tgt_reward
+            )
+            # reward += self._tgt_reward
             # if abs(uav_dt_go_error) <= self.max_dt_go_error:
             # reward += self._tgt_reward
             # uav.sa_sat = True
@@ -378,7 +397,8 @@ class UavRlRen(UavSim):
                 return reward
 
         else:
-            reward += self._beta * np.sign(uav.last_rel_dist - rel_dist)
+            # only negative reward for large relative distance from the last time step. 
+            reward += min(0, self._beta * np.sign(uav.last_rel_dist - rel_dist))
 
             uav.last_rel_dist = rel_dist
 
@@ -386,8 +406,11 @@ class UavRlRen(UavSim):
         reward += -self._beta_vel * rel_vel
 
         # reward += max(0, self._stp_penalty - abs(uav_dt_go_error))
-        if abs(uav_dt_go_error) <= self.max_dt_go_error:
-            reward += self._stp_penalty
+        # reward += min(-1, -abs(uav_dt_go_error)) * self._stp_penalty
+        reward += -abs(self._scaled_t_go_error[uav.id]) * self._stp_penalty
+        # reward += -abs(uav_dt_go_error) * self._stp_penalty
+        # if abs(uav_dt_go_error) <= self.max_dt_go_error:
+        # reward += self._stp_penalty
 
         # if abs(uav_dt_go_error) > self.max_dt_std:
         # reward += -self._stp_penalty
