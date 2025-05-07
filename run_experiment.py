@@ -188,7 +188,7 @@ def train(args):
     # args.config["env_config"]["early_done"] = tune.grid_search([False])
     # args.config["env_config"]["beta_vel"] = 0.1
 
-    neg_penalty = tune.grid_search([1, 10, 50])
+    neg_penalty = tune.grid_search([50])
     # Vary treatments here
     args.config["env_config"]["beta_vel"] = 0.1
     args.config["env_config"]["beta"] = 0.1
