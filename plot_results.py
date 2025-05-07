@@ -329,7 +329,7 @@ def plot_uav_states(
         z = center[2] + radius * np.cos(v)
         ax5.plot_wireframe(x, y, z, color="r", alpha=0.1)
 
-    ax5.axis("equal")
+    # ax5.axis("equal")
     ax5.set_xlabel("X (m)")
     ax5.set_ylabel("Y (m)")
     ax5.set_zlabel("Z (m)")

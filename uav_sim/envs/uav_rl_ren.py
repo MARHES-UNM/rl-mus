@@ -247,29 +247,40 @@ class UavRlRen(UavSim):
 
         return uav_tg_error / mean_tg_error
 
-    def _get_global_reward(self):
+    def _get_global_reward(self, reward):
         all_landed = [
-            uav.landed
-            for uav in self.uavs.values()
+            uav
+            for uav in self.uavs.values() if uav.landed
             # if uav.id in self.alive_agents
         ]
 
-        if all(all_landed) and len(all_landed) >= 2:
-            done_time = np.array(
-                [
-                    uav.done_time
-                    for uav in self.uavs.values()
-                    # if uav.id in self.alive_agents
-                ]
-            ).std()
+        all_landed_stat = [
+            uav.landed for uav in all_landed
+        ]
+        all_landed_time = np.array([
+            uav.done_time for uav in all_landed
+        ]).std()
+        
+        if all(all_landed_stat) and len(all_landed_stat) >= 2:
+            # done_time = np.array(
+            #     [
+            #         uav.done_time
+            #         for uav in self.uavs.values()
+            #         # if uav.id in self.alive_agents
+            #     ]
+            # ).std()
             # done_time = max_abs_diff([uav.done_time for uav in self.uavs.values()])
-            if done_time <= self.max_dt_std:
-                for uav in self.uavs.values():
+            if all_landed_time <= self.max_dt_std:
+                for uav in all_landed:
                     uav.sa_sat = True
-                return self._sa_reward
+                    reward[uav.id] = reward[uav.id] + self._sa_reward
+                    
+                # for uav in self.uavs.values():
+                #     uav.sa_sat = True
+                # return self._sa_reward
 
         # return -self._sa_reward
-        return 0
+        return reward
 
     def get_tc_controller(self, uav):
         """
