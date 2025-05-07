@@ -380,7 +380,9 @@ def parse_arguments():
     parser.add_argument("--exp_folder", help="Path to experiments")
     parser.add_argument("--out_folder", help="Path to experiments")
     parser.add_argument("--img_folder", help="Folder to output plots")
-    parser.add_argument("--max_dt_std", default=0.1, help="Folder to output plots")
+    parser.add_argument(
+        "--max_dt_std", default=0.1, type=float, help="Folder to output plots"
+    )
     parser.add_argument(
         "--exp_config",
         help="experiment config",
