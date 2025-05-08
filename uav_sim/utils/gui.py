@@ -1,7 +1,7 @@
 import sys
 import matplotlib
 
-matplotlib.use("TKAgg")
+#matplotlib.use("TKAgg")
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle
 import numpy as np
