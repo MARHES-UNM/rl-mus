@@ -29,7 +29,7 @@
 #     --render \
 #     --max_num_episodes 3
 
-exp_name="g_reward_mod_5"
+exp_name="g_reward_5_ed_true"
 python run_experiment.py --name ${exp_name} --run PPO \
     train \
     --cpu 8 \

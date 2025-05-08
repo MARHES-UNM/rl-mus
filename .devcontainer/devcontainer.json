@@ -22,7 +22,7 @@
 	"runArgs": [
 		"--gpus",
 		"all",
-		"--shm-size=3.2g"
+		"--shm-size=4.2g"
 	],
 	// 4. Features to add to the Dev Container. More info: https://containers.dev/implementors/features.
 	"features": {
