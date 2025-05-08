@@ -2,7 +2,9 @@ import argparse
 from datetime import datetime
 from time import time
 import matplotlib
-matplotlib.use('Agg')
+
+# matplotlib.use("Agg")
+matplotlib.use("TkAgg")
 import ray
 from ray import air, tune
 from uav_sim.envs.uav_rl_ren import UavRlRen
@@ -193,7 +195,7 @@ def train(args):
     args.config["env_config"]["beta_vel"] = 0.1
     args.config["env_config"]["beta"] = 0.1
     args.config["env_config"]["crash_penalty"] = neg_penalty
-    args.config["env_config"]["early_done"] = tune.grid_search([True, False])
+    args.config["env_config"]["early_done"] = tune.grid_search([True])
     args.config["env_config"]["max_dt_go_error"] = tune.grid_search([0.1])
     args.config["env_config"]["max_dt_std"] = tune.grid_search([0.05])
     args.config["env_config"]["max_time_penalty"] = neg_penalty
@@ -201,7 +203,7 @@ def train(args):
     args.config["env_config"]["obstacle_collision_weight"] = neg_penalty
     args.config["env_config"]["sa_reward"] = tune.grid_search([50])
     # args.config["env_config"]["start_level"] = tune.grid_search([2, 0])
-    args.config["env_config"]["stp_penalty"] = tune.grid_search([0,1])
+    args.config["env_config"]["stp_penalty"] = tune.grid_search([1, 0])
     args.config["env_config"]["t_go_error_func"] = tune.grid_search(["mean"])
     args.config["env_config"]["tgt_reward"] = tune.grid_search([50])
     args.config["env_config"]["uav_collision_weight"] = neg_penalty

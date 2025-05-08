@@ -50,7 +50,8 @@ class UavRlRen(UavSim):
                         "other_uav_obs": spaces.Box(
                             low=-np.inf,
                             high=np.inf,
-                            shape=(self.nom_num_uavs - 1, self.num_state_shape),
+                            # shape=(self.nom_num_uavs - 1, self.num_state_shape),
+                            shape=(self.nom_num_uavs - 1, 12),
                             dtype=np.float32,
                         ),
                         "obstacles": spaces.Box(
@@ -58,7 +59,8 @@ class UavRlRen(UavSim):
                             high=np.inf,
                             shape=(
                                 self.nom_num_obstacles,
-                                self.num_state_shape,
+                                # self.num_state_shape,
+                                9,
                             ),
                             dtype=np.float32,
                         ),
@@ -102,11 +104,13 @@ class UavRlRen(UavSim):
         other_uav_state_list = []
         for other_uav in self.uavs.values():
             if uav.id != other_uav.id:
-                # temp_list  = []
-                # temp_list.append(uav.rel_distance(other_uav))
-                # temp_list.append(uav.rel_vel(other_uav))
-                temp_list = other_uav.state[:6].tolist()
-                # temp_list.append(self.get_uav_t_go_error(other_uav))
+                temp_list = (uav.state[:6] - other_uav.state[:6]).tolist()
+                temp_list.append(self._scaled_t_go_error[other_uav.id])
+                temp_list.append(uav.rel_distance(other_uav))
+                temp_list.append(uav.rel_vel(other_uav))
+                temp_list.append(uav.r + other_uav.r)
+                temp_list.append(int(other_uav.done))
+                temp_list.append(int(other_uav.landed))
                 other_uav_state_list.append(temp_list)
 
         num_active_other_agents = len(other_uav_state_list)
@@ -120,12 +124,13 @@ class UavRlRen(UavSim):
         closest_obstacles = self._get_closest_obstacles(uav)
 
         obstacle_state_list = [obs.state[0:6] for obs in closest_obstacles]
-        # obstacle_state_list = []
-        # for obs in closest_obstacles:
-        #     temp_obs_list = []
-        #     temp_obs_list.append(uav.rel_distance(obs))
-        #     temp_obs_list.append(uav.rel_vel(obs))
-        #     obstacle_state_list.append(temp_obs_list)
+        obstacle_state_list = []
+        for obs in closest_obstacles:
+            temp_obs_list = (uav.state[:6] - obs.state[0:6]).tolist()
+            temp_obs_list.append(uav.rel_distance(obs))
+            temp_obs_list.append(uav.rel_vel(obs))
+            temp_obs_list.append(uav.r + obs.r)
+            obstacle_state_list.append(temp_obs_list)
 
         num_active_obstacles = len(obstacle_state_list)
         if num_active_obstacles < self.nom_num_obstacles:
@@ -155,10 +160,10 @@ class UavRlRen(UavSim):
             # ),
             # "rel_pad": rel_pad.astype(np.float32),
             "rel_pad": (uav.state[0:6] - uav.pad.state[0:6]).astype(np.float32),
-            # "other_uav_obs": (other_uav_states).astype(np.float32),
-            "other_uav_obs": (uav.state[0:6] - other_uav_states).astype(np.float32),
-            # "obstacles": (obstacles_to_add).astype(np.float32),
-            "obstacles": (uav.state[0:6] - obstacles_to_add).astype(np.float32),
+            "other_uav_obs": (other_uav_states).astype(np.float32),
+            # "other_uav_obs": (uav.state[0:6] - other_uav_states).astype(np.float32),
+            "obstacles": (obstacles_to_add).astype(np.float32),
+            # "obstacles": (uav.state[0:6] - obstacles_to_add).astype(np.float32),
         }
 
         return obs_dict
@@ -250,17 +255,14 @@ class UavRlRen(UavSim):
     def _get_global_reward(self, reward):
         all_landed = [
             uav
-            for uav in self.uavs.values() if uav.landed
+            for uav in self.uavs.values()
+            if uav.landed
             # if uav.id in self.alive_agents
         ]
 
-        all_landed_stat = [
-            uav.landed for uav in all_landed
-        ]
-        all_landed_time = np.array([
-            uav.done_time for uav in all_landed
-        ]).std()
-        
+        all_landed_stat = [uav.landed for uav in all_landed]
+        all_landed_time = np.array([uav.done_time for uav in all_landed]).std()
+
         if all(all_landed_stat) and len(all_landed_stat) >= 2:
             # done_time = np.array(
             #     [
@@ -274,7 +276,7 @@ class UavRlRen(UavSim):
                 for uav in all_landed:
                     uav.sa_sat = True
                     reward[uav.id] = reward[uav.id] + self._sa_reward
-                    
+
                 # for uav in self.uavs.values():
                 #     uav.sa_sat = True
                 # return self._sa_reward
@@ -289,7 +291,7 @@ class UavRlRen(UavSim):
         https://onlinelibrary.wiley.com/doi/abs/10.1002/asjc.2685
         Recent progress on the study of multi-vehicle coordination in cooperative attack and defense: An overview
 
-        the algorithm is based on PN time to go algorithm 
+        the algorithm is based on PN time to go algorithm
         we define t_go estimate as the sum of t_go differences:
         t_go_est = \sum_{j=1}^N (t_go_j - t_go_i)
         where N is the number of agents in the system
@@ -408,7 +410,7 @@ class UavRlRen(UavSim):
                 return reward
 
         else:
-            # only negative reward for large relative distance from the last time step. 
+            # only negative reward for large relative distance from the last time step.
             reward += min(0, self._beta * np.sign(uav.last_rel_dist - rel_dist))
 
             uav.last_rel_dist = rel_dist
