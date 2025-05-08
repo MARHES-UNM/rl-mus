@@ -3,8 +3,8 @@ from datetime import datetime
 from time import time
 import matplotlib
 
-# matplotlib.use("Agg")
-matplotlib.use("TkAgg")
+#matplotlib.use("Agg")
+# matplotlib.use("TkAgg")
 import ray
 from ray import air, tune
 from uav_sim.envs.uav_rl_ren import UavRlRen
@@ -195,7 +195,7 @@ def train(args):
     args.config["env_config"]["beta_vel"] = 0.1
     args.config["env_config"]["beta"] = 0.1
     args.config["env_config"]["crash_penalty"] = neg_penalty * 10
-    args.config["env_config"]["early_done"] = tune.grid_search([False])
+    args.config["env_config"]["early_done"] = tune.grid_search([False, True])
     args.config["env_config"]["max_dt_go_error"] = tune.grid_search([0.1])
     args.config["env_config"]["max_dt_std"] = tune.grid_search([0.05])
     args.config["env_config"]["max_time_penalty"] = neg_penalty * 10
