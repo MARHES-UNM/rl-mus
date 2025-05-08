@@ -29,12 +29,12 @@
 #     --render \
 #     --max_num_episodes 3
 
-exp_name="g_reward_5_ed_true"
+exp_name="repeat_cc94735"
 python run_experiment.py --name ${exp_name} --run PPO \
     train \
     --cpu 8 \
     --gpu 0.5 \
-    --stop_timesteps 30000000 \
+    --stop_timesteps 50000000 \
     --stop_iters 16000
     
 # python run_experiment.py --name "${exp_name}_cur" --run PPO \

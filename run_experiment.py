@@ -190,15 +190,15 @@ def train(args):
     # args.config["env_config"]["early_done"] = tune.grid_search([False])
     # args.config["env_config"]["beta_vel"] = 0.1
 
-    neg_penalty = tune.grid_search([5])
+    neg_penalty = 1
     # Vary treatments here
     args.config["env_config"]["beta_vel"] = 0.1
     args.config["env_config"]["beta"] = 0.1
-    args.config["env_config"]["crash_penalty"] = neg_penalty
-    args.config["env_config"]["early_done"] = tune.grid_search([True])
+    args.config["env_config"]["crash_penalty"] = neg_penalty * 10
+    args.config["env_config"]["early_done"] = tune.grid_search([False])
     args.config["env_config"]["max_dt_go_error"] = tune.grid_search([0.1])
     args.config["env_config"]["max_dt_std"] = tune.grid_search([0.05])
-    args.config["env_config"]["max_time_penalty"] = neg_penalty
+    args.config["env_config"]["max_time_penalty"] = neg_penalty * 10
     args.config["env_config"]["num_uavs"] = 4
     args.config["env_config"]["obstacle_collision_weight"] = neg_penalty
     args.config["env_config"]["sa_reward"] = tune.grid_search([50])
